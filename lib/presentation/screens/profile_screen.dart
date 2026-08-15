@@ -66,8 +66,6 @@ class ProfileScreen extends ConsumerWidget {
               const Text('About', style: TextStyle(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               const Text('Chem Buddy 1.0.0', style: TextStyle(color: AppColors.textSecondary)),
-              const SizedBox(height: 4),
-              const AppByPrajwal(large: true),
               const SizedBox(height: 8),
               Text(
                 SupabaseService.instance.configured
@@ -100,6 +98,9 @@ class ProfileScreen extends ConsumerWidget {
           onPressed: () => ref.read(appControllerProvider.notifier).logout(),
           child: const Text('Log out', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)),
         ),
+        const SizedBox(height: 28),
+        const Center(child: AppByPrajwal(large: true)),
+        const SizedBox(height: 8),
       ],
     );
   }

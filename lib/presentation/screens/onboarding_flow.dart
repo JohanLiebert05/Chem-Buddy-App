@@ -104,8 +104,6 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                     color: AppColors.purpleBright,
                   ),
                 ),
-                const SizedBox(height: 8),
-                const AppByPrajwal(large: true),
               ],
               Expanded(
                 child: PageView(
@@ -411,73 +409,81 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(20),
+    return Column(
       children: [
-        Text(signUp ? 'Create your account' : 'Welcome back', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 6),
-        const Text('Continue with Google or your roll number.', style: TextStyle(color: AppColors.textSecondary)),
-        const SizedBox(height: 20),
-        GlowCard(
-          onTap: () async {
-            setState(() => loading = true);
-            await ref.read(appControllerProvider.notifier).authenticate(
-                  email: 'student@chembuddy.app',
-                  password: 'google-sso',
-                  name: name.text.trim().isEmpty ? 'Student' : name.text.trim(),
-                  signUp: true,
-                );
-            if (mounted) setState(() => loading = false);
-          },
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
             children: [
-              Icon(Icons.g_mobiledata, size: 32, color: AppColors.blue),
-              SizedBox(width: 8),
-              Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w700)),
+              Text(signUp ? 'Create your account' : 'Welcome back', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 6),
+              const Text('Continue with Google or your roll number.', style: TextStyle(color: AppColors.textSecondary)),
+              const SizedBox(height: 20),
+              GlowCard(
+                onTap: () async {
+                  setState(() => loading = true);
+                  await ref.read(appControllerProvider.notifier).authenticate(
+                        email: 'student@chembuddy.app',
+                        password: 'google-sso',
+                        name: name.text.trim().isEmpty ? 'Student' : name.text.trim(),
+                        signUp: true,
+                      );
+                  if (mounted) setState(() => loading = false);
+                },
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.g_mobiledata, size: 32, color: AppColors.blue),
+                    SizedBox(width: 8),
+                    Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Center(child: Text('or', style: TextStyle(color: AppColors.textMuted))),
+              const SizedBox(height: 16),
+              TextField(controller: name, decoration: const InputDecoration(hintText: 'Full name')),
+              const SizedBox(height: 10),
+              TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'Roll number or email')),
+              const SizedBox(height: 10),
+              TextField(controller: password, obscureText: true, decoration: const InputDecoration(hintText: 'Password')),
+              if (error != null) ...[
+                const SizedBox(height: 10),
+                Text(error!, style: const TextStyle(color: AppColors.danger)),
+              ],
+              const SizedBox(height: 16),
+              PrimaryButton(
+                label: signUp ? 'Create account' : 'Log in',
+                loading: loading,
+                onPressed: () async {
+                  setState(() {
+                    loading = true;
+                    error = null;
+                  });
+                  final result = await ref.read(appControllerProvider.notifier).authenticate(
+                        email: email.text.trim(),
+                        password: password.text,
+                        name: name.text.trim(),
+                        signUp: signUp,
+                      );
+                  if (!mounted) return;
+                  setState(() {
+                    loading = false;
+                    error = result;
+                  });
+                },
+              ),
+              TextButton(
+                onPressed: () => setState(() => signUp = !signUp),
+                child: Text(signUp ? 'Already have an account? Log in' : 'New here? Create an account'),
+              ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        const Center(child: Text('or', style: TextStyle(color: AppColors.textMuted))),
-        const SizedBox(height: 16),
-        TextField(controller: name, decoration: const InputDecoration(hintText: 'Full name')),
-        const SizedBox(height: 10),
-        TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'Roll number or email')),
-        const SizedBox(height: 10),
-        TextField(controller: password, obscureText: true, decoration: const InputDecoration(hintText: 'Password')),
-        if (error != null) ...[
-          const SizedBox(height: 10),
-          Text(error!, style: const TextStyle(color: AppColors.danger)),
-        ],
-        const SizedBox(height: 16),
-        PrimaryButton(
-          label: signUp ? 'Create account' : 'Log in',
-          loading: loading,
-          onPressed: () async {
-            setState(() {
-              loading = true;
-              error = null;
-            });
-            final result = await ref.read(appControllerProvider.notifier).authenticate(
-                  email: email.text.trim(),
-                  password: password.text,
-                  name: name.text.trim(),
-                  signUp: signUp,
-                );
-            if (!mounted) return;
-            setState(() {
-              loading = false;
-              error = result;
-            });
-          },
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 8, 20, 20),
+          child: AppByPrajwal(large: true),
         ),
-        TextButton(
-          onPressed: () => setState(() => signUp = !signUp),
-          child: Text(signUp ? 'Already have an account? Log in' : 'New here? Create an account'),
-        ),
-        const SizedBox(height: 16),
-        const AppByPrajwal(),
       ],
     );
   }
