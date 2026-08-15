@@ -19,6 +19,8 @@ final chemRepositoryProvider = Provider<ChemRepository>((ref) {
 
 final appControllerProvider = NotifierProvider<AppController, AppState>(AppController.new);
 
+final shellTabProvider = StateProvider<int>((ref) => 0);
+
 class AppState {
   const AppState({
     required this.profile,

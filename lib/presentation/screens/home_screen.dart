@@ -151,6 +151,23 @@ class HomeScreen extends ConsumerWidget {
             ),
           );
         }),
+        const SectionTitle('Quick access'),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 3,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 1.05,
+          children: [
+            _QuickTile(icon: Icons.fact_check_outlined, label: 'Attendance', onTap: () => ref.read(shellTabProvider.notifier).state = 1),
+            _QuickTile(icon: Icons.calendar_month_outlined, label: 'Classes', onTap: () => ref.read(shellTabProvider.notifier).state = 2),
+            _QuickTile(icon: Icons.quiz_outlined, label: 'Tests', onTap: () => ref.read(shellTabProvider.notifier).state = 3),
+            _QuickTile(icon: Icons.notes_outlined, label: 'Notes', onTap: () => ref.read(shellTabProvider.notifier).state = 3),
+            _QuickTile(icon: Icons.person_outline, label: 'Profile', onTap: () => ref.read(shellTabProvider.notifier).state = 4),
+            _QuickTile(icon: Icons.menu_book_outlined, label: 'Resources', onTap: () => ref.read(shellTabProvider.notifier).state = 3),
+          ],
+        ),
         const SectionTitle('Upcoming'),
         if (upcoming.isEmpty)
           const GlowCard(child: Text('No tests or assignments yet.', style: TextStyle(color: AppColors.textSecondary))),
@@ -182,7 +199,52 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
         ),
+        const SizedBox(height: 10),
+        GlowCard(
+          child: Row(
+            children: [
+              const Icon(Icons.hourglass_bottom, color: AppColors.blue),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '${DateTime(DateTime.now().year, DateTime.now().month + 2, 15).difference(DateTime.now()).inDays} days left in the semester',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        const GlowCard(
+          child: Text(
+            '“Chemistry is the study of matter, but I prefer to see it as the study of change.”',
+            style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _QuickTile extends StatelessWidget {
+  const _QuickTile({required this.icon, required this.label, required this.onTap});
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlowCard(
+      padding: const EdgeInsets.all(12),
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: AppColors.purple),
+          const SizedBox(height: 8),
+          Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+        ],
+      ),
     );
   }
 }

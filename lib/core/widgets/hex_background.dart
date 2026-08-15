@@ -19,7 +19,7 @@ class HexBackground extends StatelessWidget {
             gradient: RadialGradient(
               center: Alignment(0, -0.6),
               radius: 1.2,
-              colors: [Color(0xFF2A1548), AppColors.background],
+              colors: [Color(0xFF1E1A2E), AppColors.background],
             ),
           ),
         ),
@@ -38,7 +38,7 @@ class _HexPainter extends CustomPainter {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..color = const Color(0x22A78BFA);
+      ..color = const Color(0x0DA78BFA);
 
     const radius = 28.0;
     final h = radius * math.sqrt(3);

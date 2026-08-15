@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -18,18 +20,21 @@ class GlowCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = Container(
-      width: double.infinity,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor ?? AppColors.border),
-        boxShadow: const [
-          BoxShadow(color: AppColors.glow, blurRadius: 18, offset: Offset(0, 8)),
-        ],
+    final card = ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          width: double.infinity,
+          padding: padding,
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: borderColor ?? AppColors.border),
+          ),
+          child: child,
+        ),
       ),
-      child: child,
     );
     if (onTap == null) return card;
     return GestureDetector(onTap: onTap, child: card);
@@ -57,7 +62,7 @@ class PrimaryButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: const LinearGradient(
-            colors: [AppColors.purple, AppColors.purpleDeep],
+            colors: [AppColors.purple, AppColors.blue],
           ),
           boxShadow: const [
             BoxShadow(color: AppColors.glow, blurRadius: 16, offset: Offset(0, 6)),

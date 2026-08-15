@@ -66,27 +66,41 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
         body: SafeArea(
           child: Column(
             children: [
-              const SizedBox(height: 12),
-              const AtomLogo(size: 72),
-              Text(
-                'CHEMBUDDY',
-                style: GoogleFonts.outfit(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 3,
-                  color: AppColors.purpleBright,
+              if (_index < 3) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: Row(
+                    children: List.generate(3, (i) {
+                      final active = i <= _index;
+                      return Expanded(
+                        child: Container(
+                          height: 4,
+                          margin: EdgeInsets.only(right: i == 2 ? 0 : 8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            gradient: active
+                                ? const LinearGradient(colors: [AppColors.purple, AppColors.blue])
+                                : null,
+                            color: active ? null : const Color(0xFF2A2D36),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
                 ),
-              ),
-              Text(
-                'CHEMVERSE',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  letterSpacing: 4,
-                  color: AppColors.textMuted,
+              ] else ...[
+                const SizedBox(height: 12),
+                const AtomLogo(size: 72),
+                Text(
+                  'CHEMVERSE',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2,
+                    color: AppColors.purpleBright,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              _Dots(index: _index),
+              ],
               Expanded(
                 child: PageView(
                   controller: _page,
@@ -128,7 +142,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                 child: _index == 3
                     ? const SizedBox.shrink()
                     : PrimaryButton(
-                        label: _index == 2 ? 'Continue to login' : 'Next',
+                        label: 'Continue →',
                         onPressed: _university == null && _index == 0
                             ? null
                             : () async {
@@ -163,31 +177,6 @@ class SubjectDraft {
   Subject toSubject() => Subject(id: id, name: name, code: code, teacher: teacher);
 }
 
-class _Dots extends StatelessWidget {
-  const _Dots({required this.index});
-  final int index;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(4, (i) {
-        final active = i == index;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
-          height: 6,
-          width: active ? 22 : 6,
-          decoration: BoxDecoration(
-            color: active ? AppColors.purpleBright : AppColors.textMuted,
-            borderRadius: BorderRadius.circular(8),
-          ),
-        );
-      }),
-    );
-  }
-}
-
 class _UniversityPage extends StatelessWidget {
   const _UniversityPage({required this.selected, required this.onSelect});
   final String? selected;
@@ -198,9 +187,11 @@ class _UniversityPage extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const Text('Select University', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+        const Text('STEP 1 OF 3', style: TextStyle(color: AppColors.purple, fontWeight: FontWeight.w800, letterSpacing: 1.4, fontSize: 12)),
+        const SizedBox(height: 8),
+        const Text('Select University', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
         const SizedBox(height: 6),
-        const Text('Choose your campus to personalise Chem Buddy.', style: TextStyle(color: AppColors.textSecondary)),
+        const Text('Choose your institution to personalise your experience', style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 16),
         ...SeedData.universities.map(
           (u) => Padding(
@@ -210,10 +201,11 @@ class _UniversityPage extends StatelessWidget {
               onTap: () => onSelect(u),
               child: Row(
                 children: [
-                  Icon(selected == u ? Icons.check_circle : Icons.account_balance_outlined,
-                      color: selected == u ? AppColors.purpleBright : AppColors.textMuted),
-                  const SizedBox(width: 12),
                   Expanded(child: Text(u, style: const TextStyle(fontWeight: FontWeight.w600))),
+                  Icon(
+                    selected == u ? Icons.radio_button_checked : Icons.radio_button_off,
+                    color: selected == u ? AppColors.purple : AppColors.textMuted,
+                  ),
                 ],
               ),
             ),
@@ -236,7 +228,9 @@ class _SemesterPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Select Semester', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+          const Text('STEP 2 OF 3', style: TextStyle(color: AppColors.purple, fontWeight: FontWeight.w800, letterSpacing: 1.4, fontSize: 12)),
+          const SizedBox(height: 8),
+          const Text('Select Semester', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
           const Text('MSc Chemistry · four-semester programme', style: TextStyle(color: AppColors.textSecondary)),
           const SizedBox(height: 20),
@@ -297,7 +291,9 @@ class _SubjectsPage extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const Text('Select Subjects', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+        const Text('STEP 3 OF 3', style: TextStyle(color: AppColors.purple, fontWeight: FontWeight.w800, letterSpacing: 1.4, fontSize: 12)),
+        const SizedBox(height: 8),
+        const Text('Select Subjects', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
         const SizedBox(height: 6),
         const Text('Pre-loaded for MSc Chemistry. Add your own anytime.', style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 16),
@@ -368,11 +364,34 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       children: [
         Text(signUp ? 'Create your account' : 'Welcome back', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
         const SizedBox(height: 6),
-        const Text('Simple login — works offline, syncs when Supabase is configured.', style: TextStyle(color: AppColors.textSecondary)),
+        const Text('Continue with Google or your roll number.', style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 20),
+        GlowCard(
+          onTap: () async {
+            setState(() => loading = true);
+            await ref.read(appControllerProvider.notifier).authenticate(
+                  email: 'student@chembuddy.app',
+                  password: 'google-sso',
+                  name: name.text.trim().isEmpty ? 'Student' : name.text.trim(),
+                  signUp: true,
+                );
+            if (mounted) setState(() => loading = false);
+          },
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.g_mobiledata, size: 32, color: AppColors.blue),
+              SizedBox(width: 8),
+              Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Center(child: Text('or', style: TextStyle(color: AppColors.textMuted))),
+        const SizedBox(height: 16),
         TextField(controller: name, decoration: const InputDecoration(hintText: 'Full name')),
         const SizedBox(height: 10),
-        TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'Email')),
+        TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'Roll number or email')),
         const SizedBox(height: 10),
         TextField(controller: password, obscureText: true, decoration: const InputDecoration(hintText: 'Password')),
         if (error != null) ...[

@@ -17,7 +17,18 @@ class AppTheme {
       ),
     );
 
-    final textTheme = GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(
+    final display = GoogleFonts.plusJakartaSansTextTheme(base.textTheme);
+    final body = GoogleFonts.dmSansTextTheme(base.textTheme);
+    final textTheme = display.copyWith(
+      bodyLarge: body.bodyLarge,
+      bodyMedium: body.bodyMedium,
+      bodySmall: body.bodySmall,
+      labelLarge: body.labelLarge,
+      labelMedium: body.labelMedium,
+      labelSmall: body.labelSmall,
+      titleMedium: body.titleMedium,
+      titleSmall: body.titleSmall,
+    ).apply(
       bodyColor: AppColors.textPrimary,
       displayColor: AppColors.textPrimary,
     );
