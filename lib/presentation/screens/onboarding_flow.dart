@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/seed_data.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_by_prajwal.dart';
 import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
@@ -31,8 +32,8 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
   String _customTeacher = '';
 
   Future<void> _next() async {
-    if (_index == 0 && _university == null) return;
-    if (_index < 3) {
+    if (_index == 1 && _university == null) return;
+    if (_index < 4) {
       await _page.nextPage(duration: const Duration(milliseconds: 320), curve: Curves.easeOut);
     }
   }
@@ -66,12 +67,15 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
         body: SafeArea(
           child: Column(
             children: [
-              if (_index < 3) ...[
+              if (_index == 0) ...[
+                const SizedBox(height: 8),
+              ] else if (_index >= 1 && _index <= 3) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   child: Row(
                     children: List.generate(3, (i) {
-                      final active = i <= _index;
+                      final step = _index - 1;
+                      final active = i <= step;
                       return Expanded(
                         child: Container(
                           height: 4,
@@ -100,6 +104,8 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                     color: AppColors.purpleBright,
                   ),
                 ),
+                const SizedBox(height: 8),
+                const AppByPrajwal(large: true),
               ],
               Expanded(
                 child: PageView(
@@ -107,6 +113,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                   physics: const NeverScrollableScrollPhysics(),
                   onPageChanged: (i) => setState(() => _index = i),
                   children: [
+                    const _SplashPage(),
                     _UniversityPage(
                       selected: _university,
                       onSelect: (v) => setState(() => _university = v),
@@ -139,14 +146,14 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: _index == 3
+                child: _index == 4
                     ? const SizedBox.shrink()
                     : PrimaryButton(
-                        label: 'Continue →',
-                        onPressed: _university == null && _index == 0
+                        label: _index == 0 ? 'Get Started' : 'Continue →',
+                        onPressed: _index == 1 && _university == null
                             ? null
                             : () async {
-                                if (_index == 2) {
+                                if (_index == 3) {
                                   if (_selected.isEmpty) return;
                                   await _finishSubjects();
                                 }
@@ -175,6 +182,51 @@ class SubjectDraft {
   final String teacher;
 
   Subject toSubject() => Subject(id: id, name: name, code: code, teacher: teacher);
+}
+
+class _SplashPage extends StatelessWidget {
+  const _SplashPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          const Spacer(),
+          const AtomLogo(size: 120),
+          const SizedBox(height: 16),
+          Text(
+            'CHEMBUDDY',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 3,
+              color: AppColors.purpleBright,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'CHEMVERSE',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              letterSpacing: 4,
+              color: AppColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const AppByPrajwal(large: true),
+          const SizedBox(height: 12),
+          const Text(
+            'Your MSc Chemistry companion for attendance, tests, and notes.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+          const Spacer(flex: 2),
+        ],
+      ),
+    );
+  }
 }
 
 class _UniversityPage extends StatelessWidget {
@@ -424,6 +476,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           onPressed: () => setState(() => signUp = !signUp),
           child: Text(signUp ? 'Already have an account? Log in' : 'New here? Create an account'),
         ),
+        const SizedBox(height: 16),
+        const AppByPrajwal(),
       ],
     );
   }

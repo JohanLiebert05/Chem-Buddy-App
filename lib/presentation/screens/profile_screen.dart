@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_by_prajwal.dart';
 import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
@@ -57,6 +58,26 @@ class ProfileScreen extends ConsumerWidget {
           label: 'Add custom subject',
           onPressed: () => _addSubject(context, ref),
         ),
+        const SectionTitle('Settings'),
+        GlowCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('About', style: TextStyle(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              const Text('Chem Buddy 1.0.0', style: TextStyle(color: AppColors.textSecondary)),
+              const SizedBox(height: 4),
+              const AppByPrajwal(large: true),
+              const SizedBox(height: 8),
+              Text(
+                SupabaseService.instance.configured
+                    ? 'Cloud sync is on.'
+                    : 'Offline Hive mode. Add keys in .env to enable Supabase.',
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 16),
         GlowCard(
           child: Row(
@@ -67,7 +88,7 @@ class ProfileScreen extends ConsumerWidget {
                 child: Text(
                   SupabaseService.instance.configured
                       ? 'Supabase connected — data syncs when you are online.'
-                      : 'Offline Hive mode. Add keys in .env to enable Supabase.',
+                      : 'Preferences stay on this device until you connect Supabase.',
                   style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                 ),
               ),
