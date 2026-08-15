@@ -12,15 +12,13 @@ class SeedSubject {
 
 class SeedData {
   static const universities = [
-    'University of Mysore',
-    'Bangalore University',
-    'Karnatak University, Dharwad',
-    'University of Hyderabad',
-    'Banaras Hindu University',
+    'IIT Bombay',
     'University of Delhi',
-    'Savitribai Phule Pune University',
-    'University of Madras',
+    'BHU Varanasi',
     'Osmania University',
+    'Dr Manmohan Singh Bengaluru City University',
+    'Jadavpur University',
+    'University of Mysore',
     'Other',
   ];
 
