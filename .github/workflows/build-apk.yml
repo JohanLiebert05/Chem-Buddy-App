@@ -6,6 +6,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -21,11 +24,13 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter build apk --release
+      - run: cp build/app/outputs/flutter-apk/app-release.apk Chem-Buddy-1.0.0.apk
       - uses: actions/upload-artifact@v4
         with:
           name: chem-buddy-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-      - if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+          path: Chem-Buddy-1.0.0.apk
+      - uses: softprops/action-gh-release@v2
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
+          tag_name: v1.0.0
+          name: Prajwal's release
+          files: Chem-Buddy-1.0.0.apk
