@@ -5,8 +5,13 @@ class HiveBoxes {
   static const subjects = 'subjects';
   static const attendance = 'attendance';
   static const timetable = 'timetable';
+  static const timetableEntries = 'timetable_entries';
   static const events = 'events';
   static const notes = 'notes';
+  static const pdfs = 'pdfs';
+  static const flashcards = 'flashcards';
+  static const reminders = 'reminders';
+  static const settings = 'settings';
 
   static Future<void> openAll() async {
     await Hive.initFlutter();
@@ -15,8 +20,13 @@ class HiveBoxes {
       Hive.openBox(subjects),
       Hive.openBox(attendance),
       Hive.openBox(timetable),
+      Hive.openBox(timetableEntries),
       Hive.openBox(events),
       Hive.openBox(notes),
+      Hive.openBox(pdfs),
+      Hive.openBox(flashcards),
+      Hive.openBox(reminders),
+      Hive.openBox(settings),
     ]);
   }
 }
@@ -26,8 +36,13 @@ class LocalStore {
   Box get subjects => Hive.box(HiveBoxes.subjects);
   Box get attendance => Hive.box(HiveBoxes.attendance);
   Box get timetable => Hive.box(HiveBoxes.timetable);
+  Box get timetableEntries => Hive.box(HiveBoxes.timetableEntries);
   Box get events => Hive.box(HiveBoxes.events);
   Box get notes => Hive.box(HiveBoxes.notes);
+  Box get pdfs => Hive.box(HiveBoxes.pdfs);
+  Box get flashcards => Hive.box(HiveBoxes.flashcards);
+  Box get reminders => Hive.box(HiveBoxes.reminders);
+  Box get settings => Hive.box(HiveBoxes.settings);
 
   Map<String, dynamic>? getProfile() {
     final raw = _profile.get('current');
@@ -43,8 +58,13 @@ class LocalStore {
       subjects.clear(),
       attendance.clear(),
       timetable.clear(),
+      timetableEntries.clear(),
       events.clear(),
       notes.clear(),
+      pdfs.clear(),
+      flashcards.clear(),
+      reminders.clear(),
+      settings.clear(),
     ]);
   }
 

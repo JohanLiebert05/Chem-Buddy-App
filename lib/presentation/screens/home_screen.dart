@@ -6,9 +6,15 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/attendance_math.dart';
 import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
+import '../widgets/reminder_editor.dart';
 import '../widgets/timetable_scanner_card.dart';
 import '../../data/models/models.dart';
+import '../../data/models/timetable_entry.dart';
 import '../providers/app_providers.dart';
+import '../screens/flashcard_editor_screen.dart';
+import '../screens/pdf_library_screen.dart';
+import '../screens/pdf_reader_screen.dart';
+import '../screens/search_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -45,6 +51,11 @@ class HomeScreen extends ConsumerWidget {
             CircleAvatar(
               backgroundColor: AppColors.surfaceElevated,
               child: Text(name.isEmpty ? 'C' : name[0].toUpperCase()),
+            ),
+            IconButton(
+              tooltip: 'Search',
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SearchScreen())),
+              icon: const Icon(Icons.search),
             ),
           ],
         ),
@@ -87,6 +98,40 @@ class HomeScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         const TimetableScannerCard(),
+        _NextClassCard(state: state),
+        if (state.reminders.isNotEmpty) ...[
+          const SectionTitle('Upcoming reminder'),
+          GlowCard(
+            child: Text(
+              '${state.reminders.first.title} · ${DateFormat('EEE d MMM, h:mm a').format(state.reminders.first.when)}',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+        if (state.pdfs.isNotEmpty) ...[
+          const SectionTitle('Recent PDFs'),
+          ...state.pdfs.take(3).map(
+                (d) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: GlowCard(
+                    onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: d))),
+                    child: Text(d.displayName, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ),
+        ],
+        if (state.pdfs.any((p) => p.favorite)) ...[
+          const SectionTitle('Favorite PDFs'),
+          ...state.pdfs.where((p) => p.favorite).take(3).map(
+                (d) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: GlowCard(
+                    onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: d))),
+                    child: Text(d.displayName, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ),
+        ],
         const SectionTitle('Subject-wise'),
         ...state.subjects.map((s) {
           final stats = repo.statsFor(s.id);
@@ -163,12 +208,15 @@ class HomeScreen extends ConsumerWidget {
           crossAxisSpacing: 10,
           childAspectRatio: 1.05,
           children: [
+            _QuickTile(icon: Icons.document_scanner_outlined, label: 'Scan Timetable', onTap: () => ref.read(shellTabProvider.notifier).state = 2),
+            _QuickTile(icon: Icons.picture_as_pdf_outlined, label: 'Add PDF', onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PdfLibraryScreen()))),
+            _QuickTile(icon: Icons.folder_open_outlined, label: 'PDF Library', onTap: () => ref.read(shellTabProvider.notifier).state = 3),
+            _QuickTile(icon: Icons.style_outlined, label: 'Flashcard', onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const FlashcardEditorScreen()))),
+            _QuickTile(icon: Icons.school_outlined, label: 'AnkiDroid', onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const FlashcardEditorScreen()))),
+            _QuickTile(icon: Icons.alarm_add_outlined, label: 'Reminder', onTap: () => ReminderEditor.show(context, ref)),
             _QuickTile(icon: Icons.fact_check_outlined, label: 'Attendance', onTap: () => ref.read(shellTabProvider.notifier).state = 1),
             _QuickTile(icon: Icons.calendar_month_outlined, label: 'Classes', onTap: () => ref.read(shellTabProvider.notifier).state = 2),
             _QuickTile(icon: Icons.quiz_outlined, label: 'Tests', onTap: () => ref.read(shellTabProvider.notifier).state = 3),
-            _QuickTile(icon: Icons.notes_outlined, label: 'Notes', onTap: () => ref.read(shellTabProvider.notifier).state = 3),
-            _QuickTile(icon: Icons.person_outline, label: 'Profile', onTap: () => ref.read(shellTabProvider.notifier).state = 4),
-            _QuickTile(icon: Icons.menu_book_outlined, label: 'Resources', onTap: () => ref.read(shellTabProvider.notifier).state = 3),
           ],
         ),
         const SectionTitle('Upcoming'),
@@ -248,6 +296,40 @@ class _QuickTile extends StatelessWidget {
           Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
         ],
       ),
+    );
+  }
+}
+
+class _NextClassCard extends StatelessWidget {
+  const _NextClassCard({required this.state});
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = state.entries.where((e) => e.weekdayNumber == now.weekday).toList()
+      ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+    TimetableEntry? next;
+    final minutes = now.hour * 60 + now.minute;
+    for (final e in today) {
+      if (e.startMinutes >= minutes) {
+        next = e;
+        break;
+      }
+    }
+    next ??= today.isEmpty ? null : today.first;
+    if (next == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionTitle('Next class'),
+        GlowCard(
+          child: Text(
+            '${next.displayName} · ${next.startTime}${next.room.isEmpty ? '' : ' · ${next.room}'}',
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
     );
   }
 }

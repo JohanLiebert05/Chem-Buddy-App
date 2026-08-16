@@ -6,6 +6,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
 import '../providers/app_providers.dart';
+import 'flashcard_editor_screen.dart';
+import 'pdf_library_screen.dart';
 
 class ResourcesScreen extends ConsumerStatefulWidget {
   const ResourcesScreen({super.key});
@@ -27,13 +29,20 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         const SizedBox(height: 12),
         Row(
           children: [
-            _TabChip(label: 'Tests & assignments', selected: tab == 0, onTap: () => setState(() => tab = 0)),
+            _TabChip(label: 'Tests', selected: tab == 0, onTap: () => setState(() => tab = 0)),
             const SizedBox(width: 8),
             _TabChip(label: 'Notes', selected: tab == 1, onTap: () => setState(() => tab = 1)),
+            const SizedBox(width: 8),
+            _TabChip(label: 'PDFs', selected: tab == 2, onTap: () => setState(() => tab = 2)),
+            const SizedBox(width: 8),
+            _TabChip(label: 'Cards', selected: tab == 3, onTap: () => setState(() => tab = 3)),
           ],
         ),
         const SizedBox(height: 16),
-        if (tab == 0) _EventsTab(state: state) else _NotesTab(state: state),
+        if (tab == 0) _EventsTab(state: state),
+        if (tab == 1) _NotesTab(state: state),
+        if (tab == 2) const PdfLibraryScreen(embedded: true),
+        if (tab == 3) const FlashcardsTab(),
       ],
     );
   }
@@ -242,6 +251,19 @@ class _NotesTab extends ConsumerWidget {
                   Row(
                     children: [
                       Expanded(child: Text(n.title, style: const TextStyle(fontWeight: FontWeight.w800))),
+                      IconButton(
+                        tooltip: 'Flashcard',
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => FlashcardEditorScreen(
+                              subjectId: n.subjectId,
+                              sourceHint: n.title,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Icons.style_outlined, color: AppColors.purpleBright),
+                      ),
                       IconButton(
                         onPressed: () => ref.read(appControllerProvider.notifier).deleteNote(n.id),
                         icon: const Icon(Icons.delete_outline, color: AppColors.danger),

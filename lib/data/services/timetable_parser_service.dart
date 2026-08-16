@@ -51,6 +51,8 @@ class TimetableParserService {
               ? _subjectCode.firstMatch(lines[lines.indexOf(line) + 1])
               : null);
       final teacherMatch = _teacher.firstMatch(line);
+      final roomMatch = RegExp(r'\b(?:Room|Lab|Hall|LT)\s*[-:]?\s*([A-Z0-9-]+)\b', caseSensitive: false).firstMatch(line);
+      final isLab = RegExp(r'\blab\b', caseSensitive: false).hasMatch(line);
 
       entries.add(
         TimetableEntry(
@@ -60,6 +62,8 @@ class TimetableParserService {
           endTime: _normalizeTime(timeMatch.group(2)!),
           subjectCode: (codeMatch?.group(1) ?? '').replaceAll(RegExp(r'\s+'), ' ').toUpperCase(),
           teacherName: teacherMatch?.group(1)?.trim() ?? '',
+          room: roomMatch == null ? '' : '${roomMatch.group(0)}',
+          type: isLab ? 'lab' : 'lecture',
         ),
       );
     }

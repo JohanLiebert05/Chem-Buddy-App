@@ -10,7 +10,7 @@ class AppByPrajwal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Made by Prajwal',
+      'Made by Prajwal A Kambar',
       textAlign: TextAlign.center,
       style: TextStyle(
         color: AppColors.textMuted,

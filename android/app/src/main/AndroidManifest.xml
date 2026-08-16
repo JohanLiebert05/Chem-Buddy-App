@@ -43,11 +43,23 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <package android:name="com.ichi2.anki" />
+        <intent>
+            <action android:name="org.openintents.action.CREATE_FLASHCARD"/>
+        </intent>
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE"/>
         </intent>
         <intent>
             <action android:name="android.intent.action.GET_CONTENT"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND"/>
+            <data android:mimeType="*/*"/>
         </intent>
     </queries>
 </manifest>

@@ -6,15 +6,27 @@ class TimetableEntry {
     required this.startTime,
     required this.endTime,
     required this.subjectCode,
-    required this.teacherName,
+    this.subject = '',
+    this.teacherName = '',
+    this.room = '',
+    this.type = 'lecture',
+    this.notes = '',
+    this.colorHex = 0xFFA78BFA,
   });
 
   final String id;
-  final String dayOfWeek; // e.g. "Monday"
-  final String startTime; // e.g. "10:00 AM"
-  final String endTime; // e.g. "11:00 AM"
-  final String subjectCode; // e.g. "OCH501"
-  final String teacherName; // e.g. "Dr. Sharma"
+  final String dayOfWeek;
+  final String startTime;
+  final String endTime;
+  final String subjectCode;
+  final String subject;
+  final String teacherName;
+  final String room;
+  final String type; // lecture | lab | tutorial | other
+  final String notes;
+  final int colorHex;
+
+  String get displayName => subject.trim().isNotEmpty ? subject : subjectCode;
 
   TimetableEntry copyWith({
     String? id,
@@ -22,7 +34,12 @@ class TimetableEntry {
     String? startTime,
     String? endTime,
     String? subjectCode,
+    String? subject,
     String? teacherName,
+    String? room,
+    String? type,
+    String? notes,
+    int? colorHex,
   }) {
     return TimetableEntry(
       id: id ?? this.id,
@@ -30,11 +47,43 @@ class TimetableEntry {
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       subjectCode: subjectCode ?? this.subjectCode,
+      subject: subject ?? this.subject,
       teacherName: teacherName ?? this.teacherName,
+      room: room ?? this.room,
+      type: type ?? this.type,
+      notes: notes ?? this.notes,
+      colorHex: colorHex ?? this.colorHex,
     );
   }
 
-  /// Monday = 1 … Sunday = 7 (DateTime.weekday).
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'dayOfWeek': dayOfWeek,
+        'startTime': startTime,
+        'endTime': endTime,
+        'subjectCode': subjectCode,
+        'subject': subject,
+        'teacherName': teacherName,
+        'room': room,
+        'type': type,
+        'notes': notes,
+        'colorHex': colorHex,
+      };
+
+  factory TimetableEntry.fromJson(Map<String, dynamic> json) => TimetableEntry(
+        id: json['id'] as String,
+        dayOfWeek: json['dayOfWeek'] as String? ?? 'Monday',
+        startTime: json['startTime'] as String? ?? '09:00 AM',
+        endTime: json['endTime'] as String? ?? '10:00 AM',
+        subjectCode: json['subjectCode'] as String? ?? '',
+        subject: json['subject'] as String? ?? '',
+        teacherName: json['teacherName'] as String? ?? '',
+        room: json['room'] as String? ?? '',
+        type: json['type'] as String? ?? 'lecture',
+        notes: json['notes'] as String? ?? '',
+        colorHex: json['colorHex'] as int? ?? 0xFFA78BFA,
+      );
+
   int get weekdayNumber {
     const map = {
       'monday': DateTime.monday,

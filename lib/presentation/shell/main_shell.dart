@@ -5,7 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/hex_background.dart';
 import '../providers/app_providers.dart';
 import '../screens/attendance_screen.dart';
-import '../screens/calendar_screen.dart';
+import '../screens/classes_hub_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/resources_screen.dart';
@@ -16,7 +16,7 @@ class MainShell extends ConsumerWidget {
   static const _pages = [
     HomeScreen(),
     AttendanceScreen(),
-    CalendarScreen(),
+    ClassesHubScreen(),
     ResourcesScreen(),
     ProfileScreen(),
   ];

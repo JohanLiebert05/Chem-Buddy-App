@@ -4,6 +4,7 @@ import '../../core/constants/seed_data.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/attendance_math.dart';
 import '../local/local_store.dart';
+import '../models/library_models.dart';
 import '../models/models.dart';
 import '../models/timetable_entry.dart';
 import '../remote/notification_service.dart';
@@ -268,23 +269,44 @@ class ChemRepository {
 
   Future<void> applyScannedTimetable(List<TimetableEntry> entries) async {
     await store.timetable.clear();
+    await store.timetableEntries.clear();
     for (final entry in entries) {
-      if (entry.subjectCode.trim().isEmpty && entry.teacherName.trim().isEmpty) {
+      if (entry.subjectCode.trim().isEmpty &&
+          entry.subject.trim().isEmpty &&
+          entry.teacherName.trim().isEmpty) {
         continue;
       }
-      final subject = await _matchOrCreateSubject(entry);
-      final slot = TimetableSlot(
-        id: entry.id.isEmpty ? _uuid.v4() : entry.id,
-        subjectId: subject.id,
-        weekday: entry.weekdayNumber,
-        startMinutes: entry.startMinutes,
-        endMinutes: entry.endMinutes <= entry.startMinutes
-            ? entry.startMinutes + 60
-            : entry.endMinutes,
-        room: entry.teacherName,
-      );
-      await store.put(store.timetable, slot.id, slot.toJson());
+      await upsertTimetableEntry(entry);
     }
+  }
+
+  List<TimetableEntry> timetableEntries() {
+    final list = store.all(store.timetableEntries).map(TimetableEntry.fromJson).toList();
+    list.sort((a, b) {
+      final d = a.weekdayNumber.compareTo(b.weekdayNumber);
+      if (d != 0) return d;
+      return a.startMinutes.compareTo(b.startMinutes);
+    });
+    return list;
+  }
+
+  Future<void> upsertTimetableEntry(TimetableEntry entry) async {
+    await store.put(store.timetableEntries, entry.id, entry.toJson());
+    final subject = await _matchOrCreateSubject(entry);
+    final slot = TimetableSlot(
+      id: entry.id,
+      subjectId: subject.id,
+      weekday: entry.weekdayNumber,
+      startMinutes: entry.startMinutes,
+      endMinutes: entry.endMinutes <= entry.startMinutes ? entry.startMinutes + 60 : entry.endMinutes,
+      room: entry.room.isNotEmpty ? entry.room : entry.teacherName,
+    );
+    await store.put(store.timetable, slot.id, slot.toJson());
+  }
+
+  Future<void> deleteTimetableEntry(String id) async {
+    await store.delete(store.timetableEntries, id);
+    await store.delete(store.timetable, id);
   }
 
   Future<Subject> _matchOrCreateSubject(TimetableEntry entry) async {
@@ -301,7 +323,9 @@ class ChemRepository {
     }
     final created = Subject(
       id: _uuid.v4(),
-      name: code.isEmpty ? 'Class' : code,
+      name: entry.subject.trim().isNotEmpty
+          ? entry.subject.trim()
+          : (code.isEmpty ? 'Class' : code),
       code: code.isEmpty ? 'SCAN' : code,
       teacher: entry.teacherName,
       colorHex: AppColors.subjectPalette[subjects().length % AppColors.subjectPalette.length].toARGB32(),
@@ -309,6 +333,47 @@ class ChemRepository {
     await upsertSubject(created);
     return created;
   }
+
+  List<PdfDoc> pdfs() {
+    final list = store.all(store.pdfs).map(PdfDoc.fromJson).toList();
+    list.sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
+    return list;
+  }
+
+  Future<void> upsertPdf(PdfDoc doc) => store.put(store.pdfs, doc.id, doc.toJson());
+
+  Future<void> deletePdf(String id) => store.delete(store.pdfs, id);
+
+  List<FlashcardDraft> flashcards() {
+    final list = store.all(store.flashcards).map(FlashcardDraft.fromJson).toList();
+    list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return list;
+  }
+
+  Future<void> upsertFlashcard(FlashcardDraft card) =>
+      store.put(store.flashcards, card.id, card.toJson());
+
+  Future<void> deleteFlashcard(String id) => store.delete(store.flashcards, id);
+
+  List<AppReminder> reminders() {
+    final list = store.all(store.reminders).map(AppReminder.fromJson).toList();
+    list.sort((a, b) => a.when.compareTo(b.when));
+    return list;
+  }
+
+  Future<void> upsertReminder(AppReminder reminder) =>
+      store.put(store.reminders, reminder.id, reminder.toJson());
+
+  Future<void> deleteReminder(String id) => store.delete(store.reminders, id);
+
+  NotificationPrefs notificationPrefs() {
+    final raw = store.settings.get('notifications');
+    if (raw is Map) return NotificationPrefs.fromJson(Map<String, dynamic>.from(raw));
+    return const NotificationPrefs();
+  }
+
+  Future<void> saveNotificationPrefs(NotificationPrefs prefs) =>
+      store.settings.put('notifications', prefs.toJson());
 
   Future<void> loginLocal({required String email, required String name}) async {
     final current = profile();

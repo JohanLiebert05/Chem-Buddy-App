@@ -30,17 +30,26 @@ class _TimetableScannerCardState extends ConsumerState<TimetableScannerCard> {
       final entries = _parser.parse(text);
       if (!mounted) return;
       setState(() => _busy = false);
+      if (entries.length == 1 &&
+          entries.first.subjectCode.isEmpty &&
+          entries.first.subject.isEmpty &&
+          text.trim().length < 12) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Couldn't recognize the timetable clearly. Please crop the image or enter the timetable manually."),
+          ),
+        );
+      }
       await TimetableReviewDialog.show(context, ref, entries: entries, rawText: text);
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      final fallback = _parser.parse('');
-      await TimetableReviewDialog.show(
-        context,
-        ref,
-        entries: fallback,
-        rawText: e.toString(),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Couldn't recognize the timetable clearly. Please crop the image or enter the timetable manually."),
+        ),
       );
+      await TimetableReviewDialog.show(context, ref, entries: _parser.parse(''), rawText: '');
     }
   }
 

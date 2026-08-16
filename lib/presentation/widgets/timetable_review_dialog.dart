@@ -14,6 +14,7 @@ class TimetableReviewDialog {
     WidgetRef ref, {
     required List<TimetableEntry> entries,
     String rawText = '',
+    bool replaceAll = true,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -22,16 +23,17 @@ class TimetableReviewDialog {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => _ReviewSheet(initial: entries, rawText: rawText),
+      builder: (_) => _ReviewSheet(initial: entries, rawText: rawText, replaceAll: replaceAll),
     );
   }
 }
 
 class _ReviewSheet extends ConsumerStatefulWidget {
-  const _ReviewSheet({required this.initial, required this.rawText});
+  const _ReviewSheet({required this.initial, required this.rawText, required this.replaceAll});
 
   final List<TimetableEntry> initial;
   final String rawText;
+  final bool replaceAll;
 
   @override
   ConsumerState<_ReviewSheet> createState() => _ReviewSheetState();
@@ -113,11 +115,23 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
                           _field('End', row.endTime, (v) {
                             _rows[i] = _rows[i].copyWith(endTime: v);
                           }),
+                          _field('Subject', row.subject, (v) {
+                            _rows[i] = _rows[i].copyWith(subject: v);
+                          }),
                           _field('Subject code', row.subjectCode, (v) {
                             _rows[i] = _rows[i].copyWith(subjectCode: v);
                           }),
                           _field('Teacher', row.teacherName, (v) {
                             _rows[i] = _rows[i].copyWith(teacherName: v);
+                          }),
+                          _field('Room', row.room, (v) {
+                            _rows[i] = _rows[i].copyWith(room: v);
+                          }),
+                          _field('Type (lecture/lab/tutorial)', row.type, (v) {
+                            _rows[i] = _rows[i].copyWith(type: v);
+                          }),
+                          _field('Notes', row.notes, (v) {
+                            _rows[i] = _rows[i].copyWith(notes: v);
                           }),
                         ],
                       ),
@@ -150,11 +164,18 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
               onPressed: () async {
                 setState(() => _saving = true);
                 final messenger = ScaffoldMessenger.of(context);
-                await ref.read(appControllerProvider.notifier).applyScannedTimetable(_rows);
+                final controller = ref.read(appControllerProvider.notifier);
+                if (widget.replaceAll) {
+                  await controller.applyScannedTimetable(_rows);
+                } else {
+                  for (final row in _rows) {
+                    await controller.saveTimetableEntry(row);
+                  }
+                }
                 if (!context.mounted) return;
                 Navigator.pop(context);
                 messenger.showSnackBar(
-                  const SnackBar(content: Text('Timetable updated from your image.')),
+                  SnackBar(content: Text(widget.replaceAll ? 'Timetable saved.' : 'Class saved.')),
                 );
               },
             ),

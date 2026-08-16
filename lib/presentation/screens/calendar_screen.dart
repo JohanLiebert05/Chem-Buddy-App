@@ -8,7 +8,9 @@ import '../../data/models/models.dart';
 import '../providers/app_providers.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
-  const CalendarScreen({super.key});
+  const CalendarScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   ConsumerState<CalendarScreen> createState() => _CalendarScreenState();
@@ -26,10 +28,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final dayEvents = state.events.where((e) => _sameDay(e.dueDate, _selected)).toList();
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+      padding: EdgeInsets.fromLTRB(20, widget.embedded ? 0 : 12, 20, 100),
       children: [
-        const Text('Classes', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 12),
+        if (!widget.embedded) ...[
+          const Text('Classes', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 12),
+        ],
         GlowCard(
           child: Column(
             children: [

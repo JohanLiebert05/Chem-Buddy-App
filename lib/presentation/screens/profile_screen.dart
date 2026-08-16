@@ -8,6 +8,7 @@ import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
 import '../../data/remote/supabase_service.dart';
 import '../providers/app_providers.dart';
+import 'notification_settings_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -38,8 +39,11 @@ class ProfileScreen extends ConsumerWidget {
           (s) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: GlowCard(
+              onTap: () => _addSubject(context, ref, existing: s),
               child: Row(
                 children: [
+                  Container(width: 10, height: 10, decoration: BoxDecoration(color: Color(s.colorHex), shape: BoxShape.circle)),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,6 +52,10 @@ class ProfileScreen extends ConsumerWidget {
                         Text('${s.code}${s.teacher.isEmpty ? '' : ' · ${s.teacher}'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                       ],
                     ),
+                  ),
+                  IconButton(
+                    onPressed: () => ref.read(appControllerProvider.notifier).deleteSubject(s.id),
+                    icon: const Icon(Icons.delete_outline, color: AppColors.danger),
                   ),
                 ],
               ),
@@ -59,6 +67,18 @@ class ProfileScreen extends ConsumerWidget {
           onPressed: () => _addSubject(context, ref),
         ),
         const SectionTitle('Settings'),
+        GlowCard(
+          onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const NotificationSettingsScreen())),
+          child: const Row(
+            children: [
+              Icon(Icons.notifications_outlined, color: AppColors.purpleBright),
+              SizedBox(width: 12),
+              Expanded(child: Text('Notifications', style: TextStyle(fontWeight: FontWeight.w700))),
+              Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         GlowCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,10 +125,11 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _addSubject(BuildContext context, WidgetRef ref) async {
-    final name = TextEditingController();
-    final code = TextEditingController();
-    final teacher = TextEditingController();
+  Future<void> _addSubject(BuildContext context, WidgetRef ref, {Subject? existing}) async {
+    final name = TextEditingController(text: existing?.name ?? '');
+    final code = TextEditingController(text: existing?.code ?? '');
+    final teacher = TextEditingController(text: existing?.teacher ?? '');
+    var color = existing?.colorHex ?? AppColors.subjectPalette.first.toARGB32();
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.surface,
@@ -117,34 +138,55 @@ class ProfileScreen extends ConsumerWidget {
       builder: (ctx) {
         return Padding(
           padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(ctx).viewInsets.bottom + 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Custom subject', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-              const SizedBox(height: 12),
-              TextField(controller: name, decoration: const InputDecoration(hintText: 'Name')),
-              const SizedBox(height: 8),
-              TextField(controller: code, decoration: const InputDecoration(hintText: 'Code')),
-              const SizedBox(height: 8),
-              TextField(controller: teacher, decoration: const InputDecoration(hintText: 'Teacher')),
-              const SizedBox(height: 12),
-              PrimaryButton(
-                label: 'Save',
-                onPressed: () async {
-                  if (name.text.trim().isEmpty || code.text.trim().isEmpty) return;
-                  final id = ref.read(chemRepositoryProvider).newId();
-                  await ref.read(appControllerProvider.notifier).saveSubject(
-                        Subject(
-                          id: id,
-                          name: name.text.trim(),
-                          code: code.text.trim(),
-                          teacher: teacher.text.trim(),
+          child: StatefulBuilder(
+            builder: (context, setModal) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(existing == null ? 'Custom subject' : 'Edit subject', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                  const SizedBox(height: 12),
+                  TextField(controller: name, decoration: const InputDecoration(hintText: 'Name')),
+                  const SizedBox(height: 8),
+                  TextField(controller: code, decoration: const InputDecoration(hintText: 'Code')),
+                  const SizedBox(height: 8),
+                  TextField(controller: teacher, decoration: const InputDecoration(hintText: 'Teacher')),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final c in AppColors.subjectPalette)
+                        GestureDetector(
+                          onTap: () => setModal(() => color = c.toARGB32()),
+                          child: CircleAvatar(
+                            radius: 12,
+                            backgroundColor: c,
+                            child: color == c.toARGB32() ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
+                          ),
                         ),
-                      );
-                  if (ctx.mounted) Navigator.pop(ctx);
-                },
-              ),
-            ],
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  PrimaryButton(
+                    label: 'Save',
+                    onPressed: () async {
+                      if (name.text.trim().isEmpty || code.text.trim().isEmpty) return;
+                      final id = existing?.id ?? ref.read(chemRepositoryProvider).newId();
+                      await ref.read(appControllerProvider.notifier).saveSubject(
+                            Subject(
+                              id: id,
+                              name: name.text.trim(),
+                              code: code.text.trim(),
+                              teacher: teacher.text.trim(),
+                              colorHex: color,
+                              isElective: existing?.isElective ?? false,
+                            ),
+                          );
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    },
+                  ),
+                ],
+              );
+            },
           ),
         );
       },
