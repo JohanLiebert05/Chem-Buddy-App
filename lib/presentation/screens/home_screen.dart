@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/attendance_math.dart';
 import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
+import '../widgets/timetable_scanner_card.dart';
 import '../../data/models/models.dart';
 import '../providers/app_providers.dart';
 
@@ -84,6 +85,8 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        const TimetableScannerCard(),
         const SectionTitle('Subject-wise'),
         ...state.subjects.map((s) {
           final stats = repo.statsFor(s.id);

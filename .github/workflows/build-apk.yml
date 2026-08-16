@@ -24,13 +24,13 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter build apk --release
-      - run: cp build/app/outputs/flutter-apk/app-release.apk Chem-Buddy-1.0.0.apk
+      - run: cp build/app/outputs/flutter-apk/app-release.apk Chem-Buddy-2.0.0.apk
       - uses: actions/upload-artifact@v4
         with:
           name: chem-buddy-apk
-          path: Chem-Buddy-1.0.0.apk
+          path: Chem-Buddy-2.0.0.apk
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: Prajwal's release
-          files: Chem-Buddy-1.0.0.apk
+          tag_name: v2.0.0
+          name: Chem Buddy 2.0
+          files: Chem-Buddy-2.0.0.apk

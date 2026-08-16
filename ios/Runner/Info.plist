@@ -24,6 +24,12 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Chem Buddy uses the camera to photograph your university timetable.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Chem Buddy needs photo access to upload your timetable image.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Chem Buddy may save cropped timetable photos on this device.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

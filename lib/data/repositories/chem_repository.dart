@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/attendance_math.dart';
 import '../local/local_store.dart';
 import '../models/models.dart';
+import '../models/timetable_entry.dart';
 import '../remote/notification_service.dart';
 import '../remote/supabase_service.dart';
 
@@ -263,6 +264,50 @@ class ChemRepository {
   Future<void> deleteNote(String id) async {
     await store.delete(store.notes, id);
     await remote.remove('notes', id);
+  }
+
+  Future<void> applyScannedTimetable(List<TimetableEntry> entries) async {
+    await store.timetable.clear();
+    for (final entry in entries) {
+      if (entry.subjectCode.trim().isEmpty && entry.teacherName.trim().isEmpty) {
+        continue;
+      }
+      final subject = await _matchOrCreateSubject(entry);
+      final slot = TimetableSlot(
+        id: entry.id.isEmpty ? _uuid.v4() : entry.id,
+        subjectId: subject.id,
+        weekday: entry.weekdayNumber,
+        startMinutes: entry.startMinutes,
+        endMinutes: entry.endMinutes <= entry.startMinutes
+            ? entry.startMinutes + 60
+            : entry.endMinutes,
+        room: entry.teacherName,
+      );
+      await store.put(store.timetable, slot.id, slot.toJson());
+    }
+  }
+
+  Future<Subject> _matchOrCreateSubject(TimetableEntry entry) async {
+    final code = entry.subjectCode.trim().toUpperCase();
+    for (final subject in subjects()) {
+      if (subject.code.toUpperCase() == code ||
+          (code.isNotEmpty && subject.name.toUpperCase().contains(code))) {
+        if (entry.teacherName.isNotEmpty && subject.teacher.isEmpty) {
+          await upsertSubject(subject.copyWith(teacher: entry.teacherName));
+          return subject.copyWith(teacher: entry.teacherName);
+        }
+        return subject;
+      }
+    }
+    final created = Subject(
+      id: _uuid.v4(),
+      name: code.isEmpty ? 'Class' : code,
+      code: code.isEmpty ? 'SCAN' : code,
+      teacher: entry.teacherName,
+      colorHex: AppColors.subjectPalette[subjects().length % AppColors.subjectPalette.length].toARGB32(),
+    );
+    await upsertSubject(created);
+    return created;
   }
 
   Future<void> loginLocal({required String email, required String name}) async {

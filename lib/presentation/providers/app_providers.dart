@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/seed_data.dart';
 import '../../data/local/local_store.dart';
 import '../../data/models/models.dart';
+import '../../data/models/timetable_entry.dart';
 import '../../data/remote/notification_service.dart';
 import '../../data/remote/supabase_service.dart';
 import '../../data/repositories/chem_repository.dart';
@@ -139,6 +140,11 @@ class AppController extends Notifier<AppState> {
       status: status,
       slotId: slotId,
     );
+    await reload();
+  }
+
+  Future<void> applyScannedTimetable(List<TimetableEntry> entries) async {
+    await _repo.applyScannedTimetable(entries);
     await reload();
   }
 
