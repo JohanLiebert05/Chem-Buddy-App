@@ -96,7 +96,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                 const SizedBox(height: 12),
                 const AtomLogo(size: 72),
                 Text(
-                  'CHEMVERSE',
+                  'CHEM BUDDY',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
@@ -182,46 +182,73 @@ class SubjectDraft {
   Subject toSubject() => Subject(id: id, name: name, code: code, teacher: teacher);
 }
 
-class _SplashPage extends StatelessWidget {
+class _SplashPage extends StatefulWidget {
   const _SplashPage();
 
   @override
+  State<_SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<_SplashPage> with SingleTickerProviderStateMixin {
+  late final AnimationController _intro;
+
+  @override
+  void initState() {
+    super.initState();
+    _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..forward();
+  }
+
+  @override
+  void dispose() {
+    _intro.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final fade = CurvedAnimation(parent: _intro, curve: Curves.easeOut);
+    final slide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(fade);
     return Padding(
       padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          const Spacer(),
-          const AtomLogo(size: 120),
-          const SizedBox(height: 16),
-          Text(
-            'CHEMBUDDY',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 32,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 3,
-              color: AppColors.purpleBright,
-            ),
+      child: FadeTransition(
+        opacity: fade,
+        child: SlideTransition(
+          position: slide,
+          child: Column(
+            children: [
+              const Spacer(),
+              const AtomLogo(size: 120, animated: true),
+              const SizedBox(height: 16),
+              Text(
+                'CHEM BUDDY',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 3,
+                  color: AppColors.purpleBright,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'BY PRAJWAL A KAMBAR',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  letterSpacing: 3,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const AppByPrajwal(large: true),
+              const SizedBox(height: 12),
+              const Text(
+                'Your MSc Chemistry companion for attendance, tests, and notes.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const Spacer(flex: 2),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            'CHEMVERSE',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              letterSpacing: 4,
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: 16),
-          const AppByPrajwal(large: true),
-          const SizedBox(height: 12),
-          const Text(
-            'Your MSc Chemistry companion for attendance, tests, and notes.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary),
-          ),
-          const Spacer(flex: 2),
-        ],
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags:
       - 'v*'
 
@@ -24,13 +25,16 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter build apk --release
-      - run: cp build/app/outputs/flutter-apk/app-release.apk Chem-Buddy-2.0.0.apk
+      - run: cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-by-Prajwal-A-Kambar.apk"
       - uses: actions/upload-artifact@v4
         with:
           name: chem-buddy-apk
-          path: Chem-Buddy-2.0.0.apk
+          path: Chem-Buddy-by-Prajwal-A-Kambar.apk
       - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: v2.0.0
-          name: Chem Buddy 2.0
-          files: Chem-Buddy-2.0.0.apk
+          files: Chem-Buddy-by-Prajwal-A-Kambar.apk
+          name: Chem Buddy by Prajwal A Kambar
+          body: |
+            Chem Buddy by Prajwal A Kambar — Version 2 Android APK.
+            Install this build to test timetable scanning, notifications, the PDF library, and AnkiDroid.

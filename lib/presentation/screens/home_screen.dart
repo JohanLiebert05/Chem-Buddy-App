@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/attendance_math.dart';
+import '../../core/widgets/animated_dashboard.dart';
 import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../widgets/reminder_editor.dart';
@@ -29,7 +30,7 @@ class HomeScreen extends ConsumerWidget {
     final upcoming = state.events.where((e) => !e.completed).take(3).toList();
     final name = state.profile.fullName.isEmpty ? 'Chemist' : state.profile.fullName.split(' ').first;
 
-    return ListView(
+    return AnimatedDashboardList(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       children: [
         Row(

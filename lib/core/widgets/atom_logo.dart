@@ -5,17 +5,56 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 class AtomLogo extends StatelessWidget {
-  const AtomLogo({super.key, this.size = 88});
+  const AtomLogo({super.key, this.size = 88, this.animated = false});
 
   final double size;
+  final bool animated;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    final mark = SizedBox(
       width: size,
       height: size,
       child: CustomPaint(painter: _AtomPainter()),
     );
+    if (!animated) return mark;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.86, end: 1),
+      duration: const Duration(milliseconds: 900),
+      curve: Curves.easeOutCubic,
+      builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+      child: _SpinningAtom(size: size, child: mark),
+    );
+  }
+}
+
+class _SpinningAtom extends StatefulWidget {
+  const _SpinningAtom({required this.size, required this.child});
+  final double size;
+  final Widget child;
+
+  @override
+  State<_SpinningAtom> createState() => _SpinningAtomState();
+}
+
+class _SpinningAtomState extends State<_SpinningAtom> with SingleTickerProviderStateMixin {
+  late final AnimationController _spin;
+
+  @override
+  void initState() {
+    super.initState();
+    _spin = AnimationController(vsync: this, duration: const Duration(seconds: 12))..repeat();
+  }
+
+  @override
+  void dispose() {
+    _spin.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(turns: _spin, child: widget.child);
   }
 }
 

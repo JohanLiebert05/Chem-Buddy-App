@@ -28,7 +28,7 @@ class ChemBuddyApp extends ConsumerWidget {
     }
 
     return MaterialApp(
-      title: 'Chem Buddy',
+      title: 'Chem Buddy by Prajwal A Kambar',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       themeMode: ThemeMode.dark,

@@ -1,4 +1,4 @@
-# Chem Buddy
+# Chem Buddy by Prajwal A Kambar
 
 Dark-themed Flutter app for MSc Chemistry students. Version 2 keeps Version 1 attendance, tests, notes, and onboarding, and adds a smart timetable, local notifications, a PDF library with an in-app reader, flashcards, and AnkiDroid integration.
 
