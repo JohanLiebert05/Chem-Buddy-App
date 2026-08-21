@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../utils/haptics.dart';
 
 class GlowCard extends StatelessWidget {
   const GlowCard({
@@ -37,7 +38,13 @@ class GlowCard extends StatelessWidget {
       ),
     );
     if (onTap == null) return card;
-    return GestureDetector(onTap: onTap, child: card);
+    return GestureDetector(
+      onTap: () {
+        AppHaptics.selection();
+        onTap!();
+      },
+      child: card,
+    );
   }
 }
 
@@ -69,7 +76,12 @@ class PrimaryButton extends StatelessWidget {
           ],
         ),
         child: ElevatedButton(
-          onPressed: loading ? null : onPressed,
+          onPressed: loading || onPressed == null
+              ? null
+              : () {
+                  AppHaptics.confirm();
+                  onPressed!();
+                },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,

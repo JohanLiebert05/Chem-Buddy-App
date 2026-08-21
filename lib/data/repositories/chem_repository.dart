@@ -76,30 +76,6 @@ class ChemRepository {
       await upsertSubject(subject);
       i++;
     }
-    await _seedTimetable();
-  }
-
-  Future<void> _seedTimetable() async {
-    final subs = subjects();
-    if (subs.isEmpty) return;
-    const starts = [9 * 60, 11 * 60, 14 * 60];
-    var idx = 0;
-    for (var day = DateTime.monday; day <= DateTime.friday; day++) {
-      for (var slot = 0; slot < 2; slot++) {
-        final subject = subs[idx % subs.length];
-        final start = starts[slot];
-        final item = TimetableSlot(
-          id: _uuid.v4(),
-          subjectId: subject.id,
-          weekday: day,
-          startMinutes: start,
-          endMinutes: start + 60,
-          room: 'Lab ${(slot + 1)}',
-        );
-        await store.put(store.timetable, item.id, item.toJson());
-        idx++;
-      }
-    }
   }
 
   List<TimetableSlot> timetable() =>
@@ -107,7 +83,29 @@ class ChemRepository {
         ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
 
   List<TimetableSlot> slotsFor(DateTime day) {
-    return timetable().where((s) => s.weekday == day.weekday).toList();
+    final all = timetable();
+    final entries = timetableEntries();
+    if (entries.isNotEmpty) {
+      final ids = entries.map((e) => e.id).toSet();
+      return all.where((s) => s.weekday == day.weekday && ids.contains(s.id)).toList()
+        ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+    }
+    return all.where((s) => s.weekday == day.weekday).toList()
+      ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+  }
+
+  /// Remaining scheduled classes over the next ~4 weeks, from the real timetable.
+  int remainingClasses({String? subjectId}) {
+    var slots = timetable();
+    final entries = timetableEntries();
+    if (entries.isNotEmpty) {
+      final ids = entries.map((e) => e.id).toSet();
+      slots = slots.where((s) => ids.contains(s.id)).toList();
+    }
+    if (subjectId != null) {
+      slots = slots.where((s) => s.subjectId == subjectId).toList();
+    }
+    return slots.length * 4;
   }
 
   List<AttendanceRecord> attendance() =>

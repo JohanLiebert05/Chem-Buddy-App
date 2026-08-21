@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
@@ -20,7 +21,8 @@ class AttendanceScreen extends ConsumerWidget {
     final week = repo.lastSevenDayPercents();
     final today = DateTime.now();
     final slots = repo.slotsFor(today);
-    final projected = overall.projectedPercent(remaining: 12);
+    final remaining = repo.remainingClasses();
+    final projected = overall.projectedPercent(remaining: remaining);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
@@ -89,7 +91,12 @@ class AttendanceScreen extends ConsumerWidget {
         ),
         const SectionTitle("Mark today's classes"),
         if (slots.isEmpty)
-          const GlowCard(child: Text('No timetable slots for today.', style: TextStyle(color: AppColors.textSecondary))),
+          const GlowCard(
+            child: Text(
+              'No classes on today’s timetable. Scan or add classes in the Classes tab — attendance follows your real schedule, not a fixed two-class day.',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
         ...slots.map((slot) {
           final subject = state.subjects.cast<Subject?>().firstWhere((s) => s!.id == slot.subjectId, orElse: () => null);
           final current = repo.recordFor(slotId: slot.id, date: today);
@@ -150,7 +157,7 @@ class AttendanceScreen extends ConsumerWidget {
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                   Text(
-                    'Projected if you attend remaining: ${stats.projectedPercent(remaining: 8).round()}%',
+                    'Projected if you attend remaining ${repo.remainingClasses(subjectId: s.id)} classes: ${stats.projectedPercent(remaining: repo.remainingClasses(subjectId: s.id)).round()}%',
                     style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                   ),
                 ],
@@ -200,7 +207,14 @@ class _StatusButton extends StatelessWidget {
       AttendanceStatus.postponed => AppColors.postponed,
     };
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        if (status == AttendanceStatus.absent) {
+          AppHaptics.warn();
+        } else {
+          AppHaptics.tap();
+        }
+        onTap();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(

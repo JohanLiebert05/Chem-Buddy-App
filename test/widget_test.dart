@@ -102,4 +102,11 @@ OCH501 10:00 AM - 12:00 PM Lab Room B2
     expect(FlashcardUiState.values.contains(FlashcardUiState.submitted), true);
     expect(FlashcardUiState.easy.name, 'easy');
   });
+
+  test('projected attendance uses remaining class count', () {
+    const stats = SubjectAttendanceStats(present: 6, absent: 2, postponed: 0);
+    expect(stats.percent, 75);
+    expect(stats.projectedPercent(remaining: 0), 75);
+    expect(stats.projectedPercent(remaining: 4), closeTo(83.333, 0.01));
+  });
 }

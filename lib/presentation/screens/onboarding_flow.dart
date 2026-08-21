@@ -444,31 +444,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             children: [
               Text(signUp ? 'Create your account' : 'Welcome back', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
-              const Text('Continue with Google or your roll number.', style: TextStyle(color: AppColors.textSecondary)),
+              const Text('Sign in with your name, roll number or email, and a password.', style: TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 20),
-              GlowCard(
-                onTap: () async {
-                  setState(() => loading = true);
-                  await ref.read(appControllerProvider.notifier).authenticate(
-                        email: 'student@chembuddy.app',
-                        password: 'google-sso',
-                        name: name.text.trim().isEmpty ? 'Student' : name.text.trim(),
-                        signUp: true,
-                      );
-                  if (mounted) setState(() => loading = false);
-                },
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.g_mobiledata, size: 32, color: AppColors.blue),
-                    SizedBox(width: 8),
-                    Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w700)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Center(child: Text('or', style: TextStyle(color: AppColors.textMuted))),
-              const SizedBox(height: 16),
               TextField(controller: name, decoration: const InputDecoration(hintText: 'Full name')),
               const SizedBox(height: 10),
               TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'Roll number or email')),

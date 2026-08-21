@@ -85,7 +85,7 @@ class ProfileScreen extends ConsumerWidget {
             children: [
               const Text('About', style: TextStyle(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
-              const Text('Chem Buddy 2.0 by Prajwal A Kambar', style: TextStyle(color: AppColors.textSecondary)),
+              const Text('Chem Buddy 2.5.0 by Prajwal A Kambar', style: TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 8),
               Text(
                 SupabaseService.instance.configured
