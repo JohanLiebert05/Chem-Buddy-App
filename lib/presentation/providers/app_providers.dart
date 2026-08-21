@@ -8,6 +8,7 @@ import '../../data/models/timetable_entry.dart';
 import '../../data/remote/notification_service.dart';
 import '../../data/remote/supabase_service.dart';
 import '../../data/repositories/chem_repository.dart';
+import '../../data/services/flashcard_service.dart';
 import '../../data/services/pdf_library_service.dart';
 
 final localStoreProvider = Provider<LocalStore>((ref) => LocalStore());
@@ -21,6 +22,10 @@ final chemRepositoryProvider = Provider<ChemRepository>((ref) {
 });
 
 final appControllerProvider = NotifierProvider<AppController, AppState>(AppController.new);
+
+final flashcardServiceProvider = Provider<FlashcardService>((ref) {
+  return FlashcardService(store: ref.watch(localStoreProvider));
+});
 
 final shellTabProvider = StateProvider<int>((ref) => 0);
 

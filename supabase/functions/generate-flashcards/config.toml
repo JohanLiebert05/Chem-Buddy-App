@@ -1,0 +1,3 @@
+[functions]
+  [functions.generate-flashcards]
+    verify_jwt = true

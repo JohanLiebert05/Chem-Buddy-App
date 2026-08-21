@@ -16,6 +16,7 @@ import '../screens/flashcard_editor_screen.dart';
 import '../screens/pdf_library_screen.dart';
 import '../screens/pdf_reader_screen.dart';
 import '../screens/search_screen.dart';
+import '../screens/smart_flashcards_hub.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -212,7 +213,11 @@ class HomeScreen extends ConsumerWidget {
             _QuickTile(icon: Icons.document_scanner_outlined, label: 'Scan Timetable', onTap: () => ref.read(shellTabProvider.notifier).state = 2),
             _QuickTile(icon: Icons.picture_as_pdf_outlined, label: 'Add PDF', onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PdfLibraryScreen()))),
             _QuickTile(icon: Icons.folder_open_outlined, label: 'PDF Library', onTap: () => ref.read(shellTabProvider.notifier).state = 3),
-            _QuickTile(icon: Icons.style_outlined, label: 'Flashcard', onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const FlashcardEditorScreen()))),
+            _QuickTile(
+              icon: Icons.style_outlined,
+              label: 'Flashcards',
+              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsPage())),
+            ),
             _QuickTile(icon: Icons.school_outlined, label: 'AnkiDroid', onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const FlashcardEditorScreen()))),
             _QuickTile(icon: Icons.alarm_add_outlined, label: 'Reminder', onTap: () => ReminderEditor.show(context, ref)),
             _QuickTile(icon: Icons.fact_check_outlined, label: 'Attendance', onTap: () => ref.read(shellTabProvider.notifier).state = 1),

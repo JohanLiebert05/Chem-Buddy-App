@@ -8,6 +8,7 @@ import '../../data/models/models.dart';
 import '../providers/app_providers.dart';
 import 'flashcard_editor_screen.dart';
 import 'pdf_library_screen.dart';
+import 'smart_flashcards_hub.dart';
 
 class ResourcesScreen extends ConsumerStatefulWidget {
   const ResourcesScreen({super.key});
@@ -42,7 +43,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         if (tab == 0) _EventsTab(state: state),
         if (tab == 1) _NotesTab(state: state),
         if (tab == 2) const PdfLibraryScreen(embedded: true),
-        if (tab == 3) const FlashcardsTab(),
+        if (tab == 3) const SmartFlashcardsHub(),
       ],
     );
   }

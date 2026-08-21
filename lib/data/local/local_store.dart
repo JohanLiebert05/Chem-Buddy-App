@@ -10,6 +10,11 @@ class HiveBoxes {
   static const notes = 'notes';
   static const pdfs = 'pdfs';
   static const flashcards = 'flashcards';
+  static const smartSets = 'smart_flashcard_sets';
+  static const smartCards = 'smart_flashcards';
+  static const flashcardAttempts = 'flashcard_attempts';
+  static const studySessions = 'study_sessions';
+  static const pendingSync = 'pending_sync';
   static const reminders = 'reminders';
   static const settings = 'settings';
 
@@ -25,6 +30,11 @@ class HiveBoxes {
       Hive.openBox(notes),
       Hive.openBox(pdfs),
       Hive.openBox(flashcards),
+      Hive.openBox(smartSets),
+      Hive.openBox(smartCards),
+      Hive.openBox(flashcardAttempts),
+      Hive.openBox(studySessions),
+      Hive.openBox(pendingSync),
       Hive.openBox(reminders),
       Hive.openBox(settings),
     ]);
@@ -41,6 +51,11 @@ class LocalStore {
   Box get notes => Hive.box(HiveBoxes.notes);
   Box get pdfs => Hive.box(HiveBoxes.pdfs);
   Box get flashcards => Hive.box(HiveBoxes.flashcards);
+  Box get smartSets => Hive.box(HiveBoxes.smartSets);
+  Box get smartCards => Hive.box(HiveBoxes.smartCards);
+  Box get flashcardAttempts => Hive.box(HiveBoxes.flashcardAttempts);
+  Box get studySessions => Hive.box(HiveBoxes.studySessions);
+  Box get pendingSync => Hive.box(HiveBoxes.pendingSync);
   Box get reminders => Hive.box(HiveBoxes.reminders);
   Box get settings => Hive.box(HiveBoxes.settings);
 
@@ -63,6 +78,11 @@ class LocalStore {
       notes.clear(),
       pdfs.clear(),
       flashcards.clear(),
+      smartSets.clear(),
+      smartCards.clear(),
+      flashcardAttempts.clear(),
+      studySessions.clear(),
+      pendingSync.clear(),
       reminders.clear(),
       settings.clear(),
     ]);

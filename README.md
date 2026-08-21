@@ -22,7 +22,22 @@ OCR timetable scanning and the PDF reader target Android (and iOS for OCR). Chro
 - **PDF library:** import via the system document picker into app documents (`ChemBuddy/PDFs/<subjectId>/`). Metadata (name, subject, last page, favorite) is stored in Hive, separate from the file.
 - **PDF reader:** `flutter_pdfview` in-app (pages, pinch-zoom, night mode, share, last page). Text search/selection is not claimed — create flashcards from a PDF with a manual form.
 - **AnkiDroid:** OpenIntents `org.openintents.action.CREATE_FLASHCARD` (see [AnkiDroid API wiki](https://github.com/ankidroid/Anki-Android/wiki/AnkiDroid-API)). Chem Buddy never writes Anki’s collection. If AnkiDroid is missing, the app shows Install / Share / Cancel. Fallback is a shared TSV import.
+- **Smart Flashcards:** PDF → text extract → Supabase Edge Function → Gemini → Hive cache. Study offline after generation. Gemini keys never ship in the app.
 - **Search:** offline across PDFs, subjects, timetable, notes, reminders, flashcards.
+
+## Smart Flashcards (Gemini)
+
+1. Run `supabase/schema.sql` in the SQL editor (includes RLS).
+2. Deploy the Edge Function:
+
+```bash
+supabase functions deploy generate-flashcards
+supabase secrets set GEMINI_API_KEY=your_gemini_key
+```
+
+3. Put only `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `.env` (copy from `.env.example`). Never put `GEMINI_API_KEY` in the Flutter app.
+
+Generate requires internet and a signed-in Supabase user. Studying saved sets works offline.
 
 ## Permissions
 

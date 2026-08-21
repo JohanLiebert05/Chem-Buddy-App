@@ -5,6 +5,8 @@ import 'package:chem_buddy/data/models/library_models.dart';
 import 'package:chem_buddy/data/models/models.dart';
 import 'package:chem_buddy/data/models/timetable_entry.dart';
 import 'package:chem_buddy/data/services/global_search.dart';
+import 'package:chem_buddy/data/models/smart_flashcard.dart';
+import 'package:chem_buddy/data/services/pdf_text_utils.dart';
 import 'package:chem_buddy/data/services/timetable_parser_service.dart';
 import 'package:chem_buddy/presentation/providers/app_providers.dart';
 
@@ -82,5 +84,22 @@ OCH501 10:00 AM - 12:00 PM Lab Room B2
     expect(GlobalSearch.query(state, 'SN1').any((h) => h.kind == 'Note'), true);
     expect(GlobalSearch.query(state, 'Organic').any((h) => h.kind == 'Timetable' || h.kind == 'Subject'), true);
     expect(GlobalSearch.query(state, 'Mechanisms').any((h) => h.kind == 'PDF'), true);
+  });
+
+  test('notes are chunked so Gemini never gets a giant payload', () {
+    final text = List.filled(50, 'Aldol condensation is a named reaction. ').join();
+    final chunks = chunkNotes(text, size: 80, overlap: 10);
+    expect(chunks.length, greaterThan(1));
+    expect(chunks.every((c) => c.length <= 80), true);
+  });
+
+  test('scanned-looking PDFs are rejected', () {
+    expect(looksLikeScannedPdf('....'), true);
+    expect(looksLikeScannedPdf('The aldol condensation forms a beta-hydroxy carbonyl compound.'), false);
+  });
+
+  test('flashcard UI states are a closed enum', () {
+    expect(FlashcardUiState.values.contains(FlashcardUiState.submitted), true);
+    expect(FlashcardUiState.easy.name, 'easy');
   });
 }

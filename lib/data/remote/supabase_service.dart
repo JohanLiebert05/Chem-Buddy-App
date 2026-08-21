@@ -73,4 +73,21 @@ class SupabaseService {
       await c.from(table).delete().eq('id', id);
     } catch (_) {}
   }
+
+  /// Calls a Supabase Edge Function. Gemini keys stay on the server.
+  Future<dynamic> invokeFunction(String name, Map<String, dynamic> body) async {
+    final c = client;
+    if (c == null) {
+      throw StateError('Cloud sync is not configured.');
+    }
+    final response = await c.functions.invoke(name, body: body);
+    if (response.status >= 400) {
+      final data = response.data;
+      if (data is Map && data['error'] != null) {
+        throw StateError(data['error'].toString());
+      }
+      throw StateError('Could not reach the flashcard generator.');
+    }
+    return response.data;
+  }
 }

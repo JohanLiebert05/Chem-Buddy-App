@@ -88,3 +88,70 @@ create policy "own events" on public.academic_events
 
 create policy "own notes" on public.notes
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Smart Flashcards (Gemini-generated sets). Extends existing profiles; does not duplicate auth.
+alter table public.profiles add column if not exists email text;
+alter table public.profiles add column if not exists display_name text;
+alter table public.profiles add column if not exists role text default 'student';
+
+create table if not exists public.flashcard_sets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  title text not null,
+  source_file_name text,
+  topic text,
+  card_count int default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.flashcards (
+  id uuid primary key default gen_random_uuid(),
+  set_id uuid not null references public.flashcard_sets (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  question text not null,
+  answer text not null,
+  topic text,
+  difficulty text default 'unanswered',
+  status text default 'unanswered',
+  position int not null default 0,
+  last_user_answer text,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.flashcard_attempts (
+  id uuid primary key default gen_random_uuid(),
+  flashcard_id uuid not null references public.flashcards (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  user_answer text,
+  self_rating text not null,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.study_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  flashcard_set_id uuid not null references public.flashcard_sets (id) on delete cascade,
+  current_position int default 0,
+  completed boolean default false,
+  started_at timestamptz default now(),
+  completed_at timestamptz,
+  review_mode text default 'all'
+);
+
+alter table public.flashcard_sets enable row level security;
+alter table public.flashcards enable row level security;
+alter table public.flashcard_attempts enable row level security;
+alter table public.study_sessions enable row level security;
+
+create policy "own flashcard sets" on public.flashcard_sets
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own generated flashcards" on public.flashcards
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own flashcard attempts" on public.flashcard_attempts
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own study sessions" on public.study_sessions
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

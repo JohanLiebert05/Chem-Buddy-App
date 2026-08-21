@@ -47,6 +47,8 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
-# Secrets
+# Secrets — never commit env files with keys
 .env
+.env.*
 *.env.local
+!.env.example
