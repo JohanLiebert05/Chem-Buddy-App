@@ -20,6 +20,9 @@ jobs:
       - run: supabase secrets set GEMINI_EMBEDDING_MODEL=gemini-embedding-2
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      - run: supabase secrets set GEMINI_MODEL=gemini-3.6-flash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       - run: supabase functions deploy ask-chembuddy
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
