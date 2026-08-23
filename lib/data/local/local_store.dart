@@ -17,6 +17,8 @@ class HiveBoxes {
   static const pendingSync = 'pending_sync';
   static const reminders = 'reminders';
   static const settings = 'settings';
+  static const aiConversations = 'ai_conversations';
+  static const aiMessages = 'ai_messages';
 
   static Future<void> openAll() async {
     await Hive.initFlutter();
@@ -37,6 +39,8 @@ class HiveBoxes {
       Hive.openBox(pendingSync),
       Hive.openBox(reminders),
       Hive.openBox(settings),
+      Hive.openBox(aiConversations),
+      Hive.openBox(aiMessages),
     ]);
   }
 }
@@ -58,6 +62,8 @@ class LocalStore {
   Box get pendingSync => Hive.box(HiveBoxes.pendingSync);
   Box get reminders => Hive.box(HiveBoxes.reminders);
   Box get settings => Hive.box(HiveBoxes.settings);
+  Box get aiConversations => Hive.box(HiveBoxes.aiConversations);
+  Box get aiMessages => Hive.box(HiveBoxes.aiMessages);
 
   Map<String, dynamic>? getProfile() {
     final raw = _profile.get('current');
@@ -85,6 +91,8 @@ class LocalStore {
       pendingSync.clear(),
       reminders.clear(),
       settings.clear(),
+      aiConversations.clear(),
+      aiMessages.clear(),
     ]);
   }
 

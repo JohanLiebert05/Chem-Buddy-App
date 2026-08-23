@@ -9,6 +9,7 @@ import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/models.dart';
+import '../../data/remote/supabase_service.dart';
 import '../providers/app_providers.dart';
 
 class OnboardingFlow extends ConsumerStatefulWidget {
@@ -427,7 +428,7 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final email = TextEditingController();
+  final registerNumber = TextEditingController();
   final password = TextEditingController();
   final name = TextEditingController();
   bool signUp = true;
@@ -444,11 +445,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             children: [
               Text(signUp ? 'Create your account' : 'Welcome back', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
-              const Text('Sign in with your name, roll number or email, and a password.', style: TextStyle(color: AppColors.textSecondary)),
+              const Text('Sign in with your name, register number, and a password.', style: TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 20),
               TextField(controller: name, decoration: const InputDecoration(hintText: 'Full name')),
               const SizedBox(height: 10),
-              TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'Roll number or email')),
+              TextField(controller: registerNumber, decoration: const InputDecoration(hintText: 'Register Number (e.g. 2024MSC001)')),
               const SizedBox(height: 10),
               TextField(controller: password, obscureText: true, decoration: const InputDecoration(hintText: 'Password')),
               if (error != null) ...[
@@ -460,14 +461,40 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 label: signUp ? 'Create account' : 'Log in',
                 loading: loading,
                 onPressed: () async {
+                  final regNum = registerNumber.text.trim();
+                  final pwd = password.text;
+                  final fullName = name.text.trim();
+                  
+                  if (regNum.isEmpty) {
+                    setState(() => error = 'Register number cannot be empty');
+                    return;
+                  }
+                  if (pwd.length < 6) {
+                    setState(() => error = 'Password must be at least 6 characters');
+                    return;
+                  }
+
                   setState(() {
                     loading = true;
                     error = null;
                   });
+                  
+                  if (signUp) {
+                    final exists = await SupabaseService.instance.registerNumberExists(regNum);
+                    if (exists) {
+                      if (!mounted) return;
+                      setState(() {
+                        loading = false;
+                        error = 'Register number already exists';
+                      });
+                      return;
+                    }
+                  }
+
                   final result = await ref.read(appControllerProvider.notifier).authenticate(
-                        email: email.text.trim(),
-                        password: password.text,
-                        name: name.text.trim(),
+                        registerNumber: regNum,
+                        password: pwd,
+                        name: fullName,
                         signUp: signUp,
                       );
                   if (!mounted) return;
@@ -478,7 +505,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 },
               ),
               TextButton(
-                onPressed: () => setState(() => signUp = !signUp),
+                onPressed: () => setState(() {
+                  signUp = !signUp;
+                  error = null;
+                }),
                 child: Text(signUp ? 'Already have an account? Log in' : 'New here? Create an account'),
               ),
             ],

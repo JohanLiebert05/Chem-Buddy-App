@@ -373,12 +373,13 @@ class ChemRepository {
   Future<void> saveNotificationPrefs(NotificationPrefs prefs) =>
       store.settings.put('notifications', prefs.toJson());
 
-  Future<void> loginLocal({required String email, required String name}) async {
+  Future<void> loginLocal({required String registerNumber, required String name, String role = 'student'}) async {
     final current = profile();
     await saveProfile(
       current.copyWith(
-        email: email,
-        fullName: name.isEmpty ? email.split('@').first : name,
+        registerNumber: registerNumber,
+        fullName: name.isEmpty ? registerNumber : name,
+        role: role,
         loggedIn: true,
         onboarded: true,
         id: current.id ?? _uuid.v4(),
@@ -386,18 +387,25 @@ class ChemRepository {
     );
   }
 
-  Future<String?> loginRemote(String email, String password, {required bool signUp}) async {
+  Future<String?> loginRemote(String registerNumber, String password, {required bool signUp, required String name}) async {
     if (!remote.configured) {
-      await loginLocal(email: email, name: '');
+      await loginLocal(registerNumber: registerNumber, name: name);
       return null;
     }
     try {
       if (signUp) {
-        await remote.signUp(email, password);
+        await remote.signUpWithRegisterNumber(name, registerNumber, password);
       } else {
-        await remote.signIn(email, password);
+        await remote.signInWithRegisterNumber(registerNumber, password);
       }
-      await loginLocal(email: email, name: '');
+      
+      String role = 'student';
+      final remoteProfile = await remote.fetchProfile();
+      if (remoteProfile != null && remoteProfile['role'] != null) {
+        role = remoteProfile['role'] as String;
+      }
+      
+      await loginLocal(registerNumber: registerNumber, name: name, role: role);
       return null;
     } catch (e) {
       return e.toString();

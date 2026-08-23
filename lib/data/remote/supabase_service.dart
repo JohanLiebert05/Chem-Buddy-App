@@ -42,6 +42,51 @@ class SupabaseService {
     return client?.auth.signInWithPassword(email: email, password: password);
   }
 
+  Future<AuthResponse?> signUpWithRegisterNumber(String fullName, String registerNumber, String password) async {
+    final email = '${registerNumber.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '')}@chembuddy.local';
+    final res = await client?.auth.signUp(email: email, password: password, data: {'full_name': fullName, 'register_number': registerNumber});
+    if (res?.user != null) {
+      await upsert('profiles', {'id': res!.user!.id, 'register_number': registerNumber, 'full_name': fullName});
+    }
+    return res;
+  }
+
+  Future<AuthResponse?> signInWithRegisterNumber(String registerNumber, String password) async {
+    final email = '${registerNumber.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '')}@chembuddy.local';
+    return client?.auth.signInWithPassword(email: email, password: password);
+  }
+
+  Future<bool> registerNumberExists(String registerNumber) async {
+    final c = client;
+    if (c == null) return false;
+    try {
+      final res = await c.from('profiles').select('id').eq('register_number', registerNumber).maybeSingle();
+      return res != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> fetchProfile() async {
+    final c = client;
+    final uid = userId;
+    if (c == null || uid == null) return null;
+    try {
+      return await c.from('profiles').select().eq('id', uid).maybeSingle();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> updateProfile(Map<String, dynamic> data) async {
+    final c = client;
+    final uid = userId;
+    if (c == null || uid == null) return;
+    try {
+      await c.from('profiles').update(data).eq('id', uid);
+    } catch (_) {}
+  }
+
   Future<void> signOut() async {
     await client?.auth.signOut();
   }

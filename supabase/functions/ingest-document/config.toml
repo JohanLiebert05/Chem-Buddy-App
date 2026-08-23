@@ -1,0 +1,3 @@
+[functions]
+  [functions.ingest-document]
+    verify_jwt = true

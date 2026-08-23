@@ -110,17 +110,17 @@ class AppController extends Notifier<AppState> {
   }
 
   Future<String?> authenticate({
-    required String email,
+    required String registerNumber,
     required String password,
     required String name,
     required bool signUp,
   }) async {
     if (!SupabaseService.instance.configured) {
-      await _repo.loginLocal(email: email, name: name);
+      await _repo.loginLocal(registerNumber: registerNumber, name: name);
       await reload();
       return null;
     }
-    final error = await _repo.loginRemote(email, password, signUp: signUp);
+    final error = await _repo.loginRemote(registerNumber, password, signUp: signUp, name: name);
     if (error == null) {
       final p = _repo.profile();
       await _repo.saveProfile(p.copyWith(fullName: name.isEmpty ? p.fullName : name));

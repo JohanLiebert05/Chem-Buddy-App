@@ -222,6 +222,8 @@ class UserProfile {
     this.id,
     this.fullName = '',
     this.email = '',
+    this.registerNumber = '',
+    this.role = 'student',
     this.university = '',
     this.semester = 1,
     this.onboarded = false,
@@ -231,6 +233,8 @@ class UserProfile {
   final String? id;
   final String fullName;
   final String email;
+  final String registerNumber;
+  final String role;
   final String university;
   final int semester;
   final bool onboarded;
@@ -240,6 +244,8 @@ class UserProfile {
     String? id,
     String? fullName,
     String? email,
+    String? registerNumber,
+    String? role,
     String? university,
     int? semester,
     bool? onboarded,
@@ -249,6 +255,8 @@ class UserProfile {
       id: id ?? this.id,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
+      registerNumber: registerNumber ?? this.registerNumber,
+      role: role ?? this.role,
       university: university ?? this.university,
       semester: semester ?? this.semester,
       onboarded: onboarded ?? this.onboarded,
@@ -260,6 +268,8 @@ class UserProfile {
         'id': id,
         'fullName': fullName,
         'email': email,
+        'registerNumber': registerNumber,
+        'role': role,
         'university': university,
         'semester': semester,
         'onboarded': onboarded,
@@ -270,6 +280,8 @@ class UserProfile {
         id: json['id'] as String?,
         fullName: json['fullName'] as String? ?? '',
         email: json['email'] as String? ?? '',
+        registerNumber: json['registerNumber'] as String? ?? '',
+        role: json['role'] as String? ?? 'student',
         university: json['university'] as String? ?? '',
         semester: json['semester'] as int? ?? 1,
         onboarded: json['onboarded'] as bool? ?? false,
