@@ -315,24 +315,51 @@ class _NextClassCard extends StatelessWidget {
     final now = DateTime.now();
     final today = state.entries.where((e) => e.weekdayNumber == now.weekday).toList()
       ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+    
+    TimetableEntry? ongoing;
     TimetableEntry? next;
     final minutes = now.hour * 60 + now.minute;
+    
     for (final e in today) {
-      if (e.startMinutes >= minutes) {
+      if (minutes >= e.startMinutes && minutes <= e.endMinutes) {
+        ongoing = e;
+      }
+      if (e.startMinutes > minutes && next == null) {
         next = e;
-        break;
       }
     }
-    next ??= today.isEmpty ? null : today.first;
-    if (next == null) return const SizedBox.shrink();
+    
+    final displayClass = ongoing ?? next ?? (today.isEmpty ? null : today.first);
+    if (displayClass == null) return const SizedBox.shrink();
+    
+    final isOngoing = displayClass == ongoing;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle('Next class'),
+        SectionTitle(isOngoing ? 'Ongoing class' : 'Next class'),
         GlowCard(
-          child: Text(
-            '${next.displayName} · ${next.startTime}${next.room.isEmpty ? '' : ' · ${next.room}'}',
-            style: const TextStyle(fontWeight: FontWeight.w800),
+          borderColor: isOngoing ? AppColors.success : AppColors.border,
+          child: Row(
+            children: [
+              if (isOngoing) ...[
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Text(
+                  '${displayClass.displayName} • ${displayClass.startTime}${displayClass.room.isEmpty ? '' : ' • ${displayClass.room}'}',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
           ),
         ),
       ],

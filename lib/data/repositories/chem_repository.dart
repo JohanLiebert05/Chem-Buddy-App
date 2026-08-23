@@ -131,12 +131,14 @@ class ChemRepository {
           r.slotId == slotId;
     }).toList();
     final id = existing.isNotEmpty ? existing.first.id : _uuid.v4();
+    final now = DateTime.now();
     final record = AttendanceRecord(
       id: id,
       subjectId: subjectId,
       date: DateTime(date.year, date.month, date.day),
       status: status,
       slotId: slotId,
+      markedAt: now,
     );
     await store.put(store.attendance, record.id, record.toJson());
     final uid = remote.userId;
@@ -148,6 +150,7 @@ class ChemRepository {
         'date': _dayKey(date),
         'status': status.name,
         'slot_id': slotId,
+        'marked_at': now.toIso8601String(),
       });
     }
   }

@@ -109,11 +109,11 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
                           _field('Day', row.dayOfWeek, (v) {
                             _rows[i] = _rows[i].copyWith(dayOfWeek: v);
                           }),
-                          _field('Start', row.startTime, (v) {
-                            _rows[i] = _rows[i].copyWith(startTime: v);
+                          _timeField(context, 'Start', row.startTime, (v) {
+                            setState(() => _rows[i] = _rows[i].copyWith(startTime: v));
                           }),
-                          _field('End', row.endTime, (v) {
-                            _rows[i] = _rows[i].copyWith(endTime: v);
+                          _timeField(context, 'End', row.endTime, (v) {
+                            setState(() => _rows[i] = _rows[i].copyWith(endTime: v));
                           }),
                           _field('Subject', row.subject, (v) {
                             _rows[i] = _rows[i].copyWith(subject: v);
@@ -180,6 +180,43 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _timeField(BuildContext context, String label, String value, ValueChanged<String> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () async {
+          TimeOfDay? initial;
+          try {
+            final parts = value.split(' ');
+            if (parts.length == 2) {
+              final timeParts = parts[0].split(':');
+              var h = int.parse(timeParts[0]);
+              final m = int.parse(timeParts[1]);
+              if (parts[1].toUpperCase() == 'PM' && h != 12) h += 12;
+              if (parts[1].toUpperCase() == 'AM' && h == 12) h = 0;
+              initial = TimeOfDay(hour: h, minute: m);
+            }
+          } catch (_) {}
+          
+          final selected = await showTimePicker(
+            context: context,
+            initialTime: initial ?? TimeOfDay.now(),
+          );
+          if (selected != null && context.mounted) {
+            final period = selected.period == DayPeriod.am ? 'AM' : 'PM';
+            final hour = selected.hourOfPeriod == 0 ? 12 : selected.hourOfPeriod;
+            final min = selected.minute.toString().padLeft(2, '0');
+            onChanged('$hour:$min $period');
+          }
+        },
+        child: InputDecorator(
+          decoration: InputDecoration(labelText: label, isDense: true),
+          child: Text(value.isEmpty ? 'Select time' : value),
         ),
       ),
     );

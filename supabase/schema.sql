@@ -28,6 +28,7 @@ create table if not exists public.attendance_records (
   date date not null,
   status text not null check (status in ('present', 'absent', 'postponed')),
   slot_id text,
+  marked_at timestamptz,
   created_at timestamptz default now(),
   unique (user_id, subject_id, date, slot_id)
 );

@@ -60,6 +60,7 @@ class AttendanceRecord {
     required this.date,
     required this.status,
     this.slotId,
+    this.markedAt,
   });
 
   final String id;
@@ -67,22 +68,27 @@ class AttendanceRecord {
   final DateTime date;
   final AttendanceStatus status;
   final String? slotId;
+  final DateTime? markedAt;
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'subjectId': subjectId,
         'date': date.toIso8601String(),
         'status': status.name,
-        'slotId': slotId,
+        if (slotId != null) 'slotId': slotId,
+        if (markedAt != null) 'markedAt': markedAt!.toIso8601String(),
       };
 
-  factory AttendanceRecord.fromJson(Map<String, dynamic> json) => AttendanceRecord(
-        id: json['id'] as String,
-        subjectId: json['subjectId'] as String,
-        date: DateTime.parse(json['date'] as String),
-        status: AttendanceStatus.values.byName(json['status'] as String),
-        slotId: json['slotId'] as String?,
-      );
+  factory AttendanceRecord.fromJson(Map<String, dynamic> json) {
+    return AttendanceRecord(
+      id: json['id'] as String,
+      subjectId: json['subjectId'] as String,
+      date: DateTime.parse(json['date'] as String),
+      status: AttendanceStatus.values.byName(json['status'] as String),
+      slotId: json['slotId'] as String?,
+      markedAt: json['markedAt'] != null ? DateTime.tryParse(json['markedAt'] as String) : null,
+    );
+  }
 }
 
 class TimetableSlot {

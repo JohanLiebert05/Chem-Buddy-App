@@ -129,6 +129,13 @@ class AttendanceScreen extends ConsumerWidget {
                         ),
                     ],
                   ),
+                  if (current?.markedAt != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Marked exactly at: ${DateFormat('h:mm a').format(current!.markedAt!)}',
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
+                    ),
+                  ],
                 ],
               ),
             ),
