@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../providers/rag_providers.dart';
+import 'smart_flashcards_generate_screen.dart';
 
 class AskChemBuddyScreen extends ConsumerStatefulWidget {
   const AskChemBuddyScreen({super.key});
@@ -108,6 +109,29 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                         backgroundColor: AppColors.surface,
                                         padding: EdgeInsets.zero,
                                       )).toList(),
+                                    ),
+                                  ],
+                                  if (!isUser) ...[
+                                    const SizedBox(height: 12),
+                                    OutlinedButton.icon(
+                                      icon: const Icon(Icons.style, size: 14),
+                                      label: const Text('Create Flashcards', style: TextStyle(fontSize: 12)),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                                        minimumSize: const Size(0, 32),
+                                        side: const BorderSide(color: AppColors.purple),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute<void>(
+                                            builder: (_) => SmartFlashcardsGenerateScreen(
+                                              prefilledTopic: 'Chat Topic',
+                                              prefilledText: msg.content,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ]
                                 ],

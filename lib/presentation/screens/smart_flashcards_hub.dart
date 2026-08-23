@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_card.dart';
 import '../providers/app_providers.dart';
-import 'flashcard_editor_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_study_screen.dart';
 
@@ -42,7 +41,6 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
   @override
   Widget build(BuildContext context) {
     final sets = ref.watch(flashcardServiceProvider).sets();
-    final drafts = ref.watch(appControllerProvider).flashcards;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -53,16 +51,11 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
             if (mounted) setState(() {});
           },
         ),
-        const SizedBox(height: 10),
-        OutlinedButton(
-          onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const FlashcardEditorScreen())),
-          child: const Text('Manual / AnkiDroid card'),
-        ),
         const SizedBox(height: 16),
         const Text('Saved sets', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 8),
         if (sets.isEmpty)
-          const GlowCard(child: Text('Generate flashcards from a PDF, then reopen them here anytime — even offline.', style: TextStyle(color: AppColors.textSecondary))),
+          const GlowCard(child: Text('Generate flashcards from a PDF, then reopen them here anytime - even offline.', style: TextStyle(color: AppColors.textSecondary))),
         ...sets.map(
           (s) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
@@ -76,27 +69,13 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
                 children: [
                   Text(s.title, style: const TextStyle(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 4),
-                  Text('${s.cardCount} cards · ${s.sourceFileName}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  Text('${s.cardCount} cards • ${s.sourceFileName}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                   Text(DateFormat('d MMM yyyy').format(s.createdAt), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),
             ),
           ),
         ),
-        if (drafts.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          const Text('Anki drafts', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-          const SizedBox(height: 8),
-          ...drafts.take(5).map(
-                (c) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: GlowCard(
-                    onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => FlashcardEditorScreen(existing: c))),
-                    child: Text(c.question, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  ),
-                ),
-              ),
-        ],
       ],
     );
   }

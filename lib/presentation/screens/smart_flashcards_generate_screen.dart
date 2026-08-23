@@ -12,7 +12,9 @@ import '../providers/app_providers.dart';
 import 'smart_flashcards_study_screen.dart';
 
 class SmartFlashcardsGenerateScreen extends ConsumerStatefulWidget {
-  const SmartFlashcardsGenerateScreen({super.key});
+  const SmartFlashcardsGenerateScreen({super.key, this.prefilledTopic, this.prefilledText});
+  final String? prefilledTopic;
+  final String? prefilledText;
 
   @override
   ConsumerState<SmartFlashcardsGenerateScreen> createState() => _SmartFlashcardsGenerateScreenState();
@@ -27,6 +29,14 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
   bool busy = false;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.prefilledText != null) {
+      fileName = widget.prefilledTopic ?? 'Chat Response';
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -34,24 +44,37 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
         children: [
-          const Text('Choose your source', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-          const SizedBox(height: 12),
-          GlowCard(
-            onTap: busy ? null : _pick,
-            child: Row(
-              children: [
-                const Icon(Icons.upload_file, color: AppColors.purpleBright),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    fileName == null ? 'Upload PDF' : 'Selected file:\n$fileName',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+          if (widget.prefilledText == null) ...[
+            const Text('Choose your source', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            const SizedBox(height: 12),
+            GlowCard(
+              onTap: busy ? null : _pick,
+              child: Row(
+                children: [
+                  const Icon(Icons.upload_file, color: AppColors.purpleBright),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      fileName == null ? 'Upload PDF' : 'Selected file:\n$fileName',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
+          ],
+          if (widget.prefilledText != null) ...[
+            const Text('Source', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            const SizedBox(height: 12),
+            GlowCard(
+              child: Text(
+                'Chat Topic: ${widget.prefilledTopic ?? 'Unknown'}',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
           const Text('Number of flashcards', style: TextStyle(fontWeight: FontWeight.w800)),
           const SizedBox(height: 10),
           Row(
@@ -107,8 +130,9 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
   }
 
   Future<void> _create() async {
+    final text = widget.prefilledText;
     final path = filePath;
-    if (path == null) {
+    if (path == null && text == null) {
       setState(() => error = 'Choose a PDF of your chemistry notes first.');
       return;
     }
@@ -116,23 +140,30 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
     setState(() {
       busy = true;
       error = null;
-      stage = 'Checking connection…';
+      stage = 'Checking connection.';
     });
     try {
       if (!await service.isOnline) {
         throw StateError('Internet connection required to generate new AI flashcards.');
       }
-      setState(() => stage = 'Analyzing your notes…');
-      final text = await PdfTextExtractionService.instance.extractFromPath(path);
-      final chunks = chunkNotes(text);
+      
+      String sourceText;
+      if (text != null) {
+        sourceText = text;
+      } else {
+        setState(() => stage = 'Analyzing your notes.');
+        sourceText = await PdfTextExtractionService.instance.extractFromPath(path!);
+      }
+      
+      final chunks = chunkNotes(sourceText);
       if (chunks.isEmpty) {
         throw StateError('Not enough readable text to generate flashcards.');
       }
-      setState(() => stage = 'Creating Chemistry questions…');
-      final topic = p.basenameWithoutExtension(fileName ?? 'Chemistry');
-      final cards = await GeminiFlashcardService().generate(sourceText: text, count: count, topic: topic);
-      setState(() => stage = 'Organizing flashcards…');
-      setState(() => stage = 'Saving your flashcards…');
+      setState(() => stage = 'Creating Chemistry questions.');
+      final topic = widget.prefilledTopic ?? p.basenameWithoutExtension(fileName ?? 'Chemistry');
+      final cards = await GeminiFlashcardService().generate(sourceText: sourceText, count: count, topic: topic);
+      setState(() => stage = 'Organizing flashcards.');
+      setState(() => stage = 'Saving your flashcards.');
       final set = await service.saveGeneratedSet(
         title: topic,
         sourceFileName: fileName ?? 'notes.pdf',
