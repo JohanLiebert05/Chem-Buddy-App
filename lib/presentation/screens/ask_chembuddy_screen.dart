@@ -1,8 +1,13 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:uuid/uuid.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
+import '../../data/models/models.dart';
+import '../providers/app_providers.dart';
 import '../providers/rag_providers.dart';
 import 'smart_flashcards_generate_screen.dart';
 
@@ -95,10 +100,35 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    msg.content,
-                                    style: const TextStyle(color: AppColors.textPrimary),
-                                  ),
+                                  if (isUser)
+                                    Text(
+                                      msg.content,
+                                      style: const TextStyle(color: AppColors.textPrimary),
+                                    )
+                                  else
+                                    MarkdownBody(
+                                      data: msg.content,
+                                      styleSheet: MarkdownStyleSheet(
+                                        p: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                                        h1: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w800),
+                                        h2: const TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w700),
+                                        h3: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
+                                        listBullet: const TextStyle(color: AppColors.purple),
+                                        tableHead: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+                                        tableBorder: TableBorder.all(color: AppColors.border, width: 0.5),
+                                        blockquoteDecoration: BoxDecoration(
+                                          color: AppColors.surfaceElevated,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+                                        ),
+                                        code: const TextStyle(color: AppColors.purpleBright, backgroundColor: AppColors.surfaceElevated),
+                                        codeblockDecoration: BoxDecoration(
+                                          color: AppColors.surfaceElevated,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      selectable: true,
+                                    ),
                                   if (msg.sources.isNotEmpty) ...[
                                     const SizedBox(height: 8),
                                     Wrap(
@@ -113,25 +143,76 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                   ],
                                   if (!isUser) ...[
                                     const SizedBox(height: 12),
-                                    OutlinedButton.icon(
-                                      icon: const Icon(Icons.style, size: 14),
-                                      label: const Text('Create Flashcards', style: TextStyle(fontSize: 12)),
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                                        minimumSize: const Size(0, 32),
-                                        side: const BorderSide(color: AppColors.purple),
-                                      ),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute<void>(
-                                            builder: (_) => SmartFlashcardsGenerateScreen(
-                                              prefilledTopic: 'Chat Topic',
-                                              prefilledText: msg.content,
-                                            ),
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        children: [
+                                          _ActionChip(
+                                            icon: Icons.style,
+                                            label: 'Flashcards',
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute<void>(
+                                                  builder: (_) => SmartFlashcardsGenerateScreen(
+                                                    prefilledTopic: 'Chat Topic',
+                                                    prefilledText: msg.content,
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                           ),
-                                        );
-                                      },
+                                          const SizedBox(width: 8),
+                                          _ActionChip(
+                                            icon: Icons.quiz,
+                                            label: 'Quiz',
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute<void>(
+                                                  builder: (_) => SmartFlashcardsGenerateScreen(
+                                                    prefilledTopic: 'Chat Topic',
+                                                    prefilledText: msg.content,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _ActionChip(
+                                            icon: Icons.auto_awesome,
+                                            label: 'Simpler',
+                                            onTap: () {
+                                              ref.read(chatControllerProvider.notifier).sendMessage(
+                                                'Explain this more simply: ${msg.content.substring(0, min(500, msg.content.length))}',
+                                              );
+                                            },
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _ActionChip(
+                                            icon: Icons.bookmark_add,
+                                            label: 'Save Note',
+                                            onTap: () {
+                                              final title = msg.content.split('\n').firstWhere(
+                                                (line) => line.trim().isNotEmpty,
+                                                orElse: () => 'Chat Note',
+                                              ).replaceAll(RegExp(r'^[#*\s]+'), '');
+                                              
+                                              final note = NoteItem(
+                                                id: const Uuid().v4(),
+                                                title: title.isEmpty ? 'Chat Note' : (title.length > 50 ? title.substring(0, 50) : title),
+                                                body: msg.content,
+                                                updatedAt: DateTime.now(),
+                                              );
+                                              ref.read(appControllerProvider.notifier).saveNote(note);
+                                              
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('Note saved successfully!')),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ]
                                 ],
@@ -143,9 +224,23 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                     ),
             ),
             if (chatState.isLoading)
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text('ChemBuddy is thinking...', style: TextStyle(color: AppColors.purple)),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: GlowCard(
+                  child: Row(
+                    children: const [
+                      SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.purple,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Text('ChemBuddy is thinking...', style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic)),
+                    ],
+                  ),
+                ),
               ),
             if (chatState.error != null)
               Padding(
@@ -196,6 +291,36 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionChip extends StatelessWidget {
+  const _ActionChip({required this.icon, required this.label, required this.onTap});
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceElevated,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: AppColors.purple),
+              const SizedBox(width: 4),
+              Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            ],
+          ),
         ),
       ),
     );

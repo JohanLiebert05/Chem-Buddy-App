@@ -8,8 +8,10 @@ import '../../data/models/timetable_entry.dart';
 import '../../data/remote/notification_service.dart';
 import '../../data/remote/supabase_service.dart';
 import '../../data/repositories/chem_repository.dart';
+import '../../data/services/daily_focus_service.dart';
 import '../../data/services/flashcard_service.dart';
 import '../../data/services/pdf_library_service.dart';
+import '../../data/services/study_session_service.dart';
 
 final localStoreProvider = Provider<LocalStore>((ref) => LocalStore());
 
@@ -25,6 +27,17 @@ final appControllerProvider = NotifierProvider<AppController, AppState>(AppContr
 
 final flashcardServiceProvider = Provider<FlashcardService>((ref) {
   return FlashcardService(store: ref.watch(localStoreProvider));
+});
+
+final dailyFocusServiceProvider = Provider<DailyFocusService>((ref) {
+  return DailyFocusService(ref.watch(localStoreProvider));
+});
+
+final studySessionServiceProvider = Provider<StudySessionService>((ref) {
+  return StudySessionService(
+    ref.watch(localStoreProvider),
+    ref.watch(dailyFocusServiceProvider),
+  );
 });
 
 final shellTabProvider = StateProvider<int>((ref) => 0);

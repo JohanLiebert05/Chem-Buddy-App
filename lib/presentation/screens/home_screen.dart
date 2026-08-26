@@ -17,6 +17,12 @@ import '../screens/pdf_reader_screen.dart';
 import '../screens/search_screen.dart';
 import '../screens/smart_flashcards_hub.dart';
 
+import '../../data/models/study_models.dart';
+import '../../data/models/smart_flashcard.dart';
+import '../../data/services/daily_focus_service.dart';
+import '../../data/services/study_session_service.dart';
+import '../../data/local/local_store.dart';
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -29,6 +35,16 @@ class HomeScreen extends ConsumerWidget {
     final slots = repo.slotsFor(today);
     final upcoming = state.events.where((e) => !e.completed).take(3).toList();
     final name = state.profile.fullName.isEmpty ? 'Chemist' : state.profile.fullName.split(' ').first;
+
+    final dailyFocus = ref.watch(dailyFocusServiceProvider).computeFocus(state, repo);
+    final localStore = ref.watch(localStoreProvider);
+    final allSessions = localStore.all(localStore.studySessions).map((j) => StudySession.fromJson(j)).toList();
+    final incompleteSession = allSessions.where((s) => !s.completed).firstOrNull;
+    SmartFlashcardSet? incompleteSet;
+    if (incompleteSession != null) {
+      final allSets = localStore.all(localStore.smartSets).map((j) => SmartFlashcardSet.fromJson(j)).toList();
+      incompleteSet = allSets.where((s) => s.id == incompleteSession.flashcardSetId).firstOrNull;
+    }
 
     return AnimatedDashboardList(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
@@ -61,6 +77,96 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 20),
+        
+        if (dailyFocus != null) ...[
+          const SectionTitle("Today's Focus"),
+          GlowCard(
+            borderColor: AppColors.purpleBright,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text(dailyFocus.subjectName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: AppColors.purple.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+                      child: Text('${dailyFocus.recommendedMinutes} min', style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 12)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(dailyFocus.reason, style: const TextStyle(color: AppColors.textSecondary)),
+                if (dailyFocus.upcomingTestTitle != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 16),
+                      const SizedBox(width: 6),
+                      Expanded(child: Text('Upcoming: ${dailyFocus.upcomingTestTitle}', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontWeight: FontWeight.w600))),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.purple, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsPage())),
+                    child: const Text('Start Study Session', style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        if (incompleteSession != null && incompleteSet != null) ...[
+          const SectionTitle("Continue Studying"),
+          GlowCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Flashcard Review: ${incompleteSet.title}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: incompleteSet.cardCount > 0 ? (incompleteSession.currentPosition / incompleteSet.cardCount).clamp(0, 1) : 0,
+                    color: AppColors.blue,
+                    backgroundColor: Colors.white12,
+                    minHeight: 8,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.surfaceElevated, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsPage())),
+                    child: const Text('Continue Session', style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        if (dailyFocus == null && incompleteSession == null) ...[
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.purple, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsPage())),
+              child: const Text('Start Study Session', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+
         GlowCard(
           child: Row(
             children: [
@@ -200,6 +306,7 @@ class HomeScreen extends ConsumerWidget {
             ),
           );
         }),
+        
         const SectionTitle('Quick access'),
         GridView.count(
           shrinkWrap: true,
@@ -224,6 +331,19 @@ class HomeScreen extends ConsumerWidget {
             _QuickTile(icon: Icons.quiz_outlined, label: 'Tests', onTap: () => ref.read(shellTabProvider.notifier).state = 4),
           ],
         ),
+        
+        const SizedBox(height: 20),
+        const SectionTitle('Study Streak & Stats'),
+        Row(
+          children: [
+            Expanded(child: _StatChip(icon: Icons.local_fire_department, color: AppColors.warning, label: '${repo.streak()} Days')),
+            const SizedBox(width: 8),
+            Expanded(child: _StatChip(icon: Icons.style, color: AppColors.purple, label: '${localStore.all(localStore.smartSets).length} Sets')),
+            const SizedBox(width: 8),
+            Expanded(child: _StatChip(icon: Icons.percent, color: AppColors.success, label: '${overall.percent.round()}%')),
+          ],
+        ),
+
         const SectionTitle('Upcoming'),
         if (upcoming.isEmpty)
           const GlowCard(child: Text('No tests or assignments yet.', style: TextStyle(color: AppColors.textSecondary))),
@@ -277,6 +397,66 @@ class HomeScreen extends ConsumerWidget {
             style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({required this.icon, required this.color, required this.label});
+  final IconData icon;
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: BoxDecoration(color: AppColors.surfaceElevated, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+class SectionTitle extends StatelessWidget {
+  const SectionTitle(this.title, {super.key});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20, bottom: 10),
+      child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+    );
+  }
+}
+
+class CircularAttendance extends StatelessWidget {
+  const CircularAttendance({required this.percent, super.key});
+  final double percent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          width: 50,
+          height: 50,
+          child: CircularProgressIndicator(
+            value: percent / 100,
+            color: AttendanceMath.isSafe(percent) ? AppColors.success : AppColors.danger,
+            backgroundColor: Colors.white12,
+            strokeWidth: 6,
+          ),
+        ),
+        Text('${percent.round()}%', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
       ],
     );
   }
