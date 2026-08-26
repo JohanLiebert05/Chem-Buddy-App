@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/hex_background.dart';
+import '../../shell/main_shell.dart';
 import 'admin_dashboard_screen.dart';
 import 'student_management_screen.dart';
 import 'content_management_screen.dart';
@@ -16,6 +17,7 @@ class AdminShell extends StatefulWidget {
 class _AdminShellState extends State<AdminShell> {
   final PageController _pages = PageController();
   int _currentIndex = 0;
+  bool _studentView = false;
 
   static const _tabs = [
     AdminDashboardScreen(),
@@ -41,6 +43,39 @@ class _AdminShellState extends State<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
+    if (_studentView) {
+      return Scaffold(
+        body: Stack(
+          children: [
+            const MainShell(),
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 4,
+              right: 8,
+              child: Material(
+                color: AppColors.purple,
+                borderRadius: BorderRadius.circular(20),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () => setState(() => _studentView = false),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.swap_horiz, size: 16, color: Colors.white),
+                        SizedBox(width: 4),
+                        Text('Admin', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return HexBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -50,9 +85,7 @@ class _AdminShellState extends State<AdminShell> {
           elevation: 0,
           actions: [
             TextButton.icon(
-              onPressed: () {
-                // Switch to student view logic here
-              },
+              onPressed: () => setState(() => _studentView = true),
               icon: const Icon(Icons.swap_horiz, color: AppColors.purple),
               label: const Text('Student View', style: TextStyle(color: AppColors.purple)),
             ),

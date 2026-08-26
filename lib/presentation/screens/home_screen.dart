@@ -12,7 +12,6 @@ import '../widgets/timetable_scanner_card.dart';
 import '../../data/models/models.dart';
 import '../../data/models/timetable_entry.dart';
 import '../providers/app_providers.dart';
-import '../screens/flashcard_editor_screen.dart';
 import '../screens/pdf_library_screen.dart';
 import '../screens/pdf_reader_screen.dart';
 import '../screens/search_screen.dart';

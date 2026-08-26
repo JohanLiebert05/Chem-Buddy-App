@@ -131,7 +131,7 @@ class SupabaseService {
       if (data is Map && data['error'] != null) {
         throw StateError(data['error'].toString());
       }
-      throw StateError('Could not reach the flashcard generator.');
+      throw StateError('Could not reach the $name service. Please try again.');
     }
     return response.data;
   }

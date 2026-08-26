@@ -6,8 +6,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
 import '../providers/app_providers.dart';
-import 'flashcard_editor_screen.dart';
 import 'pdf_library_screen.dart';
+import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_hub.dart';
 
 class ResourcesScreen extends ConsumerStatefulWidget {
@@ -257,9 +257,9 @@ class _NotesTab extends ConsumerWidget {
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute<void>(
-                            builder: (_) => FlashcardEditorScreen(
-                              subjectId: n.subjectId,
-                              sourceHint: n.title,
+                            builder: (_) => SmartFlashcardsGenerateScreen(
+                              prefilledTopic: n.title,
+                              prefilledText: n.body,
                             ),
                           ),
                         ),

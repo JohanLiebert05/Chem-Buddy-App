@@ -7,7 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../data/models/library_models.dart';
 import '../../data/services/pdf_library_service.dart';
 import '../providers/app_providers.dart';
-import 'flashcard_editor_screen.dart';
+import 'smart_flashcards_generate_screen.dart';
 
 class PdfReaderScreen extends ConsumerStatefulWidget {
   const PdfReaderScreen({super.key, required this.doc});
@@ -49,11 +49,13 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
         title: Text(_doc.displayName, overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
-            tooltip: 'Create flashcard',
+            tooltip: 'Create flashcards',
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute<void>(
-                builder: (_) => FlashcardEditorScreen(subjectId: _doc.subjectId, sourceHint: _doc.displayName),
+                builder: (_) => SmartFlashcardsGenerateScreen(
+                  prefilledTopic: _doc.displayName,
+                ),
               ),
             ),
             icon: const Icon(Icons.style_outlined),
