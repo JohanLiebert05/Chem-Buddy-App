@@ -10,6 +10,7 @@ class SubjectAttendanceStats {
   final int postponed;
 
   int get counted => present + absent;
+  int get total => counted;
 
   double get percent => counted == 0 ? 0 : (present / counted) * 100;
 

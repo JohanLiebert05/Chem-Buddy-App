@@ -106,7 +106,7 @@ class DailyFocusService {
       double lowestPercent = 100.0;
       for (final subject in state.subjects) {
         final stats = repo.statsFor(subject.id);
-        if (stats.total > 0 && stats.percent < lowestPercent) {
+        if (stats.counted > 0 && stats.percent < lowestPercent) {
           lowestPercent = stats.percent;
           lowestSubject = subject;
         }
