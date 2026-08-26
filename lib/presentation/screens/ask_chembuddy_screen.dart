@@ -4,9 +4,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/models.dart';
@@ -28,9 +30,108 @@ class AskChemBuddyScreen extends ConsumerStatefulWidget {
 class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final SpeechToText _speech = SpeechToText();
+  bool _speechEnabled = false;
+  bool _isListening = false;
   bool _extracting = false;
   String _extractingStatus = 'Reading document...';
   String? _lastSentQuestion;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
+
+  @override
+  void dispose() {
+    _speech.stop();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initSpeech() async {
+    try {
+      _speechEnabled = await _speech.initialize(
+        onError: (val) {
+          if (mounted) setState(() => _isListening = false);
+        },
+        onStatus: (val) {
+          if (val == 'done' || val == 'notListening') {
+            if (mounted) setState(() => _isListening = false);
+          }
+        },
+      );
+      if (mounted) setState(() {});
+    } catch (_) {
+      _speechEnabled = false;
+    }
+  }
+
+  Future<void> _startListening() async {
+    AppHaptics.tap();
+    if (!_speechEnabled) {
+      final available = await _speech.initialize(
+        onError: (val) {
+          if (mounted) setState(() => _isListening = false);
+        },
+        onStatus: (val) {
+          if (val == 'done' || val == 'notListening') {
+            if (mounted) setState(() => _isListening = false);
+          }
+        },
+      );
+      if (!available) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              backgroundColor: AppColors.danger,
+              content: Text('Microphone permission or speech service is unavailable on this device.'),
+            ),
+          );
+        }
+        return;
+      }
+      _speechEnabled = true;
+    }
+
+    if (mounted) setState(() => _isListening = true);
+
+    await _speech.listen(
+      onResult: (result) {
+        if (mounted) {
+          setState(() {
+            _controller.text = result.recognizedWords;
+            _controller.selection = TextSelection.fromPosition(
+              TextPosition(offset: _controller.text.length),
+            );
+          });
+        }
+      },
+      listenOptions: SpeechListenOptions(
+        partialResults: true,
+        cancelOnError: true,
+        listenMode: ListenMode.confirmation,
+        listenFor: const Duration(seconds: 30),
+        pauseFor: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<void> _stopListening() async {
+    AppHaptics.tap();
+    await _speech.stop();
+    if (mounted) setState(() => _isListening = false);
+  }
+
+  void _toggleListening() {
+    if (_isListening) {
+      _stopListening();
+    } else {
+      _startListening();
+    }
+  }
 
   void _sendMessage([String? textOverride]) {
     final text = textOverride ?? _controller.text.trim();
@@ -551,6 +652,46 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                 ),
               ),
 
+            if (_isListening)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: GlowCard(
+                  borderColor: AppColors.danger.withValues(alpha: 0.6),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.danger.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.mic, color: AppColors.danger, size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'Listening... Speak your question',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _stopListening,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.danger,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w800)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             // Input Bar with responsive spacing above bottom navigation bar
             Builder(
               builder: (context) {
@@ -571,19 +712,59 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                           controller: _controller,
                           style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
                           decoration: InputDecoration(
-                            hintText: chatState.hasActiveDocument
-                                ? 'Ask about ${chatState.activeDocumentName}...'
-                                : 'Ask any chemistry question...',
-                            hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                            hintText: _isListening
+                                ? 'Listening to your voice...'
+                                : chatState.hasActiveDocument
+                                    ? 'Ask about ${chatState.activeDocumentName}...'
+                                    : 'Ask any chemistry question...',
+                            hintStyle: TextStyle(
+                              color: _isListening ? AppColors.danger : AppColors.textMuted,
+                              fontSize: 13,
+                              fontWeight: _isListening ? FontWeight.w600 : FontWeight.normal,
+                            ),
                             filled: true,
                             fillColor: AppColors.surfaceElevated,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide(color: AppColors.border),
+                              borderSide: BorderSide(
+                                color: _isListening ? AppColors.danger : AppColors.border,
+                              ),
                             ),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                           ),
-                          onSubmitted: (_) => _sendMessage(),
+                          onSubmitted: (_) {
+                            if (_isListening) _stopListening();
+                            _sendMessage();
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Material(
+                        color: _isListening
+                            ? AppColors.danger.withValues(alpha: 0.25)
+                            : AppColors.surfaceElevated,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: _toggleListening,
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: _isListening
+                                    ? AppColors.danger
+                                    : AppColors.border.withValues(alpha: 0.7),
+                                width: _isListening ? 1.6 : 1.0,
+                              ),
+                            ),
+                            child: Icon(
+                              _isListening ? Icons.mic : Icons.mic_none_rounded,
+                              color: _isListening ? AppColors.danger : AppColors.purpleBright,
+                              size: 20,
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -592,7 +773,10 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                         radius: 22,
                         child: IconButton(
                           icon: const Icon(Icons.send, color: Colors.white, size: 18),
-                          onPressed: () => _sendMessage(),
+                          onPressed: () {
+                            if (_isListening) _stopListening();
+                            _sendMessage();
+                          },
                         ),
                       ),
                     ],
