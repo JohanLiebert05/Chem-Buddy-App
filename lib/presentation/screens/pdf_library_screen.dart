@@ -95,7 +95,20 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
         const SizedBox(height: 12),
         if (loading) const Center(child: CircularProgressIndicator(color: AppColors.purpleBright)),
         if (!loading && docs.isEmpty)
-          const GlowCard(child: Text('No PDFs yet. Import notes into your subject folders.', style: TextStyle(color: AppColors.textSecondary))),
+          GlowCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(Icons.picture_as_pdf, size: 48, color: AppColors.purpleBright),
+                const SizedBox(height: 12),
+                const Text('Your study library is empty.', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                const SizedBox(height: 8),
+                const Text('Import notes into your subject folders.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+                const SizedBox(height: 16),
+                PrimaryButton(label: 'Add PDF', onPressed: () => _import(state)),
+              ],
+            ),
+          ),
         ...docs.map((d) {
           String subjectName = 'Other';
           for (final s in state.subjects) {

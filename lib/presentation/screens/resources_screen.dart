@@ -88,7 +88,18 @@ class _EventsTab extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         if (events.isEmpty)
-          const GlowCard(child: Text('No deadlines yet. Add a test, assignment, or seminar.', style: TextStyle(color: AppColors.textSecondary))),
+          const GlowCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(Icons.event_note, size: 48, color: AppColors.purpleBright),
+                SizedBox(height: 12),
+                Text('No deadlines yet.', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                SizedBox(height: 8),
+                Text('Add a test, assignment, or seminar to track it here.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
         ...events.map((e) {
           String? subjectName;
           for (final s in state.subjects) {
@@ -120,6 +131,27 @@ class _EventsTab extends ConsumerWidget {
                           '${e.type.name.toUpperCase()} · ${DateFormat('d MMM yyyy').format(e.dueDate)}${subjectName == null ? '' : ' · $subjectName'}',
                           style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                         ),
+                        if (!e.completed) ...[
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (_) => SmartFlashcardsGenerateScreen(
+                                  prefilledTopic: '${e.title}${subjectName != null ? ' ($subjectName)' : ''}',
+                                ),
+                              ),
+                            ),
+                            icon: const Icon(Icons.school, size: 16, color: AppColors.purpleBright),
+                            label: const Text('Study for this', style: TextStyle(color: AppColors.purpleBright, fontSize: 12)),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 24),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              alignment: Alignment.centerLeft,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -236,7 +268,18 @@ class _NotesTab extends ConsumerWidget {
         PrimaryButton(label: 'New note', onPressed: () => _editNote(context, ref)),
         const SizedBox(height: 16),
         if (state.notes.isEmpty)
-          const GlowCard(child: Text('Day-to-day notes will show up here.', style: TextStyle(color: AppColors.textSecondary))),
+          const GlowCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(Icons.notes, size: 48, color: AppColors.purpleBright),
+                SizedBox(height: 12),
+                Text('No notes yet.', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                SizedBox(height: 8),
+                Text('Day-to-day notes will show up here.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
         ...state.notes.map((n) {
           String? tag;
           for (final s in state.subjects) {

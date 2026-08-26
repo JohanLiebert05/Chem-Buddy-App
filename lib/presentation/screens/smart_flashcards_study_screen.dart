@@ -32,6 +32,8 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
       cards = cards.where((c) => c.status == FlashcardUiState.difficult).toList();
     } else if (widget.review == ReviewMode.skipped) {
       cards = cards.where((c) => c.status == FlashcardUiState.skipped).toList();
+    } else if (widget.review == ReviewMode.due) {
+      cards = service.getDueCards(widget.setId);
     }
     deck = cards;
     sessionId = const Uuid().v4();
@@ -176,6 +178,12 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     deck[index] = updated;
     await _persist(updated);
     final service = ref.read(flashcardServiceProvider);
+    
+    String srRating = 'skipped';
+    if (rating == FlashcardUiState.easy) srRating = 'easy';
+    if (rating == FlashcardUiState.difficult) srRating = 'difficult';
+    await service.updateSpacedRepetition(card.id, srRating);
+
     await service.saveAttempt(
       FlashcardAttempt(
         id: const Uuid().v4(),
@@ -228,6 +236,8 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     final easy = deck.where((c) => c.status == FlashcardUiState.easy).length;
     final difficult = deck.where((c) => c.status == FlashcardUiState.difficult).length;
     final skipped = deck.where((c) => c.status == FlashcardUiState.skipped).length;
+    final accuracy = (easy + difficult) > 0 ? (easy / (easy + difficult)) * 100 : 0.0;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(backgroundColor: AppColors.background, title: const Text('Session Complete')),
@@ -238,42 +248,32 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${deck.length} cards studied', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20)),
+                const Text('🎉 Study Session Complete!', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20)),
+                const SizedBox(height: 16),
+                Text('${deck.length} cards reviewed', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                 const SizedBox(height: 8),
                 Text('Easy: $easy', style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w700)),
                 Text('Difficult: $difficult', style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700)),
-                Text('Skipped: $skipped', style: const TextStyle(color: AppColors.blue, fontWeight: FontWeight.w700)),
+                Text('Skipped: $skipped', style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                Text('Accuracy: ${accuracy.toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.w700)),
               ],
             ),
           ),
           const SizedBox(height: 16),
           if (difficult > 0)
             PrimaryButton(
-              label: 'Review Difficult',
+              label: 'Review Difficult Cards',
               onPressed: () => Navigator.pushReplacement(
                 context,
                 MaterialPageRoute<void>(builder: (_) => SmartFlashcardsStudyScreen(setId: widget.setId, review: ReviewMode.difficult)),
               ),
             ),
           if (difficult > 0) const SizedBox(height: 10),
-          if (skipped > 0)
-            OutlinedButton(
-              onPressed: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute<void>(builder: (_) => SmartFlashcardsStudyScreen(setId: widget.setId, review: ReviewMode.skipped)),
-              ),
-              child: const Text('Review Skipped'),
-            ),
-          const SizedBox(height: 10),
           PrimaryButton(
-            label: 'Study Again',
-            onPressed: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute<void>(builder: (_) => SmartFlashcardsStudyScreen(setId: widget.setId)),
-            ),
+            label: 'Done',
+            onPressed: () => Navigator.pop(context),
           ),
-          const SizedBox(height: 10),
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Back to Flashcards')),
         ],
       ),
     );

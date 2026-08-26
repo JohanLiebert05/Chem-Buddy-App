@@ -134,7 +134,15 @@ RULES:
 - Use proper chemical notation and formatting.
 - If the question is completely outside chemistry/academics, politely redirect.
 
-${context ? `KNOWLEDGE BASE CONTEXT:\n${context}` : "No specific knowledge base documents were found for this question. Answer from your chemistry expertise but clearly indicate this is general knowledge, not from the course materials."}`;
+When explaining concepts, use clear structure:
+- Use headings (## or ###) for major topics
+- Use bullet points for lists
+- Use tables when comparing items
+- Use bold for key terms
+- Use numbered steps for processes
+- Keep paragraphs concise
+
+${context ? `KNOWLEDGE BASE CONTEXT:\n${context}` : "Answer from your chemistry expertise but clearly indicate this is general knowledge, not from the course materials."}`;
 
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 

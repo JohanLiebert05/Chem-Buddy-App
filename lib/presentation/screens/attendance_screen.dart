@@ -9,6 +9,8 @@ import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
 import '../providers/app_providers.dart';
+import 'smart_flashcards_generate_screen.dart';
+import 'smart_flashcards_hub.dart';
 
 class AttendanceScreen extends ConsumerWidget {
   const AttendanceScreen({super.key});
@@ -142,6 +144,19 @@ class AttendanceScreen extends ConsumerWidget {
           );
         }),
         const SectionTitle('Subject breakdown'),
+        if (state.subjects.isEmpty)
+          const GlowCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(Icons.book, size: 48, color: AppColors.purpleBright),
+                SizedBox(height: 12),
+                Text('No subjects added.', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                SizedBox(height: 8),
+                Text('Add subjects to start tracking attendance.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
         ...state.subjects.map((s) {
           final stats = repo.statsFor(s.id);
           return Padding(
@@ -166,6 +181,32 @@ class AttendanceScreen extends ConsumerWidget {
                   Text(
                     'Projected if you attend remaining ${repo.remainingClasses(subjectId: s.id)} classes: ${stats.projectedPercent(remaining: repo.remainingClasses(subjectId: s.id)).round()}%',
                     style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          foregroundColor: AppColors.purple,
+                          side: const BorderSide(color: AppColors.purple),
+                        ),
+                        onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsHub())),
+                        icon: const Icon(Icons.menu_book, size: 16),
+                        label: const Text('Study', style: TextStyle(fontSize: 12)),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          foregroundColor: AppColors.purple,
+                          side: const BorderSide(color: AppColors.purple),
+                        ),
+                        onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => SmartFlashcardsGenerateScreen(prefilledTopic: s.name))),
+                        icon: const Icon(Icons.style, size: 16),
+                        label: const Text('Flashcards', style: TextStyle(fontSize: 12)),
+                      ),
+                    ],
                   ),
                 ],
               ),

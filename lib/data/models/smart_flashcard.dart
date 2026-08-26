@@ -10,7 +10,7 @@ enum FlashcardUiState {
   completed,
 }
 
-enum ReviewMode { all, difficult, skipped }
+enum ReviewMode { all, difficult, skipped, due }
 
 class SmartFlashcardSet {
   const SmartFlashcardSet({
@@ -66,6 +66,9 @@ class SmartFlashcard {
     this.topic = '',
     this.status = FlashcardUiState.unanswered,
     this.lastUserAnswer = '',
+    this.nextReviewAt,
+    this.easeFactor = 2.5,
+    this.intervalDays = 0,
   });
 
   final String id;
@@ -76,10 +79,16 @@ class SmartFlashcard {
   final int position;
   final FlashcardUiState status;
   final String lastUserAnswer;
+  final DateTime? nextReviewAt;
+  final double easeFactor;
+  final int intervalDays;
 
   SmartFlashcard copyWith({
     FlashcardUiState? status,
     String? lastUserAnswer,
+    DateTime? nextReviewAt,
+    double? easeFactor,
+    int? intervalDays,
   }) {
     return SmartFlashcard(
       id: id,
@@ -90,6 +99,9 @@ class SmartFlashcard {
       topic: topic,
       status: status ?? this.status,
       lastUserAnswer: lastUserAnswer ?? this.lastUserAnswer,
+      nextReviewAt: nextReviewAt ?? this.nextReviewAt,
+      easeFactor: easeFactor ?? this.easeFactor,
+      intervalDays: intervalDays ?? this.intervalDays,
     );
   }
 
@@ -103,6 +115,9 @@ class SmartFlashcard {
         'status': status.name,
         'position': position,
         'last_user_answer': lastUserAnswer,
+        'next_review_at': nextReviewAt?.toIso8601String(),
+        'ease_factor': easeFactor,
+        'interval_days': intervalDays,
       };
 
   factory SmartFlashcard.fromJson(Map<String, dynamic> json) {
@@ -120,6 +135,9 @@ class SmartFlashcard {
       position: json['position'] as int? ?? 0,
       status: status,
       lastUserAnswer: json['last_user_answer'] as String? ?? json['lastUserAnswer'] as String? ?? '',
+      nextReviewAt: json['next_review_at'] != null ? DateTime.tryParse('${json['next_review_at']}') : null,
+      easeFactor: (json['ease_factor'] as num?)?.toDouble() ?? 2.5,
+      intervalDays: json['interval_days'] as int? ?? 0,
     );
   }
 }

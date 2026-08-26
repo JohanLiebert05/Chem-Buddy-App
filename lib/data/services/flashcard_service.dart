@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:uuid/uuid.dart';
 
@@ -78,6 +80,45 @@ class FlashcardService {
     await _tryRemote(() async {
       await remote.upsert('flashcards', {...card.toJson(), 'user_id': remote.userId});
     }, kind: 'card', payload: card.toJson());
+  }
+
+  Future<void> updateSpacedRepetition(String cardId, String rating) async {
+    final card = store.all(store.smartCards).map(SmartFlashcard.fromJson).firstWhere((c) => c.id == cardId);
+    
+    int newInterval = card.intervalDays;
+    double newEase = card.easeFactor;
+    DateTime nextReview;
+    final now = DateTime.now();
+
+    if (rating == 'easy') {
+      newInterval = max(1, (newInterval * newEase).round());
+      newEase = min(3.0, newEase + 0.1);
+      nextReview = now.add(Duration(days: newInterval));
+    } else if (rating == 'difficult') {
+      newInterval = 1;
+      newEase = max(1.3, newEase - 0.2);
+      nextReview = now.add(const Duration(days: 1));
+    } else {
+      nextReview = now;
+    }
+
+    final updatedCard = card.copyWith(
+      intervalDays: newInterval,
+      easeFactor: newEase,
+      nextReviewAt: nextReview,
+    );
+    await updateCard(updatedCard);
+  }
+
+  List<SmartFlashcard> getDueCards(String setId) {
+    final now = DateTime.now();
+    return cardsFor(setId).where((c) {
+      return c.nextReviewAt == null || !c.nextReviewAt!.isAfter(now);
+    }).toList();
+  }
+
+  int countDueCards(String setId) {
+    return getDueCards(setId).length;
   }
 
   Future<void> saveAttempt(FlashcardAttempt attempt) async {
