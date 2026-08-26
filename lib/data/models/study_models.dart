@@ -1,5 +1,3 @@
-import '../models/smart_flashcard.dart';
-
 class DailyFocus {
   const DailyFocus({
     required this.subjectName,

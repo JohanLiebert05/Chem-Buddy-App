@@ -79,11 +79,11 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
           const SizedBox(height: 10),
           Row(
             children: [
-              for (final n in [10, 20])
+              for (final n in [5, 10, 20])
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    label: Text('$n'),
+                    label: Text('$n cards'),
                     selected: count == n,
                     onSelected: busy ? null : (_) => setState(() => count = n),
                   ),
@@ -103,13 +103,21 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
             ),
             const SizedBox(height: 12),
           ],
-          if (error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(error!, style: const TextStyle(color: AppColors.danger)),
+          if (error != null) ...[
+            GlowCard(
+              borderColor: AppColors.danger.withValues(alpha: 0.5),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: AppColors.danger, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(error!, style: const TextStyle(color: AppColors.danger, fontSize: 13))),
+                ],
+              ),
             ),
+            const SizedBox(height: 12),
+          ],
           PrimaryButton(
-            label: 'Create Flashcards',
+            label: error != null ? 'Retry Generating' : 'Create Flashcards',
             loading: busy,
             onPressed: busy ? null : _create,
           ),
@@ -140,30 +148,29 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
     setState(() {
       busy = true;
       error = null;
-      stage = 'Checking connection.';
+      stage = 'Connecting to study assistant...';
     });
     try {
       if (!await service.isOnline) {
-        throw StateError('Internet connection required to generate new AI flashcards.');
+        throw StateError('Internet connection is required to generate AI flashcards. Please check your network.');
       }
       
       String sourceText;
       if (text != null) {
         sourceText = text;
       } else {
-        setState(() => stage = 'Analyzing your notes.');
+        setState(() => stage = 'Reading your notes...');
         sourceText = await PdfTextExtractionService.instance.extractFromPath(path!);
       }
       
       final chunks = chunkNotes(sourceText);
       if (chunks.isEmpty) {
-        throw StateError('Not enough readable text to generate flashcards.');
+        throw StateError('Not enough readable text to generate flashcards. Please choose a different document.');
       }
-      setState(() => stage = 'Creating Chemistry questions.');
+      setState(() => stage = 'Synthesizing chemistry questions...');
       final topic = widget.prefilledTopic ?? p.basenameWithoutExtension(fileName ?? 'Chemistry');
       final cards = await GeminiFlashcardService().generate(sourceText: sourceText, count: count, topic: topic);
-      setState(() => stage = 'Organizing flashcards.');
-      setState(() => stage = 'Saving your flashcards.');
+      setState(() => stage = 'Saving your new deck...');
       final set = await service.saveGeneratedSet(
         title: topic,
         sourceFileName: fileName ?? 'notes.pdf',
@@ -176,7 +183,15 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
         MaterialPageRoute<void>(builder: (_) => SmartFlashcardsStudyScreen(setId: set.id)),
       );
     } catch (e) {
-      setState(() => error = e is StateError || e is PdfExtractionException ? e.toString() : 'Could not create flashcards. Please try another PDF.');
+      String msg;
+      if (e is StateError) {
+        msg = e.message;
+      } else if (e is PdfExtractionException) {
+        msg = e.message;
+      } else {
+        msg = 'Could not create flashcards. Please check your connection and try again.';
+      }
+      setState(() => error = msg);
     } finally {
       if (mounted) {
         setState(() {

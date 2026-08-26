@@ -9,16 +9,21 @@ class RagService {
   Future<RagResponse> ask({
     required String question,
     String? subject,
+    String? documentText,
+    String? documentName,
     List<AiMessage>? history,
   }) async {
     try {
       final response = await _remote.invokeFunction('ask-chembuddy', {
         'question': question,
         if (subject != null) 'subject': subject,
+        if (documentText != null) 'document_text': documentText,
+        if (documentName != null) 'document_name': documentName,
         if (history != null) 'history': history.map((e) => e.toJson()).toList(),
       });
       return RagResponse.fromJson(response as Map<String, dynamic>);
     } catch (e) {
+      if (e is StateError) rethrow;
       throw StateError('Failed to get answer: $e');
     }
   }

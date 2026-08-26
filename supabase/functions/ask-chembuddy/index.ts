@@ -20,6 +20,8 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const question = String(body.question ?? "").trim();
     const subject = body.subject as string | null;
+    const documentText = body.document_text as string | null;
+    const documentName = (body.document_name as string | null) || "Uploaded PDF";
     const conversationHistory = body.history as Array<{ role: string; content: string }> | null;
 
     if (question.length < 3) {
@@ -105,8 +107,21 @@ Deno.serve(async (req) => {
       similarity: number;
     }> = [];
 
+    // Prioritize user's uploaded document if provided
+    if (documentText && documentText.trim().length > 0) {
+      sources.push({
+        documentTitle: documentName,
+        fileName: documentName,
+        subject: subject || "Uploaded Material",
+        topic: "User Document",
+        pageNumber: 1,
+        similarity: 1.0,
+      });
+      context += `[USER STUDY MATERIAL: ${documentName}]\n${documentText.slice(0, 16000)}\n\n---\n\n`;
+    }
+
     if (chunks.length > 0) {
-      context = chunks
+      context += chunks
         .map((c, i) => {
           sources.push({
             documentTitle: c.document_title,
@@ -116,7 +131,7 @@ Deno.serve(async (req) => {
             pageNumber: c.page_number || 0,
             similarity: Math.round(c.similarity * 100) / 100,
           });
-          return `[Source ${i + 1}: ${c.document_title}${c.page_number ? ` (p.${c.page_number})` : ""}]\n${c.content}`;
+          return `[Knowledge Base ${i + 1}: ${c.document_title}${c.page_number ? ` (p.${c.page_number})` : ""}]\n${c.content}`;
         })
         .join("\n\n---\n\n");
     }
@@ -125,12 +140,11 @@ Deno.serve(async (req) => {
     const systemPrompt = `You are ChemBuddy AI, an expert Chemistry tutor for MSc Chemistry students.
 
 RULES:
-- Answer using ONLY the provided academic context when available.
-- Prefer the knowledge base content over your general knowledge.
+- When [USER STUDY MATERIAL] is provided, prioritize it as your primary reference and explicitly answer from "${documentName}".
+- If the question asks specifically about the uploaded material/PDF and the information is missing from it, explain: "I couldn't find this information in ${documentName}. Here is the explanation using general chemistry principles:"
 - CRITICAL: DO NOT output any LaTeX math formulas (e.g. $$H = ...$$ or \\frac or \\lambda). The mobile app cannot render LaTeX. Use ONLY plain text for all formulas, equations, and math (e.g. use H = A + B/u + C*u instead).
 - NEVER invent textbook facts, chemical formulas, references, or citations.
 - Give concise, exam-focused explanations suitable for MSc Chemistry students.
-- When using information from the context, reference the source (e.g., "According to [Source 1]...").
 - Use proper chemical notation and formatting.
 - If the question is completely outside chemistry/academics, politely redirect.
 
@@ -142,7 +156,7 @@ When explaining concepts, use clear structure:
 - Use numbered steps for processes
 - Keep paragraphs concise
 
-${context ? `KNOWLEDGE BASE CONTEXT:\n${context}` : "Answer from your chemistry expertise but clearly indicate this is general knowledge, not from the course materials."}`;
+${context ? `AVAILABLE STUDY CONTEXT:\n${context}` : "Answer from your chemistry expertise but clearly indicate this is general knowledge, not from specific course materials."}`;
 
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 

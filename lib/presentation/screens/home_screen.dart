@@ -17,11 +17,9 @@ import '../screens/pdf_reader_screen.dart';
 import '../screens/search_screen.dart';
 import '../screens/smart_flashcards_hub.dart';
 
-import '../../data/models/study_models.dart';
 import '../../data/models/smart_flashcard.dart';
-import '../../data/services/daily_focus_service.dart';
-import '../../data/services/study_session_service.dart';
-import '../../data/local/local_store.dart';
+import '../../data/services/daily_chemistry_service.dart';
+import '../screens/smart_flashcards_generate_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -344,60 +342,428 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
 
-        const SectionTitle('Upcoming'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const SectionTitle('Upcoming Tests'),
+            TextButton.icon(
+              onPressed: () => _showAddTestDialog(context, ref, state),
+              icon: const Icon(Icons.add_circle_outline, size: 16, color: AppColors.purpleBright),
+              label: const Text('Add Test', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
         if (upcoming.isEmpty)
-          const GlowCard(child: Text('No tests or assignments yet.', style: TextStyle(color: AppColors.textSecondary))),
-        ...upcoming.map(
-          (e) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: GlowCard(
+          GlowCard(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
-                  Icon(
-                    e.type == EventType.test ? Icons.quiz_outlined : Icons.assignment_outlined,
-                    color: AppColors.purpleBright,
-                  ),
-                  const SizedBox(width: 12),
+                  const Icon(Icons.event_available_outlined, size: 32, color: AppColors.purple),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(e.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                        Text(
-                          '${e.type.name.toUpperCase()} · ${DateFormat('EEE, d MMM').format(e.dueDate)}',
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                        ),
+                      children: const [
+                        Text('No upcoming tests scheduled', style: TextStyle(fontWeight: FontWeight.w700)),
+                        SizedBox(height: 2),
+                        Text('Tap + Add Test to track midterms and exams.', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        GlowCard(
-          child: Row(
+          )
+        else
+          ...upcoming.map((e) {
+            final now = DateTime.now();
+            final todayDate = DateTime(now.year, now.month, now.day);
+            final eventDate = DateTime(e.dueDate.year, e.dueDate.month, e.dueDate.day);
+            final daysLeft = eventDate.difference(todayDate).inDays;
+
+            String countdownLabel;
+            Color countdownColor;
+            Color countdownBg;
+
+            if (daysLeft == 0) {
+              countdownLabel = 'Today! 🎯';
+              countdownColor = Colors.white;
+              countdownBg = AppColors.danger;
+            } else if (daysLeft == 1) {
+              countdownLabel = 'Tomorrow ⏰';
+              countdownColor = Colors.black;
+              countdownBg = AppColors.warning;
+            } else if (daysLeft > 1) {
+              countdownLabel = '$daysLeft days left';
+              countdownColor = AppColors.purpleBright;
+              countdownBg = AppColors.purple.withValues(alpha: 0.18);
+            } else {
+              countdownLabel = 'Past due';
+              countdownColor = AppColors.textMuted;
+              countdownBg = AppColors.surfaceElevated;
+            }
+
+            final subject = state.subjects.where((s) => s.id == e.subjectId).firstOrNull;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: GlowCard(
+                onTap: () => _showTestDetails(context, ref, e, subject),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.purple.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        e.type == EventType.test ? Icons.quiz_rounded : Icons.assignment_rounded,
+                        color: AppColors.purpleBright,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(e.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${DateFormat('d MMM yyyy').format(e.dueDate)}${subject != null ? ' · ${subject.name}' : ''}',
+                            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: countdownBg,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        countdownLabel,
+                        style: TextStyle(
+                          color: countdownColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        const SizedBox(height: 12),
+        const SectionTitle('Daily Chemistry'),
+        _DailyChemistryCard(item: DailyChemistryService.instance.getTodayContent()),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Future<void> _showAddTestDialog(BuildContext context, WidgetRef ref, AppState state) async {
+    final titleCtrl = TextEditingController();
+    final notesCtrl = TextEditingController();
+    String? selectedSubjectId = state.subjects.isNotEmpty ? state.subjects.first.id : null;
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 7));
+    TimeOfDay? selectedTime;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Add Test / Exam', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                        IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: titleCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Test or Exam Name',
+                        hintText: 'e.g. Organic Chemistry Midterm',
+                        prefixIcon: Icon(Icons.edit_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (state.subjects.isNotEmpty)
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedSubjectId,
+                        dropdownColor: AppColors.surfaceElevated,
+                        decoration: const InputDecoration(
+                          labelText: 'Subject',
+                          prefixIcon: Icon(Icons.class_outlined),
+                        ),
+                        items: state.subjects.map((s) {
+                          return DropdownMenuItem(
+                            value: s.id,
+                            child: Text(s.name, overflow: TextOverflow.ellipsis),
+                          );
+                        }).toList(),
+                        onChanged: (val) => setModalState(() => selectedSubjectId = val),
+                      ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: selectedDate,
+                                firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                              );
+                              if (picked != null) {
+                                setModalState(() => selectedDate = picked);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceElevated,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.calendar_today, size: 16, color: AppColors.purpleBright),
+                                  const SizedBox(width: 8),
+                                  Text(DateFormat('d MMM yyyy').format(selectedDate), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: selectedTime ?? const TimeOfDay(hour: 10, minute: 0),
+                              );
+                              if (picked != null) {
+                                setModalState(() => selectedTime = picked);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceElevated,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.access_time, size: 16, color: AppColors.purpleBright),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    selectedTime != null ? selectedTime!.format(context) : 'Time (Optional)',
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: notesCtrl,
+                      maxLines: 2,
+                      decoration: const InputDecoration(
+                        labelText: 'Notes (Optional)',
+                        hintText: 'e.g. Chapters 1-4, reaction mechanisms',
+                        prefixIcon: Icon(Icons.notes),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.purple,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        onPressed: () async {
+                          if (titleCtrl.text.trim().isEmpty) return;
+                          final finalDate = DateTime(
+                            selectedDate.year,
+                            selectedDate.month,
+                            selectedDate.day,
+                            selectedTime?.hour ?? 9,
+                            selectedTime?.minute ?? 0,
+                          );
+
+                          final event = AcademicEvent(
+                            id: ref.read(chemRepositoryProvider).newId(),
+                            title: titleCtrl.text.trim(),
+                            subjectId: selectedSubjectId ?? '',
+                            dueDate: finalDate,
+                            type: EventType.test,
+                            description: notesCtrl.text.trim(),
+                          );
+
+                          await ref.read(appControllerProvider.notifier).saveEvent(event);
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        child: const Text('Save Test', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showTestDetails(BuildContext context, WidgetRef ref, AcademicEvent event, Subject? subject) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
             children: [
-              const Icon(Icons.hourglass_bottom, color: AppColors.blue),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  '${DateTime(DateTime.now().year, DateTime.now().month + 2, 15).difference(DateTime.now()).inDays} days left in the semester',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+              const Icon(Icons.quiz, color: AppColors.purpleBright),
+              const SizedBox(width: 10),
+              Expanded(child: Text(event.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18))),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (subject != null) ...[
+                Text('Subject: ${subject.name}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                const SizedBox(height: 6),
+              ],
+              Text('Date: ${DateFormat('EEEE, d MMMM yyyy').format(event.dueDate)}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+              if (event.description.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                const Text('Notes:', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                const SizedBox(height: 2),
+                Text(event.description, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await ref.read(appControllerProvider.notifier).deleteEvent(event.id);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: const Text('Delete', style: TextStyle(color: AppColors.danger)),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.purple,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => SmartFlashcardsGenerateScreen(
+                      prefilledTopic: '${event.title} ${subject?.name ?? ""}'.trim(),
+                      prefilledText: event.description,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.style, size: 16, color: Colors.white),
+              label: const Text('Study for this', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DailyChemistryCard extends StatelessWidget {
+  const _DailyChemistryCard({required this.item});
+  final DailyChemistryItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlowCard(
+      borderColor: item.type.color.withValues(alpha: 0.35),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(item.type.icon, size: 18, color: item.type.color),
+              const SizedBox(width: 8),
+              Text(
+                item.type.header,
+                style: TextStyle(
+                  color: item.type.color,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
                 ),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 10),
-        const GlowCard(
-          child: Text(
-            '“Chemistry is the study of matter, but I prefer to see it as the study of change.”',
-            style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic),
+          const SizedBox(height: 8),
+          Text(
+            item.title,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            item.content,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13.5, height: 1.4),
+          ),
+          if (item.authorOrNote != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '— ${item.authorOrNote}',
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 11.5,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

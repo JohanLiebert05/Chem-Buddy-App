@@ -5,6 +5,9 @@ class SupabaseService {
   SupabaseService._();
   static final instance = SupabaseService._();
 
+  static const defaultUrl = 'https://tqhrvvcxrrkppdfrbxnz.supabase.co';
+  static const defaultAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxaHJ2dmN4cnJrcHBkZnJieG56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MTQxOTksImV4cCI6MjEwMjM5MDE5OX0.ulLIKMS13JTOSgNA5V4btIjLZy98aB5aFWoQ4Qx4U4s';
+
   bool configured = false;
 
   Future<void> init() async {
@@ -15,19 +18,34 @@ class SupabaseService {
 
     const dartUrl = String.fromEnvironment('SUPABASE_URL');
     const dartKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-    final url = dartUrl.isNotEmpty ? dartUrl : (dotenv.env['SUPABASE_URL'] ?? '');
-    final key = dartKey.isNotEmpty ? dartKey : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
+    
+    var url = dartUrl.isNotEmpty ? dartUrl : (dotenv.env['SUPABASE_URL'] ?? '');
+    var key = dartKey.isNotEmpty ? dartKey : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
 
-    if (url.isEmpty ||
-        key.isEmpty ||
-        url.contains('YOUR_PROJECT') ||
-        key.contains('YOUR_ANON')) {
-      configured = false;
-      return;
+    if (url.isEmpty || url.contains('YOUR_PROJECT')) {
+      url = defaultUrl;
+    }
+    if (key.isEmpty || key.contains('YOUR_ANON')) {
+      key = defaultAnonKey;
     }
 
-    await Supabase.initialize(url: url, publishableKey: key);
-    configured = true;
+    try {
+      await Supabase.initialize(url: url, publishableKey: key);
+      configured = true;
+    } catch (_) {
+      configured = false;
+    }
+  }
+
+  Future<bool> checkConnection() async {
+    final c = client;
+    if (c == null) return false;
+    try {
+      final res = await c.from('profiles').select('id').limit(1);
+      return res.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
   }
 
   SupabaseClient? get client => configured ? Supabase.instance.client : null;
@@ -45,8 +63,9 @@ class SupabaseService {
   Future<AuthResponse?> signUpWithRegisterNumber(String fullName, String registerNumber, String password) async {
     final email = '${registerNumber.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '')}@chembuddy.local';
     final res = await client?.auth.signUp(email: email, password: password, data: {'full_name': fullName, 'register_number': registerNumber});
-    if (res?.user != null) {
-      await upsert('profiles', {'id': res!.user!.id, 'register_number': registerNumber, 'full_name': fullName});
+    final user = res?.user;
+    if (user != null) {
+      await upsert('profiles', {'id': user.id, 'register_number': registerNumber, 'full_name': fullName});
     }
     return res;
   }
@@ -123,16 +142,21 @@ class SupabaseService {
   Future<dynamic> invokeFunction(String name, Map<String, dynamic> body) async {
     final c = client;
     if (c == null) {
-      throw StateError('Cloud sync is not configured.');
+      throw StateError('Unable to connect to cloud services. Please check your internet connection and try again.');
     }
-    final response = await c.functions.invoke(name, body: body);
-    if (response.status >= 400) {
-      final data = response.data;
-      if (data is Map && data['error'] != null) {
-        throw StateError(data['error'].toString());
+    try {
+      final response = await c.functions.invoke(name, body: body);
+      if (response.status >= 400) {
+        final data = response.data;
+        if (data is Map && data['error'] != null) {
+          throw StateError(data['error'].toString());
+        }
+        throw StateError('The $name service encountered an issue. Please try again.');
       }
-      throw StateError('Could not reach the $name service. Please try again.');
+      return response.data;
+    } catch (e) {
+      if (e is StateError) rethrow;
+      throw StateError('Network connection issue. Please check your internet and try again.');
     }
-    return response.data;
   }
 }

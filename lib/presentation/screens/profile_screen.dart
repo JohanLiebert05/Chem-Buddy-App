@@ -10,118 +10,251 @@ import '../../data/remote/supabase_service.dart';
 import '../providers/app_providers.dart';
 import 'notification_settings_screen.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  bool _testingConnection = false;
+
+  Future<void> _testSync() async {
+    setState(() => _testingConnection = true);
+    final connected = await SupabaseService.instance.checkConnection();
+    setState(() => _testingConnection = false);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: connected ? AppColors.success : AppColors.surfaceElevated,
+          content: Text(
+            connected
+                ? '🟢 Connected to Supabase Cloud! Sync is active.'
+                : '⚪ Offline Local Mode active. Your notes, attendance & timetable remain safe on this device.',
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(appControllerProvider);
     final p = state.profile;
+    final isConfigured = SupabaseService.instance.configured;
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
       children: [
-        const Text('Profile', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+        const Text('Profile & Settings', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         GlowCard(
           child: Column(
             children: [
-              const AtomLogo(size: 72),
+              const AtomLogo(size: 64),
+              const SizedBox(height: 10),
+              Text(p.fullName.isEmpty ? 'MSc Chemistry Student' : p.fullName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 2),
+              Text(p.registerNumber.isNotEmpty ? 'Reg: ${p.registerNumber}' : p.email, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               const SizedBox(height: 8),
-              Text(p.fullName.isEmpty ? 'MSc Chemistry' : p.fullName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-              Text(p.email, style: const TextStyle(color: AppColors.textSecondary)),
-              const SizedBox(height: 8),
-              Text('${p.university} · Semester ${p.semester}', style: const TextStyle(color: AppColors.textMuted)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.purple.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text('${p.university} · Semester ${p.semester}', style: const TextStyle(color: AppColors.purpleBright, fontSize: 12, fontWeight: FontWeight.w600)),
+              ),
             ],
           ),
         ),
-        const SectionTitle('Subjects'),
-        ...state.subjects.map(
-          (s) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: GlowCard(
-              onTap: () => _addSubject(context, ref, existing: s),
-              child: Row(
-                children: [
-                  Container(width: 10, height: 10, decoration: BoxDecoration(color: Color(s.colorHex), shape: BoxShape.circle)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(s.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                        Text('${s.code}${s.teacher.isEmpty ? '' : ' · ${s.teacher}'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                      ],
+        
+        // 1. ACADEMIC
+        const SectionTitle('Academic Courses'),
+        if (state.subjects.isEmpty)
+          const GlowCard(
+            child: Text('No courses added yet. Tap Add Custom Subject to get started.', style: TextStyle(color: AppColors.textMuted)),
+          )
+        else
+          ...state.subjects.map(
+            (s) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: GlowCard(
+                onTap: () => _addSubject(context, ref, existing: s),
+                child: Row(
+                  children: [
+                    Container(width: 10, height: 10, decoration: BoxDecoration(color: Color(s.colorHex), shape: BoxShape.circle)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(s.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                          Text('${s.code}${s.teacher.isEmpty ? '' : ' · ${s.teacher}'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () => ref.read(appControllerProvider.notifier).deleteSubject(s.id),
-                    icon: const Icon(Icons.delete_outline, color: AppColors.danger),
-                  ),
-                ],
+                    IconButton(
+                      onPressed: () => ref.read(appControllerProvider.notifier).deleteSubject(s.id),
+                      icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 20),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        PrimaryButton(
-          label: 'Add custom subject',
+        const SizedBox(height: 4),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            side: BorderSide(color: AppColors.purple.withValues(alpha: 0.5)),
+          ),
           onPressed: () => _addSubject(context, ref),
+          icon: const Icon(Icons.add, size: 18, color: AppColors.purpleBright),
+          label: const Text('Add Custom Subject', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700)),
         ),
-        const SectionTitle('Settings'),
+
+        // 2. PREFERENCES
+        const SectionTitle('Preferences'),
         GlowCard(
           onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const NotificationSettingsScreen())),
           child: const Row(
             children: [
-              Icon(Icons.notifications_outlined, color: AppColors.purpleBright),
+              Icon(Icons.notifications_active_outlined, color: AppColors.purpleBright),
               SizedBox(width: 12),
-              Expanded(child: Text('Notifications', style: TextStyle(fontWeight: FontWeight.w700))),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Class & Study Reminders', style: TextStyle(fontWeight: FontWeight.w700)),
+                    Text('Configure alert timing and quiet hours', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  ],
+                ),
+              ),
               Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+
+        // 3. STORAGE & CLOUD SYNC
+        const SectionTitle('Storage & Cloud Sync'),
         GlowCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('About', style: TextStyle(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 8),
-              const Text('Chem Buddy 2.5.0 by Prajwal A Kambar', style: TextStyle(color: AppColors.textSecondary)),
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: isConfigured ? AppColors.success : AppColors.textMuted,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isConfigured ? 'Cloud Sync: Connected' : 'Storage: Offline Local Mode (Hive)',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: isConfigured ? AppColors.success : Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
               Text(
-                SupabaseService.instance.configured
-                    ? 'Cloud sync is on.'
-                    : 'Offline Hive mode. Add keys in .env to enable Supabase.',
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                isConfigured
+                    ? 'Your profile, timetable, notes, and attendance sync automatically with Supabase cloud.'
+                    : 'All your data is saved locally on this device in Hive. Cloud features will sync when online.',
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.3),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.surfaceElevated,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      side: BorderSide(color: AppColors.border),
+                    ),
+                    onPressed: _testingConnection ? null : _testSync,
+                    icon: _testingConnection
+                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purple))
+                        : const Icon(Icons.sync, size: 16, color: AppColors.purpleBright),
+                    label: Text(
+                      _testingConnection ? 'Testing...' : 'Test Connection / Retry',
+                      style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+
+        // 4. ABOUT
+        const SectionTitle('About'),
         GlowCard(
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(SupabaseService.instance.configured ? Icons.cloud_done : Icons.cloud_off, color: AppColors.purpleBright),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  SupabaseService.instance.configured
-                      ? 'Supabase connected — data syncs when you are online.'
-                      : 'Preferences stay on this device until you connect Supabase.',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                ),
+              const Text('Chem Buddy v2.5.1', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+              const SizedBox(height: 4),
+              const Text(
+                'AI-Powered Academic & Study Assistant for MSc Chemistry students.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Developed by Prajwal A Kambar',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: () => ref.read(appControllerProvider.notifier).logout(),
-          child: const Text('Log out', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)),
+
+        const SizedBox(height: 20),
+        Center(
+          child: TextButton.icon(
+            onPressed: () => _confirmLogout(context, ref),
+            icon: const Icon(Icons.logout, color: AppColors.danger, size: 18),
+            label: const Text('Log out', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)),
+          ),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 12),
         const Center(child: AppByPrajwal(large: true)),
-        const SizedBox(height: 8),
       ],
+    );
+  }
+
+  void _confirmLogout(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          title: const Text('Log out of Chem Buddy?'),
+          content: const Text('Your local data is saved on this device. You can log back in anytime.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+              onPressed: () {
+                Navigator.pop(ctx);
+                ref.read(appControllerProvider.notifier).logout();
+              },
+              child: const Text('Log out', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 

@@ -3,13 +3,16 @@ import '../remote/supabase_service.dart';
 import '../models/admin_models.dart';
 
 class AdminRepository {
-  final LocalStore _store;
+  final LocalStore? _store;
   final SupabaseService _remote;
 
   AdminRepository({
-    required LocalStore store,
+    LocalStore? store,
     required SupabaseService remote,
-  }) : _store = store, _remote = remote;
+  })  : _store = store,
+        _remote = remote;
+
+  LocalStore? get store => _store;
 
   Future<List<Announcement>> announcements({bool studentView = false}) async {
     final client = _remote.client;

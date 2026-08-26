@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -71,31 +72,115 @@ class _MainShellState extends ConsumerState<MainShell> {
           ),
         ),
         extendBody: true,
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: ColoredBox(
-              color: const Color(0xE01A1C22),
-              child: NavigationBar(
-                height: 68,
-                backgroundColor: Colors.transparent,
-                indicatorColor: AppColors.purple.withValues(alpha: 0.22),
-                selectedIndex: index,
-                onDestinationSelected: _goTo,
-                destinations: const [
-                  NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-                  NavigationDestination(icon: Icon(Icons.chat_bubble_outline), selectedIcon: Icon(Icons.chat_bubble), label: 'Ask AI'),
-                  NavigationDestination(icon: Icon(Icons.fact_check_outlined), selectedIcon: Icon(Icons.fact_check), label: 'Attendance'),
-                  NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Classes'),
-                  NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: 'Resources'),
-                  NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
-                ],
-              ),
-            ),
-          ),
+        bottomNavigationBar: _ModernBottomNav(
+          selectedIndex: index,
+          onTabSelected: _goTo,
         ),
       ),
     );
   }
+}
+
+class _ModernBottomNav extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onTabSelected;
+
+  const _ModernBottomNav({
+    required this.selectedIndex,
+    required this.onTabSelected,
+  });
+
+  static const _items = [
+    _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home'),
+    _NavItem(icon: Icons.auto_awesome_outlined, activeIcon: Icons.auto_awesome_rounded, label: 'Ask AI'),
+    _NavItem(icon: Icons.how_to_reg_outlined, activeIcon: Icons.how_to_reg_rounded, label: 'Attend'),
+    _NavItem(icon: Icons.calendar_month_outlined, activeIcon: Icons.calendar_month_rounded, label: 'Classes'),
+    _NavItem(icon: Icons.menu_book_outlined, activeIcon: Icons.menu_book_rounded, label: 'Library'),
+    _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    return Container(
+      margin: EdgeInsets.fromLTRB(10, 0, 10, max(8, bottomInset)),
+      decoration: BoxDecoration(
+        color: const Color(0xF2141620),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.purple.withValues(alpha: 0.25), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: AppColors.purple.withValues(alpha: 0.12),
+            blurRadius: 20,
+            spreadRadius: -2,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: List.generate(_items.length, (i) {
+            final isSelected = selectedIndex == i;
+            final item = _items[i];
+            return Expanded(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => onTabSelected(i),
+                  borderRadius: BorderRadius.circular(16),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.purple.withValues(alpha: 0.22) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                      border: isSelected
+                          ? Border.all(color: AppColors.purple.withValues(alpha: 0.4), width: 0.8)
+                          : null,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isSelected ? item.activeIcon : item.icon,
+                          size: 20,
+                          color: isSelected ? AppColors.purpleBright : AppColors.textMuted,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          item.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.fade,
+                          softWrap: false,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected ? Colors.white : AppColors.textMuted,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  const _NavItem({required this.icon, required this.activeIcon, required this.label});
 }
