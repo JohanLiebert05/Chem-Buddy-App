@@ -1,9 +1,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart' as p;
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/title_cleaner.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/services/gemini_flashcard_service.dart';
 import '../../data/services/pdf_text_extraction_service.dart';
@@ -160,7 +160,12 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
         sourceText = text;
       } else {
         setState(() => stage = 'Reading your notes...');
-        sourceText = await PdfTextExtractionService.instance.extractFromPath(path!);
+        sourceText = await PdfTextExtractionService.instance.extractFromPath(
+          path!,
+          onProgress: (status) {
+            if (mounted) setState(() => stage = status);
+          },
+        );
       }
       
       final chunks = chunkNotes(sourceText);
@@ -168,12 +173,13 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
         throw StateError('Not enough readable text to generate flashcards. Please choose a different document.');
       }
       setState(() => stage = 'Synthesizing chemistry questions...');
-      final topic = widget.prefilledTopic ?? p.basenameWithoutExtension(fileName ?? 'Chemistry');
+      final rawTopic = widget.prefilledTopic ?? (fileName != null ? cleanStudyMaterialTitle(fileName!) : 'Chemistry');
+      final topic = cleanStudyMaterialTitle(rawTopic);
       final cards = await GeminiFlashcardService().generate(sourceText: sourceText, count: count, topic: topic);
       setState(() => stage = 'Saving your new deck...');
       final set = await service.saveGeneratedSet(
         title: topic,
-        sourceFileName: fileName ?? 'notes.pdf',
+        sourceFileName: cleanStudyMaterialTitle(fileName ?? 'Chemistry Notes'),
         topic: topic,
         generated: cards,
       );

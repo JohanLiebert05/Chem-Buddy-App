@@ -2,9 +2,9 @@ import '../remote/supabase_service.dart';
 import '../models/rag_models.dart';
 
 class RagService {
-  final SupabaseService _remote;
+  final SupabaseService remote;
 
-  RagService({required SupabaseService remote}) : _remote = remote;
+  RagService({required this.remote});
 
   Future<RagResponse> ask({
     required String question,
@@ -14,7 +14,7 @@ class RagService {
     List<AiMessage>? history,
   }) async {
     try {
-      final response = await _remote.invokeFunction('ask-chembuddy', {
+      final response = await remote.invokeFunction('ask-chembuddy', {
         'question': question,
         if (subject != null) 'subject': subject,
         if (documentText != null) 'document_text': documentText,
@@ -36,7 +36,7 @@ class RagService {
     String? fileName,
   }) async {
     try {
-      await _remote.invokeFunction('ingest-document', {
+      await remote.invokeFunction('ingest-document', {
         'document_id': documentId,
         'text': text,
         if (subject != null) 'subject': subject,

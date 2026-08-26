@@ -3,19 +3,16 @@ import '../remote/supabase_service.dart';
 import '../models/admin_models.dart';
 
 class AdminRepository {
-  final LocalStore? _store;
-  final SupabaseService _remote;
+  final LocalStore? store;
+  final SupabaseService remote;
 
   AdminRepository({
-    LocalStore? store,
-    required SupabaseService remote,
-  })  : _store = store,
-        _remote = remote;
-
-  LocalStore? get store => _store;
+    this.store,
+    required this.remote,
+  });
 
   Future<List<Announcement>> announcements({bool studentView = false}) async {
-    final client = _remote.client;
+    final client = remote.client;
     if (client == null) return [];
 
     final response = await (studentView
@@ -26,15 +23,15 @@ class AdminRepository {
   }
 
   Future<void> upsertAnnouncement(Announcement a) async {
-    await _remote.upsert('announcements', a.toJson());
+    await remote.upsert('announcements', a.toJson());
   }
 
   Future<void> deleteAnnouncement(String id) async {
-    await _remote.remove('announcements', id);
+    await remote.remove('announcements', id);
   }
 
   Future<List<Map<String, dynamic>>> listStudents() async {
-    final client = _remote.client;
+    final client = remote.client;
     if (client == null) return [];
 
     final response = await client.from('profiles').select().eq('role', 'student').order('created_at', ascending: false);
@@ -42,7 +39,7 @@ class AdminRepository {
   }
 
   Future<void> updateStudentRole(String userId, String role) async {
-    final client = _remote.client;
+    final client = remote.client;
     if (client == null) return;
 
     await client.from('profiles').update({'role': role}).eq('id', userId);

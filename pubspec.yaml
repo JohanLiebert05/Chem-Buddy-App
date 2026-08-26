@@ -35,6 +35,7 @@ dependencies:
   connectivity_plus: ^6.1.4
   syncfusion_flutter_pdf: ^29.2.11
   flutter_markdown: ^0.7.4+3
+  pdfx: ^2.11.0
 
 dev_dependencies:
   flutter_test:

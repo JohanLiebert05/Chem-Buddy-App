@@ -31,6 +31,7 @@ Topic focus: ${topic}
 Prioritize important concepts, definitions, mechanisms, named reactions, reagents, reaction conditions, equations, spectroscopy, organic/inorganic/physical/analytical chemistry, exam-relevant facts, important exceptions, and comparisons.
 
 Avoid trivial, duplicate, ambiguous, or unsupported questions. Do not invent chemistry that is not supported by the notes. Keep questions concise.
+CRITICAL: Do NOT use raw LaTeX markup ($$...$$ or \\frac or \\Delta) or code variable names (delta_rho, v_t, r^2). Use clean textbook Unicode characters (Δ, ρ, η, vₜ, r², H₂SO₄, Ca²⁺, →, ⇌).
 
 Create exactly ${count} flashcards from these notes:
 

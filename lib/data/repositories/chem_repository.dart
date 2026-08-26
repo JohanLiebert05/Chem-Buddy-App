@@ -86,9 +86,36 @@ class ChemRepository {
     final all = timetable();
     final entries = timetableEntries();
     if (entries.isNotEmpty) {
-      final ids = entries.map((e) => e.id).toSet();
-      return all.where((s) => s.weekday == day.weekday && ids.contains(s.id)).toList()
-        ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+      final dayEntries = entries.where((e) => e.weekdayNumber == day.weekday).toList();
+      if (dayEntries.isNotEmpty) {
+        final subList = subjects();
+        final slotMap = {for (final s in all) s.id: s};
+        return dayEntries.map((e) {
+          if (slotMap.containsKey(e.id)) {
+            return slotMap[e.id]!;
+          }
+          Subject? sub;
+          for (final s in subList) {
+            if (s.code.isNotEmpty && s.code.toUpperCase() == e.subjectCode.trim().toUpperCase()) {
+              sub = s;
+              break;
+            }
+            if (s.name.isNotEmpty && s.name.toUpperCase() == e.subject.trim().toUpperCase()) {
+              sub = s;
+              break;
+            }
+          }
+          return TimetableSlot(
+            id: e.id,
+            subjectId: sub?.id ?? e.id,
+            weekday: e.weekdayNumber,
+            startMinutes: e.startMinutes,
+            endMinutes: e.endMinutes <= e.startMinutes ? e.startMinutes + 60 : e.endMinutes,
+            room: e.room.isNotEmpty ? e.room : e.teacherName,
+          );
+        }).toList()
+          ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+      }
     }
     return all.where((s) => s.weekday == day.weekday).toList()
       ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
@@ -99,8 +126,18 @@ class ChemRepository {
     var slots = timetable();
     final entries = timetableEntries();
     if (entries.isNotEmpty) {
+      if (slots.isEmpty) {
+        if (subjectId != null) {
+          final sub = subjects().where((s) => s.id == subjectId).firstOrNull;
+          final count = entries.where((e) =>
+              (sub != null && sub.code.isNotEmpty && e.subjectCode.toUpperCase() == sub.code.toUpperCase()) ||
+              (sub != null && sub.name.isNotEmpty && e.subject.toUpperCase() == sub.name.toUpperCase())).length;
+          return count * 4;
+        }
+        return entries.length * 4;
+      }
       final ids = entries.map((e) => e.id).toSet();
-      slots = slots.where((s) => ids.contains(s.id)).toList();
+      slots = slots.where((e) => ids.contains(e.id)).toList();
     }
     if (subjectId != null) {
       slots = slots.where((s) => s.subjectId == subjectId).toList();

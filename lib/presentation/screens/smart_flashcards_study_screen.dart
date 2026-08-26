@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/smart_flashcard.dart';
 import '../providers/app_providers.dart';
@@ -100,7 +101,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                 if (card.topic.isNotEmpty)
                   Text(card.topic.toUpperCase(), style: const TextStyle(color: AppColors.purpleBright, fontSize: 12, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 8),
-                Text(card.question, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, height: 1.3)),
+                Text(ChemistryTextFormatter.format(card.question), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, height: 1.3)),
               ],
             ),
           ),
@@ -131,7 +132,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
             ],
             const Text('REFERENCE ANSWER', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w800, fontSize: 12)),
             const SizedBox(height: 6),
-            GlowCard(child: Text(card.answer)),
+            GlowCard(child: Text(ChemistryTextFormatter.format(card.answer))),
             const SizedBox(height: 16),
             Row(
               children: [

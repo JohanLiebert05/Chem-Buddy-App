@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/title_cleaner.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/smart_flashcard.dart';
 import '../providers/app_providers.dart';
@@ -86,9 +87,23 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: Text(s.title, style: const TextStyle(fontWeight: FontWeight.w800))),
-                        if (dueCount > 0)
+                        Expanded(
+                          child: Text(
+                            cleanStudyMaterialTitle(s.title),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15.5,
+                              color: Colors.white,
+                              letterSpacing: 0.1,
+                            ),
+                          ),
+                        ),
+                        if (dueCount > 0) ...[
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
@@ -100,11 +115,21 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
                               style: const TextStyle(color: AppColors.warning, fontSize: 10, fontWeight: FontWeight.w800),
                             ),
                           ),
+                        ],
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text('${s.cardCount} cards • ${s.sourceFileName}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                    Text(DateFormat('d MMM yyyy').format(s.createdAt), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${s.cardCount} cards • ${cleanStudyMaterialTitle(s.sourceFileName)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      DateFormat('d MMM yyyy').format(s.createdAt),
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                    ),
                     if (dueCount > 0) ...[
                       const SizedBox(height: 12),
                       OutlinedButton(

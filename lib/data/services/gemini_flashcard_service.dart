@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../core/utils/chemistry_text_formatter.dart';
 import '../models/smart_flashcard.dart';
 import '../remote/supabase_service.dart';
 import 'pdf_text_utils.dart';
@@ -76,8 +77,8 @@ class GeminiFlashcardService {
         .map((e) => Map<String, dynamic>.from(e))
         .map(
           (e) => GeneratedCard(
-            question: '${e['question'] ?? ''}'.trim(),
-            answer: '${e['answer'] ?? ''}'.trim(),
+            question: ChemistryTextFormatter.format('${e['question'] ?? ''}'.trim()),
+            answer: ChemistryTextFormatter.format('${e['answer'] ?? ''}'.trim()),
             topic: '${e['topic'] ?? 'Chemistry'}'.trim(),
           ),
         )

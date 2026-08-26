@@ -4,5 +4,6 @@ class PdfTextExtractionService {
   PdfTextExtractionService._();
   static final instance = PdfTextExtractionService._();
 
-  Future<String> extractFromPath(String path) => impl.extractFromPath(path);
+  Future<String> extractFromPath(String path, {void Function(String progress)? onProgress}) =>
+      impl.extractFromPath(path, onProgress: onProgress);
 }

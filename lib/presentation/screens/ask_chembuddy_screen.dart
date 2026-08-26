@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/models.dart';
@@ -28,6 +29,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _extracting = false;
+  String _extractingStatus = 'Reading document...';
   String? _lastSentQuestion;
 
   void _sendMessage([String? textOverride]) {
@@ -55,12 +57,21 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
         type: FileType.custom,
         allowedExtensions: ['pdf'],
       );
-      final file = result?.files.single;
-      if (file == null || file.path == null) return;
+      if (result == null || result.files.isEmpty) return;
+      final file = result.files.first;
+      if (file.path == null) return;
 
-      setState(() => _extracting = true);
+      setState(() {
+        _extracting = true;
+        _extractingStatus = 'Reading document structure...';
+      });
 
-      final text = await PdfTextExtractionService.instance.extractFromPath(file.path!);
+      final text = await PdfTextExtractionService.instance.extractFromPath(
+        file.path!,
+        onProgress: (status) {
+          if (mounted) setState(() => _extractingStatus = status);
+        },
+      );
       final fileObj = File(file.path!);
       final size = await fileObj.length();
 
@@ -145,11 +156,17 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 child: GlowCard(
+                  borderColor: AppColors.purpleBright.withValues(alpha: 0.5),
                   child: Row(
-                    children: const [
-                      SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purpleBright)),
-                      SizedBox(width: 12),
-                      Expanded(child: Text('Extracting and indexing study material...', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                    children: [
+                      const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purpleBright)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _extractingStatus,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.white),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -386,7 +403,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                       ),
                                     ],
                                     MarkdownBody(
-                                      data: msg.content,
+                                      data: ChemistryTextFormatter.format(msg.content),
                                       styleSheet: MarkdownStyleSheet(
                                         p: const TextStyle(color: AppColors.textPrimary, fontSize: 14, height: 1.45),
                                         h1: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800),
@@ -423,7 +440,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                                 MaterialPageRoute<void>(
                                                   builder: (_) => SmartFlashcardsGenerateScreen(
                                                     prefilledTopic: 'Chat Topic',
-                                                    prefilledText: msg.content,
+                                                    prefilledText: ChemistryTextFormatter.format(msg.content),
                                                   ),
                                                 ),
                                               );
@@ -439,7 +456,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                                 MaterialPageRoute<void>(
                                                   builder: (_) => SmartFlashcardsGenerateScreen(
                                                     prefilledTopic: 'Quiz Review',
-                                                    prefilledText: msg.content,
+                                                    prefilledText: ChemistryTextFormatter.format(msg.content),
                                                   ),
                                                 ),
                                               );
@@ -460,15 +477,16 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                             icon: Icons.bookmark_add,
                                             label: 'Save Note',
                                             onTap: () {
-                                              final title = msg.content.split('\n').firstWhere(
+                                              final rawTitle = msg.content.split('\n').firstWhere(
                                                 (line) => line.trim().isNotEmpty,
                                                 orElse: () => 'Chemistry Note',
                                               ).replaceAll(RegExp(r'^[#*\s]+'), '');
+                                              final title = ChemistryTextFormatter.format(rawTitle);
                                               
                                               final note = NoteItem(
                                                 id: const Uuid().v4(),
                                                 title: title.isEmpty ? 'Chemistry Note' : (title.length > 50 ? title.substring(0, 50) : title),
-                                                body: msg.content,
+                                                body: ChemistryTextFormatter.format(msg.content),
                                                 updatedAt: DateTime.now(),
                                               );
                                               ref.read(appControllerProvider.notifier).saveNote(note);
@@ -533,46 +551,54 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                 ),
               ),
 
-            // Input Bar with bottom spacing above bottom navigation bar
-            Container(
-              padding: EdgeInsets.fromLTRB(16, 8, 16, max(92, MediaQuery.of(context).padding.bottom + 80)),
-              decoration: BoxDecoration(
-                color: const Color(0xE8141620),
-                border: Border(top: BorderSide(color: AppColors.border.withValues(alpha: 0.4))),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: chatState.hasActiveDocument
-                            ? 'Ask about ${chatState.activeDocumentName}...'
-                            : 'Ask any chemistry question...',
-                        hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                        filled: true,
-                        fillColor: AppColors.surfaceElevated,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: AppColors.border),
+            // Input Bar with responsive spacing above bottom navigation bar
+            Builder(
+              builder: (context) {
+                final insets = MediaQuery.viewInsetsOf(context).bottom;
+                final safeBottom = MediaQuery.paddingOf(context).bottom;
+                final bottomPadding = insets > 0 ? 8.0 : (62.0 + max(6.0, safeBottom));
+
+                return Container(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
+                  decoration: BoxDecoration(
+                    color: const Color(0xE8141620),
+                    border: Border(top: BorderSide(color: AppColors.border.withValues(alpha: 0.4))),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: chatState.hasActiveDocument
+                                ? 'Ask about ${chatState.activeDocumentName}...'
+                                : 'Ask any chemistry question...',
+                            hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                            filled: true,
+                            fillColor: AppColors.surfaceElevated,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(color: AppColors.border),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          ),
+                          onSubmitted: (_) => _sendMessage(),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                       ),
-                      onSubmitted: (_) => _sendMessage(),
-                    ),
+                      const SizedBox(width: 8),
+                      CircleAvatar(
+                        backgroundColor: AppColors.purple,
+                        radius: 22,
+                        child: IconButton(
+                          icon: const Icon(Icons.send, color: Colors.white, size: 18),
+                          onPressed: () => _sendMessage(),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  CircleAvatar(
-                    backgroundColor: AppColors.purple,
-                    radius: 22,
-                    child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white, size: 18),
-                      onPressed: () => _sendMessage(),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         ),

@@ -142,7 +142,8 @@ Deno.serve(async (req) => {
 RULES:
 - When [USER STUDY MATERIAL] is provided, prioritize it as your primary reference and explicitly answer from "${documentName}".
 - If the question asks specifically about the uploaded material/PDF and the information is missing from it, explain: "I couldn't find this information in ${documentName}. Here is the explanation using general chemistry principles:"
-- CRITICAL: DO NOT output any LaTeX math formulas (e.g. $$H = ...$$ or \\frac or \\lambda). The mobile app cannot render LaTeX. Use ONLY plain text for all formulas, equations, and math (e.g. use H = A + B/u + C*u instead).
+- CRITICAL: DO NOT output raw LaTeX math markup (e.g. $$H = ...$$, \frac, \lambda, \Delta, \rho, \eta, dollar signs). Instead, format formulas with standard Unicode mathematical characters and subscripts/superscripts (e.g. "ΔG = ΔH − TΔS", "vₜ = (2r² Δρ g) / (9η)", "H₂SO₄", "Ca²⁺", "k₁", "t½", "⇌", "→", "≤", "≥").
+- NEVER use code-style variables with underscores in prose or tables (do NOT write "delta_rho", "v_t", "r^2", write "Δρ", "vₜ", "r²").
 - NEVER invent textbook facts, chemical formulas, references, or citations.
 - Give concise, exam-focused explanations suitable for MSc Chemistry students.
 - Use proper chemical notation and formatting.

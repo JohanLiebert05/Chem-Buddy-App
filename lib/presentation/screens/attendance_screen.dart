@@ -100,17 +100,61 @@ class AttendanceScreen extends ConsumerWidget {
             ),
           ),
         ...slots.map((slot) {
-          final subject = state.subjects.cast<Subject?>().firstWhere((s) => s!.id == slot.subjectId, orElse: () => null);
+          final subject = state.subjects.where((s) => s.id == slot.subjectId).firstOrNull;
+          final entry = state.entries.where((e) => e.id == slot.id).firstOrNull;
           final current = repo.recordFor(slotId: slot.id, date: today);
+          final title = subject?.name ?? (entry != null && entry.displayName.isNotEmpty ? entry.displayName : 'Class');
+          final timeStr = slot.timeLabel.isNotEmpty ? slot.timeLabel : (entry != null ? '${entry.startTime} – ${entry.endTime}' : '');
+          final roomStr = slot.room.isNotEmpty ? slot.room : (entry?.room ?? '');
+
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: GlowCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(subject?.name ?? 'Class', style: const TextStyle(fontWeight: FontWeight.w700)),
-                  Text(slot.timeLabel, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      ),
+                      if (current != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: (current.status == AttendanceStatus.present
+                                    ? AppColors.present
+                                    : current.status == AttendanceStatus.absent
+                                        ? AppColors.absent
+                                        : AppColors.warning)
+                                .withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            current.status == AttendanceStatus.present
+                                ? '✓ Marked Present'
+                                : current.status == AttendanceStatus.absent
+                                    ? '✗ Marked Absent'
+                                    : '⏸ Postponed',
+                            style: TextStyle(
+                              color: current.status == AttendanceStatus.present
+                                  ? AppColors.present
+                                  : current.status == AttendanceStatus.absent
+                                      ? AppColors.absent
+                                      : AppColors.warning,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    [timeStr, if (roomStr.isNotEmpty) 'Room: $roomStr'].where((s) => s.isNotEmpty).join(' • '),
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       for (final status in AttendanceStatus.values)
@@ -121,7 +165,7 @@ class AttendanceScreen extends ConsumerWidget {
                               status: status,
                               selected: current?.status == status,
                               onTap: () => ref.read(appControllerProvider.notifier).mark(
-                                    subjectId: slot.subjectId,
+                                    subjectId: subject?.id ?? slot.subjectId,
                                     date: today,
                                     status: status,
                                     slotId: slot.id,
@@ -134,7 +178,7 @@ class AttendanceScreen extends ConsumerWidget {
                   if (current?.markedAt != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Marked exactly at: ${DateFormat('h:mm a').format(current!.markedAt!)}',
+                      'Marked at: ${DateFormat('h:mm a').format(current!.markedAt!)}',
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
                     ),
                   ],
@@ -249,31 +293,49 @@ class _StatusButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (status) {
-      AttendanceStatus.present => AppColors.present,
-      AttendanceStatus.absent => AppColors.absent,
-      AttendanceStatus.postponed => AppColors.postponed,
+    final (color, icon, label) = switch (status) {
+      AttendanceStatus.present => (AppColors.present, Icons.check_circle_outline, 'Present'),
+      AttendanceStatus.absent => (AppColors.absent, Icons.cancel_outlined, 'Absent'),
+      AttendanceStatus.postponed => (AppColors.warning, Icons.pause_circle_outline, 'Postponed'),
     };
-    return GestureDetector(
-      onTap: () {
-        if (status == AttendanceStatus.absent) {
-          AppHaptics.warn();
-        } else {
-          AppHaptics.tap();
-        }
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.2) : AppColors.surfaceElevated,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? color : Colors.transparent),
-        ),
-        child: Text(
-          status.name[0].toUpperCase() + status.name.substring(1),
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: selected ? color : AppColors.textSecondary),
+    return Material(
+      color: selected ? color.withValues(alpha: 0.2) : AppColors.surfaceElevated,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          if (status == AttendanceStatus.absent) {
+            AppHaptics.warn();
+          } else {
+            AppHaptics.tap();
+          }
+          onTap();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected ? color : AppColors.border.withValues(alpha: 0.6),
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 14, color: selected ? color : AppColors.textMuted),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? color : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

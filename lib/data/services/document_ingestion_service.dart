@@ -5,9 +5,9 @@ import '../models/admin_models.dart';
 import 'rag_service.dart';
 
 class DocumentIngestionService {
-  final SupabaseService _remote;
+  final SupabaseService remote;
 
-  DocumentIngestionService({required SupabaseService remote}) : _remote = remote;
+  DocumentIngestionService({required this.remote});
 
   Future<String> uploadDocument({
     required String filePath,
@@ -15,8 +15,8 @@ class DocumentIngestionService {
     required String title,
     String? subject,
   }) async {
-    final client = _remote.client;
-    final userId = _remote.userId;
+    final client = remote.client;
+    final userId = remote.userId;
     if (client == null || userId == null) {
       throw StateError('Not authenticated');
     }
@@ -52,8 +52,8 @@ class DocumentIngestionService {
     String? topic,
     String? fileName,
   }) async {
-    final ragService = RagService(remote: _remote);
-    final client = _remote.client;
+    final ragService = RagService(remote: remote);
+    final client = remote.client;
     if (client == null) throw StateError('Not authenticated');
 
     try {
@@ -73,7 +73,7 @@ class DocumentIngestionService {
   }
 
   Future<List<RagDocument>> listDocuments() async {
-    final client = _remote.client;
+    final client = remote.client;
     if (client == null) return [];
 
     final response = await client.from('rag_documents').select().order('created_at', ascending: false);
@@ -81,7 +81,7 @@ class DocumentIngestionService {
   }
 
   Future<void> deleteDocument(String id) async {
-    final client = _remote.client;
+    final client = remote.client;
     if (client == null) return;
 
     final docData = await client.from('rag_documents').select('storage_path').eq('id', id).maybeSingle();
@@ -91,6 +91,6 @@ class DocumentIngestionService {
       } catch (_) {}
     }
     
-    await _remote.remove('rag_documents', id);
+    await remote.remove('rag_documents', id);
   }
 }
