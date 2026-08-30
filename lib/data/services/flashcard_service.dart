@@ -1,11 +1,46 @@
-import 'dart:math';
-
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../local/local_store.dart';
 import '../models/smart_flashcard.dart';
 import '../remote/supabase_service.dart';
+import 'spaced_repetition_service.dart';
+
+class DeckSrStats {
+  const DeckSrStats({
+    required this.total,
+    required this.due,
+    required this.learning,
+    required this.newCount,
+    required this.mature,
+  });
+
+  final int total;
+  final int due;
+  final int learning;
+  final int newCount;
+  final int mature;
+}
+
+class OverallSrStats {
+  const OverallSrStats({
+    required this.totalCards,
+    required this.dueToday,
+    required this.learningToday,
+    required this.newToday,
+    required this.matureCount,
+    required this.reviewedToday,
+    required this.retentionRate,
+  });
+
+  final int totalCards;
+  final int dueToday;
+  final int learningToday;
+  final int newToday;
+  final int matureCount;
+  final int reviewedToday;
+  final double retentionRate;
+}
 
 class FlashcardService {
   FlashcardService({required this.store, SupabaseService? remote}) : remote = remote ?? SupabaseService.instance;
@@ -13,6 +48,7 @@ class FlashcardService {
   final LocalStore store;
   final SupabaseService remote;
   final _uuid = const Uuid();
+  final scheduler = const SpacedRepetitionService();
 
   Future<bool> get isOnline async {
     final result = await Connectivity().checkConnectivity();
@@ -25,12 +61,12 @@ class FlashcardService {
     return list;
   }
 
+  List<SmartFlashcard> allCards() {
+    return store.all(store.smartCards).map(SmartFlashcard.fromJson).toList();
+  }
+
   List<SmartFlashcard> cardsFor(String setId) {
-    final list = store
-        .all(store.smartCards)
-        .map(SmartFlashcard.fromJson)
-        .where((c) => c.setId == setId)
-        .toList();
+    final list = allCards().where((c) => c.setId == setId).toList();
     list.sort((a, b) => a.position.compareTo(b.position));
     return list;
   }
@@ -60,6 +96,7 @@ class FlashcardService {
         answer: generated[i].answer,
         topic: generated[i].topic,
         position: i,
+        srState: FlashcardSrState.newCard,
       );
       await store.put(store.smartCards, card.id, card.toJson());
     }
@@ -82,43 +119,143 @@ class FlashcardService {
     }, kind: 'card', payload: card.toJson());
   }
 
-  Future<void> updateSpacedRepetition(String cardId, String rating) async {
-    final card = store.all(store.smartCards).map(SmartFlashcard.fromJson).firstWhere((c) => c.id == cardId);
+  /// Rates a card with Anki / SM-2 spaced repetition calculation.
+  Future<SmartFlashcard> applyRating(String cardId, FlashcardRating rating) async {
+    final raw = store.all(store.smartCards).map(SmartFlashcard.fromJson);
+    final card = raw.firstWhere((c) => c.id == cardId);
     
-    int newInterval = card.intervalDays;
-    double newEase = card.easeFactor;
-    DateTime nextReview;
-    final now = DateTime.now();
-
-    if (rating == 'easy') {
-      newInterval = max(1, (newInterval * newEase).round());
-      newEase = min(3.0, newEase + 0.1);
-      nextReview = now.add(Duration(days: newInterval));
-    } else if (rating == 'difficult') {
-      newInterval = 1;
-      newEase = max(1.3, newEase - 0.2);
-      nextReview = now.add(const Duration(days: 1));
-    } else {
-      nextReview = now;
-    }
-
-    final updatedCard = card.copyWith(
-      intervalDays: newInterval,
-      easeFactor: newEase,
-      nextReviewAt: nextReview,
-    );
-    await updateCard(updatedCard);
+    final scheduled = scheduler.schedule(card: card, rating: rating);
+    await updateCard(scheduled);
+    return scheduled;
   }
 
-  List<SmartFlashcard> getDueCards(String setId) {
-    final now = DateTime.now();
-    return cardsFor(setId).where((c) {
-      return c.nextReviewAt == null || !c.nextReviewAt!.isAfter(now);
-    }).toList();
+  /// Legacy compatibility wrapper
+  Future<void> updateSpacedRepetition(String cardId, String rating) async {
+    FlashcardRating r;
+    if (rating == 'easy') {
+      r = FlashcardRating.easy;
+    } else if (rating == 'difficult' || rating == 'hard') {
+      r = FlashcardRating.hard;
+    } else if (rating == 'again') {
+      r = FlashcardRating.again;
+    } else {
+      r = FlashcardRating.good;
+    }
+    await applyRating(cardId, r);
+  }
+
+  List<SmartFlashcard> getDueCards([String? setId, int limit = 50]) {
+    final cards = setId != null ? cardsFor(setId) : allCards();
+    final due = cards.where((c) => c.isDue).toList();
+    due.sort((a, b) => (a.nextReviewAt ?? DateTime.now()).compareTo(b.nextReviewAt ?? DateTime.now()));
+    return due.take(limit).toList();
+  }
+
+  List<SmartFlashcard> getNewCards([String? setId, int limit = 10]) {
+    final cards = setId != null ? cardsFor(setId) : allCards();
+    final newOnes = cards.where((c) => c.isNew).toList();
+    newOnes.sort((a, b) => a.position.compareTo(b.position));
+    return newOnes.take(limit).toList();
+  }
+
+  List<SmartFlashcard> getLearningCards([String? setId]) {
+    final cards = setId != null ? cardsFor(setId) : allCards();
+    return cards.where((c) => c.isLearning).toList();
+  }
+
+  /// Builds a complete daily spaced repetition queue respecting limits:
+  /// Learning cards (top priority) + Due Review cards (up to limit) + New cards (up to limit).
+  List<SmartFlashcard> getSpacedRepetitionQueue({
+    String? setId,
+    int newLimit = SpacedRepetitionService.defaultDailyNewCards,
+    int reviewLimit = SpacedRepetitionService.defaultDailyReviews,
+  }) {
+    final queue = <SmartFlashcard>[];
+    final seen = <String>{};
+
+    // 1. Learning / Lapse cards
+    for (final c in getLearningCards(setId)) {
+      if (seen.add(c.id)) queue.add(c);
+    }
+
+    // 2. Due Review cards
+    for (final c in getDueCards(setId, reviewLimit)) {
+      if (seen.add(c.id)) queue.add(c);
+    }
+
+    // 3. New cards
+    for (final c in getNewCards(setId, newLimit)) {
+      if (seen.add(c.id)) queue.add(c);
+    }
+
+    return queue;
   }
 
   int countDueCards(String setId) {
     return getDueCards(setId).length;
+  }
+
+  DeckSrStats getDeckStats(String setId) {
+    final cards = cardsFor(setId);
+    var due = 0;
+    var learning = 0;
+    var newCount = 0;
+    var mature = 0;
+
+    for (final c in cards) {
+      if (c.isDue) due++;
+      if (c.isLearning) learning++;
+      if (c.isNew) newCount++;
+      if (c.isMature) mature++;
+    }
+
+    return DeckSrStats(
+      total: cards.length,
+      due: due,
+      learning: learning,
+      newCount: newCount,
+      mature: mature,
+    );
+  }
+
+  OverallSrStats getOverallStats() {
+    final cards = allCards();
+    var due = 0;
+    var learning = 0;
+    var newCount = 0;
+    var mature = 0;
+
+    for (final c in cards) {
+      if (c.isDue) due++;
+      if (c.isLearning) learning++;
+      if (c.isNew) newCount++;
+      if (c.isMature) mature++;
+    }
+
+    // Calculate reviews done today from attempts
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final attempts = store.all(store.flashcardAttempts).map(FlashcardAttempt.fromJson).where((a) {
+      return a.createdAt.isAfter(todayStart);
+    }).toList();
+
+    var goodOrEasy = 0;
+    for (final a in attempts) {
+      if (a.selfRating == 'good' || a.selfRating == 'easy' || a.selfRating == 'Easy') {
+        goodOrEasy++;
+      }
+    }
+    final retention = attempts.isNotEmpty ? (goodOrEasy / attempts.length) * 100 : 92.0;
+
+    return OverallSrStats(
+      totalCards: cards.length,
+      dueToday: due,
+      learningToday: learning,
+      newToday: newCount,
+      matureCount: mature,
+      reviewedToday: attempts.length,
+      retentionRate: retention,
+    );
   }
 
   Future<void> saveAttempt(FlashcardAttempt attempt) async {

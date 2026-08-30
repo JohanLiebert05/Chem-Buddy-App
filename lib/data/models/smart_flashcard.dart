@@ -10,7 +10,24 @@ enum FlashcardUiState {
   completed,
 }
 
-enum ReviewMode { all, difficult, skipped, due }
+/// Anki / SM-2 Spaced Repetition card lifecycle states.
+enum FlashcardSrState {
+  newCard,   // Never reviewed
+  learning,  // Currently in short learning steps
+  review,    // Graduated to day-based interval reviews
+  mature,    // Retained over multiple reviews (interval >= 21 days)
+  lapse,     // Previously learned, but forgotten (Again pressed)
+}
+
+/// Anki-style 4-button recall rating choices.
+enum FlashcardRating {
+  again, // 🔴 "I didn't remember"
+  hard,  // 🟠 "I remembered, but with difficulty"
+  good,  // 🟢 "I remembered normally"
+  easy,  // 🔵 "I remembered immediately"
+}
+
+enum ReviewMode { all, difficult, skipped, due, newCards, spacedRepetition }
 
 class SmartFlashcardSet {
   const SmartFlashcardSet({
@@ -69,6 +86,10 @@ class SmartFlashcard {
     this.nextReviewAt,
     this.easeFactor = 2.5,
     this.intervalDays = 0,
+    this.srState = FlashcardSrState.newCard,
+    this.repetitionCount = 0,
+    this.lapseCount = 0,
+    this.lastReviewedAt,
   });
 
   final String id;
@@ -82,6 +103,19 @@ class SmartFlashcard {
   final DateTime? nextReviewAt;
   final double easeFactor;
   final int intervalDays;
+  final FlashcardSrState srState;
+  final int repetitionCount;
+  final int lapseCount;
+  final DateTime? lastReviewedAt;
+
+  bool get isNew => srState == FlashcardSrState.newCard && repetitionCount == 0 && lastReviewedAt == null;
+  bool get isLearning => srState == FlashcardSrState.learning || srState == FlashcardSrState.lapse;
+  bool get isMature => srState == FlashcardSrState.mature || intervalDays >= 21;
+  bool get isDue {
+    if (isNew) return false;
+    if (nextReviewAt == null) return true;
+    return !nextReviewAt!.isAfter(DateTime.now());
+  }
 
   SmartFlashcard copyWith({
     FlashcardUiState? status,
@@ -89,6 +123,10 @@ class SmartFlashcard {
     DateTime? nextReviewAt,
     double? easeFactor,
     int? intervalDays,
+    FlashcardSrState? srState,
+    int? repetitionCount,
+    int? lapseCount,
+    DateTime? lastReviewedAt,
   }) {
     return SmartFlashcard(
       id: id,
@@ -102,6 +140,10 @@ class SmartFlashcard {
       nextReviewAt: nextReviewAt ?? this.nextReviewAt,
       easeFactor: easeFactor ?? this.easeFactor,
       intervalDays: intervalDays ?? this.intervalDays,
+      srState: srState ?? this.srState,
+      repetitionCount: repetitionCount ?? this.repetitionCount,
+      lapseCount: lapseCount ?? this.lapseCount,
+      lastReviewedAt: lastReviewedAt ?? this.lastReviewedAt,
     );
   }
 
@@ -118,14 +160,37 @@ class SmartFlashcard {
         'next_review_at': nextReviewAt?.toIso8601String(),
         'ease_factor': easeFactor,
         'interval_days': intervalDays,
+        'sr_state': srState.name,
+        'repetition_count': repetitionCount,
+        'lapse_count': lapseCount,
+        'last_reviewed_at': lastReviewedAt?.toIso8601String(),
       };
 
   factory SmartFlashcard.fromJson(Map<String, dynamic> json) {
-    final raw = '${json['status'] ?? json['difficulty'] ?? 'unanswered'}';
+    final rawStatus = '${json['status'] ?? json['difficulty'] ?? 'unanswered'}';
     final status = FlashcardUiState.values.firstWhere(
-      (e) => e.name == raw,
+      (e) => e.name == rawStatus,
       orElse: () => FlashcardUiState.unanswered,
     );
+
+    final rawSrState = json['sr_state'] as String?;
+    FlashcardSrState srState;
+    if (rawSrState != null) {
+      srState = FlashcardSrState.values.firstWhere(
+        (e) => e.name == rawSrState,
+        orElse: () => FlashcardSrState.newCard,
+      );
+    } else {
+      // Safe legacy initialization: If it has nextReviewAt and interval > 0, it was reviewed
+      final interval = json['interval_days'] as int? ?? 0;
+      final nextRev = json['next_review_at'] != null ? DateTime.tryParse('${json['next_review_at']}') : null;
+      if (nextRev != null && interval > 0) {
+        srState = interval >= 21 ? FlashcardSrState.mature : FlashcardSrState.review;
+      } else {
+        srState = FlashcardSrState.newCard;
+      }
+    }
+
     return SmartFlashcard(
       id: json['id'] as String,
       setId: json['set_id'] as String? ?? json['setId'] as String? ?? '',
@@ -138,9 +203,28 @@ class SmartFlashcard {
       nextReviewAt: json['next_review_at'] != null ? DateTime.tryParse('${json['next_review_at']}') : null,
       easeFactor: (json['ease_factor'] as num?)?.toDouble() ?? 2.5,
       intervalDays: json['interval_days'] as int? ?? 0,
+      srState: srState,
+      repetitionCount: json['repetition_count'] as int? ?? 0,
+      lapseCount: json['lapse_count'] as int? ?? 0,
+      lastReviewedAt: json['last_reviewed_at'] != null ? DateTime.tryParse('${json['last_reviewed_at']}') : null,
     );
   }
 }
+
+class ReviewSchedulePreview {
+  const ReviewSchedulePreview({
+    required this.againLabel,
+    required this.hardLabel,
+    required this.goodLabel,
+    required this.easyLabel,
+  });
+
+  final String againLabel;
+  final String hardLabel;
+  final String goodLabel;
+  final String easyLabel;
+}
+
 
 class FlashcardAttempt {
   const FlashcardAttempt({
@@ -167,6 +251,15 @@ class FlashcardAttempt {
         'self_rating': selfRating,
         'created_at': createdAt.toIso8601String(),
       };
+
+  factory FlashcardAttempt.fromJson(Map<String, dynamic> json) => FlashcardAttempt(
+        id: json['id'] as String? ?? '',
+        flashcardId: (json['flashcard_id'] ?? json['flashcardId'] ?? '') as String,
+        userId: json['user_id'] as String? ?? json['userId'] as String?,
+        userAnswer: (json['user_answer'] ?? json['userAnswer'] ?? '') as String,
+        selfRating: (json['self_rating'] ?? json['selfRating'] ?? '') as String,
+        createdAt: DateTime.tryParse('${json['created_at'] ?? json['createdAt'] ?? ''}') ?? DateTime.now(),
+      );
 }
 
 class StudySession {
