@@ -81,6 +81,7 @@ class SmartFlashcard {
     required this.answer,
     required this.position,
     this.topic = '',
+    this.keyTerms = const [],
     this.status = FlashcardUiState.unanswered,
     this.lastUserAnswer = '',
     this.nextReviewAt,
@@ -97,6 +98,7 @@ class SmartFlashcard {
   final String question;
   final String answer;
   final String topic;
+  final List<String> keyTerms;
   final int position;
   final FlashcardUiState status;
   final String lastUserAnswer;
@@ -120,6 +122,7 @@ class SmartFlashcard {
   SmartFlashcard copyWith({
     FlashcardUiState? status,
     String? lastUserAnswer,
+    List<String>? keyTerms,
     DateTime? nextReviewAt,
     double? easeFactor,
     int? intervalDays,
@@ -135,6 +138,7 @@ class SmartFlashcard {
       answer: answer,
       position: position,
       topic: topic,
+      keyTerms: keyTerms ?? this.keyTerms,
       status: status ?? this.status,
       lastUserAnswer: lastUserAnswer ?? this.lastUserAnswer,
       nextReviewAt: nextReviewAt ?? this.nextReviewAt,
@@ -153,6 +157,7 @@ class SmartFlashcard {
         'question': question,
         'answer': answer,
         'topic': topic,
+        'key_terms': keyTerms,
         'difficulty': status.name,
         'status': status.name,
         'position': position,
@@ -191,12 +196,19 @@ class SmartFlashcard {
       }
     }
 
+    final rawKeyTerms = json['key_terms'] ?? json['keyTerms'];
+    List<String> keyTerms = const [];
+    if (rawKeyTerms is List) {
+      keyTerms = rawKeyTerms.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList();
+    }
+
     return SmartFlashcard(
       id: json['id'] as String,
       setId: json['set_id'] as String? ?? json['setId'] as String? ?? '',
       question: json['question'] as String? ?? '',
       answer: json['answer'] as String? ?? '',
       topic: json['topic'] as String? ?? '',
+      keyTerms: keyTerms,
       position: json['position'] as int? ?? 0,
       status: status,
       lastUserAnswer: json['last_user_answer'] as String? ?? json['lastUserAnswer'] as String? ?? '',
@@ -307,8 +319,15 @@ class StudySession {
 }
 
 class GeneratedCard {
-  const GeneratedCard({required this.question, required this.answer, required this.topic});
+  const GeneratedCard({
+    required this.question,
+    required this.answer,
+    required this.topic,
+    this.keyTerms = const [],
+  });
+
   final String question;
   final String answer;
   final String topic;
+  final List<String> keyTerms;
 }

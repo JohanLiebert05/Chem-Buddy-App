@@ -30,16 +30,16 @@ Deno.serve(async (req) => {
     // Smart chunking / truncation to 12,000 characters to prevent input token overflow
     const clipped = sourceText.length > 12000 ? sourceText.slice(0, 12000) : sourceText;
 
-    const prompt = `You are a distinguished Chemistry professor creating rigorous, exam-quality active-recall flashcards for chemistry students based strictly on the uploaded document.
+    const prompt = `You are an expert MSc Chemistry academic tutor creating rigorous, exam-quality active-recall flashcards based strictly on the uploaded document.
 
 Target Subject/Document: ${topic}
 
-CRITICAL GROUNDING RULES:
-1. You MUST generate all flashcards EXCLUSIVELY and STRICTLY from the provided Study Notes below.
-2. Do NOT invent, assume, or pull in generic or unrelated chemistry topics (e.g. if the notes are about LC Solutions/HPLC, create cards solely about HPLC, instruments, parameters, retention, calibration, and methods in the text; do NOT create cards on unrelated organic/inorganic reactions unless they are in the text).
-3. Every card's question must test a specific concept, term, instrument, parameter, equation, mechanism, or principle directly stated in the Study Notes.
-4. Formulate clear, focused questions on the front and accurate, comprehensive answers on the back.
-5. CRITICAL: Do NOT use raw LaTeX markup ($...$, \\frac, \\Delta). Use clean textbook Unicode characters (Δ, →, ⇌, H₂SO₄, Ca²⁺, ¹H NMR, etc.).
+CRITICAL RULES:
+1. QUESTION FORMAT: Formulate standalone, high-yield conceptual interrogative questions (e.g., reaction mechanisms, stereochemistry, regioselectivity, rate laws, analytical parameters, instrumentation, and thermodynamic principles).
+2. FORBIDDEN: NEVER quote verbatim snippets with trailing ellipses (e.g., NEVER write 'Explain the following point: "..."' or 'What does the document state regarding "..."'). Every question must be a complete, standalone question.
+3. ANSWER FORMAT: Provide accurate, comprehensive explanations using clean chemical equations and inline LaTeX notation where applicable.
+4. KEY TERMS: For each card, provide 3 to 5 mandatory chemical concepts or keywords required for a complete answer.
+5. GROUNDING: You MUST generate all flashcards EXCLUSIVELY and STRICTLY from the provided Study Notes below. Do not pull in generic unrelated topics.
 6. Generate exactly ${count} distinct flashcards.
 
 Study Notes:
@@ -62,12 +62,17 @@ ${clipped}`;
               items: {
                 type: "OBJECT",
                 properties: {
-                  question: { type: "STRING", description: "Clear question or prompt for the front of the flashcard" },
-                  answer: { type: "STRING", description: "Accurate, concise answer and explanation for the back" },
+                  question: { type: "STRING", description: "Standalone conceptual interrogative question" },
+                  answer: { type: "STRING", description: "Accurate, comprehensive explanation with chemical/LaTeX notation" },
+                  key_terms: {
+                    type: "ARRAY",
+                    items: { type: "STRING" },
+                    description: "3 to 5 mandatory chemical concepts/keywords required for a complete answer"
+                  },
                   explanation: { type: "STRING", description: "Optional brief context or exam tip" },
                   topic: { type: "STRING", description: "Chemistry sub-discipline or specific topic" }
                 },
-                required: ["question", "answer", "topic"]
+                required: ["question", "answer", "key_terms", "topic"]
               }
             }
           },
@@ -202,11 +207,14 @@ function parseCards(raw, defaultTopic = "Chemistry") {
       const a = String(item?.answer ?? item?.back ?? item?.response ?? "").trim();
       const expl = String(item?.explanation ?? "").trim();
       const top = String(item?.topic ?? defaultTopic).trim() || defaultTopic;
-      const combinedAnswer = expl.length > 0 && !a.contains(expl) ? `${a}\n\n*Note: ${expl}*` : a;
+      const combinedAnswer = expl.length > 0 && !a.includes(expl) ? `${a}\n\n*Note: ${expl}*` : a;
+      const rawTerms = item?.key_terms ?? item?.keyTerms ?? [];
+      const terms = Array.isArray(rawTerms) ? rawTerms.map((t) => String(t).trim()).filter((t) => t.length > 0) : [];
       return {
         question: q,
         answer: combinedAnswer,
         topic: top,
+        key_terms: terms,
       };
     })
     .filter((item) => item.question.length > 3 && item.answer.length > 1);

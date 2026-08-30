@@ -95,6 +95,7 @@ class FlashcardService {
         question: generated[i].question,
         answer: generated[i].answer,
         topic: generated[i].topic,
+        keyTerms: generated[i].keyTerms,
         position: i,
         srState: FlashcardSrState.newCard,
       );

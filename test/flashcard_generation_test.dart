@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:chem_buddy/data/models/smart_flashcard.dart';
 import 'package:chem_buddy/data/services/gemini_flashcard_service.dart';
 
 void main() {
@@ -12,7 +13,7 @@ void main() {
       );
     });
 
-    test('2. Synthesizes chemistry cards directly from notes when offline/fallback', () async {
+    test('2. Synthesizes chemistry cards directly from notes with standalone questions & 3-5 key terms', () async {
       const notes = '''
 Aldol condensation is defined as the reaction of an enolate ion with a carbonyl compound to form a beta-hydroxy aldehyde.
 Cannizzaro reaction refers to the redox disproportionation of aldehydes lacking alpha hydrogens in alkaline medium.
@@ -29,7 +30,20 @@ Selection rules state that Laporte forbidden transitions have lower extinction c
 
       expect(cards.isNotEmpty, true);
       expect(cards.length, 5);
-      expect(cards.any((c) => c.question.contains('Aldol') || c.question.contains('Define')), true);
+
+      for (final card in cards) {
+        // Must NOT contain chopped ellipses quotes
+        expect(card.question.contains('...'), false, reason: 'Card should not contain ellipses snippets: ${card.question}');
+        expect(card.question.startsWith('Explain the following point:'), false);
+        expect(card.question.startsWith('What does the document state regarding'), false);
+
+        // Must be a complete interrogative question
+        expect(card.question.endsWith('?') || card.question.endsWith('.'), true);
+
+        // Must have key terms
+        expect(card.keyTerms.isNotEmpty, true, reason: 'Card must have key terms: ${card.question}');
+        expect(card.keyTerms.length >= 1 && card.keyTerms.length <= 5, true);
+      }
     });
 
     test('3. Synthesizes flashcards strictly from LC Solutions / Analytical PDF without unrelated organic concepts', () async {
@@ -54,17 +68,17 @@ Peak area integration is used for quantitative determination against standard ca
       );
 
       expect(cards.length, 5);
-      // All cards must be grounded strictly in LC Solutions
       for (final card in cards) {
         expect(
           card.question.contains('SN1') || card.question.contains('SN2') || card.question.contains('Diels-Alder'),
           false,
           reason: 'Card should not contain generic organic questions: ${card.question}',
         );
+        expect(card.question.contains('...'), false);
+        expect(card.keyTerms.isNotEmpty, true);
       }
 
-      // Check that cards contain LC Solutions content
-      final allText = cards.map((c) => '${c.question} ${c.answer}').join(' ');
+      final allText = cards.map((c) => '${c.question} ${c.answer} ${c.keyTerms.join(" ")}').join(' ');
       expect(
         allText.contains('Column') ||
             allText.contains('Flow Rate') ||
@@ -76,6 +90,29 @@ Peak area integration is used for quantitative determination against standard ca
         true,
         reason: 'Cards must contain LC Solutions concepts: $allText',
       );
+    });
+
+    test('4. SmartFlashcard model correctly serializes and deserializes key_terms', () {
+      const card = SmartFlashcard(
+        id: 'test-123',
+        setId: 'set-456',
+        question: r'What is the rate law for a Cannizzaro reaction?',
+        answer: r'The rate equation is $\text{Rate} = k[\text{RCHO}]^2[\text{OH}^-]^2$ at high base concentrations.',
+        topic: 'Organic Reaction Mechanisms',
+        keyTerms: ['Rate Law', 'Cannizzaro Reaction', 'Second-Order Base Dependence', 'Hydride Transfer'],
+        position: 0,
+      );
+
+      final json = card.toJson();
+      expect(json['key_terms'], isA<List>());
+      expect(json['key_terms'].length, 4);
+      expect(json['key_terms'][0], 'Rate Law');
+
+      final fromJson = SmartFlashcard.fromJson(json);
+      expect(fromJson.keyTerms.length, 4);
+      expect(fromJson.keyTerms[1], 'Cannizzaro Reaction');
+      expect(fromJson.question, card.question);
+      expect(fromJson.answer, card.answer);
     });
   });
 }

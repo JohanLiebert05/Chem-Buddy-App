@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/models.dart';
@@ -734,28 +735,9 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                         padding: EdgeInsets.only(bottom: 12),
                                         child: ReactionMechanismsCard(compact: true),
                                       ),
-                                    MarkdownBody(
-                                      data: ChemistryTextFormatter.format(msg.content),
-                                      styleSheet: MarkdownStyleSheet(
-                                        p: const TextStyle(color: AppColors.textPrimary, fontSize: 14, height: 1.45),
-                                        h1: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800),
-                                        h2: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
-                                        h3: const TextStyle(color: AppColors.purpleBright, fontSize: 15, fontWeight: FontWeight.w600),
-                                        listBullet: const TextStyle(color: AppColors.purpleBright),
-                                        tableHead: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-                                        tableBorder: TableBorder.all(color: AppColors.border, width: 0.6),
-                                        blockquoteDecoration: BoxDecoration(
-                                          color: AppColors.surfaceElevated,
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
-                                        ),
-                                        code: const TextStyle(color: AppColors.purpleBright, backgroundColor: AppColors.surfaceElevated, fontFamily: 'monospace'),
-                                        codeblockDecoration: BoxDecoration(
-                                          color: AppColors.surfaceElevated,
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: AppColors.border),
-                                        ),
-                                      ),
+                                    ChemistryMarkdownView(
+                                      text: msg.content,
+                                      textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 14, height: 1.45),
                                       selectable: true,
                                     ),
                                     const SizedBox(height: 12),

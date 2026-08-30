@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/smart_flashcard.dart';
 import '../providers/app_providers.dart';
@@ -189,9 +190,9 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                   ),
                   const SizedBox(height: 12),
                 ],
-                Text(
-                  ChemistryTextFormatter.format(card.question),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.4, color: Colors.white),
+                ChemistryMarkdownView(
+                  text: card.question,
+                  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.4, color: Colors.white),
                 ),
               ],
             ),
@@ -271,11 +272,35 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
             GlowCard(
               borderColor: AppColors.blue.withValues(alpha: 0.35),
               padding: const EdgeInsets.all(18),
-              child: Text(
-                ChemistryTextFormatter.format(card.answer),
-                style: const TextStyle(fontSize: 15.5, height: 1.45, color: Colors.white),
+              child: ChemistryMarkdownView(
+                text: card.answer,
+                textStyle: const TextStyle(fontSize: 15.5, height: 1.45, color: Colors.white),
               ),
             ),
+            if (card.keyTerms.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              const Text(
+                'MANDATORY KEY TERMS',
+                style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.8),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: card.keyTerms.map((term) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.purple.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4), width: 0.8),
+                  ),
+                  child: Text(
+                    '✨ $term',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
+                )).toList(),
+              ),
+            ],
             const SizedBox(height: 20),
 
             // Anki Recall Rating Prompt

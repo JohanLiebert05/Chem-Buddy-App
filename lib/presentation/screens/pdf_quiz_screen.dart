@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
+import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../providers/app_providers.dart';
@@ -215,9 +216,9 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                         style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 12),
                       ),
                     ),
-                  Text(
-                    ChemistryTextFormatter.format(q.question),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, height: 1.35, color: Colors.white),
+                  ChemistryMarkdownView(
+                    text: q.question,
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, height: 1.35, color: Colors.white),
                   ),
                 ],
               ),
@@ -278,9 +279,9 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          ChemistryTextFormatter.format(optText),
-                          style: TextStyle(
+                        child: ChemistryMarkdownView(
+                          text: optText,
+                          textStyle: TextStyle(
                             fontSize: 13.5,
                             fontWeight: isChosen ? FontWeight.w700 : FontWeight.w500,
                             color: textColor,
@@ -322,9 +323,9 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      ChemistryTextFormatter.format(q.explanation),
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+                    ChemistryMarkdownView(
+                      text: q.explanation,
+                      textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
                     ),
                     if (q.numerical != null) ...[
                       const SizedBox(height: 8),
@@ -482,28 +483,37 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                           Icon(isCorrect ? Icons.check_circle : Icons.cancel, color: isCorrect ? AppColors.success : AppColors.danger, size: 18),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(
-                              'Q${i + 1}. ${ChemistryTextFormatter.format(q.question)}',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: Colors.white, height: 1.3),
+                            child: ChemistryMarkdownView(
+                              text: '**Q${i + 1}.** ${q.question}',
+                              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: Colors.white, height: 1.3),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       if (!isCorrect) ...[
-                        Text(
-                          'Your Choice: ${ChemistryTextFormatter.format(chosenText)}',
-                          style: const TextStyle(color: AppColors.danger, fontSize: 12.5, fontWeight: FontWeight.w600),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Your Choice: ', style: TextStyle(color: AppColors.danger, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                            Expanded(child: ChemistryMarkdownView(text: chosenText, textStyle: const TextStyle(color: AppColors.danger, fontSize: 12.5, fontWeight: FontWeight.w600))),
+                          ],
                         ),
                         const SizedBox(height: 3),
-                        Text(
-                          'Correct Answer: ${ChemistryTextFormatter.format(correctText)}',
-                          style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 12.5),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Correct Answer: ', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 12.5)),
+                            Expanded(child: ChemistryMarkdownView(text: correctText, textStyle: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 12.5))),
+                          ],
                         ),
                       ] else ...[
-                        Text(
-                          'Correct: ${ChemistryTextFormatter.format(chosenText)} ✓',
-                          style: const TextStyle(color: AppColors.success, fontSize: 12.5, fontWeight: FontWeight.w600),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Correct: ', style: TextStyle(color: AppColors.success, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                            Expanded(child: ChemistryMarkdownView(text: '$chosenText ✓', textStyle: const TextStyle(color: AppColors.success, fontSize: 12.5, fontWeight: FontWeight.w600))),
+                          ],
                         ),
                       ],
                       if (q.explanation.isNotEmpty) ...[
@@ -514,9 +524,9 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                             color: AppColors.surfaceElevated,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            ChemistryTextFormatter.format(q.explanation),
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.3),
+                          child: ChemistryMarkdownView(
+                            text: q.explanation,
+                            textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.3),
                           ),
                         ),
                       ],
