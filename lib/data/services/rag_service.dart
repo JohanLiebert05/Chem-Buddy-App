@@ -15,7 +15,7 @@ class RagService {
     List<AiMessage>? history,
   }) async {
     // 1. Try remote cloud first if configured
-    if (remote.configured && remote.userId != null) {
+    if (remote.configured) {
       try {
         final response = await remote.invokeFunction('ask-chembuddy', {
           'question': question,
