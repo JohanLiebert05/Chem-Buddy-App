@@ -138,20 +138,24 @@ class SupabaseService {
     } catch (_) {}
   }
 
-  /// Calls a Supabase Edge Function. Gemini keys stay on the server.
-  Future<dynamic> invokeFunction(String name, Map<String, dynamic> body) async {
+  /// Calls a Supabase Edge Function with a 45-second timeout and network resilience.
+  Future<dynamic> invokeFunction(String name, Map<String, dynamic> body, {Duration timeout = const Duration(seconds: 45)}) async {
     final c = client;
     if (c == null) {
       throw StateError('Unable to connect to cloud services. Please check your internet connection and try again.');
     }
     try {
-      final response = await c.functions.invoke(name, body: body);
+      final response = await c.functions.invoke(name, body: body).timeout(
+        timeout,
+        onTimeout: () => throw StateError('Request timed out while waiting for $name (45s). Please check your network.'),
+      );
       if (response.status >= 400) {
         final data = response.data;
         if (data is Map && data['error'] != null) {
-          throw StateError(data['error'].toString());
+          final detail = data['detail'] != null ? ' (${data['detail']})' : '';
+          throw StateError('${data['error']}$detail');
         }
-        throw StateError('The $name service encountered an issue. Please try again.');
+        throw StateError('The $name service encountered an issue (HTTP ${response.status}). Please try again.');
       }
       return response.data;
     } on FunctionException catch (fe) {
@@ -161,10 +165,13 @@ class SupabaseService {
       if (fe.status == 401) {
         throw StateError('Sign in required to use cloud AI features.');
       }
+      if (fe.status == 429) {
+        throw StateError('AI service rate limit reached. Please wait a moment and retry.');
+      }
       throw StateError('Cloud service temporarily unavailable (${fe.status}).');
     } catch (e) {
       if (e is StateError) rethrow;
-      throw StateError('Network connection issue. Please check your internet and try again.');
+      throw StateError('Network connection issue ($e). Please check your internet and try again.');
     }
   }
 }

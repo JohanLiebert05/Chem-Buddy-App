@@ -148,18 +148,13 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
     setState(() {
       busy = true;
       error = null;
-      stage = 'Connecting to study assistant...';
+      stage = 'Reading notes...';
     });
     try {
-      if (!await service.isOnline) {
-        throw StateError('Internet connection is required to generate AI flashcards. Please check your network.');
-      }
-      
       String sourceText;
-      if (text != null) {
+      if (text != null && text.trim().isNotEmpty) {
         sourceText = text;
       } else {
-        setState(() => stage = 'Reading your notes...');
         sourceText = await PdfTextExtractionService.instance.extractFromPath(
           path!,
           onProgress: (status) {
@@ -167,15 +162,24 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
           },
         );
       }
-      
-      final chunks = chunkNotes(sourceText);
-      if (chunks.isEmpty) {
-        throw StateError('Not enough readable text to generate flashcards. Please choose a different document.');
+
+      final cleaned = cleanupExtractedText(sourceText);
+      if (cleaned.length < 30) {
+        throw StateError(
+          'The selected PDF contains very little readable text or appears to be a scanned image without OCR. Please choose a text-based PDF or notes.',
+        );
       }
-      setState(() => stage = 'Synthesizing chemistry questions...');
+
+      setState(() => stage = 'Synthesizing chemistry flashcards...');
       final rawTopic = widget.prefilledTopic ?? (fileName != null ? cleanStudyMaterialTitle(fileName!) : 'Chemistry');
       final topic = cleanStudyMaterialTitle(rawTopic);
-      final cards = await GeminiFlashcardService().generate(sourceText: sourceText, count: count, topic: topic);
+      
+      final cards = await GeminiFlashcardService().generate(
+        sourceText: cleaned,
+        count: count,
+        topic: topic,
+      );
+
       setState(() => stage = 'Saving your new deck...');
       final set = await service.saveGeneratedSet(
         title: topic,
@@ -183,6 +187,7 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
         topic: topic,
         generated: cards,
       );
+
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -195,7 +200,7 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
       } else if (e is PdfExtractionException) {
         msg = e.message;
       } else {
-        msg = 'Could not create flashcards. Please check your connection and try again.';
+        msg = 'Could not generate flashcards ($e). Please retry.';
       }
       setState(() => error = msg);
     } finally {
