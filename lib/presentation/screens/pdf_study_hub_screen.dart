@@ -21,10 +21,12 @@ class PdfStudyHubScreen extends ConsumerStatefulWidget {
     super.key,
     required this.doc,
     this.initialTab = 0,
+    this.initialExtractedText,
   });
 
   final PdfDoc doc;
   final int initialTab;
+  final String? initialExtractedText;
 
   @override
   ConsumerState<PdfStudyHubScreen> createState() => _PdfStudyHubScreenState();
@@ -50,6 +52,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this, initialIndex: widget.initialTab);
+    if (widget.initialExtractedText != null && widget.initialExtractedText!.trim().isNotEmpty) {
+      _extractedText = widget.initialExtractedText;
+      _documentQuality = assessDocumentQuality(widget.initialExtractedText!);
+    }
     _loadCachedOrExtract();
   }
 
@@ -71,6 +77,13 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
 
     if (_extractedText == null) {
       await _extractText();
+    } else {
+      // If we already have the text, auto-populate if missing
+      if (widget.initialTab == 1 && _summary == null) {
+        _fetchSummary();
+      } else if (_topics == null || _topics!.isEmpty) {
+        _fetchTopics();
+      }
     }
   }
 
@@ -92,16 +105,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       _extractedText = text;
       _documentQuality = assessDocumentQuality(text);
 
-      // Automatically populate topics or summary if not already cached
-      if (_topics == null || _topics!.isEmpty) {
-        _topics = await service.analyzeImportantTopics(
-          sourceText: text,
-          documentTitle: widget.doc.displayName,
-          onProgress: (status) {
-            if (mounted) setState(() => _progressStatus = status);
-          },
-        );
-        await ref.read(appControllerProvider.notifier).savePdfTopics(widget.doc.id, _topics!);
+      if (widget.initialTab == 1 && _summary == null) {
+        await _fetchSummary();
+      } else if (_topics == null || _topics!.isEmpty) {
+        await _fetchTopics();
       }
     } catch (e) {
       setState(() {

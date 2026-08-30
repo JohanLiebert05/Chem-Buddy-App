@@ -461,6 +461,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                           fileSize: chatState.activeDocumentSize ?? 0,
                                         ),
                                         initialTab: 0,
+                                        initialExtractedText: chatState.activeDocumentText,
                                       ),
                                     ),
                                   );
@@ -489,6 +490,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                           fileSize: chatState.activeDocumentSize ?? 0,
                                         ),
                                         initialTab: 1,
+                                        initialExtractedText: chatState.activeDocumentText,
                                       ),
                                     ),
                                   );
@@ -517,6 +519,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                           fileSize: chatState.activeDocumentSize ?? 0,
                                         ),
                                         initialTab: 2,
+                                        initialExtractedText: chatState.activeDocumentText,
                                       ),
                                     ),
                                   );

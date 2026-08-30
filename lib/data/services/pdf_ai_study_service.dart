@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/utils/chemistry_text_formatter.dart';
 import '../local/local_store.dart';
 import '../models/pdf_study_models.dart';
 import '../remote/supabase_service.dart';
@@ -257,15 +258,31 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
         id: _uuid.v4(),
         docId: docId,
         docName: docName,
-        overview: map['overview'] as String? ?? 'Comprehensive review of $docName.',
-        coreConcepts: List<String>.from(map['core_concepts'] as List? ?? const []),
-        definitions: (map['definitions'] as List? ?? const [])
-            .map((e) => Map<String, String>.from(e as Map))
+        overview: ChemistryTextFormatter.format(map['overview'] as String? ?? 'Comprehensive review of $docName.'),
+        coreConcepts: (map['core_concepts'] as List? ?? const [])
+            .map((e) => ChemistryTextFormatter.format(e.toString()))
             .toList(),
-        reactionsAndEquations: List<String>.from(map['reactions_and_equations'] as List? ?? const []),
-        keyPoints: List<String>.from(map['key_points'] as List? ?? const []),
-        examFocus: List<String>.from(map['exam_focus'] as List? ?? const []),
-        quickRevision: List<String>.from(map['quick_revision'] as List? ?? const []),
+        definitions: (map['definitions'] as List? ?? const [])
+            .map((e) {
+              final d = Map<String, dynamic>.from(e as Map);
+              return {
+                'term': ChemistryTextFormatter.format(d['term']?.toString() ?? ''),
+                'definition': ChemistryTextFormatter.format(d['definition']?.toString() ?? ''),
+              };
+            })
+            .toList(),
+        reactionsAndEquations: (map['reactions_and_equations'] as List? ?? const [])
+            .map((e) => ChemistryTextFormatter.format(e.toString()))
+            .toList(),
+        keyPoints: (map['key_points'] as List? ?? const [])
+            .map((e) => ChemistryTextFormatter.format(e.toString()))
+            .toList(),
+        examFocus: (map['exam_focus'] as List? ?? const [])
+            .map((e) => ChemistryTextFormatter.format(e.toString()))
+            .toList(),
+        quickRevision: (map['quick_revision'] as List? ?? const [])
+            .map((e) => ChemistryTextFormatter.format(e.toString()))
+            .toList(),
         createdAt: DateTime.now(),
       );
     } catch (_) {
@@ -278,7 +295,17 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
     try {
       final map = jsonDecode(cleanedJson) as Map<String, dynamic>;
       final list = map['topics'] as List? ?? const [];
-      final result = list.map((e) => ImportantTopic.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+      final result = list.map((e) {
+        final t = ImportantTopic.fromJson(Map<String, dynamic>.from(e as Map));
+        return ImportantTopic(
+          id: t.id,
+          title: ChemistryTextFormatter.format(t.title),
+          priority: t.priority,
+          explanation: ChemistryTextFormatter.format(t.explanation),
+          keyFormulas: t.keyFormulas.map((f) => ChemistryTextFormatter.format(f)).toList(),
+          tags: t.tags,
+        );
+      }).toList();
       if (result.isNotEmpty) return result;
     } catch (_) {}
     return _generateHeuristicTopics(text, 'Study Document');
