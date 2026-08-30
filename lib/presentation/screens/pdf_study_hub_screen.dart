@@ -33,6 +33,7 @@ class PdfStudyHubScreen extends ConsumerStatefulWidget {
 class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _extractedText;
+  DocumentQuality _documentQuality = DocumentQuality.digitalText;
   bool _loading = false;
   String _progressStatus = '';
   String? _errorMessage;
@@ -89,6 +90,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
         },
       );
       _extractedText = text;
+      _documentQuality = assessDocumentQuality(text);
 
       // Automatically populate topics or summary if not already cached
       if (_topics == null || _topics!.isEmpty) {
@@ -412,6 +414,29 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                     TextButton(
                       onPressed: _extractText,
                       child: const Text('Try Again', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+              )
+            else if (_documentQuality == DocumentQuality.scannedImage)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                decoration: BoxDecoration(
+                  color: AppColors.purple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.purple.withValues(alpha: 0.25)),
+                ),
+                child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('⚠️', style: TextStyle(fontSize: 15)),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'This document appears to be a scanned PDF. Chemistry structures, equations and symbols may not be extracted accurately. Some study-generation features may be limited.',
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35),
+                      ),
                     ),
                   ],
                 ),

@@ -17,8 +17,18 @@ import '../../data/services/pdf_text_extraction_service.dart';
 import '../../data/services/pdf_text_utils.dart';
 import '../providers/app_providers.dart';
 import '../providers/rag_providers.dart';
+import '../widgets/reaction_mechanisms_card.dart';
+import '../widgets/viva_practice_dialog.dart';
 import 'pdf_study_hub_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
+
+enum ChemBuddyAiMode {
+  concept,
+  exam2M,
+  exam5M,
+  exam10M,
+  mechanisms,
+}
 
 class AskChemBuddyScreen extends ConsumerStatefulWidget {
   const AskChemBuddyScreen({super.key});
@@ -31,11 +41,13 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final SpeechToText _speech = SpeechToText();
+  ChemBuddyAiMode _currentMode = ChemBuddyAiMode.concept;
   bool _speechEnabled = false;
   bool _isListening = false;
   bool _extracting = false;
   String _extractingStatus = 'Reading document...';
   String? _lastSentQuestion;
+
 
   @override
   void initState() {
@@ -134,11 +146,31 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
   }
 
   void _sendMessage([String? textOverride]) {
-    final text = textOverride ?? _controller.text.trim();
-    if (text.isEmpty) return;
+    final rawText = textOverride ?? _controller.text.trim();
+    if (rawText.isEmpty) return;
+
+    String promptToSend = rawText;
+    if (_currentMode == ChemBuddyAiMode.exam2M && !rawText.contains('2-Mark')) {
+      promptToSend = '[Format as a 2-Mark MSc Chemistry Answer with Definition and Key Reaction/Equation]: $rawText';
+    } else if (_currentMode == ChemBuddyAiMode.exam5M && !rawText.contains('5-Mark')) {
+      promptToSend = '[Format as a structured 5-Mark MSc Chemistry Answer with Principle, Reaction, Mechanism, and Conditions]: $rawText';
+    } else if (_currentMode == ChemBuddyAiMode.exam10M && !rawText.contains('10-Mark')) {
+      promptToSend = '''[Format as a comprehensive 10-Mark MSc Chemistry Exam Answer:
+1. Definition & Core Concept
+2. Chemical Principle
+3. Reaction Equation (Unicode)
+4. Step-by-Step Reaction Mechanism
+5. Required Reagents & Reaction Conditions
+6. Concrete Laboratory Examples
+7. Synthetic & Academic Applications
+8. Limitations & Side Reactions
+9. Academic Conclusion]: $rawText''';
+    } else if (_currentMode == ChemBuddyAiMode.mechanisms && !rawText.toLowerCase().contains('mechanism')) {
+      promptToSend = 'Explain the full theoretical reaction mechanism, curly-arrow electron pushing, and intermediate stability for: $rawText';
+    }
     
-    _lastSentQuestion = text;
-    ref.read(chatControllerProvider.notifier).sendMessage(text);
+    _lastSentQuestion = rawText;
+    ref.read(chatControllerProvider.notifier).sendMessage(promptToSend);
     if (textOverride == null) _controller.clear();
     
     Future.delayed(const Duration(milliseconds: 100), () {
@@ -150,6 +182,65 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
         );
       }
     });
+  }
+
+  Widget _buildModeBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.5),
+        border: const Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            _AiModeChip(
+              icon: Icons.lightbulb_outline,
+              label: 'Concept',
+              selected: _currentMode == ChemBuddyAiMode.concept,
+              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.concept),
+            ),
+            const SizedBox(width: 8),
+            _AiModeChip(
+              icon: Icons.edit_note,
+              label: '2M Answer',
+              selected: _currentMode == ChemBuddyAiMode.exam2M,
+              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.exam2M),
+            ),
+            const SizedBox(width: 8),
+            _AiModeChip(
+              icon: Icons.edit_note,
+              label: '5M Answer',
+              selected: _currentMode == ChemBuddyAiMode.exam5M,
+              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.exam5M),
+            ),
+            const SizedBox(width: 8),
+            _AiModeChip(
+              icon: Icons.article_outlined,
+              label: '10M Answer',
+              selected: _currentMode == ChemBuddyAiMode.exam10M,
+              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.exam10M),
+            ),
+            const SizedBox(width: 8),
+            _AiModeChip(
+              icon: Icons.record_voice_over_outlined,
+              label: 'Viva Practice',
+              selected: false,
+              onTap: () => VivaPracticeDialog.show(context),
+            ),
+            const SizedBox(width: 8),
+            _AiModeChip(
+              icon: Icons.science_outlined,
+              label: '⚗️ Mechanisms',
+              selected: _currentMode == ChemBuddyAiMode.mechanisms,
+              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.mechanisms),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _pickPdf() async {
@@ -252,6 +343,8 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
         ),
         body: Column(
           children: [
+            _buildModeBar(),
+
             // Extracting banner
             if (_extracting)
               Padding(
@@ -569,6 +662,16 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                         ),
                                       ),
                                     ],
+                                    if (msg.content.toLowerCase().contains('mechanism') ||
+                                        msg.content.toLowerCase().contains('sn1') ||
+                                        msg.content.toLowerCase().contains('sn2') ||
+                                        msg.content.toLowerCase().contains('aldol') ||
+                                        msg.content.toLowerCase().contains('wittig') ||
+                                        msg.content.toLowerCase().contains('diels-alder'))
+                                      const Padding(
+                                        padding: EdgeInsets.only(bottom: 12),
+                                        child: ReactionMechanismsCard(compact: true),
+                                      ),
                                     MarkdownBody(
                                       data: ChemistryTextFormatter.format(msg.content),
                                       styleSheet: MarkdownStyleSheet(
@@ -916,3 +1019,60 @@ class _ActionChip extends StatelessWidget {
     );
   }
 }
+
+class _AiModeChip extends StatelessWidget {
+  const _AiModeChip({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        AppHaptics.selection();
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5.5),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.purple.withValues(alpha: 0.3) : AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? AppColors.purpleBright : AppColors.border,
+            width: selected ? 1.2 : 0.8,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13.5,
+              color: selected ? AppColors.purpleBright : AppColors.textMuted,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                color: selected ? Colors.white : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

@@ -332,3 +332,63 @@ class QuizResult {
     );
   }
 }
+
+enum MasteryLevel {
+  strong,   // > 75%
+  moderate, // 50% - 75%
+  weak,     // < 50%
+}
+
+extension MasteryLevelExtension on MasteryLevel {
+  String get label {
+    switch (this) {
+      case MasteryLevel.strong:
+        return 'Strong 🟢';
+      case MasteryLevel.moderate:
+        return 'Moderate 🟡';
+      case MasteryLevel.weak:
+        return 'Weak 🔴';
+    }
+  }
+}
+
+class TopicMastery {
+  final String topicName;
+  final int totalQuestions;
+  final int correctCount;
+  final double accuracy;
+  final MasteryLevel level;
+
+  const TopicMastery({
+    required this.topicName,
+    required this.totalQuestions,
+    required this.correctCount,
+    required this.accuracy,
+    required this.level,
+  });
+
+  factory TopicMastery.fromStats({
+    required String topicName,
+    required int totalQuestions,
+    required int correctCount,
+  }) {
+    final accuracy = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0.0;
+    MasteryLevel level;
+    if (accuracy >= 75) {
+      level = MasteryLevel.strong;
+    } else if (accuracy >= 50) {
+      level = MasteryLevel.moderate;
+    } else {
+      level = MasteryLevel.weak;
+    }
+
+    return TopicMastery(
+      topicName: topicName,
+      totalQuestions: totalQuestions,
+      correctCount: correctCount,
+      accuracy: accuracy,
+      level: level,
+    );
+  }
+}
+

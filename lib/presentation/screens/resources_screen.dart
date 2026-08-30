@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
+import '../../data/models/pdf_study_models.dart';
 import '../providers/app_providers.dart';
+import '../widgets/reaction_mechanisms_card.dart';
 import 'pdf_library_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_hub.dart';
@@ -26,24 +28,30 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       children: [
-        const Text('Resources', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+        const Text('Library & Tools', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            _TabChip(label: 'Tests', selected: tab == 0, onTap: () => setState(() => tab = 0)),
-            const SizedBox(width: 8),
-            _TabChip(label: 'Notes', selected: tab == 1, onTap: () => setState(() => tab = 1)),
-            const SizedBox(width: 8),
-            _TabChip(label: 'PDFs', selected: tab == 2, onTap: () => setState(() => tab = 2)),
-            const SizedBox(width: 8),
-            _TabChip(label: 'Cards', selected: tab == 3, onTap: () => setState(() => tab = 3)),
-          ],
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _TabChip(label: 'PDFs', selected: tab == 0, onTap: () => setState(() => tab = 0)),
+              const SizedBox(width: 8),
+              _TabChip(label: '⚗️ Reactions', selected: tab == 1, onTap: () => setState(() => tab = 1)),
+              const SizedBox(width: 8),
+              _TabChip(label: 'Cards', selected: tab == 2, onTap: () => setState(() => tab = 2)),
+              const SizedBox(width: 8),
+              _TabChip(label: 'Quizzes', selected: tab == 3, onTap: () => setState(() => tab = 3)),
+              const SizedBox(width: 8),
+              _TabChip(label: 'Notes', selected: tab == 4, onTap: () => setState(() => tab = 4)),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
-        if (tab == 0) _EventsTab(state: state),
-        if (tab == 1) _NotesTab(state: state),
-        if (tab == 2) const PdfLibraryScreen(embedded: true),
-        if (tab == 3) const SmartFlashcardsHub(),
+        if (tab == 0) const PdfLibraryScreen(embedded: true),
+        if (tab == 1) const _ReactionsTab(),
+        if (tab == 2) const SmartFlashcardsHub(),
+        if (tab == 3) const _QuizzesAndMasteryTab(),
+        if (tab == 4) _NotesTab(state: state),
       ],
     );
   }
@@ -57,18 +65,129 @@ class _TabChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.purple : AppColors.surfaceElevated,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Text(label, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.purple : AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: selected ? AppColors.purpleBright : AppColors.border),
         ),
+        child: Text(label, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
       ),
+    );
+  }
+}
+
+
+class _ReactionsTab extends StatelessWidget {
+  const _ReactionsTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      children: [
+        ReactionMechanismsCard(compact: false),
+        SizedBox(height: 16),
+        GlowCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Why Verified Reaction SVGs?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5, color: Colors.white)),
+              SizedBox(height: 8),
+              Text(
+                'AI text generators often hallucinate chemical structures. ChemBuddy\'s upcoming Reaction Engine pairs curated, peer-reviewed reaction mechanisms rendered in vector SVG format with step-by-step electron arrow pushing for 100% academic precision.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.4),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _QuizzesAndMasteryTab extends ConsumerWidget {
+  const _QuizzesAndMasteryTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.watch(chemRepositoryProvider);
+    final allPdfs = ref.watch(appControllerProvider).pdfs;
+    final allQuizzes = <ChemistryQuiz>[];
+    for (final pdf in allPdfs) {
+      allQuizzes.addAll(repo.getPdfQuizzes(pdf.id));
+    }
+
+    if (allQuizzes.isEmpty) {
+      return const GlowCard(
+        child: Column(
+          children: [
+            Icon(Icons.quiz_outlined, size: 48, color: AppColors.purpleBright),
+            SizedBox(height: 12),
+            Text('No Quiz History Yet', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+            SizedBox(height: 8),
+            Text(
+              'Take a quiz from any uploaded PDF notes to track your Strong 🟢, Moderate 🟡, and Weak 🔴 chemistry topic mastery here.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Chemistry Topic Mastery 🧠', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        const SizedBox(height: 8),
+        const Text(
+          'Adaptive tracking based on your PDF quiz performance:',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        ),
+        const SizedBox(height: 12),
+        ...allQuizzes.take(5).map((q) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: GlowCard(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.school, size: 18, color: AppColors.purpleBright),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            q.title,
+                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.purple.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${q.questionCount} Questions',
+                            style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Source: ${q.sourceFileName} · ${DateFormat("d MMM yyyy").format(q.createdAt)}',
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+            )),
+      ],
     );
   }
 }
@@ -264,7 +383,12 @@ class _NotesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _EventsTab(state: state),
+        const SizedBox(height: 24),
+        const Text('Daily Chemistry Notes', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        const SizedBox(height: 10),
         PrimaryButton(label: 'New note', onPressed: () => _editNote(context, ref)),
         const SizedBox(height: 16),
         if (state.notes.isEmpty)

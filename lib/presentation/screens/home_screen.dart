@@ -18,7 +18,8 @@ import 'pdf_study_hub_screen.dart';
 import 'search_screen.dart';
 import 'smart_flashcards_hub.dart';
 import 'smart_flashcards_study_screen.dart';
-import '../widgets/reminder_editor.dart';
+import '../widgets/reaction_mechanisms_card.dart';
+import '../widgets/viva_practice_dialog.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -151,7 +152,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         const SizedBox(height: 14),
 
-        // 4. Primary CTA: Study with ChemBuddy
+        // 4. Dynamic Class Preparation & Revision Tip
+        _buildStudyRecommendation(state),
+        const SizedBox(height: 14),
+
+        // 5. Reaction Mechanisms Feature Showcase (Coming Soon)
+        const SectionTitle('Upcoming Feature ⚗️'),
+        const ReactionMechanismsCard(),
+        const SizedBox(height: 14),
+
+        // 6. Primary CTA: Study with ChemBuddy
         const SectionTitle('Study with ChemBuddy ✨'),
         GlowCard(
           borderColor: AppColors.purpleBright.withValues(alpha: 0.45),
@@ -226,7 +236,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         const SizedBox(height: 12),
 
-        // 5. Continue Studying (Progressive disclosure: only if session in progress)
+        // 7. Continue Studying (Progressive disclosure: only if session in progress)
         if (incompleteSession != null && incompleteSet != null) ...[
           const SectionTitle('Continue Flashcard Session'),
           GlowCard(
@@ -259,7 +269,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(height: 12),
         ],
 
-        // 6. Chemistry Tools (Grouped quick-access tiles)
+        // 8. Chemistry Tools (Grouped quick-access tiles)
         const SectionTitle('Chemistry Tools'),
         GridView.count(
           shrinkWrap: true,
@@ -272,7 +282,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _QuickTile(icon: Icons.calendar_month_outlined, label: 'Timetable', onTap: () => ref.read(shellTabProvider.notifier).state = 3),
             _QuickTile(icon: Icons.menu_book_outlined, label: 'PDFs', onTap: () => ref.read(shellTabProvider.notifier).state = 4),
             _QuickTile(icon: Icons.style_outlined, label: 'Cards', onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsPage()))),
-            _QuickTile(icon: Icons.alarm_add_outlined, label: 'Reminder', onTap: () => ReminderEditor.show(context, ref)),
+            _QuickTile(icon: Icons.record_voice_over_outlined, label: 'Viva Exam', onTap: () => VivaPracticeDialog.show(context)),
           ],
         ),
         const SizedBox(height: 16),
@@ -345,6 +355,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // 8. Daily Chemistry Concept / Quote
         _DailyChemistryCard(item: dailyChem),
       ],
+    );
+  }
+
+  Widget _buildStudyRecommendation(AppState state) {
+    final now = DateTime.now();
+    final today = state.entries.where((e) => e.weekdayNumber == now.weekday).toList()
+      ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+    final minutes = now.hour * 60 + now.minute;
+    final nextClass = today.where((e) => e.startMinutes > minutes).firstOrNull ?? (today.isNotEmpty ? today.first : null);
+
+    String topicTip = 'Revise reaction mechanisms, spectroscopy principles, and practice viva questions today.';
+    String subjectName = 'MSc Chemistry';
+    if (nextClass != null) {
+      subjectName = nextClass.displayName;
+      final lower = subjectName.toLowerCase();
+      if (lower.contains('organic')) {
+        topicTip = 'Upcoming $subjectName: Revise Aldol, Wittig, and Diels-Alder mechanisms before lecture.';
+      } else if (lower.contains('inorganic') || lower.contains('coordination')) {
+        topicTip = 'Upcoming $subjectName: Practice Crystal Field Theory (Δ_oct vs Δ_tet) and spectrochemical series.';
+      } else if (lower.contains('physical') || lower.contains('kinetic') || lower.contains('thermo')) {
+        topicTip = 'Upcoming $subjectName: Review Arrhenius activation energy and reaction rate order equations.';
+      } else if (lower.contains('spectro') || lower.contains('analytical') || lower.contains('nmr')) {
+        topicTip = 'Upcoming $subjectName: Check ¹H NMR chemical shifts (δ ppm) and spin-spin splitting rules.';
+      } else {
+        topicTip = 'Upcoming $subjectName: Review your latest study notes and practice flashcards.';
+      }
+    }
+
+    return GlowCard(
+      borderColor: AppColors.purple.withValues(alpha: 0.35),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.purple.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.tips_and_updates_outlined, color: AppColors.purpleBright, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Today\'s Study Focus 🎯',
+                  style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 12.5),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  topicTip,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 12.5, height: 1.35),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
