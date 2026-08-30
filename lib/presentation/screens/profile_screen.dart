@@ -8,6 +8,8 @@ import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
 import '../../data/remote/supabase_service.dart';
 import '../providers/app_providers.dart';
+import 'app_guides_screen.dart';
+import 'beginner_tutorial_dialog.dart';
 import 'notification_settings_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -118,7 +120,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           label: const Text('Add Custom Subject', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700)),
         ),
 
-        // 2. PREFERENCES
+        // 2. HELP & TUTORIALS
+        const SectionTitle('Help & Guides'),
+        GlowCard(
+          onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const AppGuidesScreen())),
+          child: const Row(
+            children: [
+              Icon(Icons.menu_book_rounded, color: AppColors.purpleBright),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('How to Use ChemBuddy', style: TextStyle(fontWeight: FontWeight.w700)),
+                    Text('Visual guides for Attendance, Timetable, PDF AI & Quizzes', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        GlowCard(
+          onTap: () => BeginnerTutorialDialog.show(context),
+          child: const Row(
+            children: [
+              Icon(Icons.play_circle_outline_rounded, color: AppColors.blue),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Replay Onboarding Walkthrough', style: TextStyle(fontWeight: FontWeight.w700)),
+                    Text('7-step interactive tour of ChemBuddy features', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+
+        // 3. PREFERENCES
         const SectionTitle('Preferences'),
         GlowCard(
           onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const NotificationSettingsScreen())),
@@ -140,7 +184,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
 
-        // 3. STORAGE & CLOUD SYNC
+        // 4. STORAGE & CLOUD SYNC
         const SectionTitle('Storage & Cloud Sync'),
         GlowCard(
           child: Column(
@@ -198,13 +242,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
 
-        // 4. ABOUT
+        // 5. ABOUT
         const SectionTitle('About'),
         GlowCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Chem Buddy v2.5.1', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+              const Text('Chem Buddy v2.6.0', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
               const SizedBox(height: 4),
               const Text(
                 'AI-Powered Academic & Study Assistant for MSc Chemistry students.',

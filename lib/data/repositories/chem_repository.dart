@@ -6,6 +6,7 @@ import '../../core/utils/attendance_math.dart';
 import '../local/local_store.dart';
 import '../models/library_models.dart';
 import '../models/models.dart';
+import '../models/pdf_study_models.dart';
 import '../models/timetable_entry.dart';
 import '../remote/notification_service.dart';
 import '../remote/supabase_service.dart';
@@ -457,6 +458,58 @@ class ChemRepository {
     final current = profile();
     await saveProfile(current.copyWith(loggedIn: false));
   }
+
+  // --- Tutorial & First-Time Onboarding State ---
+  bool hasCompletedTutorial() {
+    return store.appTutorialState.get('completed', defaultValue: false) as bool;
+  }
+
+  Future<void> setTutorialCompleted(bool completed) async {
+    await store.appTutorialState.put('completed', completed);
+  }
+
+  // --- PDF Study Persistence ---
+  PdfSummary? getPdfSummary(String docId) {
+    final raw = store.pdfSummaries.get(docId);
+    if (raw is Map) return PdfSummary.fromJson(Map<String, dynamic>.from(raw));
+    return null;
+  }
+
+  Future<void> savePdfSummary(PdfSummary summary) =>
+      store.put(store.pdfSummaries, summary.docId.isNotEmpty ? summary.docId : summary.id, summary.toJson());
+
+  List<ImportantTopic> getPdfTopics(String docId) {
+    final raw = store.pdfTopics.get(docId);
+    if (raw is List) {
+      return raw
+          .whereType<Map>()
+          .map((e) => ImportantTopic.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<void> savePdfTopics(String docId, List<ImportantTopic> topics) =>
+      store.pdfTopics.put(docId, topics.map((t) => t.toJson()).toList());
+
+  List<ChemistryQuiz> getPdfQuizzes(String docId) {
+    final all = store.all(store.pdfQuizzes).map(ChemistryQuiz.fromJson).toList();
+    if (docId.isEmpty) return all;
+    return all.where((q) => q.docId == docId).toList();
+  }
+
+  Future<void> saveQuiz(ChemistryQuiz quiz) =>
+      store.put(store.pdfQuizzes, quiz.id, quiz.toJson());
+
+  List<QuizResult> getQuizResults(String? quizId) {
+    final all = store.all(store.quizResults).map(QuizResult.fromJson).toList();
+    all.sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    if (quizId == null) return all;
+    return all.where((r) => r.quizId == quizId).toList();
+  }
+
+  Future<void> saveQuizResult(QuizResult result) =>
+      store.put(store.quizResults, result.id, result.toJson());
 
   String newId() => _uuid.v4();
 

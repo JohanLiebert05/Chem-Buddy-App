@@ -1,7 +1,7 @@
 name: chem_buddy
 description: Chem Buddy by Prajwal A Kambar — attendance, tests, and notes for MSc Chemistry students.
 publish_to: 'none'
-version: 2.5.1+6
+version: 2.6.0+7
 
 environment:
   sdk: ^3.13.0

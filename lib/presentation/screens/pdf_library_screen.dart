@@ -8,6 +8,7 @@ import '../../data/models/library_models.dart';
 import '../../data/services/pdf_library_service.dart';
 import '../providers/app_providers.dart';
 import 'pdf_reader_screen.dart';
+import 'pdf_study_hub_screen.dart';
 
 class PdfLibraryScreen extends ConsumerStatefulWidget {
   const PdfLibraryScreen({super.key, this.embedded = false});
@@ -114,39 +115,80 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
           for (final s in state.subjects) {
             if (s.id == d.subjectId) subjectName = s.name;
           }
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: GlowCard(
-              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: d))),
-              child: Row(
-                children: [
-                  Icon(d.favorite ? Icons.star : Icons.picture_as_pdf_outlined, color: AppColors.purpleBright),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: GlowCard(
+                onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+                child: Column(
+                  children: [
+                    Row(
                       children: [
-                        Text(d.displayName, style: const TextStyle(fontWeight: FontWeight.w800)),
-                        Text(
-                          '$subjectName · ${DateFormat('d MMM').format(d.dateAdded)}',
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                        Icon(d.favorite ? Icons.star : Icons.picture_as_pdf_outlined, color: AppColors.purpleBright),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(d.displayName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                              Text(
+                                '$subjectName · ${DateFormat('d MMM').format(d.dateAdded)}',
+                                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          onSelected: (v) => _menu(d, v, state),
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(value: 'study', child: Text('Study with AI')),
+                            PopupMenuItem(value: 'read', child: Text('Read PDF')),
+                            PopupMenuItem(value: 'rename', child: Text('Rename')),
+                            PopupMenuItem(value: 'move', child: Text('Move subject')),
+                            PopupMenuItem(value: 'fav', child: Text('Toggle favorite')),
+                            PopupMenuItem(value: 'delete', child: Text('Delete')),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                  PopupMenuButton<String>(
-                    onSelected: (v) => _menu(d, v, state),
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'rename', child: Text('Rename')),
-                      PopupMenuItem(value: 'move', child: Text('Move subject')),
-                      PopupMenuItem(value: 'fav', child: Text('Toggle favorite')),
-                      PopupMenuItem(value: 'delete', child: Text('Delete')),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.border),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: d))),
+                            icon: const Icon(Icons.visibility_outlined, size: 14, color: AppColors.textSecondary),
+                            label: const Text('Read PDF', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.purple.withValues(alpha: 0.25),
+                              foregroundColor: AppColors.purpleBright,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+                            icon: const Icon(Icons.auto_awesome, size: 14),
+                            label: const Text('Study with AI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
+            );
         }),
       ],
     );
@@ -180,7 +222,11 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
 
   Future<void> _menu(PdfDoc doc, String action, AppState state) async {
     final controller = ref.read(appControllerProvider.notifier);
-    if (action == 'fav') {
+    if (action == 'study') {
+      Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: doc)));
+    } else if (action == 'read') {
+      Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: doc)));
+    } else if (action == 'fav') {
       await controller.savePdf(doc.copyWith(favorite: !doc.favorite));
     } else if (action == 'delete') {
       final ok = await showDialog<bool>(

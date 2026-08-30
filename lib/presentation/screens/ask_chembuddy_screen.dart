@@ -17,7 +17,7 @@ import '../../data/services/pdf_text_extraction_service.dart';
 import '../../data/services/pdf_text_utils.dart';
 import '../providers/app_providers.dart';
 import '../providers/rag_providers.dart';
-import 'pdf_reader_screen.dart';
+import 'pdf_study_hub_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
 
 class AskChemBuddyScreen extends ConsumerStatefulWidget {
@@ -295,34 +295,34 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                           ),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  chatState.activeDocumentName ?? 'Study Material',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                                ),
-                                Row(
-                                  children: [
-                                    const Text('Ready 🟢', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
-                                    if (chatState.activeDocumentSize != null)
-                                      Text(' · ${_formatSize(chatState.activeDocumentSize)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                                  ],
-                                ),
-                              ],
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Based on: ${chatState.activeDocumentName ?? "Study Material"}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white),
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Text('Ready 🟢', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
+                                      if (chatState.activeDocumentSize != null)
+                                        Text(' · ${_formatSize(chatState.activeDocumentSize)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
                           if (chatState.activeDocumentPath != null)
                             IconButton(
-                              icon: const Icon(Icons.visibility_outlined, size: 18, color: AppColors.blue),
-                              tooltip: 'View PDF',
+                              icon: const Icon(Icons.school, size: 18, color: AppColors.purpleBright),
+                              tooltip: 'Open Study Hub',
                               onPressed: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute<void>(
-                                    builder: (_) => PdfReaderScreen(
+                                    builder: (_) => PdfStudyHubScreen(
                                       doc: PdfDoc(
                                         id: const Uuid().v4(),
                                         filename: chatState.activeDocumentName ?? 'document.pdf',
@@ -350,9 +350,65 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                         child: Row(
                           children: [
                             _ActionChip(
+                              icon: Icons.local_fire_department_outlined,
+                              label: 'Important Topics',
+                              onTap: () {
+                                if (chatState.activeDocumentPath != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => PdfStudyHubScreen(
+                                        doc: PdfDoc(
+                                          id: const Uuid().v4(),
+                                          filename: chatState.activeDocumentName ?? 'document.pdf',
+                                          displayName: chatState.activeDocumentName ?? 'Study Material',
+                                          subjectId: '',
+                                          localPath: chatState.activeDocumentPath!,
+                                          dateAdded: DateTime.now(),
+                                          fileSize: chatState.activeDocumentSize ?? 0,
+                                        ),
+                                        initialTab: 0,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  _sendMessage('Extract and rank the most important topics from this study material with explanations.');
+                                }
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            _ActionChip(
                               icon: Icons.summarize_outlined,
                               label: 'Summarize',
-                              onTap: () => _sendMessage('Please give me a clear, structured summary of this study material with major topics and reaction mechanisms.'),
+                              onTap: () => _sendMessage('Please give me a clear, structured summary of this study material with major topics, definitions, and reaction mechanisms.'),
+                            ),
+                            const SizedBox(width: 8),
+                            _ActionChip(
+                              icon: Icons.quiz_outlined,
+                              label: 'Quiz',
+                              onTap: () {
+                                if (chatState.activeDocumentPath != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => PdfStudyHubScreen(
+                                        doc: PdfDoc(
+                                          id: const Uuid().v4(),
+                                          filename: chatState.activeDocumentName ?? 'document.pdf',
+                                          displayName: chatState.activeDocumentName ?? 'Study Material',
+                                          subjectId: '',
+                                          localPath: chatState.activeDocumentPath!,
+                                          dateAdded: DateTime.now(),
+                                          fileSize: chatState.activeDocumentSize ?? 0,
+                                        ),
+                                        initialTab: 2,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  _sendMessage('Generate 5 MSc-level exam practice questions with model answers based on this study material.');
+                                }
+                              },
                             ),
                             const SizedBox(width: 8),
                             _ActionChip(
@@ -369,18 +425,6 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                   ),
                                 );
                               },
-                            ),
-                            const SizedBox(width: 8),
-                            _ActionChip(
-                              icon: Icons.lightbulb_outline,
-                              label: 'Key Concepts',
-                              onTap: () => _sendMessage('Extract and list all the key chemistry concepts, definitions, and equations from this PDF.'),
-                            ),
-                            const SizedBox(width: 8),
-                            _ActionChip(
-                              icon: Icons.quiz_outlined,
-                              label: 'Practice Questions',
-                              onTap: () => _sendMessage('Generate 5 MSc-level exam practice questions with model answers based on this study material.'),
                             ),
                           ],
                         ),

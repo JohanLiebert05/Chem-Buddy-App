@@ -4,12 +4,14 @@ import '../../core/constants/seed_data.dart';
 import '../../data/local/local_store.dart';
 import '../../data/models/library_models.dart';
 import '../../data/models/models.dart';
+import '../../data/models/pdf_study_models.dart';
 import '../../data/models/timetable_entry.dart';
 import '../../data/remote/notification_service.dart';
 import '../../data/remote/supabase_service.dart';
 import '../../data/repositories/chem_repository.dart';
 import '../../data/services/daily_focus_service.dart';
 import '../../data/services/flashcard_service.dart';
+import '../../data/services/pdf_ai_study_service.dart';
 import '../../data/services/pdf_library_service.dart';
 import '../../data/services/study_session_service.dart';
 
@@ -24,6 +26,13 @@ final chemRepositoryProvider = Provider<ChemRepository>((ref) {
 });
 
 final appControllerProvider = NotifierProvider<AppController, AppState>(AppController.new);
+
+final pdfAiStudyServiceProvider = Provider<PdfAiStudyService>((ref) {
+  return PdfAiStudyService(
+    store: ref.watch(localStoreProvider),
+    remote: SupabaseService.instance,
+  );
+});
 
 final flashcardServiceProvider = Provider<FlashcardService>((ref) {
   return FlashcardService(store: ref.watch(localStoreProvider));
@@ -239,6 +248,33 @@ class AppController extends Notifier<AppState> {
 
   Future<void> saveNotificationPrefs(NotificationPrefs prefs) async {
     await _repo.saveNotificationPrefs(prefs);
+    await reload();
+  }
+
+  bool hasCompletedTutorial() => _repo.hasCompletedTutorial();
+
+  Future<void> setTutorialCompleted(bool completed) async {
+    await _repo.setTutorialCompleted(completed);
+    await reload();
+  }
+
+  Future<void> savePdfSummary(PdfSummary summary) async {
+    await _repo.savePdfSummary(summary);
+    await reload();
+  }
+
+  Future<void> savePdfTopics(String docId, List<ImportantTopic> topics) async {
+    await _repo.savePdfTopics(docId, topics);
+    await reload();
+  }
+
+  Future<void> saveQuiz(ChemistryQuiz quiz) async {
+    await _repo.saveQuiz(quiz);
+    await reload();
+  }
+
+  Future<void> saveQuizResult(QuizResult result) async {
+    await _repo.saveQuizResult(result);
     await reload();
   }
 }

@@ -19,6 +19,11 @@ class HiveBoxes {
   static const settings = 'settings';
   static const aiConversations = 'ai_conversations';
   static const aiMessages = 'ai_messages';
+  static const pdfSummaries = 'pdf_summaries';
+  static const pdfTopics = 'pdf_topics';
+  static const pdfQuizzes = 'pdf_quizzes';
+  static const quizResults = 'quiz_results';
+  static const appTutorialState = 'app_tutorial_state';
 
   static Future<void> openAll() async {
     await Hive.initFlutter();
@@ -41,6 +46,11 @@ class HiveBoxes {
       Hive.openBox(settings),
       Hive.openBox(aiConversations),
       Hive.openBox(aiMessages),
+      Hive.openBox(pdfSummaries),
+      Hive.openBox(pdfTopics),
+      Hive.openBox(pdfQuizzes),
+      Hive.openBox(quizResults),
+      Hive.openBox(appTutorialState),
     ]);
   }
 }
@@ -64,6 +74,11 @@ class LocalStore {
   Box get settings => Hive.box(HiveBoxes.settings);
   Box get aiConversations => Hive.box(HiveBoxes.aiConversations);
   Box get aiMessages => Hive.box(HiveBoxes.aiMessages);
+  Box get pdfSummaries => Hive.box(HiveBoxes.pdfSummaries);
+  Box get pdfTopics => Hive.box(HiveBoxes.pdfTopics);
+  Box get pdfQuizzes => Hive.box(HiveBoxes.pdfQuizzes);
+  Box get quizResults => Hive.box(HiveBoxes.quizResults);
+  Box get appTutorialState => Hive.box(HiveBoxes.appTutorialState);
 
   Map<String, dynamic>? getProfile() {
     final raw = _profile.get('current');
