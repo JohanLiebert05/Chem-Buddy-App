@@ -115,80 +115,128 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
           for (final s in state.subjects) {
             if (s.id == d.subjectId) subjectName = s.name;
           }
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: GlowCard(
-                onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Icon(d.favorite ? Icons.star : Icons.picture_as_pdf_outlined, color: AppColors.purpleBright),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(d.displayName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-                              Text(
-                                '$subjectName · ${DateFormat('d MMM').format(d.dateAdded)}',
-                                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                              ),
-                            ],
-                          ),
+
+          final store = ref.watch(localStoreProvider);
+          final docQuizzes = store.all(store.quizResults).where((j) => j['pdfDocId'] == d.id).length;
+          final docFlashcards = store.all(store.smartSets).where((j) => j['sourceDocId'] == d.id).length;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GlowCard(
+              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.purple.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        PopupMenuButton<String>(
-                          onSelected: (v) => _menu(d, v, state),
-                          itemBuilder: (_) => const [
-                            PopupMenuItem(value: 'study', child: Text('Study with AI')),
-                            PopupMenuItem(value: 'read', child: Text('Read PDF')),
-                            PopupMenuItem(value: 'rename', child: Text('Rename')),
-                            PopupMenuItem(value: 'move', child: Text('Move subject')),
-                            PopupMenuItem(value: 'fav', child: Text('Toggle favorite')),
-                            PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        child: Icon(d.favorite ? Icons.star : Icons.picture_as_pdf_outlined, color: AppColors.purpleBright, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(d.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5, color: Colors.white)),
+                            Text(
+                              '$subjectName · ${DateFormat('d MMM yyyy').format(d.dateAdded)}',
+                              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                            ),
                           ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: AppColors.border),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              padding: const EdgeInsets.symmetric(vertical: 6),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: d))),
-                            icon: const Icon(Icons.visibility_outlined, size: 14, color: AppColors.textSecondary),
-                            label: const Text('Read PDF', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                          ),
+                      ),
+                      PopupMenuButton<String>(
+                        onSelected: (v) => _menu(d, v, state),
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(value: 'study', child: Text('Study with AI')),
+                          PopupMenuItem(value: 'read', child: Text('Read PDF')),
+                          PopupMenuItem(value: 'rename', child: Text('Rename')),
+                          PopupMenuItem(value: 'move', child: Text('Move subject')),
+                          PopupMenuItem(value: 'fav', child: Text('Toggle favorite')),
+                          PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Study Metrics Row
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceElevated,
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.purple.withValues(alpha: 0.25),
-                              foregroundColor: AppColors.purpleBright,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              padding: const EdgeInsets.symmetric(vertical: 6),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
-                            icon: const Icon(Icons.auto_awesome, size: 14),
-                            label: const Text('Study with AI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                          ),
+                        child: Text(
+                          '📝 $docQuizzes Quiz${docQuizzes == 1 ? "" : "zes"}',
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceElevated,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '🃏 $docFlashcards Deck${docFlashcards == 1 ? "" : "s"}',
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      const Spacer(),
+                      if (d.lastOpened != null)
+                        Text(
+                          'Last studied ${DateFormat('d MMM').format(d.lastOpened!)}',
+                          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // 5 Quick Action Shortcuts
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      _buildQuickActionBtn(
+                        label: 'Chat',
+                        icon: Icons.chat_bubble_outline,
+                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+                      ),
+                      _buildQuickActionBtn(
+                        label: 'Quiz',
+                        icon: Icons.quiz_outlined,
+                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+                      ),
+                      _buildQuickActionBtn(
+                        label: 'Flashcards',
+                        icon: Icons.style_outlined,
+                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+                      ),
+                      _buildQuickActionBtn(
+                        label: 'Summary',
+                        icon: Icons.auto_stories_outlined,
+                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+                      ),
+                      _buildQuickActionBtn(
+                        label: 'Read',
+                        icon: Icons.visibility_outlined,
+                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: d))),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            );
+            ),
+          );
         }),
       ],
     );
@@ -268,5 +316,35 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
       );
       if (next != null) await controller.savePdf(doc.copyWith(subjectId: next));
     }
+  }
+
+  Widget _buildQuickActionBtn({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 13, color: AppColors.purpleBright),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: const TextStyle(color: AppColors.textPrimary, fontSize: 11.5, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

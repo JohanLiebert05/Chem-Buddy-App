@@ -153,23 +153,32 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
     if (rawText.isEmpty) return;
 
     String promptToSend = rawText;
-    if (_currentMode == ChemBuddyAiMode.exam2M && !rawText.contains('2-Mark')) {
-      promptToSend = '[Format as a 2-Mark MSc Chemistry Answer with Definition and Key Reaction/Equation]: $rawText';
+    if (_currentMode == ChemBuddyAiMode.concept) {
+      promptToSend = '[Explain in Academic Concept Mode: Focus on deep understanding, physical/chemical intuition, orbital or thermodynamic principles, and clear chemical notation]: $rawText';
+    } else if (_currentMode == ChemBuddyAiMode.exam2M && !rawText.contains('2-Mark')) {
+      promptToSend = '[Format as a concise 2-Mark University Exam Answer: Provide 1) Definition (1-2 sentences), 2) Balanced Reaction or Equation, 3) Key Condition/Nuance. DO NOT over-explain]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.exam5M && !rawText.contains('5-Mark')) {
-      promptToSend = '[Format as a structured 5-Mark MSc Chemistry Answer with Principle, Reaction, Mechanism, and Conditions]: $rawText';
+      promptToSend = '''[Format as a structured 5-Mark MSc Chemistry University Rubric:
+- Definition & Statement of Principle
+- Main Explanation & Driving Force
+- Balanced Chemical Reaction / Equation
+- Step-by-Step Mechanism / Intermediates
+- Important Points & Synthetic Applications
+- Concise Conclusion]: $rawText''';
     } else if (_currentMode == ChemBuddyAiMode.exam10M && !rawText.contains('10-Mark')) {
       promptToSend = '''[Format as a comprehensive 10-Mark MSc Chemistry Exam Answer:
 1. Definition & Core Concept
-2. Chemical Principle
-3. Reaction Equation (Unicode)
-4. Step-by-Step Reaction Mechanism
-5. Required Reagents & Reaction Conditions
+2. Chemical Principle & Thermodynamics
+3. Reaction Equation & Conditions
+4. Step-by-Step Reaction Mechanism with Curved Arrow Notes
+5. Transition States & Intermediate Stability
 6. Concrete Laboratory Examples
-7. Synthetic & Academic Applications
-8. Limitations & Side Reactions
-9. Academic Conclusion]: $rawText''';
+7. Regio- & Stereoselectivity
+8. Synthetic & Industrial Applications
+9. Limitations & Side Reactions
+10. Academic Conclusion]: $rawText''';
     } else if (_currentMode == ChemBuddyAiMode.mechanisms && !rawText.toLowerCase().contains('mechanism')) {
-      promptToSend = 'Explain the full theoretical reaction mechanism, curly-arrow electron pushing, and intermediate stability for: $rawText';
+      promptToSend = 'Explain the full stepwise reaction mechanism, curved arrow electron displacement, intermediates, and driving force for: $rawText';
     }
     
     _lastSentQuestion = rawText;

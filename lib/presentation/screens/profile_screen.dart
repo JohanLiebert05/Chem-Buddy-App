@@ -48,6 +48,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final p = state.profile;
     final isConfigured = SupabaseService.instance.configured;
 
+    final repo = ref.watch(chemRepositoryProvider);
+    final analyticsService = ref.watch(studyAnalyticsServiceProvider);
+    final analytics = analyticsService.computeSummary(streakDays: repo.streak());
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
       children: [
@@ -73,8 +77,130 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
         ),
-        
-        // 1. ACADEMIC
+
+        // 1. STUDY ANALYTICS & MASTERY
+        const SectionTitle('Study Analytics & Topic Mastery 📊'),
+        GlowCard(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 4-Card Metric Grid
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildMetricTile(
+                      label: 'Quiz Accuracy',
+                      value: analytics.totalQuestionsAnswered > 0
+                          ? '${analytics.overallQuizAccuracy.toStringAsFixed(0)}%'
+                          : 'N/A',
+                      color: analytics.overallQuizAccuracy >= 70 ? AppColors.success : AppColors.warning,
+                      icon: Icons.track_changes_outlined,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildMetricTile(
+                      label: 'Questions Solved',
+                      value: '${analytics.totalQuestionsAnswered}',
+                      color: AppColors.purpleBright,
+                      icon: Icons.quiz_outlined,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildMetricTile(
+                      label: 'Cards Mastered',
+                      value: '${analytics.flashcardsMatureCount}',
+                      color: AppColors.blue,
+                      icon: Icons.school_outlined,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildMetricTile(
+                      label: 'Study Streak',
+                      value: '${analytics.studyStreakDays} Day${analytics.studyStreakDays == 1 ? "" : "s"} 🔥',
+                      color: AppColors.warning,
+                      icon: Icons.local_fire_department_outlined,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Weak Areas Section
+              const Text('Chemistry Topic Mastery Breakdown', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white)),
+              const SizedBox(height: 8),
+
+              if (analytics.weakTopics.isNotEmpty) ...[
+                ...analytics.weakTopics.map((w) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.danger.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🔴', style: TextStyle(fontSize: 14)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(w.topic, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white)),
+                              Text(
+                                '${w.accuracy.toStringAsFixed(0)}% Accuracy · Needs Review',
+                                style: const TextStyle(color: AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            ref.read(shellTabProvider.notifier).state = 1; // Ask AI tab
+                          },
+                          style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
+                          child: const Text('Study →', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 12)),
+                        ),
+                      ],
+                    ),
+                  ),
+                )),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevated,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.check_circle_outline, color: AppColors.success, size: 18),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'No weak topics identified yet. Complete quizzes to track your chemistry mastery!',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // 2. ACADEMIC COURSES
         const SectionTitle('Academic Courses'),
         if (state.subjects.isEmpty)
           const GlowCard(
@@ -367,6 +493,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildMetricTile({
+    required String label,
+    required String value,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w900),
+          ),
+        ],
+      ),
     );
   }
 }

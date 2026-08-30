@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/glow_card.dart';
+import '../screens/reaction_mechanism_screen.dart';
 
 class ReactionMechanismsCard extends StatelessWidget {
   const ReactionMechanismsCard({
@@ -17,35 +18,22 @@ class ReactionMechanismsCard extends StatelessWidget {
 
   static const _previewReactions = [
     'Aldol Condensation',
+    'Cannizzaro Reaction',
     'Wittig Reaction',
     'Diels-Alder (4+2)',
     'Grignard Addition',
     'Benzoin Condensation',
     'Beckmann Rearrangement',
+    'SN1 vs SN2',
   ];
 
-  void _handleNotify(BuildContext context) {
-    AppHaptics.confirm();
-    if (onNotifyTap != null) {
-      onNotifyTap!();
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.purple,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        content: const Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'You\'ll be notified as soon as Verified Reaction Mechanisms are live! ⚗️',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-              ),
-            ),
-          ],
+  void _openMechanisms(BuildContext context, [String? reactionName]) {
+    AppHaptics.tap();
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => ReactionMechanismsScreen(
+          initialReactionId: reactionName,
         ),
       ),
     );
@@ -55,7 +43,7 @@ class ReactionMechanismsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (compact) {
       return GlowCard(
-        borderColor: AppColors.purple.withValues(alpha: 0.4),
+        borderColor: AppColors.purple.withValues(alpha: 0.45),
         padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,14 +74,14 @@ class ReactionMechanismsCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.purple.withValues(alpha: 0.2),
+                    color: AppColors.success.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.6)),
+                    border: Border.all(color: AppColors.success.withValues(alpha: 0.5)),
                   ),
                   child: const Text(
-                    'COMING SOON',
+                    'EXPLORE',
                     style: TextStyle(
-                      color: AppColors.purpleBright,
+                      color: AppColors.success,
                       fontWeight: FontWeight.w800,
                       fontSize: 10,
                       letterSpacing: 0.5,
@@ -105,13 +93,13 @@ class ReactionMechanismsCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               highlightReaction != null
-                  ? 'Verified step-by-step vector mechanisms for "$highlightReaction" are coming soon.'
-                  : 'Explore verified reaction mechanisms with step-by-step visual explanations.',
+                ? 'Step-by-step electron movement & intermediates for "$highlightReaction".'
+                : 'Explore verified reaction mechanisms with step-by-step visual explanations.',
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
             ),
             const SizedBox(height: 10),
             InkWell(
-              onTap: () => _handleNotify(context),
+              onTap: () => _openMechanisms(context, highlightReaction),
               borderRadius: BorderRadius.circular(8),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -123,10 +111,10 @@ class ReactionMechanismsCard extends StatelessWidget {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.notifications_active_outlined, size: 14, color: AppColors.purpleBright),
+                    Icon(Icons.visibility_outlined, size: 14, color: AppColors.purpleBright),
                     SizedBox(width: 6),
                     Text(
-                      'Notify Me',
+                      'View Mechanism →',
                       style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 12),
                     ),
                   ],
@@ -180,14 +168,14 @@ class ReactionMechanismsCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
                           decoration: BoxDecoration(
-                            color: AppColors.purpleBright.withValues(alpha: 0.15),
+                            color: AppColors.success.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.5)),
+                            border: Border.all(color: AppColors.success.withValues(alpha: 0.5)),
                           ),
                           child: const Text(
-                            'COMING SOON',
+                            'LIVE ⚡',
                             style: TextStyle(
-                              color: AppColors.purpleBright,
+                              color: AppColors.success,
                               fontWeight: FontWeight.w800,
                               fontSize: 9.5,
                               letterSpacing: 0.4,
@@ -198,7 +186,7 @@ class ReactionMechanismsCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      '250+ Verified MSc Organic & Inorganic Mechanisms',
+                      'Verified MSc Organic & Inorganic Mechanisms with Curved Arrows',
                       style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                     ),
                   ],
@@ -218,25 +206,29 @@ class ReactionMechanismsCard extends StatelessWidget {
             children: _previewReactions.map((name) {
               final isTarget = highlightReaction != null &&
                   name.toLowerCase().contains(highlightReaction!.toLowerCase());
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isTarget
-                      ? AppColors.purple.withValues(alpha: 0.25)
-                      : AppColors.surfaceElevated,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
+              return InkWell(
+                onTap: () => _openMechanisms(context, name),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  decoration: BoxDecoration(
                     color: isTarget
-                        ? AppColors.purpleBright
-                        : AppColors.border,
+                        ? AppColors.purple.withValues(alpha: 0.25)
+                        : AppColors.surfaceElevated,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isTarget
+                          ? AppColors.purpleBright
+                          : AppColors.border,
+                    ),
                   ),
-                ),
-                child: Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: isTarget ? FontWeight.w700 : FontWeight.w500,
-                    color: isTarget ? AppColors.purpleBright : AppColors.textSecondary,
+                  child: Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: isTarget ? FontWeight.w700 : FontWeight.w600,
+                      color: isTarget ? AppColors.purpleBright : AppColors.textSecondary,
+                    ),
                   ),
                 ),
               );
@@ -252,11 +244,11 @@ class ReactionMechanismsCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              onPressed: () => _handleNotify(context),
-              icon: const Icon(Icons.notifications_active_outlined, size: 18),
+              onPressed: () => _openMechanisms(context),
+              icon: const Icon(Icons.auto_stories_outlined, size: 18),
               label: const Text(
-                'Notify Me When Available',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                'Explore All Reaction Mechanisms →',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
               ),
             ),
           ),
@@ -265,3 +257,4 @@ class ReactionMechanismsCard extends StatelessWidget {
     );
   }
 }
+

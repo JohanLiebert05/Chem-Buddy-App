@@ -13,6 +13,7 @@ import '../../data/services/daily_focus_service.dart';
 import '../../data/services/flashcard_service.dart';
 import '../../data/services/pdf_ai_study_service.dart';
 import '../../data/services/pdf_library_service.dart';
+import '../../data/services/study_analytics_service.dart';
 import '../../data/services/study_session_service.dart';
 
 final localStoreProvider = Provider<LocalStore>((ref) => LocalStore());
@@ -47,6 +48,10 @@ final studySessionServiceProvider = Provider<StudySessionService>((ref) {
     ref.watch(localStoreProvider),
     ref.watch(dailyFocusServiceProvider),
   );
+});
+
+final studyAnalyticsServiceProvider = Provider<StudyAnalyticsService>((ref) {
+  return StudyAnalyticsService(ref.watch(localStoreProvider));
 });
 
 final shellTabProvider = StateProvider<int>((ref) => 0);

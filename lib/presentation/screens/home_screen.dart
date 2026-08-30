@@ -67,6 +67,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final upcomingTests = state.events.where((e) => !e.completed).take(3).toList();
     final dailyChem = DailyChemistryService.instance.getTodayContent();
 
+    final analyticsService = ref.watch(studyAnalyticsServiceProvider);
+    final analytics = analyticsService.computeSummary(streakDays: repo.streak());
+
     return AnimatedDashboardList(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       children: [
@@ -79,7 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Hi, $name', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                  Text('Hi, $name 👋', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                   Text(
                     '${state.profile.university.isEmpty ? "MSc Chemistry" : state.profile.university} · Sem ${state.profile.semester}',
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
@@ -101,11 +104,247 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         const SizedBox(height: 16),
 
-        // 2. Next class or schedule status
+        // 2. CONTINUE STUDYING (Recently Studied Topic / PDF)
+        const SectionTitle('Continue Studying 📖'),
+        GlowCard(
+          borderColor: AppColors.purpleBright.withValues(alpha: 0.45),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.purple.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.auto_awesome, color: AppColors.purpleBright, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          recentPdf != null ? recentPdf.displayName : 'MSc Chemistry Study Hub',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
+                        ),
+                        Text(
+                          recentPdf != null ? 'Ready for Quizzes, Flashcards & RAG Chat' : 'Upload your chemistry PDF notes to begin',
+                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.purple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () {
+                    if (recentPdf != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: recentPdf)),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(builder: (_) => const PdfLibraryScreen()),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                  label: Text(
+                    recentPdf != null ? 'Continue Studying ${recentPdf.displayName} →' : 'Open PDF Study Hub →',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // 3. TODAY'S STUDY METRICS
+        const SectionTitle('Today\'s Study 📊'),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 2.1,
+          children: [
+            _buildStatCard(
+              label: 'Questions Answered',
+              value: '${analytics.totalQuestionsAnswered}',
+              icon: Icons.quiz_outlined,
+              color: AppColors.purpleBright,
+            ),
+            _buildStatCard(
+              label: 'Flashcards Due',
+              value: '${analytics.flashcardsDueToday}',
+              icon: Icons.psychology_outlined,
+              color: analytics.flashcardsDueToday > 0 ? AppColors.warning : AppColors.success,
+            ),
+            _buildStatCard(
+              label: 'Quiz Accuracy',
+              value: analytics.totalQuestionsAnswered > 0 ? '${analytics.overallQuizAccuracy.toStringAsFixed(0)}%' : 'N/A',
+              icon: Icons.track_changes_outlined,
+              color: analytics.overallQuizAccuracy >= 70 ? AppColors.success : AppColors.warning,
+            ),
+            _buildStatCard(
+              label: 'Study Streak',
+              value: '${analytics.studyStreakDays} Day${analytics.studyStreakDays == 1 ? "" : "s"} 🔥',
+              icon: Icons.local_fire_department_outlined,
+              color: AppColors.warning,
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        // 4. DUE TODAY FLASHCARDS BANNER
+        if (analytics.flashcardsDueToday > 0)
+          GlowCard(
+            borderColor: AppColors.warning.withValues(alpha: 0.6),
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.alarm_on, color: AppColors.warning, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${analytics.flashcardsDueToday} flashcard${analytics.flashcardsDueToday == 1 ? "" : "s"} due today',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                      ),
+                      const Text(
+                        'Reinforce active recall spaced repetition',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.warning,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SmartFlashcardsStudyScreen(
+                          setId: '',
+                          review: ReviewMode.spacedRepetition,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('Review Now →', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.check_circle_outline, color: AppColors.success, size: 20),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'You\'re all caught up with flashcards today 🎉',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 16),
+
+        // 5. QUICK ACTIONS
+        const SectionTitle('Quick Actions ⚡'),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 5,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 6,
+          childAspectRatio: 0.78,
+          children: [
+            _QuickTile(
+              icon: Icons.chat_bubble_outline,
+              label: 'Ask AI',
+              onTap: () => ref.read(shellTabProvider.notifier).state = 1,
+            ),
+            _QuickTile(
+              icon: Icons.quiz_outlined,
+              label: 'Quiz',
+              onTap: () {
+                if (recentPdf != null) {
+                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: recentPdf)));
+                } else {
+                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PdfLibraryScreen()));
+                }
+              },
+            ),
+            _QuickTile(
+              icon: Icons.style_outlined,
+              label: 'Cards',
+              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsPage())),
+            ),
+            _QuickTile(
+              icon: Icons.upload_file_outlined,
+              label: 'Upload',
+              onTap: () => ref.read(shellTabProvider.notifier).state = 4,
+            ),
+            _QuickTile(
+              icon: Icons.science_outlined,
+              label: 'Mechanism',
+              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ReactionMechanismsScreen())),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // 6. Next class or schedule status
+        const SectionTitle('Schedule & Classes 🏫'),
         _NextClassCard(state: state),
         const SizedBox(height: 12),
 
-        // 3. Attendance health status
+        // 7. Attendance health status
         GlowCard(
           onTap: () => ref.read(shellTabProvider.notifier).state = 2,
           child: Row(
@@ -150,95 +389,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
 
-        // 4. Dynamic Class Preparation & Revision Tip
-        _buildStudyRecommendation(state),
-        const SizedBox(height: 14),
-
-        // 5. Reaction Mechanisms Feature Showcase (Coming Soon)
-        const SectionTitle('Upcoming Feature ⚗️'),
+        // 8. Reaction Mechanisms Feature Showcase (Live)
+        const SectionTitle('Reaction Mechanisms Spotlight ⚗️'),
         const ReactionMechanismsCard(),
         const SizedBox(height: 14),
 
-        // 6. Primary CTA: Study with ChemBuddy
-        const SectionTitle('Study with ChemBuddy ✨'),
-        GlowCard(
-          borderColor: AppColors.purpleBright.withValues(alpha: 0.45),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.purple.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.auto_awesome, color: AppColors.purpleBright, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          recentPdf != null ? recentPdf.displayName : 'Academic AI Tutor',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
-                        ),
-                        Text(
-                          recentPdf != null ? 'Ready for Important Topics & Quizzes' : 'Upload your chemistry PDF notes to study',
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.purple,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () {
-                    if (recentPdf != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: recentPdf)),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(builder: (_) => const PdfLibraryScreen()),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.school, size: 18),
-                  label: Text(
-                    recentPdf != null ? 'Study ${recentPdf.displayName}' : 'Open PDF Study Library',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // 7. Continue Studying (Progressive disclosure: only if session in progress)
+        // 9. Continue Incomplete Flashcard Session (if in progress)
         if (incompleteSession != null && incompleteSet != null) ...[
-          const SectionTitle('Continue Flashcard Session'),
+          const SectionTitle('Incomplete Flashcard Session ⏳'),
           GlowCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,28 +426,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
         ],
 
-        // 8. Chemistry Tools (Grouped quick-access tiles)
-        const SectionTitle('Chemistry Tools'),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 4,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 0.95,
-          children: [
-            _QuickTile(icon: Icons.calendar_month_outlined, label: 'Timetable', onTap: () => ref.read(shellTabProvider.notifier).state = 3),
-            _QuickTile(icon: Icons.menu_book_outlined, label: 'PDFs', onTap: () => ref.read(shellTabProvider.notifier).state = 4),
-            _QuickTile(icon: Icons.style_outlined, label: 'Cards', onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsPage()))),
-            _QuickTile(icon: Icons.record_voice_over_outlined, label: 'Viva Exam', onTap: () => VivaPracticeDialog.show(context)),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 7. Upcoming Deadlines & Tests
+        // 10. Upcoming Deadlines & Tests
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -355,6 +497,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // 8. Daily Chemistry Concept / Quote
         _DailyChemistryCard(item: dailyChem),
       ],
+    );
+  }
+
+  Widget _buildStatCard({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w900),
+          ),
+        ],
+      ),
     );
   }
 
