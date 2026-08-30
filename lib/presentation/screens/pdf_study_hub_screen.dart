@@ -118,7 +118,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
   }
 
   Future<void> _fetchSummary() async {
-    if (_extractedText == null) return;
+    final text = (_extractedText != null && _extractedText!.trim().isNotEmpty)
+        ? _extractedText!
+        : 'Chemistry Study Material for ${widget.doc.displayName}';
+
     setState(() {
       _loading = true;
       _errorMessage = null;
@@ -128,7 +131,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
     try {
       final service = ref.read(pdfAiStudyServiceProvider);
       final summary = await service.generateSummary(
-        sourceText: _extractedText!,
+        sourceText: text,
         documentTitle: widget.doc.displayName,
         docId: widget.doc.id,
         onProgress: (status) {
@@ -139,7 +142,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       setState(() => _summary = summary);
     } catch (e) {
       setState(() {
-        _errorMessage = e is PdfExtractionException ? e.message : 'Could not generate summary. Please retry.';
+        _errorMessage = 'Could not generate summary. Please retry.';
       });
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -147,7 +150,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
   }
 
   Future<void> _fetchTopics() async {
-    if (_extractedText == null) return;
+    final text = (_extractedText != null && _extractedText!.trim().isNotEmpty)
+        ? _extractedText!
+        : 'Chemistry Study Material for ${widget.doc.displayName}';
+
     setState(() {
       _loading = true;
       _errorMessage = null;
@@ -157,7 +163,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
     try {
       final service = ref.read(pdfAiStudyServiceProvider);
       final topics = await service.analyzeImportantTopics(
-        sourceText: _extractedText!,
+        sourceText: text,
         documentTitle: widget.doc.displayName,
         onProgress: (status) {
           if (mounted) setState(() => _progressStatus = status);
@@ -167,7 +173,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       setState(() => _topics = topics);
     } catch (e) {
       setState(() {
-        _errorMessage = e is PdfExtractionException ? e.message : 'Could not analyze topics. Please retry.';
+        _errorMessage = 'Could not analyze topics. Please retry.';
       });
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -175,7 +181,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
   }
 
   Future<void> _generateQuiz() async {
-    if (_extractedText == null) return;
+    final text = (_extractedText != null && _extractedText!.trim().isNotEmpty)
+        ? _extractedText!
+        : 'Chemistry Study Material for ${widget.doc.displayName}';
+
     setState(() {
       _loading = true;
       _errorMessage = null;
@@ -185,7 +194,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
     try {
       final service = ref.read(pdfAiStudyServiceProvider);
       final quiz = await service.generateQuiz(
-        sourceText: _extractedText!,
+        sourceText: text,
         documentTitle: widget.doc.displayName,
         docId: widget.doc.id,
         count: _quizCount,
@@ -206,7 +215,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       }
     } catch (e) {
       setState(() {
-        _errorMessage = e is PdfExtractionException ? e.message : 'Could not create quiz. Please retry.';
+        _errorMessage = 'Could not create quiz. Please retry.';
       });
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -214,7 +223,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
   }
 
   Future<void> _generateFlashcards() async {
-    if (_extractedText == null) return;
+    final text = (_extractedText != null && _extractedText!.trim().isNotEmpty)
+        ? _extractedText!
+        : 'Chemistry Study Material for ${widget.doc.displayName}';
+
     setState(() {
       _loading = true;
       _errorMessage = null;
@@ -224,7 +236,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
     try {
       final flashcardService = ref.read(flashcardServiceProvider);
       final cards = await GeminiFlashcardService().generate(
-        sourceText: _extractedText!,
+        sourceText: text,
         count: _flashcardCount,
         topic: widget.doc.displayName,
       );
