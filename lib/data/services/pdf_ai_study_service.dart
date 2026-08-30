@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:uuid/uuid.dart';
@@ -163,7 +164,7 @@ CRITICAL: Do NOT use raw LaTeX. Use clean Unicode (Δ, →, ⇌, etc.).''',
     int count = 10,
     void Function(String status)? onProgress,
   }) async {
-    final validCount = count == 30 ? 30 : (count == 20 ? 20 : 10);
+    final validCount = count.clamp(5, 30);
     onProgress?.call('Extracting chemistry concepts for quiz...');
     final rawCleaned = cleanupExtractedText(sourceText);
     final cleaned = rawCleaned.length >= 30
@@ -173,10 +174,10 @@ CRITICAL: Do NOT use raw LaTeX. Use clean Unicode (Δ, →, ⇌, etc.).''',
     onProgress?.call('Synthesizing $validCount MSc Chemistry exam questions...');
     List<QuizQuestion>? questions;
 
-    if (remote.configured && remote.userId != null && await isOnline) {
+    if (remote.configured && await isOnline) {
       try {
         final raw = await remote.invokeFunction('ask-chembuddy', {
-          'question': '''Create exactly $validCount rigorous MSc Chemistry multiple choice questions based on "$documentTitle".
+          'question': '''Create exactly $validCount rigorous MSc Chemistry multiple choice questions based strictly on "$documentTitle".
 Cover a balance of:
 - Conceptual understanding
 - Reaction mechanisms & arrow pushing
@@ -185,21 +186,21 @@ Cover a balance of:
 - Practical laboratory/synthetic applications
 
 RULES:
-- Provide 4 distinct options per question.
-- Mark exactly one correct index (0, 1, 2, or 3).
+- Provide exactly 4 distinct options per question.
+- Randomize the correct answer index across 0, 1, 2, and 3 (A, B, C, D). Do NOT put the correct answer at index 0 for all questions.
 - Provide a detailed academic explanation for the correct answer.
 - Assign a type: "conceptual", "reaction", "mechanism", "reagent", "spectroscopy", "numerical", or "application".
 
-Return valid JSON with this shape:
+Return strictly valid JSON with this shape:
 {
   "questions": [
     {
       "question": "Question text with proper chemical notation",
       "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correct_index": 0,
-      "explanation": "Detailed explanation of why Option A is correct...",
+      "correct_index": 1,
+      "explanation": "Detailed explanation of why the correct option is right...",
       "type": "mechanism",
-      "topic": "Nucleophilic Substitution"
+      "topic": "$documentTitle"
     }
   ]
 }
@@ -216,17 +217,20 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
       }
     }
 
-    if (questions == null || questions.isEmpty) {
-      questions = _generateHeuristicQuiz(cleaned, documentTitle, validCount);
-    }
-    onProgress?.call('Generated ${questions.length} questions ✓');
+    final safeQuestions = (questions != null && questions.isNotEmpty)
+        ? questions
+        : _generateHeuristicQuiz(cleaned, documentTitle, validCount);
+    onProgress?.call('Generated ${safeQuestions.length} questions ✓');
+
+    // Ensure options are shuffled and correct indices are randomized across A, B, C, D
+    final randomized = safeQuestions.map(_randomizeQuestionOptions).take(validCount).toList();
 
     return ChemistryQuiz(
       id: _uuid.v4(),
       title: '$documentTitle Quiz',
       docId: docId,
       sourceFileName: documentTitle,
-      questions: questions.take(validCount).toList(),
+      questions: randomized,
       createdAt: DateTime.now(),
     );
   }
@@ -320,6 +324,45 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
       if (result.isNotEmpty) return result;
     } catch (_) {}
     return [];
+  }
+
+  QuizQuestion _randomizeQuestionOptions(QuizQuestion q) {
+    final validOptions = q.options.where((o) => o.trim().isNotEmpty).toList();
+    if (validOptions.length < 2) return q;
+
+    // Distractors pool in case less than 4 options
+    final defaultDistractors = [
+      'Increases by a factor of 2 under standard conditions',
+      'Requires anhydrous catalyst at high temperature',
+      'Follows first-order pseudo kinetics',
+      'Dependent on solvent dielectric constant',
+    ];
+
+    var distIdx = 0;
+    while (validOptions.length < 4) {
+      final d = defaultDistractors[distIdx % defaultDistractors.length];
+      if (!validOptions.contains(d)) validOptions.add(d);
+      distIdx++;
+    }
+
+    final fourOptions = validOptions.take(4).toList();
+    final safeCorrectIdx = q.correctIndex.clamp(0, fourOptions.length - 1);
+    final correctText = fourOptions[safeCorrectIdx];
+
+    final indices = [0, 1, 2, 3]..shuffle(Random());
+    final shuffledOptions = indices.map((i) => fourOptions[i]).toList();
+    final newCorrectIndex = shuffledOptions.indexOf(correctText);
+
+    return QuizQuestion(
+      id: q.id,
+      question: ChemistryTextFormatter.format(q.question),
+      options: shuffledOptions.map((o) => ChemistryTextFormatter.format(o)).toList(),
+      correctIndex: newCorrectIndex >= 0 ? newCorrectIndex : 0,
+      explanation: ChemistryTextFormatter.format(q.explanation),
+      type: q.type,
+      topic: ChemistryTextFormatter.format(q.topic),
+      numerical: q.numerical,
+    );
   }
 
   String _extractJsonBlock(String raw) {
@@ -493,6 +536,115 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
 
   List<QuizQuestion> _generateHeuristicQuiz(String text, String docTitle, int count) {
     final lowerTitle = '$docTitle $text'.toLowerCase();
+    final isCannizzaro = lowerTitle.contains('cannizzaro') ||
+        lowerTitle.contains('disproportionation') ||
+        lowerTitle.contains('hydride transfer');
+
+    if (isCannizzaro) {
+      final cannizzaroPool = [
+        QuizQuestion(
+          id: _uuid.v4(),
+          question: 'Which of the following substrates undergoes the Cannizzaro reaction upon heating with concentrated aqueous or alcoholic alkali?',
+          options: [
+            'Benzaldehyde (C₆H₅CHO)',
+            'Acetaldehyde (CH₃CHO)',
+            'Propionaldehyde (CH₃CH₂CHO)',
+            'Acetone (CH₃COCH₃)',
+          ],
+          correctIndex: 0,
+          explanation: 'The Cannizzaro reaction requires aldehydes having no α-hydrogens (such as benzaldehyde or formaldehyde) to prevent competing base-catalyzed aldol condensation.',
+          type: QuizQuestionType.reaction,
+          topic: 'Cannizzaro Reaction Substrates',
+        ),
+        QuizQuestion(
+          id: _uuid.v4(),
+          question: 'What is the rate-determining step (RDS) in the classic mechanism of the Cannizzaro reaction?',
+          options: [
+            'Direct transfer of hydride ion (H⁻) from the tetrahedral mono/dianion intermediate to a second molecule of aldehyde',
+            'Initial nucleophilic attack of hydroxide ion (OH⁻) on the carbonyl carbon',
+            'Proton transfer between alkoxide and carboxylic acid in the final step',
+            'Protonation of the primary alcohol by solvent water',
+          ],
+          correctIndex: 0,
+          explanation: 'The slow, rate-determining step is the direct intermolecular hydride (H⁻) transfer from the gem-diolate mono/dianion intermediate to the carbonyl carbon of the second aldehyde molecule.',
+          type: QuizQuestionType.mechanism,
+          topic: 'Cannizzaro Mechanism & Kinetics',
+        ),
+        QuizQuestion(
+          id: _uuid.v4(),
+          question: 'In a Crossed Cannizzaro reaction between benzaldehyde (C₆H₅CHO) and excess formaldehyde (HCHO), what are the principal products formed?',
+          options: [
+            'Benzyl alcohol (C₆H₅CH₂OH) and sodium formate (HCOONa)',
+            'Sodium benzoate (C₆H₅COONa) and methanol (CH₃OH)',
+            'Equimolar mixture of benzoic acid, formic acid, benzyl alcohol, and methanol',
+            'Cinnamic acid and water',
+          ],
+          correctIndex: 0,
+          explanation: 'Formaldehyde is much more electrophilic than benzaldehyde and preferentially forms the gem-diolate intermediate, acting as the hydride donor and oxidizing exclusively to formate, reducing benzaldehyde to benzyl alcohol.',
+          type: QuizQuestionType.reaction,
+          topic: 'Crossed Cannizzaro Reaction',
+        ),
+        QuizQuestion(
+          id: _uuid.v4(),
+          question: 'What is the overall kinetic rate law for the Cannizzaro reaction at moderate concentrations of base (OH⁻)?',
+          options: [
+            'Rate = k [RCHO]² [OH⁻]',
+            'Rate = k [RCHO] [OH⁻]',
+            'Rate = k [RCHO]² [OH⁻]²',
+            'Rate = k [RCHO]',
+          ],
+          correctIndex: 0,
+          explanation: 'At moderate base concentrations, the reaction is second-order with respect to aldehyde and first-order with respect to hydroxide (third-order overall), involving the monoanion intermediate.',
+          type: QuizQuestionType.numerical,
+          topic: 'Reaction Kinetics & Order',
+          numerical: const NumericalBreakdown(
+            given: 'Moderate [OH⁻], 2 RCHO molecules involved up to RDS',
+            formula: 'Rate = k [RCHO]² [OH⁻]',
+            calculation: '2nd order in RCHO + 1st order in OH⁻ = 3rd order overall',
+            answer: '3rd Order',
+            unit: 'overall',
+          ),
+        ),
+        QuizQuestion(
+          id: _uuid.v4(),
+          question: 'When the Cannizzaro reaction of benzaldehyde is performed in deuterium oxide (D₂O) with NaOD, where is deuterium found in the resulting benzyl alcohol?',
+          options: [
+            'Exclusively on the hydroxyl group (–OD); no deuterium is incorporated into the methylene (–CH₂–) carbon',
+            'On both the methylene carbon (–CD₂–) and hydroxyl group',
+            'Exclusively on the methylene carbon with no –OD formation',
+            'Evenly distributed across the aromatic benzene ring',
+          ],
+          correctIndex: 0,
+          explanation: 'Isotopic labeling confirms that hydride transfer occurs directly from one aldehyde molecule to another without exchange with the solvent (D₂O). Only the exchangeable OH/OD group incorporates deuterium.',
+          type: QuizQuestionType.conceptual,
+          topic: 'Isotopic Evidence & Mechanism',
+        ),
+      ];
+
+      final pool = List<QuizQuestion>.from(cannizzaroPool);
+      if (count > pool.length) {
+        for (var i = pool.length + 1; i <= count; i++) {
+          pool.add(
+            QuizQuestion(
+              id: _uuid.v4(),
+              question: 'Which intramolecular variant of the Cannizzaro reaction converts glyoxal (CHO-CHO) or phenylglyoxal into an α-hydroxy acid?',
+              options: [
+                'Internal hydride transfer within the same molecule to produce glycolic acid / mandelic acid',
+                'Benzoin condensation with cyanide catalyst',
+                'Pinacol-pinacolone rearrangement via carbocation shift',
+                'Beckmann rearrangement via oxime intermediate',
+              ],
+              correctIndex: 0,
+              explanation: 'In intramolecular Cannizzaro reactions, an internal hydride transfer converts a 1,2-dicarbonyl compound (like glyoxal or phenylglyoxal) directly into an α-hydroxy acid derivative.',
+              type: QuizQuestionType.application,
+              topic: 'Intramolecular Cannizzaro',
+            ),
+          );
+        }
+      }
+      return pool;
+    }
+
     final isChromatography = lowerTitle.contains('lc') ||
         lowerTitle.contains('hplc') ||
         lowerTitle.contains('chromatograph') ||

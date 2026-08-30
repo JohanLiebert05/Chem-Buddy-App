@@ -458,6 +458,75 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
               const SizedBox(height: 16),
             ],
 
+            // Comprehensive Question-by-Question Review
+            const Text('Question Breakdown', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
+            const SizedBox(height: 8),
+            ...List.generate(widget.quiz.questions.length, (i) {
+              final q = widget.quiz.questions[i];
+              final userAns = _userAnswers[i];
+              final isCorrect = userAns == q.correctIndex;
+              final chosenText = (userAns != null && userAns < q.options.length) ? q.options[userAns] : 'Not answered';
+              final correctText = q.correctIndex < q.options.length ? q.options[q.correctIndex] : '';
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: GlowCard(
+                  borderColor: (isCorrect ? AppColors.success : AppColors.danger).withValues(alpha: 0.4),
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(isCorrect ? Icons.check_circle : Icons.cancel, color: isCorrect ? AppColors.success : AppColors.danger, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Q${i + 1}. ${ChemistryTextFormatter.format(q.question)}',
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: Colors.white, height: 1.3),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if (!isCorrect) ...[
+                        Text(
+                          'Your Choice: ${ChemistryTextFormatter.format(chosenText)}',
+                          style: const TextStyle(color: AppColors.danger, fontSize: 12.5, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Correct Answer: ${ChemistryTextFormatter.format(correctText)}',
+                          style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 12.5),
+                        ),
+                      ] else ...[
+                        Text(
+                          'Correct: ${ChemistryTextFormatter.format(chosenText)} ✓',
+                          style: const TextStyle(color: AppColors.success, fontSize: 12.5, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                      if (q.explanation.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceElevated,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            ChemistryTextFormatter.format(q.explanation),
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.3),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(height: 16),
+
             // Recommended Next Step
             const Text('Recommended Next Step', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
             const SizedBox(height: 8),

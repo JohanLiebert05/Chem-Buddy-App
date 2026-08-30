@@ -13,12 +13,14 @@ import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/models.dart';
 import '../../data/models/library_models.dart';
+import '../../data/models/rag_models.dart';
 import '../../data/services/pdf_text_extraction_service.dart';
 import '../../data/services/pdf_text_utils.dart';
 import '../providers/app_providers.dart';
 import '../providers/rag_providers.dart';
 import '../widgets/reaction_mechanisms_card.dart';
 import '../widgets/viva_practice_dialog.dart';
+import 'pdf_quiz_screen.dart';
 import 'pdf_study_hub_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
 
@@ -241,6 +243,63 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _startQuizForMessage(AiMessage msg) async {
+    AppHaptics.tap();
+    final rawLines = msg.content.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    final firstLine = rawLines.firstWhere(
+      (l) => !l.startsWith('#') && l.length < 60,
+      orElse: () => 'Chemistry Topic',
+    ).replaceAll(RegExp(r'^[#*\s]+'), '');
+    final topicTitle = ChemistryTextFormatter.format(firstLine.isEmpty ? 'Chemistry Topic' : firstLine);
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Center(
+        child: GlowCard(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(color: AppColors.purpleBright),
+              const SizedBox(height: 16),
+              Text(
+                'Generating Chemistry Quiz on "$topicTitle"...',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13.5),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final quiz = await ref.read(pdfAiStudyServiceProvider).generateQuiz(
+        sourceText: msg.content,
+        documentTitle: topicTitle,
+        count: 10,
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // close loading dialog
+        Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => PdfQuizScreen(quiz: quiz, docName: topicTitle),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not generate quiz: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _pickPdf() async {
@@ -723,17 +782,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                           _ActionChip(
                                             icon: Icons.quiz,
                                             label: 'Quiz',
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute<void>(
-                                                  builder: (_) => SmartFlashcardsGenerateScreen(
-                                                    prefilledTopic: 'Quiz Review',
-                                                    prefilledText: ChemistryTextFormatter.format(msg.content),
-                                                  ),
-                                                ),
-                                              );
-                                            },
+                                            onTap: () => _startQuizForMessage(msg),
                                           ),
                                           const SizedBox(width: 8),
                                           _ActionChip(
@@ -796,7 +845,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                         ),
                       ),
                       SizedBox(width: 12),
-                      Text('ChemBuddy is thinking...', style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic, fontSize: 13)),
+                      Text('ChemBuddy is formulating your MSc Chemistry answer...', style: TextStyle(color: AppColors.purpleBright, fontStyle: FontStyle.italic, fontSize: 13, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),

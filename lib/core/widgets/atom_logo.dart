@@ -4,98 +4,152 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-class AtomLogo extends StatelessWidget {
-  const AtomLogo({super.key, this.size = 88, this.animated = false});
+class AtomLogo extends StatefulWidget {
+  const AtomLogo({super.key, this.size = 88, this.animated = true});
 
   final double size;
   final bool animated;
 
   @override
-  Widget build(BuildContext context) {
-    final mark = SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(painter: _AtomPainter()),
-    );
-    if (!animated) return mark;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.86, end: 1),
-      duration: const Duration(milliseconds: 900),
-      curve: Curves.easeOutCubic,
-      builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
-      child: _SpinningAtom(size: size, child: mark),
-    );
-  }
+  State<AtomLogo> createState() => _AtomLogoState();
 }
 
-class _SpinningAtom extends StatefulWidget {
-  const _SpinningAtom({required this.size, required this.child});
-  final double size;
-  final Widget child;
-
-  @override
-  State<_SpinningAtom> createState() => _SpinningAtomState();
-}
-
-class _SpinningAtomState extends State<_SpinningAtom> with SingleTickerProviderStateMixin {
-  late final AnimationController _spin;
+class _AtomLogoState extends State<AtomLogo> with TickerProviderStateMixin {
+  late final AnimationController _spinController;
+  late final AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
-    _spin = AnimationController(vsync: this, duration: const Duration(seconds: 12))..repeat();
+    _spinController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    );
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    );
+
+    if (widget.animated) {
+      _spinController.repeat();
+      _pulseController.repeat(reverse: true);
+    }
   }
 
   @override
   void dispose() {
-    _spin.dispose();
+    _spinController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return RotationTransition(turns: _spin, child: widget.child);
+    return AnimatedBuilder(
+      animation: Listenable.merge([_spinController, _pulseController]),
+      builder: (context, child) {
+        final pulse = 0.95 + (_pulseController.value * 0.08);
+        return Transform.scale(
+          scale: pulse,
+          child: SizedBox(
+            width: widget.size,
+            height: widget.size,
+            child: CustomPaint(
+              painter: _AestheticAtomPainter(
+                spin: _spinController.value * 2 * math.pi,
+                pulse: _pulseController.value,
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
-class _AtomPainter extends CustomPainter {
+class _AestheticAtomPainter extends CustomPainter {
+  _AestheticAtomPainter({required this.spin, required this.pulse});
+
+  final double spin;
+  final double pulse;
+
   @override
   void paint(Canvas canvas, Size size) {
     final c = Offset(size.width / 2, size.height / 2);
-    final glow = Paint()
-      ..color = AppColors.glow
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
-    canvas.drawCircle(c, size.width * 0.22, glow);
 
-    final nucleus = Paint()
-      ..shader = const RadialGradient(
-        colors: [AppColors.purpleBright, AppColors.purpleDeep],
-      ).createShader(Rect.fromCircle(center: c, radius: size.width * 0.12));
-    canvas.drawCircle(c, size.width * 0.1, nucleus);
+    // 1. Ambient Outer Glow
+    final glowPaint = Paint()
+      ..color = AppColors.purpleBright.withValues(alpha: 0.22 + (pulse * 0.15))
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, size.width * 0.2);
+    canvas.drawCircle(c, size.width * 0.28, glowPaint);
 
-    final orbit = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
-      ..color = AppColors.purpleBright.withValues(alpha: 0.85);
+    // 2. Cyan Secondary Glow
+    final cyanGlow = Paint()
+      ..color = AppColors.blue.withValues(alpha: 0.15 + (pulse * 0.1))
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, size.width * 0.14);
+    canvas.drawCircle(c, size.width * 0.18, cyanGlow);
 
-    for (final angle in [0.4, 2.1, 4.0]) {
+    // 3. Nucleus Core
+    final nucleusGradient = RadialGradient(
+      colors: [
+        Colors.white,
+        AppColors.purpleBright,
+        AppColors.purpleDeep,
+      ],
+      stops: const [0.0, 0.45, 1.0],
+    ).createShader(Rect.fromCircle(center: c, radius: size.width * 0.14));
+
+    final nucleusPaint = Paint()
+      ..shader = nucleusGradient
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(c, size.width * 0.11, nucleusPaint);
+
+    // 4. Three 3D Orbits with Phase Shifts
+    final angles = [0.0, math.pi / 3, 2 * math.pi / 3];
+    final orbitColors = [
+      AppColors.purpleBright.withValues(alpha: 0.85),
+      AppColors.blue.withValues(alpha: 0.85),
+      const Color(0xFFC084FC).withValues(alpha: 0.85),
+    ];
+
+    for (var i = 0; i < angles.length; i++) {
+      final baseAngle = angles[i];
+      final orbitPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8
+        ..color = orbitColors[i];
+
       canvas.save();
       canvas.translate(c.dx, c.dy);
-      canvas.rotate(angle);
-      canvas.drawOval(
-        Rect.fromCenter(center: Offset.zero, width: size.width * 0.86, height: size.height * 0.34),
-        orbit,
+      canvas.rotate(baseAngle + (spin * 0.15 * (i % 2 == 0 ? 1 : -1)));
+
+      final ovalRect = Rect.fromCenter(
+        center: Offset.zero,
+        width: size.width * 0.90,
+        height: size.height * 0.36,
       );
+      canvas.drawOval(ovalRect, orbitPaint);
+
+      // Orbiting Electron on this ellipse
+      final electronAngle = spin * (1.2 + i * 0.3) + (i * math.pi / 2);
+      final eX = (size.width * 0.45) * math.cos(electronAngle);
+      final eY = (size.height * 0.18) * math.sin(electronAngle);
+
+      final electronGlow = Paint()
+        ..color = Colors.white.withValues(alpha: 0.8)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+      canvas.drawCircle(Offset(eX, eY), 4.5, electronGlow);
+
+      final electronCore = Paint()..color = Colors.white;
+      canvas.drawCircle(Offset(eX, eY), 2.8, electronCore);
+
       canvas.restore();
     }
-
-    final electron = Paint()..color = Colors.white;
-    canvas.drawCircle(c + Offset(size.width * 0.32, -size.height * 0.08), 3.2, electron);
-    canvas.drawCircle(c + Offset(-size.width * 0.28, size.height * 0.12), 3.2, electron);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _AestheticAtomPainter oldDelegate) =>
+      oldDelegate.spin != spin || oldDelegate.pulse != pulse;
 }
 
 class CircularAttendance extends StatelessWidget {

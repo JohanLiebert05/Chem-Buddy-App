@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:uuid/uuid.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
 
@@ -211,13 +213,52 @@ class QuizQuestion {
       orElse: () => QuizQuestionType.conceptual,
     );
 
+    var optionsList = <String>[];
+    if (json['options'] is List) {
+      optionsList = (json['options'] as List)
+          .map((e) => ChemistryTextFormatter.format(e.toString().trim()))
+          .where((e) => e.isNotEmpty)
+          .toList();
+    } else if (json['options'] is Map) {
+      final map = json['options'] as Map;
+      final keys = ['A', 'B', 'C', 'D', 'a', 'b', 'c', 'd', '1', '2', '3', '4'];
+      for (final k in keys) {
+        if (map.containsKey(k) && map[k] != null) {
+          final val = ChemistryTextFormatter.format(map[k].toString().trim());
+          if (val.isNotEmpty && !optionsList.contains(val)) {
+            optionsList.add(val);
+          }
+        }
+      }
+      if (optionsList.isEmpty) {
+        optionsList = map.values.map((v) => ChemistryTextFormatter.format(v.toString().trim())).toList();
+      }
+    }
+
+    var correctIdx = 0;
+    if (json['correct_index'] is int) {
+      correctIdx = (json['correct_index'] as int).clamp(0, max(0, optionsList.length - 1));
+    } else if (json['correctAnswer'] != null || json['correct_answer'] != null) {
+      final rawCorrect = '${json['correctAnswer'] ?? json['correct_answer']}'.trim().toUpperCase();
+      if (rawCorrect == 'A' || rawCorrect == '0') {
+        correctIdx = 0;
+      } else if (rawCorrect == 'B' || rawCorrect == '1') {
+        correctIdx = 1;
+      } else if (rawCorrect == 'C' || rawCorrect == '2') {
+        correctIdx = 2;
+      } else if (rawCorrect == 'D' || rawCorrect == '3') {
+        correctIdx = 3;
+      } else {
+        final found = optionsList.indexWhere((o) => o.toLowerCase() == rawCorrect.toLowerCase());
+        if (found != -1) correctIdx = found;
+      }
+    }
+
     return QuizQuestion(
       id: json['id'] as String? ?? const Uuid().v4(),
       question: ChemistryTextFormatter.format(json['question'] as String? ?? ''),
-      options: (json['options'] as List? ?? const [])
-          .map((e) => ChemistryTextFormatter.format(e.toString()))
-          .toList(),
-      correctIndex: json['correct_index'] as int? ?? 0,
+      options: optionsList,
+      correctIndex: correctIdx,
       explanation: ChemistryTextFormatter.format(json['explanation'] as String? ?? ''),
       type: type,
       topic: json['topic'] as String? ?? 'General Chemistry',

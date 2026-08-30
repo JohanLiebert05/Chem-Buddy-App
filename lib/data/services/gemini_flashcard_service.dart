@@ -275,39 +275,41 @@ Return strictly valid JSON with this shape:
     }
 
     // 3. Definition & explanatory sentences in paragraphs
-    final sentences = sourceText.split(RegExp(r'(?<=[.!?])\s+|\n+')).map((s) => s.trim()).where((s) => s.length >= 15 && s.length <= 400).toList();
+    final rawSentences = sourceText.split(RegExp(r'(?<=[.!?])\s+|\n+')).map((s) => s.replaceAll(RegExp(r'#{1,6}'), '').trim()).where((s) => s.length >= 15 && s.length <= 400).toList();
 
-    for (final s in sentences) {
+    for (final s in rawSentences) {
       if (cards.length >= count) break;
-      final lower = s.toLowerCase();
+      final cleanText = s.replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
+      final lower = cleanText.toLowerCase();
 
       // Definitions: "X is defined as Y", "X refers to Y", "X is a Y", "X means Y"
       if (lower.contains(' is defined as ') || lower.contains(' refers to ') || lower.contains(' is used for ') || lower.contains(' is used to ') || lower.contains(' is called ') || lower.contains(' consists of ')) {
-        final match = RegExp(r'^(.*?)\s+(?:is defined as|refers to|is used for|is used to|is called|consists of)\s+(.*)$', caseSensitive: false).firstMatch(s);
+        final match = RegExp(r'^(.*?)\s+(?:is defined as|refers to|is used for|is used to|is called|consists of)\s+(.*)$', caseSensitive: false).firstMatch(cleanText);
         if (match != null) {
-          final subject = match.group(1)?.replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim() ?? '';
+          final subject = match.group(1)?.trim() ?? '';
           if (subject.length >= 2 && subject.length <= 60) {
-            addCard('What is the function or definition of $subject in this material?', s);
+            addCard('What is the function or definition of $subject in this material?', cleanText);
             continue;
           }
         }
       }
 
       // Principle & mechanism sentences
-      if (lower.contains('because') || lower.contains('due to') || lower.contains('principle') || lower.contains('method') || lower.contains('mechanism') || lower.contains('reaction') || lower.contains('procedure') || lower.contains('step') || lower.contains('parameter') || lower.contains('result') || lower.contains('requires') || lower.contains('retention') || lower.contains('calibration')) {
-        final preview = s.length > 55 ? '${s.substring(0, 55)}...' : s;
-        addCard('Explain the following point from the document: "$preview"', s);
+      if (lower.contains('because') || lower.contains('due to') || lower.contains('principle') || lower.contains('method') || lower.contains('mechanism') || lower.contains('reaction') || lower.contains('procedure') || lower.contains('step') || lower.contains('parameter') || lower.contains('result') || lower.contains('requires') || lower.contains('retention') || lower.contains('calibration') || lower.contains('hydride') || lower.contains('transfer') || lower.contains('kinetics')) {
+        final preview = cleanText.length > 55 ? '${cleanText.substring(0, 55).trim()}...' : cleanText;
+        addCard('Explain the following point from the document: "$preview"', cleanText);
       }
     }
 
     // 4. Fill with remaining sentence chunks if needed — STILL STRICTLY FROM THE TEXT
     if (cards.length < count) {
-      for (final s in sentences) {
+      for (final s in rawSentences) {
         if (cards.length >= count) break;
-        final words = s.split(RegExp(r'\s+'));
+        final cleanText = s.replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
+        final words = cleanText.split(RegExp(r'\s+'));
         if (words.length >= 4) {
           final firstWords = words.take(5).join(' ');
-          addCard('What does the document state regarding "$firstWords..."?', s);
+          addCard('What does the document state regarding "$firstWords..."?', cleanText);
         }
       }
     }

@@ -74,5 +74,26 @@ One molecule of aldehyde is reduced to a primary alcohol, while another is oxidi
         contains('¹H NMR and ¹³C NMR'),
       );
     });
+
+    test('TEST 7: #### Bug Fix — Removes inline markdown hashes without corrupting chemical reaction', () {
+      const corruptedReaction = 'R-CHO + OH- -> R-CH2OH + R-COO- #### Representative Reaction ### Discussion';
+      final clean = ChemistryTextFormatter.format(corruptedReaction);
+      
+      expect(clean.contains('####'), false);
+      expect(clean.contains('###'), false);
+      expect(clean.contains('R-CHO + OH⁻ → R-CH₂OH + R-COO⁻'), true);
+      expect(clean.contains('Representative Reaction'), true);
+    });
+
+    test('TEST 8: Organic intermediate formatting with R-groups and negative charges', () {
+      const intermediate = 'R-CH(O-)(OH) + R-CHO -> R-COOH + R-CH2O-';
+      final clean = ChemistryTextFormatter.format(intermediate);
+
+      expect(clean.contains('R-CH(O⁻)(OH)'), true);
+      expect(clean.contains('R-CHO'), true);
+      expect(clean.contains('R-COOH'), true);
+      expect(clean.contains('R-CH₂O⁻'), true);
+      expect(clean.contains('→'), true);
+    });
   });
 }

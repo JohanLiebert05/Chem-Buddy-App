@@ -129,21 +129,25 @@ class ChemistryTextFormatter {
   static String _stripDecorativeNoise(String input) {
     var s = input;
 
-    // Convert decorative framed lines to standard Markdown headings:
-    // e.g. "· · · Definition · · :" -> "### Definition"
-    // e.g. "⋯ Key Reaction / Equation ⋯" -> "### Key Reaction / Equation"
-    // e.g. "::: Key Point :::" -> "### Key Point"
-    // e.g. "∶ Conditions ∶" -> "### Conditions"
-    s = s.replaceAllMapped(
-      RegExp(r'^[ \t]*(?:[·•▪◆⋯∶:\-\*~=]\s*)+([A-Za-z0-9\s/&—–]+?)(?:\s*[·•▪◆⋯∶:\-\*~=])*:?[ \t]*$', multiLine: true),
-      (m) {
-        final title = m[1]?.trim() ?? '';
-        if (title.isNotEmpty && title.length < 70 && !title.contains('.')) {
-          return '### $title';
+    // Convert decorative framed lines to standard Markdown headings line by line
+    final lines = s.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) continue;
+
+      // Check if line starts and ends with decorative characters: ·, •, ▪, ◆, ⋯, ∶, :, -, *, ~, =
+      if (RegExp(r'^[·•▪◆⋯∶:\-\*~=\s]+').hasMatch(trimmed) && RegExp(r'[·•▪◆⋯∶:\-\*~=\s]+$').hasMatch(trimmed)) {
+        final textOnly = trimmed
+            .replaceAll(RegExp(r'^[·•▪◆⋯∶:\-\*~=\s]+'), '')
+            .replaceAll(RegExp(r'[·•▪◆⋯∶:\-\*~=\s]+$'), '')
+            .trim();
+        if (textOnly.isNotEmpty && textOnly.length >= 3 && textOnly.length < 70 && !textOnly.contains('.')) {
+          lines[i] = '### $textOnly';
         }
-        return m[0]!;
-      },
-    );
+      }
+    }
+    s = lines.join('\n');
 
     // Remove repeated decorative dot clusters: "· · ·", "⋯ ⋯ ⋯", "⋯", "∶ ∶", "•••", ":::", ". . .", "····"
     s = s.replaceAll(RegExp(r'(?:[·•▪◆]\s*){3,}'), '');
@@ -151,6 +155,13 @@ class ChemistryTextFormatter {
     s = s.replaceAll(RegExp(r'(?:\.\s*){4,}'), '');
     s = s.replaceAll(RegExp(r'(?:∶\s*){2,}'), ':');
     s = s.replaceAll(RegExp(r'(?::{3,})'), '');
+
+    // Remove inline or trailing stray markdown hashes (e.g. "R-COO⁻ ####", "Reaction ### Dis...")
+    s = s.replaceAll(RegExp(r'(?<=[^\s#\n])[ \t]*#{1,6}[ \t]*(?=[^\s#\n]|$)'), ' ');
+    s = s.replaceAll(RegExp(r'(?<=[^\s#\n])[ \t]*#{1,6}[ \t]*$', multiLine: true), '');
+
+    // Normalize 4+ hashes at line starts to standard h3 ###
+    s = s.replaceAllMapped(RegExp(r'^(?:[ \t]*)#{4,}\s*', multiLine: true), (m) => '### ');
 
     // Remove decorative separator lines: "---", "***", "___", "━━━", "───", "┈┈┈"
     s = s.replaceAll(RegExp(r'^[ \t]*[-*_—━─~┈·•]{3,}[ \t]*$', multiLine: true), '');
@@ -396,6 +407,18 @@ class ChemistryTextFormatter {
       'AgNO3': 'AgNO₃',
       '1H NMR': '¹H NMR',
       '13C NMR': '¹³C NMR',
+      'D2O': 'D₂O',
+      'R-CHO': 'R-CHO',
+      'R-COOH': 'R-COOH',
+      'R-COONa': 'R-COONa',
+      'R-COOK': 'R-COOK',
+      'R-CH2OH': 'R-CH₂OH',
+      'R-CH2O-': 'R-CH₂O⁻',
+      'R-CH2O^-': 'R-CH₂O⁻',
+      'R-COO-': 'R-COO⁻',
+      'R-COO^-': 'R-COO⁻',
+      'R-CH(O-)(OH)': 'R-CH(O⁻)(OH)',
+      'R-CH(O^-)(OH)': 'R-CH(O⁻)(OH)',
     };
 
     var res = text;
@@ -432,8 +455,8 @@ class ChemistryTextFormatter {
 
     // Ensure chemical equations on standalone lines have clear vertical breathing room
     s = s.replaceAllMapped(
-      RegExp(r'(\n(?:[0-9A-Za-z\u2070-\u209f\(\)\+\-·\s]+[→⇌][0-9A-Za-z\u2070-\u209f\(\)\+\-·\s]+)\n)'),
-      (m) => '\n${m[1]?.trim()}\n',
+      RegExp(r'^[ \t]*([0-9A-Za-z\u2070-\u209f\(\)\+\-· \t]+[→⇌][0-9A-Za-z\u2070-\u209f\(\)\+\-· \t]+)[ \t]*$', multiLine: true),
+      (m) => '${m[1]?.trim()}',
     );
 
     // Collapse multiple consecutive blank lines to at most two

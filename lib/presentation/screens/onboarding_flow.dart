@@ -207,10 +207,10 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
-    final fade = CurvedAnimation(parent: _intro, curve: Curves.easeOut);
-    final slide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(fade);
+    final fade = CurvedAnimation(parent: _intro, curve: Curves.easeInOutCubic);
+    final slide = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(fade);
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: FadeTransition(
         opacity: fade,
         child: SlideTransition(
@@ -218,14 +218,14 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
           child: Column(
             children: [
               const Spacer(),
-              const AtomLogo(size: 120, animated: true),
-              const SizedBox(height: 16),
+              const AtomLogo(size: 130, animated: true),
+              const SizedBox(height: 24),
               Text(
                 'CHEM BUDDY',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 3,
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 3.5,
                   color: AppColors.purpleBright,
                 ),
               ),
@@ -233,23 +233,83 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
               Text(
                 'BY PRAJWAL A KAMBAR',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
                   letterSpacing: 3,
                   color: AppColors.textMuted,
                 ),
               ),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.purple.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4), width: 1),
+                ),
+                child: const Text(
+                  '✨ YOUR MSc CHEMISTRY COMPANION',
+                  style: TextStyle(
+                    color: AppColors.purpleBright,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
-              const AppByPrajwal(large: true),
-              const SizedBox(height: 12),
               const Text(
-                'Your MSc Chemistry companion for attendance, tests, and notes.',
+                'ChemBuddy is built specifically for MSc Chemistry students — your intelligent companion for AI problem-solving, reaction mechanisms, active-recall smart flashcards, interactive quizzes, and university exam preparation.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13.5,
+                  height: 1.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: const [
+                  _FeaturePill(icon: '⚗️', label: 'Reaction Mechanisms'),
+                  _FeaturePill(icon: '🧠', label: 'Spaced Repetition'),
+                  _FeaturePill(icon: '📝', label: 'AI Quizzes'),
+                  _FeaturePill(icon: '📊', label: 'Attendance & Timetable'),
+                ],
               ),
               const Spacer(flex: 2),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FeaturePill extends StatelessWidget {
+  const _FeaturePill({required this.icon, required this.label});
+  final String icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 5),
+          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }

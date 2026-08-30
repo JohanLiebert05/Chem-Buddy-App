@@ -198,18 +198,74 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
           ),
           const SizedBox(height: 16),
 
-          // Action Phase: Show Answer or Rate Recall
+          // Action Phase: Type Answer & Show Answer or Rate Recall
           if (phase == FlashcardUiState.unanswered) ...[
-            PrimaryButton(
-              label: 'Show Answer',
-              onPressed: _reveal,
+            GlowCard(
+              padding: const EdgeInsets.all(16),
+              borderColor: AppColors.purple.withValues(alpha: 0.3),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'YOUR ANSWER (ACTIVE RECALL)',
+                    style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.8),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: answer,
+                    maxLines: 3,
+                    style: const TextStyle(color: Colors.white, fontSize: 14.5),
+                    decoration: InputDecoration(
+                      hintText: 'Type your answer here before revealing...',
+                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      filled: true,
+                      fillColor: AppColors.surfaceElevated,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.purpleBright),
+                      ),
+                      contentPadding: const EdgeInsets.all(12),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  PrimaryButton(
+                    label: 'Submit / Show Answer',
+                    onPressed: _reveal,
+                  ),
+                ],
+              ),
             ),
           ],
 
           if (phase == FlashcardUiState.revealed || phase == FlashcardUiState.submitted) ...[
+            if (answer.text.trim().isNotEmpty) ...[
+              const Text(
+                'YOUR ANSWER',
+                style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 11.5, letterSpacing: 0.5),
+              ),
+              const SizedBox(height: 6),
+              GlowCard(
+                borderColor: AppColors.purple.withValues(alpha: 0.4),
+                padding: const EdgeInsets.all(14),
+                child: Text(
+                  answer.text.trim(),
+                  style: const TextStyle(fontSize: 14.5, height: 1.4, color: Colors.white),
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+
             const Text(
               'CORRECT ANSWER',
-              style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w800, fontSize: 11.5, letterSpacing: 0.5),
+              style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w800, fontSize: 11.5, letterSpacing: 0.5),
             ),
             const SizedBox(height: 6),
             GlowCard(
