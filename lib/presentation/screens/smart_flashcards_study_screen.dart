@@ -7,8 +7,11 @@ import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
+import '../../data/models/flashcard_evaluation.dart';
 import '../../data/models/smart_flashcard.dart';
+import '../../data/services/flashcard_evaluation_service.dart';
 import '../providers/app_providers.dart';
+import '../widgets/flashcard_evaluation_modal.dart';
 
 class SmartFlashcardsStudyScreen extends ConsumerStatefulWidget {
   const SmartFlashcardsStudyScreen({
@@ -26,11 +29,14 @@ class SmartFlashcardsStudyScreen extends ConsumerStatefulWidget {
 
 class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStudyScreen> {
   final answer = TextEditingController();
+  final _evalService = FlashcardEvaluationService();
   late List<SmartFlashcard> deck;
   late String sessionId;
   int index = 0;
   FlashcardUiState phase = FlashcardUiState.unanswered;
   bool _savingRating = false;
+  bool _evaluatingWithAi = false;
+  FlashcardAiEvaluation? _currentEvaluation;
 
   // Session Statistics
   int _againCount = 0;
@@ -261,6 +267,48 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                   style: const TextStyle(fontSize: 14.5, height: 1.4, color: Colors.white),
                 ),
               ),
+              const SizedBox(height: 10),
+
+              // Evaluate My Answer with AI Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.purpleBright,
+                    side: BorderSide(
+                      color: _currentEvaluation != null ? AppColors.success : AppColors.purpleBright,
+                      width: 1.2,
+                    ),
+                    backgroundColor: AppColors.purple.withValues(alpha: 0.12),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: _evaluatingWithAi ? null : () => _evaluateWithAi(card, preview),
+                  icon: _evaluatingWithAi
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purpleBright),
+                        )
+                      : Icon(
+                          _currentEvaluation != null ? Icons.check_circle_outline : Icons.auto_awesome,
+                          size: 18,
+                          color: _currentEvaluation != null ? AppColors.success : AppColors.purpleBright,
+                        ),
+                  label: Text(
+                    _evaluatingWithAi
+                        ? 'Evaluating with AI...'
+                        : (_currentEvaluation != null
+                            ? 'AI Match: ${_currentEvaluation!.matchPercentage}% (${_currentEvaluation!.recommendedLabel}) • View Analysis'
+                            : 'Evaluate My Answer with AI ✨'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13.5,
+                      color: _currentEvaluation != null ? AppColors.success : AppColors.purpleBright,
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 14),
             ],
 
@@ -304,11 +352,29 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
             const SizedBox(height: 20),
 
             // Anki Recall Rating Prompt
-            const Center(
-              child: Text(
-                'How well did you remember?',
-                style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 13),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'How well did you remember?',
+                  style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 13),
+                ),
+                if (_currentEvaluation != null) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.purple.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.5), width: 0.8),
+                    ),
+                    child: Text(
+                      'AI Pick: ${_currentEvaluation!.recommendedLabel}',
+                      style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 11),
+                    ),
+                  ),
+                ],
+              ],
             ),
             const SizedBox(height: 12),
 
@@ -321,6 +387,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                     interval: preview.againLabel,
                     color: AppColors.danger,
                     rating: FlashcardRating.again,
+                    isRecommended: _currentEvaluation?.recommendedAction == FlashcardRating.again,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -330,6 +397,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                     interval: preview.hardLabel,
                     color: AppColors.warning,
                     rating: FlashcardRating.hard,
+                    isRecommended: _currentEvaluation?.recommendedAction == FlashcardRating.hard,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -339,6 +407,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                     interval: preview.goodLabel,
                     color: AppColors.success,
                     rating: FlashcardRating.good,
+                    isRecommended: _currentEvaluation?.recommendedAction == FlashcardRating.good,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -348,6 +417,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                     interval: preview.easyLabel,
                     color: AppColors.blue,
                     rating: FlashcardRating.easy,
+                    isRecommended: _currentEvaluation?.recommendedAction == FlashcardRating.easy,
                   ),
                 ),
               ],
@@ -392,6 +462,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     required String interval,
     required Color color,
     required FlashcardRating rating,
+    bool isRecommended = false,
   }) {
     return InkWell(
       onTap: _savingRating ? null : () => _markWithRating(rating),
@@ -399,21 +470,37 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
+          color: isRecommended ? color.withValues(alpha: 0.24) : color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
+          border: Border.all(
+            color: isRecommended ? color : color.withValues(alpha: 0.5),
+            width: isRecommended ? 2.0 : 1.0,
+          ),
+          boxShadow: isRecommended
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               interval,
-              style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w800),
+              style: TextStyle(color: isRecommended ? Colors.white : color, fontSize: 11, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 2),
             Text(
-              label,
-              style: const TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w700),
+              isRecommended ? '$label ★' : label,
+              style: TextStyle(
+                color: isRecommended ? Colors.white : Colors.white70,
+                fontSize: 12.5,
+                fontWeight: isRecommended ? FontWeight.w900 : FontWeight.w700,
+              ),
             ),
           ],
         ),
@@ -424,6 +511,47 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
   Future<void> _reveal() async {
     AppHaptics.tap();
     setState(() => phase = FlashcardUiState.revealed);
+  }
+
+  Future<void> _evaluateWithAi(SmartFlashcard card, ReviewSchedulePreview preview) async {
+    final clean = answer.text.trim();
+    if (clean.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please type your answer in the box first to evaluate with AI.')),
+      );
+      return;
+    }
+
+    setState(() => _evaluatingWithAi = true);
+    AppHaptics.tap();
+
+    try {
+      final eval = await _evalService.evaluate(
+        userAnswer: clean,
+        officialAnswer: card.answer,
+        keyTerms: card.keyTerms,
+        topic: card.topic,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _evaluatingWithAi = false;
+        _currentEvaluation = eval;
+      });
+
+      await FlashcardEvaluationModal.show(
+        context: context,
+        evaluation: eval,
+        preview: preview,
+        onApplyRating: (rating) => _markWithRating(rating),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _evaluatingWithAi = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('AI Evaluation error: $e')),
+      );
+    }
   }
 
   Future<void> _markWithRating(FlashcardRating rating) async {
@@ -468,7 +596,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
           id: const Uuid().v4(),
           flashcardId: card.id,
           userId: service.remote.userId,
-          userAnswer: '',
+          userAnswer: answer.text.trim(),
           selfRating: rating.name,
           createdAt: DateTime.now(),
         ),
@@ -496,6 +624,8 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
         index += 1;
         phase = FlashcardUiState.unanswered;
         answer.clear();
+        _currentEvaluation = null;
+        _evaluatingWithAi = false;
       });
 
       await service.saveSession(
