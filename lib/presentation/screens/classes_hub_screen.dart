@@ -7,6 +7,7 @@ import '../../core/widgets/glow_card.dart';
 import '../../data/models/timetable_entry.dart';
 import '../providers/app_providers.dart';
 import '../screens/calendar_screen.dart';
+import '../screens/review_timetable_screen.dart';
 import '../widgets/timetable_review_dialog.dart';
 import '../widgets/timetable_scanner_card.dart';
 
@@ -32,19 +33,20 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
               const Expanded(child: Text('Timetable', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800))),
               IconButton(
                 tooltip: 'Add class',
-                onPressed: () =>                 TimetableReviewDialog.show(
+                onPressed: () => Navigator.push<bool>(
                   context,
-                  ref,
-                  replaceAll: false,
-                  entries: [
-                    TimetableEntry(
-                      id: const Uuid().v4(),
-                      dayOfWeek: 'Monday',
-                      startTime: '10:00 AM',
-                      endTime: '11:00 AM',
-                      subjectCode: '',
-                    ),
-                  ],
+                  ReviewTimetableScreen.route(
+                    replaceAll: false,
+                    initialEntries: [
+                      TimetableEntry(
+                        id: const Uuid().v4(),
+                        dayOfWeek: 'Monday',
+                        startTime: '10:00 AM',
+                        endTime: '11:00 AM',
+                        subjectCode: '',
+                      ),
+                    ],
+                  ),
                 ),
                 icon: const Icon(Icons.add_circle_outline, color: AppColors.purpleBright),
               ),

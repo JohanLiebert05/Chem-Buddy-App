@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/services/timetable_ocr.dart';
 import '../../data/services/timetable_parser_service.dart';
+import '../screens/review_timetable_screen.dart';
 import 'timetable_review_dialog.dart';
 
 /// Dashboard card: gallery / camera → OCR → review → save to Hive timetable.
@@ -40,7 +41,10 @@ class _TimetableScannerCardState extends ConsumerState<TimetableScannerCard> {
           ),
         );
       }
-      await TimetableReviewDialog.show(context, ref, entries: entries, rawText: text);
+      await Navigator.push<bool>(
+        context,
+        ReviewTimetableScreen.route(initialEntries: entries, rawText: text),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -49,7 +53,10 @@ class _TimetableScannerCardState extends ConsumerState<TimetableScannerCard> {
           content: Text("Couldn't recognize the timetable clearly. Please crop the image or enter the timetable manually."),
         ),
       );
-      await TimetableReviewDialog.show(context, ref, entries: _parser.parse(''), rawText: '');
+      await Navigator.push<bool>(
+        context,
+        ReviewTimetableScreen.route(initialEntries: _parser.parse(''), rawText: ''),
+      );
     }
   }
 
