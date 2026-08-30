@@ -1,5 +1,9 @@
-/// Universal formatter that transforms raw LaTeX, ASCII math, and chemical equations
-/// into clean, readable Unicode notation that looks like a printed chemistry textbook.
+/// Universal, chemistry-aware formatter and sanitizer that transforms raw AI output,
+/// LaTeX macros, ASCII math, and chemical equations into clean, readable textbook Unicode.
+///
+/// Preserves legitimate chemistry notation (subscripts, superscripts, ionic charges,
+/// Greek letters, reaction arrows, equilibrium symbols, partial charges, and scientific math)
+/// while strictly stripping decorative noise, unwanted separators, and prompt instruction leaks.
 class ChemistryTextFormatter {
   ChemistryTextFormatter._();
 
@@ -47,32 +51,116 @@ class ChemistryTextFormatter {
     'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ',
   };
 
-  /// Main formatting function applied to all AI responses and chemistry cards.
-  static String format(String? raw) {
+  /// Main public entry point: sanitizes and formats any chemistry text or AI response.
+  static String format(String? raw) => sanitizeChemistryResponse(raw);
+
+  /// Comprehensive chemistry-aware sanitization pipeline.
+  static String sanitizeChemistryResponse(String? raw) {
     if (raw == null || raw.isEmpty) return '';
 
     var text = raw;
 
-    // 1. Convert display math blocks: $$...$$ or \[...\]
+    // 1. Remove internal AI prompt instruction leaks
+    text = _removePromptInstructions(text);
+
+    // 2. Normalize malformed headings and strip decorative dot/separator noise
+    text = _stripDecorativeNoise(text);
+
+    // 3. Process display math blocks: $$...$$ or \[...\]
     text = text.replaceAllMapped(RegExp(r'\$\$(.*?)\$\$|\\\[(.*?)\\\]', dotAll: true), (m) {
       final inner = (m[1] ?? m[2] ?? '').trim();
       return '\n${_cleanMathExpression(inner)}\n';
     });
 
-    // 2. Convert inline math blocks: $...$ or \(...\)
+    // 4. Process inline math blocks: $...$ or \(...\)
     text = text.replaceAllMapped(RegExp(r'\$([^\$\n]+?)\$|\\\(([^\)]+?)\\\)'), (m) {
       final inner = (m[1] ?? m[2] ?? '').trim();
       return _cleanMathExpression(inner);
     });
 
-    // 3. Process remaining LaTeX macros (like \frac, \sqrt, \Delta, \times without $)
+    // 5. Clean LaTeX macros in general text
     text = _cleanMathExpression(text);
 
-    // 4. Process text-level formulas, arrows, variables
-    text = _cleanTextLevelMath(text);
+    // 6. Normalize chemical notation, equations, arrows, charges, and formulas
+    text = _normalizeChemistryTypography(text);
 
-    return text;
+    // 7. Normalize Markdown headings, lists, and spacing
+    text = _normalizeMarkdownStructure(text);
+
+    return text.trim();
   }
+
+  // =========================================================================
+  // 1. PROMPT LEAK REMOVAL
+  // =========================================================================
+
+  static String _removePromptInstructions(String input) {
+    var s = input;
+    // Remove full instruction lines matching [Format as...]: query
+    s = s.replaceAll(
+      RegExp(r'^\[\s*(?:Format as a structured|Give me only|Principle, Reaction|Instruction:|Note for AI|Guidelines:|MSc Chemistry Answer Format|Exam Format|Mark Distribution).*?\]:?.*?\n', caseSensitive: false, multiLine: true),
+      '',
+    );
+    s = s.replaceAll(
+      RegExp(r'^\[(?:2|5|10)\s*[-–]?\s*Mark\s*(?:Answer|Format|MSc).*?\]:?.*?\n', caseSensitive: false, multiLine: true),
+      '',
+    );
+    // Remove standalone bracketed instructions anywhere
+    s = s.replaceAll(
+      RegExp(r'\[\s*(?:Format as a structured|Give me only|Principle, Reaction|Instruction:|Note for AI|Guidelines:|MSc Chemistry Answer Format|Exam Format|Mark Distribution).*?\]:?', caseSensitive: false),
+      '',
+    );
+    s = s.replaceAll(
+      RegExp(r'\[(?:2|5|10)\s*[-–]?\s*Mark\s*(?:Answer|Format|MSc).*?\]:?', caseSensitive: false),
+      '',
+    );
+    // Remove prefix system instructions
+    s = s.replaceAll(
+      RegExp(r'^(?:System Prompt|Assistant Prompt|Format Instruction|CRITICAL INSTRUCTION):?.*?\n', caseSensitive: false, multiLine: true),
+      '',
+    );
+    return s;
+  }
+
+  // =========================================================================
+  // 2. DECORATIVE NOISE STRIPPING & HEADING NORMALIZATION
+  // =========================================================================
+
+  static String _stripDecorativeNoise(String input) {
+    var s = input;
+
+    // Convert decorative framed lines to standard Markdown headings:
+    // e.g. "· · · Definition · · :" -> "### Definition"
+    // e.g. "⋯ Key Reaction / Equation ⋯" -> "### Key Reaction / Equation"
+    // e.g. "::: Key Point :::" -> "### Key Point"
+    // e.g. "∶ Conditions ∶" -> "### Conditions"
+    s = s.replaceAllMapped(
+      RegExp(r'^[ \t]*(?:[·•▪◆⋯∶:\-\*~=]\s*)+([A-Za-z0-9\s/&—–]+?)(?:\s*[·•▪◆⋯∶:\-\*~=])*:?[ \t]*$', multiLine: true),
+      (m) {
+        final title = m[1]?.trim() ?? '';
+        if (title.isNotEmpty && title.length < 70 && !title.contains('.')) {
+          return '### $title';
+        }
+        return m[0]!;
+      },
+    );
+
+    // Remove repeated decorative dot clusters: "· · ·", "⋯ ⋯ ⋯", "⋯", "∶ ∶", "•••", ":::", ". . .", "····"
+    s = s.replaceAll(RegExp(r'(?:[·•▪◆]\s*){3,}'), '');
+    s = s.replaceAll(RegExp(r'(?:⋯\s*)+'), '');
+    s = s.replaceAll(RegExp(r'(?:\.\s*){4,}'), '');
+    s = s.replaceAll(RegExp(r'(?:∶\s*){2,}'), ':');
+    s = s.replaceAll(RegExp(r'(?::{3,})'), '');
+
+    // Remove decorative separator lines: "---", "***", "___", "━━━", "───", "┈┈┈"
+    s = s.replaceAll(RegExp(r'^[ \t]*[-*_—━─~┈·•]{3,}[ \t]*$', multiLine: true), '');
+
+    return s;
+  }
+
+  // =========================================================================
+  // 3. LATEX & MATH CLEANUP
+  // =========================================================================
 
   static String _cleanMathExpression(String expr) {
     var s = expr;
@@ -80,7 +168,17 @@ class ChemistryTextFormatter {
     // Remove LaTeX text wrappers: \text{...}, \mathrm{...}, \mathbf{...}, \mathit{...}
     s = s.replaceAllMapped(RegExp(r'\\(?:text|mathrm|mathbf|mathit|boldsymbol|operatorname)\{([^}]*)\}'), (m) => m[1] ?? '');
 
-    // Common fractions: \frac{a}{b} -> (a) / (b)
+    // Arrow with conditions: \xrightarrow[\text{below}]{\text{above}} -> [above] →
+    s = s.replaceAllMapped(RegExp(r'\\xrightarrow(?:\[([^\]]*)\])?\{([^}]*)\}'), (m) {
+      final above = _cleanMathExpression(m[2]?.trim() ?? '');
+      final below = m[1] != null ? ' (${_cleanMathExpression(m[1]!.trim())})' : '';
+      if (above.isNotEmpty) {
+        return ' ─[$above$below]→ ';
+      }
+      return ' → ';
+    });
+
+    // Common fractions: \frac{a}{b} -> a/b or (a)/(b)
     s = s.replaceAllMapped(RegExp(r'\\frac\{([^}]*)\}\{([^}]*)\}'), (m) {
       final num = m[1]?.trim() ?? '';
       final den = m[2]?.trim() ?? '';
@@ -99,9 +197,6 @@ class ChemistryTextFormatter {
     // LaTeX Greek replacements
     _greekMap.forEach((k, v) => s = s.replaceAll(k, v));
 
-    // Collapse LaTeX command delimiter spaces after Greek letters: "\Delta G" -> "Δ G" -> "ΔG"
-    s = s.replaceAllMapped(RegExp(r'([ΔδΑαΒβΓγΕεΖζΗηΘθΙιΚκΛλΜμΝνΞξΠπΡρΣσΤτΥυΦφΧχΨψΩω])\s+([A-Za-z0-9])'), (m) => '${m[1]}${m[2]}');
-
     // Specific combined chemistry variables
     s = s.replaceAll(RegExp(r'\\Delta\s*\\rho|\\Delta\s*rho|delta_rho', caseSensitive: false), 'Δρ');
     s = s.replaceAll(RegExp(r'\\Delta\s*G|delta_G', caseSensitive: false), 'ΔG');
@@ -109,10 +204,14 @@ class ChemistryTextFormatter {
     s = s.replaceAll(RegExp(r'\\Delta\s*S|delta_S', caseSensitive: false), 'ΔS');
     s = s.replaceAll(RegExp(r'\\Delta\s*E|delta_E', caseSensitive: false), 'ΔE');
     s = s.replaceAll(RegExp(r'\\Delta\s*T|delta_T', caseSensitive: false), 'ΔT');
-    s = s.replaceAll(RegExp(r'\\Delta|delta(?=[\s\-_A-Za-z])', caseSensitive: false), 'Δ');
-    s = s.replaceAll(RegExp(r'\beta(?=[\s\-_A-Za-z])', caseSensitive: false), 'β');
+    s = s.replaceAll(RegExp(r'\\Delta\b'), 'Δ');
+    s = s.replaceAll(RegExp(r'h\\nu|hnu\b', caseSensitive: false), 'hν');
 
-    // LaTeX Operators and Symbols
+    // Collapse spaces around Greek letters: "Δ G" -> "ΔG", "T ΔS" -> "TΔS", "Δ H" -> "ΔH"
+    s = s.replaceAllMapped(RegExp(r'([ΔδΑαΒβΓγΕεΖζΗηΘθΙιΚκΛλΜμΝνΞξΠπΡρΣσΤτΥυΦφΧχΨψΩω])\s+([A-Za-z0-9])'), (m) => '${m[1]}${m[2]}');
+    s = s.replaceAllMapped(RegExp(r'([A-Za-z0-9])\s+([ΔδΑαΒβΓγΕεΖζΗηΘθΙιΚκΛλΜμΝνΞξΠπΡρΣσΤτΥυΦφΧχΨψΩω])'), (m) => '${m[1]}${m[2]}');
+
+    // Operators and Symbols
     s = s.replaceAll(r'\times', '×');
     s = s.replaceAll(r'\cdot', '·');
     s = s.replaceAll(r'\approx', '≈');
@@ -135,6 +234,7 @@ class ChemistryTextFormatter {
     s = s.replaceAll(r'\rightarrow', '→');
     s = s.replaceAll(r'\leftarrow', '←');
     s = s.replaceAll(r'\rightleftharpoons', '⇌');
+    s = s.replaceAll(r'\leftrightarrow', '↔');
     s = s.replaceAll(r'\uparrow', '↑');
     s = s.replaceAll(r'\downarrow', '↓');
 
@@ -142,103 +242,113 @@ class ChemistryTextFormatter {
     s = s.replaceAllMapped(RegExp(r'\^\{([^}]+)\}'), (m) => _toSuperscript(m[1] ?? ''));
     s = s.replaceAllMapped(RegExp(r'_\{([^}]+)\}'), (m) => _toSubscript(m[1] ?? ''));
 
-    // Handle single-char superscripts and subscripts
-    s = s.replaceAllMapped(RegExp(r'\^([0-9\+\-nix])'), (m) => _toSuperscript(m[1] ?? ''));
-    s = s.replaceAllMapped(RegExp(r'_([0-9a-z\+\-])'), (m) => _toSubscript(m[1] ?? ''));
-
-    // Numbers multiplied by variables: "2 * r^2" -> "2r²", "9 * eta" -> "9η"
-    s = s.replaceAllMapped(RegExp(r'(\d+)\s*\*\s*([a-zA-Z\u0370-\u03ff\u2070-\u209f])'), (m) => '${m[1]}${m[2]}');
-
-    // Clean remaining multiplication stars between variables/expressions: "r² * Δρ * g" -> "r² · Δρ · g"
-    s = s.replaceAllMapped(RegExp(r'([a-zA-Z\u0370-\u03ff\u2070-\u209f²³⁴⁵⁶⁷⁸⁹⁺⁻\)])\s*\*\s*([a-zA-Z\u0370-\u03ff\u2070-\u209f\(])'), (m) => '${m[1]} · ${m[2]}');
-    s = s.replaceAll(RegExp(r'\s*\*\s*'), ' · ');
-
-    // Remove remaining stray backslashes from unrecognized LaTeX commands
+    // Remove remaining stray backslashes
     s = s.replaceAll(RegExp(r'\\[a-zA-Z]+'), '');
     s = s.replaceAll(r'\', '');
 
     return s.trim();
   }
 
-  static String _cleanTextLevelMath(String input) {
+  // =========================================================================
+  // 4. CHEMISTRY TYPOGRAPHY & FORMULAS
+  // =========================================================================
+
+  static String _normalizeChemistryTypography(String input) {
     var s = input;
 
-    // Greek word substitutions in general text
-    s = s.replaceAll(RegExp(r'\bdelta_rho\b', caseSensitive: false), 'Δρ');
-    s = s.replaceAll(RegExp(r'\bv_t\b', caseSensitive: false), 'vₜ');
-    s = s.replaceAll(RegExp(r'\bv_0\b', caseSensitive: false), 'v₀');
-    s = s.replaceAll(RegExp(r'\br\^2\b', caseSensitive: false), 'r²');
-    s = s.replaceAll(RegExp(r'\br\^3\b', caseSensitive: false), 'r³');
-    s = s.replaceAll(RegExp(r'\bx\^2\b', caseSensitive: false), 'x²');
-    s = s.replaceAll(RegExp(r'\bk_1\b', caseSensitive: false), 'k₁');
-    s = s.replaceAll(RegExp(r'\bk_-1\b', caseSensitive: false), 'k₋₁');
-    s = s.replaceAll(RegExp(r'\bk_2\b', caseSensitive: false), 'k₂');
-    s = s.replaceAll(RegExp(r'\bt_1/2\b|\bt_\{1/2\}\b', caseSensitive: false), 't½');
+    // Partial charges and nucleophiles
+    s = s.replaceAll(RegExp(r'\bdelta\s*\+|\bdelta\(\+\)', caseSensitive: false), 'δ⁺');
+    s = s.replaceAll(RegExp(r'\bdelta\s*[-−]|\bdelta\([-−]\)', caseSensitive: false), 'δ⁻');
+    s = s.replaceAllMapped(RegExp(r'(^|[^\w])Nu\s*(?:[-−]|\^[-−]|\^\{[-−]\})(?=[^\w]|$)'), (m) => '${m[1]}Nu⁻');
+    s = s.replaceAllMapped(RegExp(r'(^|[^\w])E\s*(?:\+|\^\+|\^\{\+\})(?=[^\w]|$)'), (m) => '${m[1]}E⁺');
 
-    // Reaction and relation arrows in plain text
-    s = s.replaceAll(RegExp(r'\s*-->\s*|\s*->\s*'), ' → ');
-    s = s.replaceAll(RegExp(r'\s*<--\s*|\s*<-\s*'), ' ← ');
-    s = s.replaceAll(RegExp(r'\s*<=>\s*|\s*<->\s*'), ' ⇌ ');
+    // Arrows and Equilibrium
+    s = s.replaceAll(RegExp(r'\s*-->\s*|\s*->\s*|\s*⟶\s*'), ' → ');
+    s = s.replaceAll(RegExp(r'\s*<--\s*|\s*<-\s*|\s*⟵\s*'), ' ← ');
+    s = s.replaceAll(RegExp(r'\s*<=>\s*|\s*<->\s*|\s*<==>\s*|\s*⟷\s*'), ' ⇌ ');
     s = s.replaceAll(RegExp(r'\s*<=\s*'), ' ≤ ');
     s = s.replaceAll(RegExp(r'\s*>=\s*'), ' ≥ ');
     s = s.replaceAll(RegExp(r'\s*\+-\s*'), ' ± ');
 
-    // Common LaTeX words that leak without dollar signs
-    s = s.replaceAll(r'\Delta', 'Δ');
-    s = s.replaceAll(r'\rho', 'ρ');
-    s = s.replaceAll(r'\eta', 'η');
-    s = s.replaceAll(r'\alpha', 'α');
-    s = s.replaceAll(r'\beta', 'β');
-    s = s.replaceAll(r'\gamma', 'γ');
-    s = s.replaceAll(r'\lambda', 'λ');
-    s = s.replaceAll(r'\pi', 'π');
-    s = s.replaceAll(r'\sigma', 'σ');
-    s = s.replaceAll(r'\omega', 'ω');
-    s = s.replaceAll(r'\theta', 'θ');
+    // Greek letters in text
+    s = s.replaceAll(RegExp(r'\balpha(?=[ \-_A-Za-z])', caseSensitive: false), 'α');
+    s = s.replaceAll(RegExp(r'\bbeta(?=[ \-_A-Za-z])', caseSensitive: false), 'β');
+    s = s.replaceAll(RegExp(r'\bgamma(?=[ \-_A-Za-z])', caseSensitive: false), 'γ');
 
-    // Standalone or coefficient-attached "eta" (e.g. "9 * eta", "9eta", "eta")
-    s = s.replaceAllMapped(RegExp(r'(\d*)\s*\*?\s*eta\b', caseSensitive: false), (m) => '${m[1] ?? ""}η');
+    // Chemical Ion Charges & Explicit Superscripts: SO4^2-, SO4 2-, Fe3+, Fe2+, Cu2+, etc.
+    s = s.replaceAll(RegExp(r'SO4\s*\^\s*\{?2[-−]\}?|SO4\s*²[-−]|SO4\^2[-−]'), 'SO₄²⁻');
+    s = s.replaceAll(RegExp(r'PO4\s*\^\s*\{?3[-−]\}?|PO4\s*³[-−]|PO4\^3[-−]'), 'PO₄³⁻');
+    s = s.replaceAll(RegExp(r'CO3\s*\^\s*\{?2[-−]\}?|CO3\s*²[-−]|CO3\^2[-−]'), 'CO₃²⁻');
+    s = s.replaceAll(RegExp(r'NO3\s*\^\s*\{?[-−]\}?|NO3\^-'), 'NO₃⁻');
+    s = s.replaceAll(RegExp(r'NH4\s*\^\s*\{?\+\}?|NH4\^\+'), 'NH₄⁺');
+    s = s.replaceAll(RegExp(r'Fe\s*\^\s*\{?3\+\}?|Fe\s*³\+|Fe\^3\+'), 'Fe³⁺');
+    s = s.replaceAll(RegExp(r'Fe\s*\^\s*\{?2\+\}?|Fe\s*²\+|Fe\^2\+'), 'Fe²⁺');
+    s = s.replaceAll(RegExp(r'Cu\s*\^\s*\{?2\+\}?|Cu\s*²\+|Cu\^2\+'), 'Cu²⁺');
+    s = s.replaceAll(RegExp(r'Cu\s*\^\s*\{?\+\}?|Cu\^\+'), 'Cu⁺');
+    s = s.replaceAll(RegExp(r'Al\s*\^\s*\{?3\+\}?|Al\s*³\+|Al\^3\+'), 'Al³⁺');
+    s = s.replaceAll(RegExp(r'Ca\s*\^\s*\{?2\+\}?|Ca\s*²\+|Ca\^2\+'), 'Ca²⁺');
+    s = s.replaceAll(RegExp(r'Mg\s*\^\s*\{?2\+\}?|Mg\s*²\+|Mg\^2\+'), 'Mg²⁺');
+    s = s.replaceAll(RegExp(r'Zn\s*\^\s*\{?2\+\}?|Zn\s*²\+|Zn\^2\+'), 'Zn²⁺');
+    s = s.replaceAll(RegExp(r'Ba\s*\^\s*\{?2\+\}?|Ba\s*²\+|Ba\^2\+'), 'Ba²⁺');
+    s = s.replaceAll(RegExp(r'Na\s*\^\s*\{?\+\}?|Na\^\+'), 'Na⁺');
+    s = s.replaceAll(RegExp(r'K\s*\^\s*\{?\+\}?|K\^\+'), 'K⁺');
+    s = s.replaceAll(RegExp(r'Ag\s*\^\s*\{?\+\}?|Ag\^\+'), 'Ag⁺');
+    s = s.replaceAll(RegExp(r'Cl\s*\^\s*\{?[-−]\}?|Cl\^-'), 'Cl⁻');
+    s = s.replaceAll(RegExp(r'Br\s*\^\s*\{?[-−]\}?|Br\^-'), 'Br⁻');
+    s = s.replaceAll(RegExp(r'I\s*\^\s*\{?[-−]\}?|I\^-'), 'I⁻');
+    s = s.replaceAll(RegExp(r'F\s*\^\s*\{?[-−]\}?|F\^-'), 'F⁻');
 
-    // Clean multiplication stars in math: "2 * r²" -> "2r²", "* Δρ * g" -> "· Δρ · g"
-    s = s.replaceAllMapped(RegExp(r'(\d+)\s*\*\s*([a-zA-Z\u0370-\u03ff\u2070-\u209f])'), (m) => '${m[1]}${m[2]}');
-    s = s.replaceAll(RegExp(r'\s*\*\s*'), ' · ');
+    // Standalone H+ and OH- matching
+    s = s.replaceAllMapped(RegExp(r'(^|[^\w])H\s*(?:\+|\^\+|\^\{\+\})(?=[^\w]|$)'), (m) => '${m[1]}H⁺');
+    s = s.replaceAllMapped(RegExp(r'(^|[^\w])OH\s*(?:[-−]|\^[-−]|\^\{[-−]\})(?=[^\w]|$)'), (m) => '${m[1]}OH⁻');
 
-    // Common chemical formulas with explicit underscores: H_2SO_4 -> H₂SO₄, CH_3COOH -> CH₃COOH
+    // Standalone common ions written without caret when separated:
+    // e.g. "Fe2+", "Fe3+", "Ba2+", "Ca2+", "Cu2+", "Al3+"
+    s = s.replaceAllMapped(RegExp(r'\b(Fe|Cu|Al|Ca|Ba|Mg|Zn|Na|K|Ag)(2\+|3\+|\+)(?=[^\w]|\$)'), (m) {
+      final metal = m[1]!;
+      final charge = m[2]!;
+      return '$metal${_toSuperscript(charge)}';
+    });
+
+    // General explicit ions matching: e.g. M^{n+}, X^{n-}
+    s = s.replaceAllMapped(RegExp(r'([A-Za-z0-9\u2080-\u2089\)]+)\^\{?([0-9]?[+\-−])\}?'), (m) {
+      return '${m[1]}${_toSuperscript(m[2] ?? '')}';
+    });
+
+    // Subscripts in explicit formulas: H_2SO_4 -> H₂SO₄
     s = s.replaceAllMapped(RegExp(r'([A-Za-z\(\)])_\{?([0-9a-z\+\-]+)\}?'), (m) {
       return '${m[1]}${_toSubscript(m[2] ?? '')}';
     });
 
-    // Common chemical ions with charges: Ca^{2+} -> Ca²⁺, SO_4^{2-} -> SO₄²⁻
-    s = s.replaceAllMapped(RegExp(r'([A-Za-z0-9\u2080-\u2089]+)\^\{?([0-9]?[+-])\}?'), (m) {
-      return '${m[1]}${_toSuperscript(m[2] ?? '')}';
-    });
+    // Authoritative chemical formula dictionary
+    s = _applyChemicalDictionary(s);
 
-    // Superscripts in braces: ^{2+} -> ²⁺
-    s = s.replaceAllMapped(RegExp(r'\^\{([^}]+)\}'), (m) => _toSuperscript(m[1] ?? ''));
-
-    // Multi-element molecular formulas and brackets: NH3 -> NH₃, C6H12O6 -> C₆H₁₂O₆, Ca(OH)2 -> Ca(OH)₂
+    // Multi-element formula subscripts: e.g. C6H5CHO -> C₆H₅CHO, CH3COOH -> CH₃COOH
     s = s.replaceAllMapped(
       RegExp(r'([A-Z][a-z]?|\))(\d+)'),
       (m) {
         final elem = m[1]!;
         final num = m[2]!;
-        if (elem == 'SN' || elem == 'UV' || elem == 'IC' || elem == 'EC' || elem == 'LD' || elem == 'pH') return m[0]!;
+        // Protect non-chemical acronyms with numbers
+        if (elem == 'SN' || elem == 'UV' || elem == 'IC' || elem == 'EC' || elem == 'LD' || elem == 'pH' || elem == 'E') {
+          return m[0]!;
+        }
         return '$elem${_toSubscript(num)}';
       },
     );
 
-    // Clean common chemical formula patterns: H2SO4, KMnO4, CaCO3, CH3COOH, etc.
-    s = _formatChemicalFormulas(s);
+    // Ensure spaces around reaction plus signs: " + "
+    s = s.replaceAllMapped(RegExp(r'([A-Za-z0-9\u2070-\u209f\)])\+([A-Za-z0-9\u2070-\u209f\(])'), (m) => '${m[1]} + ${m[2]}');
 
     return s;
   }
 
-  static String _formatChemicalFormulas(String text) {
-    // List of known molecular formula patterns to format cleanly
+  static String _applyChemicalDictionary(String text) {
     const formulaMap = {
       'H2SO4': 'H₂SO₄',
       'HNO3': 'HNO₃',
       'H3PO4': 'H₃PO₄',
+      'HClO4': 'HClO₄',
       'H2O': 'H₂O',
       'H2O2': 'H₂O₂',
       'CO2': 'CO₂',
@@ -249,7 +359,6 @@ class ChemistryTextFormatter {
       'NO3': 'NO₃',
       'NO2': 'NO₂',
       'NH3': 'NH₃',
-      'NH4+': 'NH₄⁺',
       'NH4': 'NH₄',
       'CH4': 'CH₄',
       'C2H6': 'C₂H₆',
@@ -258,8 +367,17 @@ class ChemistryTextFormatter {
       'C6H6': 'C₆H₆',
       'C6H12O6': 'C₆H₁₂O₆',
       'CH3COOH': 'CH₃COOH',
+      'CH3COONa': 'CH₃COONa',
+      'CH3COOK': 'CH₃COOK',
+      'CH3CHO': 'CH₃CHO',
       'CH3OH': 'CH₃OH',
       'C2H5OH': 'C₂H₅OH',
+      'CH3COOC2H5': 'CH₃COOC₂H₅',
+      'C6H5CHO': 'C₆H₅CHO',
+      'C6H5COOH': 'C₆H₅COOH',
+      'C6H5COONa': 'C₆H₅COONa',
+      'C6H5COOK': 'C₆H₅COOK',
+      'C6H5CH2OH': 'C₆H₅CH₂OH',
       'KMnO4': 'KMnO₄',
       'K2Cr2O7': 'K₂Cr₂O₇',
       'Na2CO3': 'Na₂CO₃',
@@ -276,24 +394,52 @@ class ChemistryTextFormatter {
       'Al2O3': 'Al₂O₃',
       'CuSO4': 'CuSO₄',
       'AgNO3': 'AgNO₃',
-      'Ca2+': 'Ca²⁺',
-      'Fe3+': 'Fe³⁺',
-      'Fe2+': 'Fe²⁺',
-      'Cu2+': 'Cu²⁺',
-      'Al3+': 'Al³⁺',
-      'Na+': 'Na⁺',
-      'K+': 'K⁺',
-      'Cl-': 'Cl⁻',
-      'OH-': 'OH⁻',
-      'H+': 'H⁺',
+      '1H NMR': '¹H NMR',
+      '13C NMR': '¹³C NMR',
     };
 
     var res = text;
     formulaMap.forEach((plain, formatted) {
-      res = res.replaceAll(RegExp('\\b${RegExp.escape(plain)}\\b'), formatted);
+      res = res.replaceAllMapped(
+        RegExp('(^|[^A-Za-z])(${RegExp.escape(plain)})(?=[^A-Za-z0-9]|\$)', multiLine: true),
+        (m) => '${m[1]}$formatted',
+      );
     });
 
     return res;
+  }
+
+  // =========================================================================
+  // 5. MARKDOWN STRUCTURE NORMALIZATION
+  // =========================================================================
+
+  static String _normalizeMarkdownStructure(String input) {
+    var s = input;
+
+    // Clean redundant bold markup inside headings:
+    // "### **Definition**" -> "### Definition"
+    // "#### **1. Principle**" -> "### Principle"
+    s = s.replaceAllMapped(
+      RegExp(r'^(#{1,6})\s*\*\*+(?:\d+[\.\)]\s*)?([^*]+?)\*\*+:?[ \t]*$', multiLine: true),
+      (m) => '${m[1]} ${m[2]?.trim()}',
+    );
+
+    // Clean single colon or period at the end of Markdown headings
+    s = s.replaceAllMapped(
+      RegExp(r'^(#{1,6}\s+[^:\n]+):[ \t]*$', multiLine: true),
+      (m) => '${m[1]?.trim()}',
+    );
+
+    // Ensure chemical equations on standalone lines have clear vertical breathing room
+    s = s.replaceAllMapped(
+      RegExp(r'(\n(?:[0-9A-Za-z\u2070-\u209f\(\)\+\-·\s]+[→⇌][0-9A-Za-z\u2070-\u209f\(\)\+\-·\s]+)\n)'),
+      (m) => '\n${m[1]?.trim()}\n',
+    );
+
+    // Collapse multiple consecutive blank lines to at most two
+    s = s.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+
+    return s;
   }
 
   static String _toSubscript(String s) {

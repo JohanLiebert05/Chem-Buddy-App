@@ -1,3 +1,4 @@
+import '../../core/utils/chemistry_text_formatter.dart';
 import '../models/rag_models.dart';
 
 /// Comprehensive MSc Chemistry Academic Knowledge Engine.
@@ -22,7 +23,7 @@ class ChemistryKnowledgeEngine {
       final docAnswer = _extractFromDocument(cleanQ, documentText, documentName ?? 'Uploaded Notes');
       if (docAnswer != null) {
         return RagResponse(
-          answer: docAnswer,
+          answer: ChemistryTextFormatter.format(docAnswer),
           sources: [
             RagSource(
               documentTitle: documentName ?? 'Uploaded PDF',
@@ -54,7 +55,7 @@ class ChemistryKnowledgeEngine {
         formattedAnswer = _format10Mark(cleanQ, curated);
       }
       return RagResponse(
-        answer: formattedAnswer,
+        answer: ChemistryTextFormatter.format(formattedAnswer),
         sources: [
           RagSource(
             documentTitle: 'ChemBuddy MSc Chemistry Academic Reference',
@@ -71,7 +72,7 @@ class ChemistryKnowledgeEngine {
     // 4. Fallback: Dynamic Structured Academic Synthesis
     final dynamicAnswer = _generateDynamicAnswer(cleanQ, subject: subject, is2M: is2M, is5M: is5M, is10M: is10M);
     return RagResponse(
-      answer: dynamicAnswer,
+      answer: ChemistryTextFormatter.format(dynamicAnswer),
       sources: [
         RagSource(
           documentTitle: 'ChemBuddy Academic Knowledge Engine',
@@ -445,43 +446,82 @@ In MSc Chemistry, **$title** pertains to ${subject ?? 'advanced chemistry princi
   }
 
   static String _format2Mark(String q, String content) {
-    return '''### **2-Mark Exam Answer: $q**
+    final title = q.replaceAll(RegExp(r'2\s*[-–]?\s*marks?|for\s*2\s*marks?', caseSensitive: false), '').trim();
+    final cleanTitle = title.isEmpty ? '2-Mark Academic Answer' : title;
 
-* **Definition**:
-  ${content.split('\n\n').firstWhere((s) => s.contains('Principle') || s.contains('Definition'), orElse: () => 'Key definition and principle.')}
+    final paragraphs = content.split('\n\n');
+    final defSection = paragraphs.firstWhere(
+      (s) => s.toLowerCase().contains('definition') || s.toLowerCase().contains('principle'),
+      orElse: () => 'The chemical transformation or concept under standard reaction conditions.',
+    );
+    final cleanDef = defSection.replaceAll(RegExp(r'#+\s*|\*+|\bDefinition\b|\bPrinciple\b', caseSensitive: false), '').trim();
 
-* **Key Reaction / Equation**:
-  See standard reaction conditions and stoichiometric balance in textbook reference.''';
+    final rxnSection = paragraphs.firstWhere(
+      (s) => s.toLowerCase().contains('reaction') || s.contains('→') || s.contains('⇌'),
+      orElse: () => 'Standard chemical stoichiometry: Reactants → Products',
+    );
+    final cleanRxn = rxnSection.replaceAll(RegExp(r'#+\s*|\*+|\bRepresentative Reaction\b|\bGeneral Reaction\b', caseSensitive: false), '').trim();
+
+    return '''### $cleanTitle
+
+**Definition**
+
+$cleanDef
+
+**Reaction**
+
+$cleanRxn''';
   }
 
   static String _format5Mark(String q, String content) {
-    return '''### **5-Mark Exam Answer: $q**
+    final title = q.replaceAll(RegExp(r'5\s*[-–]?\s*marks?|for\s*5\s*marks?', caseSensitive: false), '').trim();
+    final cleanTitle = title.isEmpty ? '5-Mark Academic Answer' : title;
 
-1. **Principle & Definition**:
-   ${content.split('\n\n').firstWhere((s) => s.contains('Principle') || s.contains('Definition'), orElse: () => 'Key underlying chemical principle.')}
+    final paragraphs = content.split('\n\n');
+    final defSection = paragraphs.firstWhere(
+      (s) => s.toLowerCase().contains('definition') || s.toLowerCase().contains('principle'),
+      orElse: () => 'Core underlying chemical principle and standard definition.',
+    ).replaceAll(RegExp(r'#+\s*|\*+|\bDefinition\b|\bPrinciple\b', caseSensitive: false), '').trim();
 
-2. **General Reaction & Conditions**:
-   ${content.split('\n\n').firstWhere((s) => s.contains('Reaction') || s.contains('Scheme'), orElse: () => 'Representative scheme with reagents and catalysts.')}
+    final rxnSection = paragraphs.firstWhere(
+      (s) => s.toLowerCase().contains('reaction') || s.contains('→') || s.contains('⇌'),
+      orElse: () => 'Standard reaction scheme with reagents and catalysts.',
+    ).replaceAll(RegExp(r'#+\s*|\*+|\bRepresentative Reaction\b', caseSensitive: false), '').trim();
 
-3. **Step-by-Step Mechanism Outline**:
-   ${content.split('\n\n').firstWhere((s) => s.contains('Mechanism'), orElse: () => 'Step 1: Nucleophile generation. Step 2: Rate-determining attack. Step 3: Product stabilization.')}
+    final mechSection = paragraphs.firstWhere(
+      (s) => s.toLowerCase().contains('mechanism') || s.toLowerCase().contains('step'),
+      orElse: () => 'Step 1: Nucleophilic addition / attack. Step 2: Rate-determining transition state. Step 3: Product stabilization.',
+    ).replaceAll(RegExp(r'#+\s*|\bStep-by-Step Reaction Mechanism\b', caseSensitive: false), '').trim();
 
-4. **Key Applications**:
-   Extensively utilized in organic synthesis and academic examinations.''';
+    return '''### $cleanTitle
+
+### Definition
+
+$defSection
+
+### Reaction & Conditions
+
+$rxnSection
+
+### Mechanism
+
+$mechSection
+
+### Conclusion
+
+High-yield reaction relevant for postgraduate MSc synthesis and structural determination.''';
   }
 
   static String _format10Mark(String q, String content) {
-    return '''### **10-Mark Full Academic Answer: $q**
+    return '''### 10-Mark Academic Comprehensive Answer
 
 $content
 
----
-#### **Summary for 10-Mark Assessment**:
-* **Mark Distribution Guide**:
-  - Definition & Principle: 2 Marks
-  - Balanced Equation & Reagents: 2 Marks
-  - Step-by-Step Mechanism with Electron Arrows: 3 Marks
-  - Stereochemistry / Kinetics: 2 Marks
-  - Examples & Applications: 1 Mark''';
+### Mark Distribution Guide
+* **Definition & Principle**: 2 Marks
+* **Balanced Equation & Reagents**: 2 Marks
+* **Step-by-Step Mechanism with Electron Arrows**: 3 Marks
+* **Stereochemistry / Kinetics**: 2 Marks
+* **Examples & Synthetic Applications**: 1 Mark''';
   }
 }
