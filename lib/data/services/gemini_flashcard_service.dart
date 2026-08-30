@@ -61,7 +61,7 @@ class GeminiFlashcardService {
     }
 
     // 3. Fallback: Local Chemistry Synthesis from document content
-    debugPrint('[GeminiFlashcardService] Invoking Academic Chemistry Fallback Synthesis...');
+    debugPrint('[GeminiFlashcardService] Invoking Academic Chemistry Fallback Synthesis strictly from document text...');
     final fallback = _synthesizeLocalChemistryCards(cleaned, targetCount, topic);
     if (fallback.isNotEmpty) {
       return fallback;
@@ -79,7 +79,10 @@ class GeminiFlashcardService {
     Object? lastError;
 
     // Check if cloud backend is available
-    if (_remote.configured && _remote.userId != null) {
+    if (_remote.configured) {
+      final clipped = sourceText.length > 12000 ? sourceText.substring(0, 12000) : sourceText;
+
+      // 1. Primary: dedicated generate-flashcards Edge Function
       for (var attempt = 0; attempt <= 2; attempt++) {
         if (attempt > 0) {
           debugPrint('[GeminiFlashcardService] Backing off retry attempt $attempt after network/rate hiccup...');
@@ -87,7 +90,6 @@ class GeminiFlashcardService {
         }
 
         try {
-          final clipped = sourceText.length > 12000 ? sourceText.substring(0, 12000) : sourceText;
           final raw = await _remote.invokeFunction(
             'generate-flashcards',
             {
@@ -109,9 +111,44 @@ class GeminiFlashcardService {
           debugPrint('[GeminiFlashcardService] Attempt $attempt failed: $e');
         }
       }
+
+      // 2. Secondary Cloud Fallback: ask-chembuddy Edge Function
+      try {
+        debugPrint('[GeminiFlashcardService] Trying secondary cloud synthesis via ask-chembuddy...');
+        final rawSecondary = await _remote.invokeFunction(
+          'ask-chembuddy',
+          {
+            'question': '''Create exactly $count active-recall flashcards based EXCLUSIVELY and STRICTLY on the attached document "$topic".
+Do NOT invent or include unrelated chemistry topics. Every card must test a concept, definition, procedure, parameter, or instrument from the provided document.
+Return strictly valid JSON with this shape:
+{
+  "flashcards": [
+    {
+      "question": "Question directly about the document content",
+      "answer": "Accurate answer from the document",
+      "explanation": "Brief context",
+      "topic": "$topic"
+    }
+  ]
+}''',
+            'document_text': clipped,
+            'document_name': topic,
+          },
+          timeout: const Duration(seconds: 45),
+        );
+
+        if (rawSecondary is Map && rawSecondary['answer'] != null) {
+          final parsedSec = _parse(rawSecondary['answer'].toString(), topic);
+          if (parsedSec.isNotEmpty) {
+            return parsedSec;
+          }
+        }
+      } catch (secErr) {
+        debugPrint('[GeminiFlashcardService] Secondary cloud synthesis failed: $secErr');
+      }
     }
 
-    // If cloud failed or offline, synthesize high-yield academic cards from the text
+    // If cloud failed or offline, synthesize high-yield cards strictly from the text
     debugPrint('[GeminiFlashcardService] Cloud generation unavailable ($lastError). Using local document extraction.');
     return _synthesizeLocalChemistryCards(sourceText, count, topic);
   }
@@ -195,75 +232,83 @@ class GeminiFlashcardService {
         .toList();
   }
 
-  /// Synthesizes high-yield academic chemistry flashcards directly from the document text
-  /// so students are NEVER blocked if cloud AI is slow, offline, or rate-limited.
+  /// Synthesizes high-yield academic chemistry flashcards strictly and solely from the provided document text.
+  /// NEVER injects hardcoded external questions (e.g. SN1/SN2 or Laporte) that are not in the document.
   List<GeneratedCard> _synthesizeLocalChemistryCards(String sourceText, int count, String topic) {
     final cards = <GeneratedCard>[];
-    final sentences = sourceText.split(RegExp(r'\n+|\.\s+'));
+    final seenQuestions = <String>{};
 
-    for (final s in sentences) {
-      final cleanS = s.trim();
-      if (cleanS.length < 30 || cleanS.length > 300) continue;
-
-      // Extract definition patterns: "X is defined as Y" or "X is Y"
-      if (cleanS.toLowerCase().contains(' is defined as ') || cleanS.toLowerCase().contains(' refers to ')) {
-        final parts = cleanS.split(RegExp(r' is defined as | refers to ', caseSensitive: false));
-        if (parts.length >= 2 && parts[0].trim().length > 3 && parts[1].trim().length > 10) {
-          cards.add(
-            GeneratedCard(
-              question: 'Define ${parts[0].trim()}',
-              answer: '${parts[0].trim()} ${cleanS.contains('is defined as') ? 'is defined as' : 'refers to'} ${parts[1].trim()}.',
-              topic: topic,
-            ),
-          );
-        }
+    void addCard(String q, String a) {
+      final cleanQ = ChemistryTextFormatter.format(q.trim());
+      final cleanA = ChemistryTextFormatter.format(a.trim());
+      if (cleanQ.length > 5 && cleanA.length > 2 && seenQuestions.add(cleanQ.toLowerCase())) {
+        cards.add(GeneratedCard(question: cleanQ, answer: cleanA, topic: topic));
       }
-      // Extract reaction / mechanism patterns
-      else if (cleanS.contains('→') || cleanS.contains('yields') || cleanS.contains('catalyst')) {
-        cards.add(
-          GeneratedCard(
-            question: 'What is the chemical principle behind: "${cleanS.length > 60 ? '${cleanS.substring(0, 60)}...' : cleanS}"?',
-            answer: cleanS,
-            topic: topic,
-          ),
-        );
-      }
-      if (cards.length >= count) break;
     }
 
-    // Fill remaining cards with core MSc concepts if needed
-    if (cards.length < count) {
-      final mscCore = [
-        GeneratedCard(
-          question: 'What distinguishes SN1 from SN2 reaction mechanisms in organic chemistry?',
-          answer: 'SN1 proceeds via a two-step carbocation intermediate (first-order kinetics, racemization), whereas SN2 is a single-step concerted nucleophilic attack with Walden inversion (second-order kinetics).',
-          topic: topic,
-        ),
-        GeneratedCard(
-          question: 'State the Selection Rules for electronic transitions in coordination complexes.',
-          answer: '1. Laporte Rule: Transitions between states of the same parity are forbidden (Δl = ±1 allowed). 2. Spin Selection Rule: ΔS = 0 (transitions between states of different spin multiplicities are forbidden).',
-          topic: topic,
-        ),
-        GeneratedCard(
-          question: 'What is the significance of the Chemical Shift in ¹H NMR spectroscopy?',
-          answer: 'The chemical shift (δ in ppm relative to TMS) indicates the electronic shielding/deshielding environment of resonant protons, identifying functional groups and molecular structure.',
-          topic: topic,
-        ),
-        GeneratedCard(
-          question: 'Explain the thermodynamic criterion for reaction spontaneity at constant T and P.',
-          answer: 'A reaction is spontaneous when the change in Gibbs free energy is negative (ΔG = ΔH - TΔS < 0).',
-          topic: topic,
-        ),
-        GeneratedCard(
-          question: 'What is the Alder Endo Rule in [4+2] Diels-Alder cycloadditions?',
-          answer: 'The endo transition state is favored kinetically due to secondary π-orbital overlap between the developing double bond of the diene and the electron-withdrawing groups of the dienophile.',
-          topic: topic,
-        ),
-      ];
+    final rawLines = sourceText.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
 
-      for (final core in mscCore) {
+    // 1. Key-Value pairs & Parameter specs (e.g. "Column: C18", "Flow Rate: 1.0 mL/min", "Wavelength: 254 nm")
+    for (final line in rawLines) {
+      if (cards.length >= count) break;
+      if (line.contains(':') && !line.startsWith('http')) {
+        final colonIdx = line.indexOf(':');
+        final key = line.substring(0, colonIdx).replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
+        final val = line.substring(colonIdx + 1).trim();
+        if (key.length >= 2 && key.length <= 60 && val.length >= 2 && val.length <= 400) {
+          addCard('What is the specification or detail for "$key" in this document?', val);
+        }
+      }
+    }
+
+    // 2. Headings with following descriptions
+    for (var i = 0; i < rawLines.length - 1; i++) {
+      if (cards.length >= count) break;
+      final line = rawLines[i];
+      if (line.startsWith('#') || (line.length <= 50 && !line.endsWith('.') && line.length > 3)) {
+        final heading = line.replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
+        final nextLine = rawLines[i + 1].trim();
+        if (heading.length >= 3 && nextLine.length >= 15 && !nextLine.startsWith('#')) {
+          addCard('Explain the concept of "$heading" as described in this material.', nextLine);
+        }
+      }
+    }
+
+    // 3. Definition & explanatory sentences in paragraphs
+    final sentences = sourceText.split(RegExp(r'(?<=[.!?])\s+|\n+')).map((s) => s.trim()).where((s) => s.length >= 15 && s.length <= 400).toList();
+
+    for (final s in sentences) {
+      if (cards.length >= count) break;
+      final lower = s.toLowerCase();
+
+      // Definitions: "X is defined as Y", "X refers to Y", "X is a Y", "X means Y"
+      if (lower.contains(' is defined as ') || lower.contains(' refers to ') || lower.contains(' is used for ') || lower.contains(' is used to ') || lower.contains(' is called ') || lower.contains(' consists of ')) {
+        final match = RegExp(r'^(.*?)\s+(?:is defined as|refers to|is used for|is used to|is called|consists of)\s+(.*)$', caseSensitive: false).firstMatch(s);
+        if (match != null) {
+          final subject = match.group(1)?.replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim() ?? '';
+          if (subject.length >= 2 && subject.length <= 60) {
+            addCard('What is the function or definition of $subject in this material?', s);
+            continue;
+          }
+        }
+      }
+
+      // Principle & mechanism sentences
+      if (lower.contains('because') || lower.contains('due to') || lower.contains('principle') || lower.contains('method') || lower.contains('mechanism') || lower.contains('reaction') || lower.contains('procedure') || lower.contains('step') || lower.contains('parameter') || lower.contains('result') || lower.contains('requires') || lower.contains('retention') || lower.contains('calibration')) {
+        final preview = s.length > 55 ? '${s.substring(0, 55)}...' : s;
+        addCard('Explain the following point from the document: "$preview"', s);
+      }
+    }
+
+    // 4. Fill with remaining sentence chunks if needed — STILL STRICTLY FROM THE TEXT
+    if (cards.length < count) {
+      for (final s in sentences) {
         if (cards.length >= count) break;
-        cards.add(core);
+        final words = s.split(RegExp(r'\s+'));
+        if (words.length >= 4) {
+          final firstWords = words.take(5).join(' ');
+          addCard('What does the document state regarding "$firstWords..."?', s);
+        }
       }
     }
 

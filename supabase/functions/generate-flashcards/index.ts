@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
   try {
     const auth = req.headers.get("Authorization") ?? "";
     if (!auth.toLowerCase().startsWith("bearer ")) {
-      return json({ error: "Sign in required to generate flashcards." }, 401);
+      return json({ error: "Authorization required to generate flashcards." }, 401);
     }
 
     const geminiKey = Deno.env.get("GEMINI_API_KEY") ?? "";
@@ -30,15 +30,17 @@ Deno.serve(async (req) => {
     // Smart chunking / truncation to 12,000 characters to prevent input token overflow
     const clipped = sourceText.length > 12000 ? sourceText.slice(0, 12000) : sourceText;
 
-    const prompt = `You are a distinguished Chemistry professor creating rigorous, exam-quality active-recall flashcards for MSc Chemistry students.
+    const prompt = `You are a distinguished Chemistry professor creating rigorous, exam-quality active-recall flashcards for chemistry students based strictly on the uploaded document.
 
-Topic focus: ${topic}
+Target Subject/Document: ${topic}
 
-Guidelines:
-1. Focus heavily on core principles, definitions, reaction mechanisms, electron movement, reagents, conditions, equations, spectral data, and key academic distinctions.
-2. Formulate clear, concise questions on the front and precise, authoritative explanations on the back.
-3. CRITICAL: Do NOT use raw LaTeX markup ($...$, \\frac, \\Delta). Use clean textbook Unicode characters (Δ, →, ⇌, H₂SO₄, Ca²⁺, ¹H NMR, etc.).
-4. Generate exactly ${count} distinct flashcards based strictly on the provided study notes.
+CRITICAL GROUNDING RULES:
+1. You MUST generate all flashcards EXCLUSIVELY and STRICTLY from the provided Study Notes below.
+2. Do NOT invent, assume, or pull in generic or unrelated chemistry topics (e.g. if the notes are about LC Solutions/HPLC, create cards solely about HPLC, instruments, parameters, retention, calibration, and methods in the text; do NOT create cards on unrelated organic/inorganic reactions unless they are in the text).
+3. Every card's question must test a specific concept, term, instrument, parameter, equation, mechanism, or principle directly stated in the Study Notes.
+4. Formulate clear, focused questions on the front and accurate, comprehensive answers on the back.
+5. CRITICAL: Do NOT use raw LaTeX markup ($...$, \\frac, \\Delta). Use clean textbook Unicode characters (Δ, →, ⇌, H₂SO₄, Ca²⁺, ¹H NMR, etc.).
+6. Generate exactly ${count} distinct flashcards.
 
 Study Notes:
 ${clipped}`;
