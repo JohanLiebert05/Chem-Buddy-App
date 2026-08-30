@@ -15,6 +15,7 @@ import '../providers/app_providers.dart';
 import 'beginner_tutorial_dialog.dart';
 import 'pdf_library_screen.dart';
 import 'pdf_study_hub_screen.dart';
+import 'reaction_mechanism_screen.dart';
 import 'search_screen.dart';
 import 'smart_flashcards_hub.dart';
 import 'smart_flashcards_study_screen.dart';
