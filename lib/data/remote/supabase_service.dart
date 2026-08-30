@@ -154,6 +154,14 @@ class SupabaseService {
         throw StateError('The $name service encountered an issue. Please try again.');
       }
       return response.data;
+    } on FunctionException catch (fe) {
+      if (fe.details is Map && fe.details['error'] != null) {
+        throw StateError(fe.details['error'].toString());
+      }
+      if (fe.status == 401) {
+        throw StateError('Sign in required to use cloud AI features.');
+      }
+      throw StateError('Cloud service temporarily unavailable (${fe.status}).');
     } catch (e) {
       if (e is StateError) rethrow;
       throw StateError('Network connection issue. Please check your internet and try again.');
