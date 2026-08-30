@@ -216,7 +216,9 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
       }
     }
 
-    questions ??= _generateHeuristicQuiz(cleaned, documentTitle, validCount);
+    if (questions == null || questions.isEmpty) {
+      questions = _generateHeuristicQuiz(cleaned, documentTitle, validCount);
+    }
     onProgress?.call('Generated ${questions.length} questions ✓');
 
     return ChemistryQuiz(

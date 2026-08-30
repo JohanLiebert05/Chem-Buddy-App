@@ -238,10 +238,10 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           actions: [
-            TextButton.icon(
+            IconButton(
+              icon: const Icon(Icons.attach_file, color: AppColors.purpleBright),
+              tooltip: 'Attach PDF Study Material',
               onPressed: _extracting ? null : _pickPdf,
-              icon: const Icon(Icons.note_add, size: 16, color: AppColors.purpleBright),
-              label: const Text('+ Study Material', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 12)),
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline, color: AppColors.textMuted),
@@ -380,7 +380,29 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                             _ActionChip(
                               icon: Icons.summarize_outlined,
                               label: 'Summarize',
-                              onTap: () => _sendMessage('Please give me a clear, structured summary of this study material with major topics, definitions, and reaction mechanisms.'),
+                              onTap: () {
+                                if (chatState.activeDocumentPath != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => PdfStudyHubScreen(
+                                        doc: PdfDoc(
+                                          id: const Uuid().v4(),
+                                          filename: chatState.activeDocumentName ?? 'document.pdf',
+                                          displayName: chatState.activeDocumentName ?? 'Study Material',
+                                          subjectId: '',
+                                          localPath: chatState.activeDocumentPath!,
+                                          dateAdded: DateTime.now(),
+                                          fileSize: chatState.activeDocumentSize ?? 0,
+                                        ),
+                                        initialTab: 1,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  _sendMessage('Please give me a clear, structured summary of this study material with major topics, definitions, and reaction mechanisms.');
+                                }
+                              },
                             ),
                             const SizedBox(width: 8),
                             _ActionChip(

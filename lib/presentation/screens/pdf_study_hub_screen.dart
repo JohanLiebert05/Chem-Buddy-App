@@ -425,38 +425,36 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
 
   // 1. IMPORTANT TOPICS TAB
   Widget _buildTopicsTab() {
+    if (_loading && (_topics == null || _topics!.isEmpty)) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(width: 36, height: 36, child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.purpleBright)),
+              const SizedBox(height: 16),
+              Text(
+                _progressStatus.isEmpty ? 'Analyzing document...' : _progressStatus,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Colors.white),
+              ),
+              const SizedBox(height: 6),
+              const Text('Extracting key concepts, formulas and exam priorities', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
       children: [
         const ContextualHintCard(
           hintKey: 'topics_hint',
-          title: 'Start with Important Topics 💡',
-          message: 'ChemBuddy analyzes coverage depth and repetition in your uploaded material to pinpoint exam-heavy concepts.',
+          title: 'Important Topics',
+          message: 'ChemBuddy analyzes depth and exam relevance to pinpoint high-yield concepts.',
         ),
-
-        // Recommended Path Banner
-        GlowCard(
-          borderColor: AppColors.purpleBright.withValues(alpha: 0.4),
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.psychology, color: AppColors.purpleBright, size: 20),
-                  SizedBox(width: 8),
-                  Text('Recommended Study Routine', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-                ],
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                '1. Review top priority topics\n2. Read academic summary\n3. Generate flashcards\n4. Practice with quiz',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.4),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
 
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -465,7 +463,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
             TextButton.icon(
               onPressed: _loading ? null : _fetchTopics,
               icon: const Icon(Icons.refresh, size: 16, color: AppColors.purpleBright),
-              label: const Text('Re-Analyze', style: TextStyle(color: AppColors.purpleBright, fontSize: 12)),
+              label: const Text('Re-Analyze', style: TextStyle(color: AppColors.purpleBright, fontSize: 12, fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -473,18 +471,25 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
 
         if (_topics == null || _topics!.isEmpty)
           GlowCard(
+            padding: const EdgeInsets.all(20),
             child: Column(
               children: [
                 const Icon(Icons.analytics_outlined, size: 40, color: AppColors.purpleBright),
-                const SizedBox(height: 10),
-                const Text('No topics extracted yet.', style: TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 12),
+                const Text('No topics extracted yet.', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.white)),
                 const SizedBox(height: 6),
                 const Text('Tap below to analyze this PDF with AI.', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                const SizedBox(height: 12),
-                ElevatedButton(
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
                   onPressed: _fetchTopics,
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.purple),
-                  child: const Text('Analyze Topics with AI'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.purple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.auto_awesome, size: 16),
+                  label: const Text('Analyze Topics with AI', style: TextStyle(fontWeight: FontWeight.w700)),
                 ),
               ],
             ),

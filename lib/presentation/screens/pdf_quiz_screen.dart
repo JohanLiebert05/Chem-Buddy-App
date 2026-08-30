@@ -97,10 +97,59 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
       return _buildResultScreen(_result!);
     }
 
-    final q = widget.quiz.questions[_currentIndex];
+    if (widget.quiz.questions.isEmpty) {
+      return HexBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Text(
+              widget.quiz.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+          ),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.quiz_outlined, size: 48, color: AppColors.warning),
+                  const SizedBox(height: 16),
+                  const Text('No Questions Found', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Could not generate quiz questions from this document. Try re-generating or analyzing a different document.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.purple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Go Back', style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final total = widget.quiz.questions.length;
-    final progress = (_currentIndex + 1) / total;
-    final selectedOption = _userAnswers[_currentIndex];
+    final safeIndex = _currentIndex.clamp(0, total - 1);
+    final q = widget.quiz.questions[safeIndex];
+    final progress = (safeIndex + 1) / total;
+    final selectedOption = _userAnswers[safeIndex];
 
     return HexBackground(
       child: Scaffold(
