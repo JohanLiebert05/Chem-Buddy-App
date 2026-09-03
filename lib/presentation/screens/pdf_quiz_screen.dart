@@ -4,7 +4,9 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
+
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../providers/app_providers.dart';
@@ -29,11 +31,18 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
 
   void _selectOption(int optionIndex) {
     if (_submittedCurrent) return;
+    final isCorrect = widget.quiz.questions[_currentIndex].correctIndex == optionIndex;
+    if (isCorrect) {
+      AppHaptics.confirm();
+    } else {
+      AppHaptics.warning();
+    }
     setState(() {
       _userAnswers[_currentIndex] = optionIndex;
       _submittedCurrent = true;
     });
   }
+
 
   void _nextQuestion() {
     if (_currentIndex < widget.quiz.questions.length - 1) {
@@ -231,23 +240,40 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
               final isChosen = selectedOption == optIdx;
               final isCorrect = q.correctIndex == optIdx;
 
-              Color borderColor = AppColors.border;
+              Color borderColor = AppColors.borderSubtle;
+              Color bgColor = AppColors.card;
               Color textColor = Colors.white;
 
               if (_submittedCurrent) {
                 if (isCorrect) {
-                  borderColor = AppColors.success;
-                  textColor = AppColors.success;
+                  borderColor = AppColors.statusSuccess;
+                  bgColor = AppColors.statusSuccess.withValues(alpha: 0.16);
+                  textColor = AppColors.statusSuccess;
                 } else if (isChosen && !isCorrect) {
-                  borderColor = AppColors.danger;
-                  textColor = AppColors.danger;
+                  borderColor = AppColors.statusDanger;
+                  bgColor = AppColors.statusDanger.withValues(alpha: 0.16);
+                  textColor = AppColors.statusDanger;
                 }
               } else if (isChosen) {
-                borderColor = AppColors.purpleBright;
+                borderColor = AppColors.brandBright;
+                bgColor = AppColors.brandPrimary.withValues(alpha: 0.14);
               }
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    if (_submittedCurrent && (isCorrect || (isChosen && !isCorrect)))
+                      BoxShadow(
+                        color: (isCorrect ? AppColors.statusSuccess : AppColors.statusDanger).withValues(alpha: 0.22),
+                        blurRadius: 14,
+                        offset: const Offset(0, 3),
+                      ),
+                  ],
+                ),
                 child: GlowCard(
                   borderColor: borderColor,
                   padding: const EdgeInsets.all(14),
@@ -256,24 +282,24 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 26,
-                        height: 26,
+                        width: 28,
+                        height: 28,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: _submittedCurrent && isCorrect
-                              ? AppColors.success
+                              ? AppColors.statusSuccess
                               : (_submittedCurrent && isChosen
-                                  ? AppColors.danger
-                                  : AppColors.surfaceElevated),
+                                  ? AppColors.statusDanger
+                                  : (isChosen ? AppColors.brandPrimary : AppColors.surfaceElevated)),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: borderColor),
+                          border: Border.all(color: borderColor, width: 1),
                         ),
                         child: Text(
                           String.fromCharCode(65 + optIdx), // A, B, C, D
                           style: TextStyle(
                             fontWeight: FontWeight.w800,
-                            color: _submittedCurrent && (isCorrect || isChosen) ? Colors.black : AppColors.textSecondary,
-                            fontSize: 12,
+                            color: _submittedCurrent && (isCorrect || isChosen) ? Colors.black : (isChosen ? Colors.white : AppColors.textSecondary),
+                            fontSize: 12.5,
                           ),
                         ),
                       ),
@@ -282,18 +308,23 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                         child: ChemistryMarkdownView(
                           text: optText,
                           textStyle: TextStyle(
-                            fontSize: 13.5,
+                            fontSize: 14,
                             fontWeight: isChosen ? FontWeight.w700 : FontWeight.w500,
                             color: textColor,
-                            height: 1.3,
+                            height: 1.35,
                           ),
                         ),
                       ),
+                      if (_submittedCurrent && isCorrect)
+                        const Icon(Icons.check_circle_rounded, color: AppColors.statusSuccess, size: 20)
+                      else if (_submittedCurrent && isChosen && !isCorrect)
+                        const Icon(Icons.cancel_rounded, color: AppColors.statusDanger, size: 20),
                     ],
                   ),
                 ),
               );
             }),
+
 
             // Explanation Card (Visible after answering)
             if (_submittedCurrent) ...[

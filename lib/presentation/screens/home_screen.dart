@@ -1,6 +1,8 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/attendance_math.dart';
@@ -190,13 +192,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           crossAxisCount: 2,
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
-          childAspectRatio: 2.1,
+          childAspectRatio: 1.85,
           children: [
             _buildStatCard(
               label: 'Questions Answered',
               value: '${analytics.totalQuestionsAnswered}',
               icon: Icons.quiz_outlined,
-              color: AppColors.purpleBright,
+              color: AppColors.brandBright,
             ),
             _buildStatCard(
               label: 'Flashcards Due',
@@ -204,20 +206,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: Icons.psychology_outlined,
               color: analytics.flashcardsDueToday > 0 ? AppColors.warning : AppColors.success,
             ),
-            _buildStatCard(
-              label: 'Quiz Accuracy',
-              value: analytics.totalQuestionsAnswered > 0 ? '${analytics.overallQuizAccuracy.toStringAsFixed(0)}%' : 'N/A',
-              icon: Icons.track_changes_outlined,
-              color: analytics.overallQuizAccuracy >= 70 ? AppColors.success : AppColors.warning,
+            _buildAccuracyCard(
+              analytics.overallQuizAccuracy,
+              analytics.totalQuestionsAnswered,
             ),
-            _buildStatCard(
-              label: 'Study Streak',
-              value: '${analytics.studyStreakDays} Day${analytics.studyStreakDays == 1 ? "" : "s"} 🔥',
-              icon: Icons.local_fire_department_outlined,
-              color: AppColors.warning,
+            _buildStreakCard(
+              analytics.studyStreakDays,
             ),
           ],
         ),
+
         const SizedBox(height: 14),
 
         // 4. DUE TODAY FLASHCARDS BANNER
@@ -572,6 +570,103 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildAccuracyCard(double accuracy, int totalQuestions) {
+    final hasData = totalQuestions > 0;
+    final color = accuracy >= 70 ? AppColors.statusSuccess : AppColors.statusWarning;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 36,
+            height: 36,
+            child: CustomPaint(
+              painter: _RadialAccuracyPainter(
+                percent: hasData ? (accuracy / 100).clamp(0.0, 1.0) : 0.0,
+                color: color,
+              ),
+              child: Center(
+                child: Icon(
+                  hasData ? Icons.bolt_rounded : Icons.track_changes_outlined,
+                  size: 14,
+                  color: color,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Quiz Accuracy',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hasData ? '${accuracy.toStringAsFixed(0)}%' : 'N/A',
+                  style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStreakCard(int streakDays) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            height: 28,
+            child: CustomPaint(
+              painter: _StreakSparklinePainter(streakDays: streakDays),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Study Streak',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$streakDays Day${streakDays == 1 ? "" : "s"} 🔥',
+                  style: const TextStyle(color: AppColors.accentGold, fontSize: 15, fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
   Widget _buildStudyRecommendation(AppState state) {
     final now = DateTime.now();
     final today = state.entries.where((e) => e.weekdayNumber == now.weekday).toList()
@@ -906,3 +1001,84 @@ class _NextClassCard extends StatelessWidget {
     );
   }
 }
+
+class _RadialAccuracyPainter extends CustomPainter {
+  _RadialAccuracyPainter({required this.percent, required this.color});
+
+  final double percent;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width / 2) - 3.5;
+
+    // Background track
+    final bgPaint = Paint()
+      ..color = const Color(0x25FFFFFF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5;
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // Progress Arc
+    if (percent > 0) {
+      final fgPaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        -math.pi / 2,
+        2 * math.pi * percent,
+        false,
+        fgPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _RadialAccuracyPainter old) =>
+      old.percent != percent || old.color != color;
+}
+
+class _StreakSparklinePainter extends CustomPainter {
+  _StreakSparklinePainter({required this.streakDays});
+
+  final int streakDays;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const bars = 7;
+    const spacing = 2.5;
+    final barWidth = (size.width - ((bars - 1) * spacing)) / bars;
+
+    for (var i = 0; i < bars; i++) {
+      final daysAgo = (bars - 1) - i;
+      final isActive = daysAgo < streakDays;
+      final x = i * (barWidth + spacing);
+      final heightFactor = 0.35 + ((i + 1) / bars) * 0.65;
+      final height = isActive ? (size.height * heightFactor) : (size.height * 0.22);
+      final y = size.height - height;
+
+      final paint = Paint()
+        ..color = isActive
+            ? AppColors.accentGold.withValues(alpha: 0.55 + ((i + 1) / bars) * 0.45)
+            : const Color(0x28FFFFFF)
+        ..style = PaintingStyle.fill;
+
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, y, barWidth, height),
+          const Radius.circular(2),
+        ),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _StreakSparklinePainter old) =>
+      old.streakDays != streakDays;
+}
+

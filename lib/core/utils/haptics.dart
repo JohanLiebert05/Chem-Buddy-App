@@ -17,4 +17,9 @@ class AppHaptics {
   static Future<void> warn() async {
     await HapticFeedback.heavyImpact();
   }
+
+  static Future<void> warning() async {
+    await HapticFeedback.heavyImpact();
+  }
 }
+

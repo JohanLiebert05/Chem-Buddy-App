@@ -6,7 +6,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
+import '../../core/widgets/flip_card_3d.dart';
 import '../../core/widgets/glow_card.dart';
+
 import '../../data/models/flashcard_evaluation.dart';
 import '../../data/models/smart_flashcard.dart';
 import '../../data/services/flashcard_evaluation_service.dart';
@@ -171,39 +173,127 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
           ),
           const SizedBox(height: 16),
 
-          // Front of Card (Question)
-          GlowCard(
-            borderColor: AppColors.purple.withValues(alpha: 0.35),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (card.topic.isNotEmpty) ...[
+          // 3D Perspective Flashcard (Question on Front, Answer on Back)
+          FlipCard3D(
+            isFlipped: phase != FlashcardUiState.unanswered,
+            onFlip: (isBack) {
+              if (isBack && phase == FlashcardUiState.unanswered) {
+                _reveal();
+              }
+            },
+            front: GlowCard(
+              borderColor: AppColors.purple.withValues(alpha: 0.40),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (card.topic.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.purple.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            card.topic.toUpperCase(),
+                            style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  ChemistryMarkdownView(
+                    text: card.question,
+                    textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.4, color: Colors.white),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Tap card to flip in 3D ↻',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, fontWeight: FontWeight.w600),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: (card.srState == FlashcardSrState.lapse ? AppColors.statusDanger : AppColors.brandPrimary).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          card.srState.name.toUpperCase(),
+                          style: TextStyle(
+                            color: card.srState == FlashcardSrState.lapse ? AppColors.statusDanger : AppColors.brandBright,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            back: GlowCard(
+              borderColor: AppColors.blue.withValues(alpha: 0.45),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.purple.withValues(alpha: 0.2),
+                          color: AppColors.success.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          card.topic.toUpperCase(),
-                          style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w800),
+                        child: const Text(
+                          'OFFICIAL ANSWER',
+                          style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w800),
                         ),
+                      ),
+                      const Spacer(),
+                      const Text(
+                        'Tap to flip back ↻',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
+                  ChemistryMarkdownView(
+                    text: card.answer,
+                    textStyle: const TextStyle(fontSize: 15.5, height: 1.45, color: Colors.white),
+                  ),
+                  if (card.keyTerms.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: card.keyTerms.map((term) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.purple.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4), width: 0.8),
+                        ),
+                        child: Text(
+                          '✨ $term',
+                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                        ),
+                      )).toList(),
+                    ),
+                  ],
                 ],
-                ChemistryMarkdownView(
-                  text: card.question,
-                  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.4, color: Colors.white),
-                ),
-              ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
+
 
           // Action Phase: Type Answer & Show Answer or Rate Recall
           if (phase == FlashcardUiState.unanswered) ...[
