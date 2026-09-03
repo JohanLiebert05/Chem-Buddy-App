@@ -1,21 +1,69 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
+/// Predefined MSc Chemistry loading status lines for generation states.
+class ChemistryMicrocopy {
+  ChemistryMicrocopy._();
+
+  static const List<String> askAi = [
+    'Distilling your answer...',
+    'Calibrating the concept...',
+    'Titrating the right explanation...',
+    'Honing in on the mechanism...',
+    'Percolating through the theory...',
+    'Balancing the equation of ideas...',
+    'Cross-referencing orbital theory...',
+    'Formulating a precise answer...',
+  ];
+
+  static const List<String> flashcards = [
+    'Distilling notes into cards...',
+    'Crystallizing core ideas...',
+    'Curating your study deck...',
+    'Condensing chapters into concepts...',
+    'Sifting through the material...',
+    'Forging your revision deck...',
+    'Isolating essentials...',
+    'Refining questions & answers...',
+  ];
+
+  static const List<String> timetable = [
+    'Resolving grid coordinates...',
+    'Deciphering course codes...',
+    'Mapping faculty to mentors...',
+    'Structuring weekly routine...',
+    'Harmonizing lab practicals...',
+  ];
+
+  static const List<String> spectroscopy = [
+    'Analyzing chemical shifts...',
+    'Simulating spin-spin coupling...',
+    'Integrating proton peak areas...',
+    'Solving molecular framework...',
+  ];
+}
+
 /// Branded MSc Chemistry Benzene Molecule Loader.
-/// Renders a pulsing hexagonal carbon ring with a rotating delocalized pi-electron cloud.
+/// Renders a pulsing hexagonal carbon ring with a rotating delocalized pi-electron cloud
+/// and smoothly rotating chemistry microcopy status lines.
 class BenzeneMoleculeLoader extends StatefulWidget {
   const BenzeneMoleculeLoader({
     super.key,
     this.size = 68,
     this.message,
+    this.messages,
     this.color = AppColors.brandBright,
+    this.cycleInterval = const Duration(milliseconds: 1800),
   });
 
   final double size;
   final String? message;
+  final List<String>? messages;
   final Color color;
+  final Duration cycleInterval;
 
   @override
   State<BenzeneMoleculeLoader> createState() => _BenzeneMoleculeLoaderState();
@@ -24,6 +72,8 @@ class BenzeneMoleculeLoader extends StatefulWidget {
 class _BenzeneMoleculeLoaderState extends State<BenzeneMoleculeLoader> with TickerProviderStateMixin {
   late final AnimationController _rotationController;
   late final AnimationController _pulseController;
+  Timer? _cycleTimer;
+  int _currentMessageIndex = 0;
 
   @override
   void initState() {
@@ -37,10 +87,21 @@ class _BenzeneMoleculeLoaderState extends State<BenzeneMoleculeLoader> with Tick
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
+
+    if (widget.messages != null && widget.messages!.length > 1) {
+      _cycleTimer = Timer.periodic(widget.cycleInterval, (timer) {
+        if (mounted) {
+          setState(() {
+            _currentMessageIndex = (_currentMessageIndex + 1) % widget.messages!.length;
+          });
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
+    _cycleTimer?.cancel();
     _rotationController.dispose();
     _pulseController.dispose();
     super.dispose();
@@ -48,6 +109,10 @@ class _BenzeneMoleculeLoaderState extends State<BenzeneMoleculeLoader> with Tick
 
   @override
   Widget build(BuildContext context) {
+    final currentText = widget.messages != null && widget.messages!.isNotEmpty
+        ? widget.messages![_currentMessageIndex % widget.messages!.length]
+        : widget.message;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -71,16 +136,32 @@ class _BenzeneMoleculeLoaderState extends State<BenzeneMoleculeLoader> with Tick
             );
           },
         ),
-        if (widget.message != null) ...[
+        if (currentText != null && currentText.isNotEmpty) ...[
           const SizedBox(height: 14),
-          Text(
-            widget.message!,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.2,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.25),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: Text(
+              currentText,
+              key: ValueKey<String>(currentText),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.2,
+              ),
             ),
           ),
         ],
@@ -88,6 +169,7 @@ class _BenzeneMoleculeLoaderState extends State<BenzeneMoleculeLoader> with Tick
     );
   }
 }
+
 
 class _BenzenePainter extends CustomPainter {
   _BenzenePainter({

@@ -1,16 +1,200 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/reaction_models.dart';
+import 'reaction_diagram_svg_catalog.dart';
 
 /// Service providing verified, step-by-step MSc chemistry reaction mechanisms,
-/// electron movement, curved arrow descriptions, and intermediates.
+/// electron movement, curved arrow descriptions, intermediates, and cached vector SVGs.
 class ReactionMechanismService {
   ReactionMechanismService._();
   static final ReactionMechanismService instance = ReactionMechanismService._();
 
+  final Map<String, String> _svgCache = {};
+
   List<ReactionMechanism> get mechanisms => curatedMechanisms;
 
+  /// Retrieves and caches SVG vector diagrams for the requested reaction mechanism.
+  Future<String> getSvgForMechanism(String id) async {
+    final cleanId = id.trim().toLowerCase();
+    if (_svgCache.containsKey(cleanId)) {
+      return _svgCache[cleanId]!;
+    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cached = prefs.getString('cached_svg_$cleanId');
+      if (cached != null && cached.isNotEmpty) {
+        _svgCache[cleanId] = cached;
+        return cached;
+      }
+    } catch (_) {
+      // SharedPreferences failure fallback
+    }
+
+    final svg = ReactionDiagramSvgCatalog.getSvgFor(cleanId);
+    _svgCache[cleanId] = svg;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cached_svg_$cleanId', svg);
+    } catch (_) {}
+
+    return svg;
+  }
+
   static final List<ReactionMechanism> curatedMechanisms = [
-    // 1. CANNIZZARO REACTION
-    const ReactionMechanism(
+    // 1. SN1 SUBSTITUTION
+    ReactionMechanism(
+      id: 'sn1',
+      name: 'SN1 Nucleophilic Substitution',
+      aliases: ['Unimolecular Nucleophilic Substitution', 'Carbocation Pathway', 'Solvolysis'],
+      category: ReactionCategory.stereochemistry,
+      summary:
+          r'Two-step unimolecular nucleophilic substitution proceeding via a planar carbocation intermediate. Rate depends only on substrate concentration: $\text{Rate} = k[\text{R-X}]$. Results in racemization with partial inversion.',
+      reactants: r'$3^\circ$ Alkyl halide / Benzylic / Allylic halide ($\text{R}_3\text{C-X}$)',
+      reagentsAndConditions: r'Weak nucleophile / polar protic solvent ($\text{H}_2\text{O}, \text{ROH}$), moderate temperature',
+      products: r'Racemic nucleophilic product ($\text{R}_3\text{C-Nu}$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('sn1'),
+      isVerified: true,
+      keyApplications: [
+        r'Solvolysis of tert-butyl halides to tert-butanol or ethers.',
+        r'Formation of stable carbocations for synthetic rearrangements and Wagner-Meerwein shifts.',
+      ],
+      limitations: [
+        r'Fails with $1^\circ$ and methyl halides due to high energy of primary carbocations.',
+        r'Prone to carbocation rearrangements (hydride and alkyl shifts).',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Carbocation Formation (Heterolysis, Rate-Determining Step)',
+          description:
+              r'Departure of the leaving group $X^-$ produces a planar, trigonal $sp^2$-hybridized carbocation with an empty $p$-orbital.',
+          curvedArrowNotes:
+              r'Curved arrow from C-X bonding pair onto halogen atom $X$ to release halide ion $X^-$.',
+          intermediate: r'$[\text{R}_3\text{C}^+]$ Planar Carbocation Intermediate',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Nucleophilic Attack & Deprotonation (Fast)',
+          description:
+              r'The nucleophile attacks the planar carbocation from either top or bottom face with equal probability, yielding racemization.',
+          curvedArrowNotes:
+              r'Nucleophile lone pair attacks the vacant $p$-orbital of $C^+$ from either re or si face.',
+          intermediate: r'$\text{R}_3\text{C-Nu}$ (Racemic Product)',
+        ),
+      ],
+    ),
+
+    // 2. SN2 SUBSTITUTION
+    ReactionMechanism(
+      id: 'sn2',
+      name: 'SN2 Nucleophilic Substitution',
+      aliases: ['Bimolecular Nucleophilic Substitution', 'Walden Inversion', 'Backside Attack'],
+      category: ReactionCategory.stereochemistry,
+      summary:
+          r'Concerted, single-step bimolecular substitution featuring a backside nucleophilic attack at $180^\circ$ to the leaving group, passing through a pentacoordinate trigonal bipyramidal transition state with 100% Walden inversion.',
+      reactants: r'Methyl / $1^\circ$ Alkyl halide ($\text{R-CH}_2\text{-X}$)',
+      reagentsAndConditions: r'Strong nucleophile ($\text{I}^-, \text{CN}^-, \text{N}_3^-, \text{OH}^-$) in Polar Aprotic Solvent (DMSO, DMF, Acetone)',
+      products: r'Inverted Configuration Product ($\text{Nu-CH}_2\text{-R}$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('sn2'),
+      isVerified: true,
+      keyApplications: [
+        r'Stereospecific synthesis of chiral alcohols, amines, azides, and nitriles with inversion of stereocenters.',
+        r'Williamson ether synthesis: $\text{R-O}^- + \text{R\x27-X} \rightarrow \text{R-O-R\x27} + \text{X}^-$.',
+      ],
+      limitations: [
+        r'Completely blocked by steric hindrance in $3^\circ$ substrates and neopentyl halides.',
+        r'Unreactive with aryl and vinyl halides due to high $\sigma^*(\text{C-X})$ energy and geometric blockage.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Concerted Backside Attack & Walden Inversion',
+          description:
+              r'Nucleophile donates electron density into the antibonding $\sigma^*(\text{C-X})$ orbital directly opposite to the leaving group, passing through a $[\text{Nu}\cdots\text{C}\cdots\text{X}]^\ddagger$ trigonal bipyramidal transition state.',
+          curvedArrowNotes:
+              r'Simultaneous curved arrow from :Nu⁻ to central carbon and from C-X bond to leaving group X⁻.',
+          intermediate: r'$[\text{Nu}\cdots\text{C(H)}_2\cdots\text{X}]^\ddagger$ Pentacoordinate Transition State',
+        ),
+      ],
+    ),
+
+    // 3. E1 ELIMINATION
+    ReactionMechanism(
+      id: 'e1',
+      name: 'E1 Elimination Reaction',
+      aliases: ['Unimolecular Elimination', 'Zaitsev Alkene Formation'],
+      category: ReactionCategory.stereochemistry,
+      summary:
+          r'Two-step unimolecular elimination. Rate-determining ionization produces a carbocation, which subsequently loses a $\beta$-proton to base, yielding the most substituted, thermodynamically stable (Zaitsev) alkene.',
+      reactants: r'$3^\circ$ Alkyl halide / tertiary alcohol under acid conditions',
+      reagentsAndConditions: r'Weak base ($\text{H}_2\text{O}, \text{EtOH}$) / $\text{H}_2\text{SO}_4$, Heat ($\Delta$)',
+      products: r'Thermodynamically favored Zaitsev Alkene + $\text{H-Base}^+ + \text{X}^-$',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('e1'),
+      isVerified: true,
+      keyApplications: [
+        r'Acid-catalyzed dehydration of $3^\circ$ alcohols to alkenes.',
+        r'Thermodynamic alkene synthesis via stable carbocations.',
+      ],
+      limitations: [
+        r'Competes directly with SN1 substitution in polar protic solvents.',
+        r'Rearrangements of the carbocation intermediate often yield isomeric mixtures.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Carbocation Formation (Rate-Determining Step)',
+          description:
+              r'Heterolytic cleavage of the C-X bond releases $X^-$, forming a planar carbocation intermediate.',
+          curvedArrowNotes: r'Arrow from C-X bond to halogen atom X.',
+          intermediate: r'$[\text{R}_3\text{C}^+]$ Carbocation',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Base Deprotonation of β-Hydrogen (Fast)',
+          description:
+              r'A weak base abstracts a $\beta$-hydrogen. The C-H bonding pair collapses into the vacant $p$-orbital of $C^+$ to establish the $C=C$ $\pi$-bond.',
+          curvedArrowNotes:
+              r'Arrow from base lone pair to $\beta\text{-H}$, and arrow from $\text{C}_\beta\text{-H}$ bond to $\text{C}_\alpha\text{-C}_\beta$ bond.',
+          intermediate: r'Zaitsev Alkene ($\text{R}_2\text{C=CR}_2$)',
+        ),
+      ],
+    ),
+
+    // 4. E2 ELIMINATION
+    ReactionMechanism(
+      id: 'e2',
+      name: 'E2 Bimolecular Elimination',
+      aliases: ['Bimolecular Elimination', 'Anti-Periplanar Elimination', 'Hofmann/Zaitsev Elimination'],
+      category: ReactionCategory.stereochemistry,
+      summary:
+          r'Concerted bimolecular elimination requiring anti-periplanar ($180^\circ$ dihedral angle) geometry between the $\beta$-hydrogen and the leaving group. Non-bulky bases yield Zaitsev alkenes, while bulky bases (e.g. potassium t-butoxide) yield Hofmann alkenes.',
+      reactants: r'$1^\circ, 2^\circ$, or $3^\circ$ Alkyl halide with accessible $\beta$-hydrogen',
+      reagentsAndConditions: r'Strong base ($\text{EtO}^-, \text{OH}^-$, or $\text{t-BuO}^-$) in alcoholic solvent, Heat',
+      products: r'Alkene + $\text{HB} + \text{X}^-$',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('e2'),
+      isVerified: true,
+      keyApplications: [
+        r'Regioselective alkene synthesis (Hofmann product with $t\text{-BuOK}$, Zaitsev with $\text{NaOEt}$).',
+        r'Stereospecific synthesis of trans-alkenes and cyclic alkenes based on diaxial anti-periplanar conformers.',
+      ],
+      limitations: [
+        r'Requires strict anti-coplanar transition state geometry ($\text{H-C-C-X} \approx 180^\circ$). In cyclohexane rings, both H and X must be trans-diaxial.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Concerted Anti-Periplanar Transition State',
+          description:
+              r'Base abstracts the anti-periplanar $\beta$-proton simultaneously as the C-H electrons form the $C=C$ $\pi$-bond and the leaving group departs.',
+          curvedArrowNotes:
+              r'Three concerted arrows: Base $\rightarrow$ $\beta\text{-H}$, $\text{C}_\beta\text{-H}$ bond $\rightarrow$ $\text{C-C}$ bond, and $\text{C}_\alpha\text{-X}$ bond $\rightarrow$ X.',
+          intermediate: r'$[\text{B}\cdots\text{H}\cdots\text{C}=\text{C}\cdots\text{X}]^\ddagger$ Transition State',
+        ),
+      ],
+    ),
+
+    // 5. CANNIZZARO REACTION
+    ReactionMechanism(
       id: 'cannizzaro',
       name: 'Cannizzaro Reaction',
       aliases: ['Disproportionation of Aldehydes', 'Crossed Cannizzaro'],
@@ -20,6 +204,7 @@ class ReactionMechanismService {
       reactants: r'2 R-CHO (where R = aryl, $3^\circ$ alkyl, or H, lacking $\alpha$-H)',
       reagentsAndConditions: r'Concentrated strong base ($50\%\text{ NaOH}$ or $\text{KOH}$), Heat ($60\text{–}100^\circ\text{C}$)',
       products: r'$\text{R-CH}_2\text{OH}$ (Primary Alcohol) + $\text{R-COO}^-\text{Na}^+$ (Carboxylate Salt)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('cannizzaro'),
       isVerified: true,
       keyApplications: [
         r'Synthesis of benzoic acid and benzyl alcohol from benzaldehyde ($\text{C}_6\text{H}_5\text{CHO}$).',
@@ -42,355 +227,281 @@ class ReactionMechanismService {
           stepNumber: 2,
           title: 'Hydride Transfer (Rate-Determining Step)',
           description:
-              r'The alkoxide collapses its negative charge back to reform a carbonyl ($C=O$), expelling a hydride ion ($:H^-$) directly to the carbonyl carbon of a second aldehyde molecule.',
+              r'Collapse of the alkoxide oxygen electron pair forces the transfer of a hydride ion ($:\text{H}^-$) to the carbonyl carbon of a second aldehyde molecule.',
           curvedArrowNotes:
-              r'Electron pair on $O^-$ reforms $C=O$; $C-H$ bond pair attacks the carbonyl carbon of the second aldehyde; $\pi(C=O)$ electrons shift to second carbonyl oxygen.',
+              r'Oxygen $O^-$ lone pair pushes back to re-form $C=O$ double bond; C-H bonding pair shifts as $:H^-$ to attack carbonyl carbon of second aldehyde; second aldehyde $C=O$ opens to $O^-$.',
           intermediate: r'$\text{R-COOH}$ (Carboxylic Acid) + $\text{R-CH}_2\text{O}^-$ (Alkoxide Ion)',
         ),
         ReactionStep(
           stepNumber: 3,
-          title: 'Rapid Proton Transfer & Irreversible Equilibrium',
+          title: 'Rapid Acid-Base Proton Exchange',
           description:
-              r'The newly formed strongly basic alkoxide ion ($\text{R-CH}_2\text{O}^-$) deprotonates the carboxylic acid ($\text{R-COOH}$), irreversibly driving the reaction to completion via resonance stabilization of the carboxylate anion.',
+              r'The strongly basic alkoxide ion ($\text{R-CH}_2\text{O}^-$) immediately deprotonates the carboxylic acid ($\text{R-COOH}$), driving the equilibrium irreversibly forward.',
           curvedArrowNotes:
-              r'Alkoxide oxygen attacks acidic proton on $R-COOH$; $O-H$ bond pair shifts entirely to carboxylate oxygen forming resonance-stabilized $R-COO^-$.',
-          intermediate: r'$\text{R-CH}_2\text{OH}$ + $\text{R-COO}^-$ (Resonance Delocalized Carboxylate)',
+              r'Alkoxide oxygen lone pair attacks acidic proton on carboxyl group $O-H$; $O-H$ electron pair shifts onto carboxylate oxygen.',
+          intermediate: r'$\text{R-COO}^-$ (Carboxylate) + $\text{R-CH}_2\text{OH}$ (Primary Alcohol)',
         ),
       ],
     ),
 
-    // 2. ALDOL CONDENSATION
-    const ReactionMechanism(
+    // 6. ALDOL CONDENSATION
+    ReactionMechanism(
       id: 'aldol',
       name: 'Aldol Condensation',
-      aliases: [r'Claisen-Schmidt Condensation', r'$\beta$-Hydroxy Carbonyl Synthesis'],
+      aliases: ['Aldol Reaction', 'Crossed Aldol', 'Claisen-Schmidt Condensation'],
       category: ReactionCategory.namedReactions,
       summary:
-          r'Carbon-carbon bond-forming reaction between enolizable aldehydes or ketones to form a $\beta$-hydroxy carbonyl (aldol addition), which subsequently dehydrates to an $\alpha,\beta$-unsaturated enone/enal.',
-      reactants: r'2 Carbonyl compounds possessing acidic $\alpha$-hydrogens ($\text{R-CH}_2\text{CHO}$ or $\text{R-COCH}_3$)',
-      reagentsAndConditions: r'Dilute base ($\text{NaOH}, \text{KOH}$) or dilute acid ($\text{HCl}, \text{H}_2\text{SO}_4$), followed by heat ($\Delta$)',
-      products: r'$\alpha,\beta$-Unsaturated Carbonyl ($\text{R-CH}=\text{CH-CHO}$ or enone) + $\text{H}_2\text{O}$',
+          r'Base- or acid-catalyzed enolization of an aldehyde or ketone followed by nucleophilic addition to another carbonyl group, yielding a $\beta$-hydroxy carbonyl compound, which undergoes subsequent elimination to form an $\alpha,\beta$-unsaturated enone.',
+      reactants: r'Aldehydes or ketones containing acidic $\alpha$-hydrogens',
+      reagentsAndConditions: r'Dilute base ($10\%\text{ NaOH}$) or acid ($\text{HCl}$), followed by heat ($\Delta$)',
+      products: r'$\alpha,\beta$-Unsaturated aldehyde/ketone (Enal / Enone) + $\text{H}_2\text{O}$',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('aldol'),
       isVerified: true,
       keyApplications: [
-        r'Synthesis of chalcones, cinnamaldehyde derivatives, and conjugated enones in steroid synthesis.',
-        r'Robinson Annulation tandem sequence for polycyclic ring synthesis.',
+        r'Formation of carbon-carbon bonds in steroid and alkaloid synthesis (Robinson annulation).',
+        r'Synthesis of chalcones and cinnamaldehyde via Claisen-Schmidt reaction.',
       ],
       limitations: [
-        r'Cross-aldol between two different enolizable aldehydes gives a complex mixture of 4 products unless one component lacks $\alpha$-H or preformed lithium enolate (LDA) is used.',
+        r'Crossed Aldols with two enolizable partners yield complex mixtures of four products unless one partner lacks $\alpha$-hydrogens or LDA is used.',
       ],
       steps: [
         ReactionStep(
           stepNumber: 1,
-          title: r'Enolate Generation via $\alpha$-Deprotonation',
+          title: 'Enolate Generation (Deprotonation)',
           description:
-              r'Base removes an acidic $\alpha$-proton ($pK_a \approx 19\text{–}20$) from the carbonyl compound to generate a resonance-stabilized carbanion / enolate intermediate.',
+              r'Base removes an acidic $\alpha$-hydrogen to form a resonance-stabilized enolate anion.',
           curvedArrowNotes:
-              r'Base lone pair attacks $\alpha-H$; $C-H$ bond pair shifts to form $C=C$ while $C=O$ double bond shifts to oxygen.',
-          intermediate: r'$[\text{R-CH}=\text{C(H)-O}^- \leftrightarrow \text{R-CH}^--\text{CHO}]$ (Enolate nucleophile)',
+              r'Base abstracts $\alpha\text{-H}$; C-H electrons shift to form $C=C$ double bond, shifting $C=O$ $\pi$-electrons to oxygen.',
+          intermediate: r'$[\text{R-CH}=\text{C(H)-O}^- \leftrightarrow \text{R-CH}^-\text{-CHO}]$ (Enolate Anion)',
         ),
         ReactionStep(
           stepNumber: 2,
           title: 'Nucleophilic Carbonyl Addition (C-C Bond Formation)',
           description:
-              r'The nucleophilic enolate carbon attacks the electrophilic carbonyl carbon of an unionized aldehyde molecule, forming a new C-C $\sigma$-bond and an alkoxide.',
+              r'Enolate carbon attacks the electrophilic carbonyl carbon of the second aldehyde molecule, generating a tetrahedral alkoxide.',
           curvedArrowNotes:
-              r'Enolate $O^-$ reforms $C=O$; $\pi(C=C)$ attacks second carbonyl carbon; carbonyl $\pi$-electrons shift to oxygen.',
-          intermediate: r'$[\text{R-CH(O}^-)\text{-CH(R)-CHO}]$ (Aldolate intermediate)',
+              r'Enolate $C=C$ electrons attack electrophilic carbonyl carbon; second carbonyl $\pi$-electrons shift to oxygen.',
+          intermediate: r'Tetrahedral alkoxide adduct',
         ),
         ReactionStep(
           stepNumber: 3,
-          title: 'Protonation & Base-Catalyzed E1cB Dehydration',
+          title: 'Protonation & E1cB Dehydration',
           description:
-              r'Protonation by solvent produces the neutral $\beta$-hydroxy aldehyde. Under warming, base abstracts the remaining $\alpha$-H via an $\text{E1cB}$ mechanism to eliminate hydroxide and yield the thermodynamically conjugated enal/enone.',
+              r'Protonation produces the $\beta$-hydroxy carbonyl (Aldol). Heating eliminates water via an E1cB pathway to give the conjugated $\alpha,\beta$-unsaturated carbonyl.',
           curvedArrowNotes:
-              r'Base removes remaining $\alpha-H$; enolate reforms and expels $OH^-$ leaving group to generate conjugated $\pi$-system.',
-          intermediate: r'$\text{R-CH}=\text{C(R)-CHO}$ ($\alpha,\beta$-Unsaturated conjugated enone)',
+              r'Base deprotonates residual $\alpha\text{-H}$ forming an enolate; $O^-$ pushes back to kick off $OH^-$ as leaving group.',
+          intermediate: r'$\alpha,\beta$-Unsaturated Enone (Conjugated Product)',
         ),
       ],
     ),
 
-    // 3. WITTIG REACTION
-    const ReactionMechanism(
+    // 7. WITTIG REACTION
+    ReactionMechanism(
       id: 'wittig',
       name: 'Wittig Reaction',
-      aliases: ['Phosphonium Ylide Olefination'],
-      category: ReactionCategory.organometallics,
-      summary:
-          r'Reaction of an aldehyde or ketone with a triphenylphosphonium ylide ($\text{Ph}_3\text{P}=\text{CR}_2$) to yield an alkene with complete regiochemical control of the double bond.',
-      reactants: r'Aldehyde or Ketone ($\text{R}_2\text{C}=\text{O}$) + Phosphonium Ylide ($\text{Ph}_3\text{P}=\text{CR}^\prime_2$)',
-      reagentsAndConditions: r'$\text{Ph}_3\text{P}$, Alkyl Halide, Strong base ($n\text{-BuLi}$, $\text{NaH}$, or $\text{KO}t\text{Bu}$), anhydrous THF, $0^\circ\text{C}$ to RT',
-      products: r'Alkene ($\text{R}_2\text{C}=\text{CR}^\prime_2$) + Triphenylphosphine Oxide ($\text{Ph}_3\text{P}=\text{O}$)',
-      isVerified: true,
-      keyApplications: [
-        r'Synthesis of natural products, polyenes, and non-migrated terminal/internal olefins without positional isomers.',
-        r'Z-selective olefination with unstabilized ylides; E-selective olefination with stabilized ylides or Horner-Wadsworth-Emmons.',
-      ],
-      limitations: [
-        r'Sterically hindered ketones react sluggishly; phosphine oxide byproduct removal can require chromatography.',
-      ],
-      steps: [
-        ReactionStep(
-          stepNumber: 1,
-          title: 'Ylide Generation & Nucleophilic Addition',
-          description:
-              r'Deprotonation of phosphonium salt by strong base yields the nucleophilic ylide ($\text{Ph}_3\text{P}^+-\text{C}^-\text{R}_2$). The carbanion attacks the electrophilic carbonyl carbon to generate a betaine intermediate.',
-          curvedArrowNotes:
-              r'Ylide $C^-$ attacks carbonyl carbon; carbonyl $\pi$-electrons shift to oxygen forming $O^-$.',
-          intermediate: r'$[\text{Ph}_3\text{P}^+-\text{CR}_2-\text{CR}^\prime_2-\text{O}^-]$ (Betaine zwitterion)',
-        ),
-        ReactionStep(
-          stepNumber: 2,
-          title: 'Cyclization to Oxaphosphetane Four-Membered Ring',
-          description:
-              r'The negatively charged oxygen attacks the positively charged phosphorus atom ($\text{P}^+$), collapsing into a 4-membered oxaphosphetane heterocycle.',
-          curvedArrowNotes:
-              r'Alkoxide oxygen lone pair coordinates directly with phosphorus d-orbitals.',
-          intermediate: r'4-Membered Oxaphosphetane ring containing P-O and P-C bonds',
-        ),
-        ReactionStep(
-          stepNumber: 3,
-          title: 'Retro-Cycloaddition & Alkene Formation',
-          description:
-              r'The oxaphosphetane spontaneously collapses via a concerted $[2+2]$ cycloreversion driven by the exceptionally high bond dissociation energy of the $\text{P}=\text{O}$ bond ($\sim 535\text{ kJ/mol}$).',
-          curvedArrowNotes:
-              r'$P-C$ bond cleaves to form $C=C$ alkene double bond; $C-O$ bond cleaves to form $P=O$ double bond.',
-          intermediate: r'Alkene ($\text{R}_2\text{C}=\text{CR}^\prime_2$) + $\text{Ph}_3\text{P}=\text{O}$',
-        ),
-      ],
-    ),
-
-    // 4. DIELS-ALDER [4+2] CYCLOADDITION
-    const ReactionMechanism(
-      id: 'diels_alder',
-      name: 'Diels-Alder [4+2] Cycloaddition',
-      aliases: ['Pericyclic Cycloaddition', 'Concerted Six-Membered Ring Synthesis'],
-      category: ReactionCategory.pericyclic,
-      summary:
-          r'Thermally allowed $[4\pi_s + 2\pi_s]$ concerted pericyclic cycloaddition between a conjugated diene (in s-cis conformation) and a dienophile (alkene/alkyne) to yield a substituted cyclohexene ring with stereospecific preservation of geometry.',
-      reactants: r'Conjugated Diene (s-cis) + Dienophile (electron-deficient alkene with EWG)',
-      reagentsAndConditions: r'Thermal conditions ($50\text{–}150^\circ\text{C}$) or Lewis Acid catalysis ($\text{AlCl}_3, \text{TiCl}_4, \text{Sc(OTf)}_3$)',
-      products: r'Substituted Cyclohexene Derivative (Endo-adduct favored kinetically)',
-      isVerified: true,
-      keyApplications: [
-        r'Total synthesis of complex terpenes, alkaloids, steroids (cortisone, reserpine), and bicyclic norbornene frameworks.',
-      ],
-      limitations: [
-        r'Dienes locked in an s-trans conformation (e.g. 1,3-cyclohexadiene derivatives with fixed trans geometry) cannot react.',
-      ],
-      steps: [
-        ReactionStep(
-          stepNumber: 1,
-          title: 'Conformational Alignment (s-cis Diene)',
-          description:
-              r'The conjugated diene adopts the requisite planar s-cis conformation to allow simultaneous overlap of orbital lobes at C1 and C4 with the dienophile.',
-          curvedArrowNotes:
-              r'FMO alignment: $\text{HOMO}_{\text{diene}} \rightarrow \text{LUMO}_{\text{dienophile}}$.',
-          intermediate: r'Suprafacial molecular complex in parallel plane alignment',
-        ),
-        ReactionStep(
-          stepNumber: 2,
-          title: 'Concerted Six-Electron Transition State',
-          description:
-              r'A single, concerted transition state forms via a cyclic flow of 6 $\pi$-electrons ($4\pi + 2\pi$), converting two weak $\pi$-bonds into two strong $\sigma$-bonds with aromatic transition state stabilization ($4n+2, n=1$).',
-          curvedArrowNotes:
-              r'Three simultaneous curved arrows forming 6-membered cyclic electron movement with secondary orbital interaction producing Endo selectivity.',
-          intermediate: r'Aromatic 6-membered boat-like transition state $[\ddagger]$',
-        ),
-        ReactionStep(
-          stepNumber: 3,
-          title: 'Cyclohexene Ring Closure (Stereospecific Product)',
-          description:
-              r'Two new $C-C$ $\sigma$-bonds and one new $C=C$ $\pi$-bond form with $100\%$ retention of dienophile stereochemistry (cis-dienophile gives cis-ring; trans gives trans-ring).',
-          curvedArrowNotes:
-              r'Fully bonded cyclohexene framework without ionic or radical intermediates.',
-          intermediate: r'Endo-substituted Cyclohexene Adduct',
-        ),
-      ],
-    ),
-
-    // 5. BECKMANN REARRANGEMENT
-    const ReactionMechanism(
-      id: 'beckmann',
-      name: 'Beckmann Rearrangement',
-      aliases: ['Oxime to Amide Rearrangement'],
-      category: ReactionCategory.rearrangements,
-      summary:
-          r'Acid-catalyzed rearrangement of ketoximes ($\text{R}_2\text{C}=\text{N-OH}$) into substituted secondary amides via anti-periplanar 1,2-migration of the group trans to the hydroxyl group.',
-      reactants: r'Ketoxime ($\text{R}_2\text{C}=\text{N-OH}$, derived from ketone + hydroxylamine)',
-      reagentsAndConditions: r'Protic/Lewis acids: $\text{H}_2\text{SO}_4$, $\text{PCl}_5$, $\text{SOCl}_2$, $\text{PPA}$ (polyphosphoric acid), or $\text{TsCl}$',
-      products: r'N-Substituted Amide or Lactam ($\text{R-CO-NH-R}^\prime$)',
-      isVerified: true,
-      keyApplications: [
-        r'Industrial synthesis of $\epsilon$-caprolactam (precursor to Nylon-6) from cyclohexanone oxime.',
-      ],
-      limitations: [
-        r'Aldoximes may dehydrate to nitriles ($\text{R-C}\equiv\text{N}$) rather than rearrange.',
-      ],
-      steps: [
-        ReactionStep(
-          stepNumber: 1,
-          title: 'Protonation / Activation of the Oxime Hydroxyl Group',
-          description:
-              r'Acid converts the poor leaving group ($-OH$) on the oxime nitrogen into a good leaving group ($-\text{OH}_2^+$ or $-\text{OTs}$).',
-          curvedArrowNotes:
-              r'Nitrogen-bound hydroxyl lone pair attacks $H^+$ from acid.',
-          intermediate: r'$[\text{R}_2\text{C}=\text{N-OH}_2^+]$ (Activated oxonium intermediate)',
-        ),
-        ReactionStep(
-          stepNumber: 2,
-          title: 'Anti-Periplanar 1,2-Migration & Nitrilium Ion Formation',
-          description:
-              r'The alkyl or aryl group positioned strictly **anti** to the departing water molecule migrates to nitrogen with retention of configuration, simultaneously expelling water.',
-          curvedArrowNotes:
-              r'Bond pair of anti-alkyl group attacks nitrogen while $N-O$ bond pair leaves with water.',
-          intermediate: r'$[\text{R-C}\equiv\text{N}^+-\text{R}^\prime]$ (Linear Nitrilium Cation)',
-        ),
-        ReactionStep(
-          stepNumber: 3,
-          title: 'Hydration of Nitrilium Ion & Tautomerization',
-          description:
-              r'Water attacks the electrophilic carbon of the nitrilium cation to form an imidic acid, which rapidly tautomerizes into the stable secondary amide or cyclic lactam.',
-          curvedArrowNotes:
-              r'$H_2O$ attacks carbocation carbon $\rightarrow$ imidic acid $[\text{R-C(OH)}=\text{NR}^\prime] \rightarrow$ amide $[\text{R-CO-NHR}^\prime]$.',
-          intermediate: r'N-Substituted Amide ($\text{R-CO-NHR}^\prime$)',
-        ),
-      ],
-    ),
-
-    // 6. BENZOIN CONDENSATION
-    const ReactionMechanism(
-      id: 'benzoin',
-      name: 'Benzoin Condensation',
-      aliases: ['Cyanide / Thiamine Catalyzed Umpolung'],
+      aliases: ['Olefin Synthesis', 'Phosphonium Ylide Carbonyl Olefination'],
       category: ReactionCategory.namedReactions,
       summary:
-          r'Cyanide or N-heterocyclic carbene (NHC / Vitamin B1) catalyzed coupling of two aromatic aldehydes to yield an $\alpha$-hydroxy ketone (benzoin) via polarity reversal (umpolung).',
-      reactants: r'2 Aromatic Aldehydes (e.g. 2 $\text{C}_6\text{H}_5\text{CHO}$)',
-      reagentsAndConditions: r'Catalytic $\text{NaCN}$ or $\text{KCN}$ in aqueous ethanol ($\text{EtOH/H}_2\text{O}$), or Thiamine hydrochloride / base, reflux',
-      products: r'$\alpha$-Hydroxy Ketone (Benzoin: $\text{C}_6\text{H}_5\text{-CH(OH)-CO-C}_6\text{H}_5$)',
+          r'Reaction of a phosphonium ylide (phosphorane) with an aldehyde or ketone to yield an alkene and triphenylphosphine oxide ($\text{Ph}_3\text{P=O}$) via a four-membered oxaphosphetane intermediate.',
+      reactants: r'Aldehyde or Ketone ($\text{R}_2\text{C=O}$) + Phosphonium Ylide ($\text{Ph}_3\text{P=CHR\x27}$)',
+      reagentsAndConditions: r'Strong base ($n\text{-BuLi, NaH, or NaHMDS}$ in dry THF / ether), $0^\circ\text{C}$ to RT',
+      products: r'Alkene ($\text{R}_2\text{C=CHR\x27}$) + Triphenylphosphine oxide ($\text{Ph}_3\text{P=O}$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('wittig'),
       isVerified: true,
       keyApplications: [
-        r'Synthesis of benzil ($\text{Ph-CO-CO-Ph}$) via oxidation, and heterocyclic imidazole/oxazole precursors.',
+        r'Precision alkene synthesis with unequivocal positioning of the double bond (no double bond migration).',
+        r'Synthesis of vitamin A, prostaglandins, and complex natural products.',
       ],
       limitations: [
-        r'Aliphatic aldehydes undergo Aldol condensation or polymerize instead of benzoin coupling.',
+        r'Sterically hindered ketones react slowly or fail.',
+        r'Non-stabilized ylides give predominantly (Z)-alkenes, while stabilized ylides give (E)-alkenes.',
       ],
       steps: [
         ReactionStep(
           stepNumber: 1,
-          title: 'Cyanide Addition & Cyanohydrin Anion Generation',
+          title: 'Nucleophilic Ylide Addition [2+2 Cycloaddition]',
           description:
-              r'Cyanide ion acts as a specific nucleophile, attacking the carbonyl carbon of benzaldehyde to form a cyanohydrin intermediate.',
+              r'The carbanionic carbon of the ylide attacks the carbonyl carbon, and carbonyl oxygen attacks the phosphorus atom in a concerted $[2+2]$ cycloaddition to create a 4-membered oxaphosphetane ring.',
           curvedArrowNotes:
-              r'$:C\equiv N^-$ attacks carbonyl carbon; carbonyl $\pi$-electrons shift to oxygen.',
-          intermediate: r'$[\text{Ph-CH(O}^-)\text{CN}]$ (Tetrahedral adduct)',
+              r'Curved arrow from ylide $C^-$ to carbonyl carbon; curved arrow from $C=O$ oxygen to phosphorus atom $P^+$.',
+          intermediate: r'Oxaphosphetane (4-Membered Cyclic Intermediate)',
         ),
         ReactionStep(
           stepNumber: 2,
-          title: 'Proton Transfer & Polarity Inversion (Umpolung)',
+          title: 'Retro-[2+2] Cycloreversion (Driving Force)',
           description:
-              r'Intramolecular proton shift converts the former electrophilic carbonyl carbon into a resonance-stabilized carbanion nucleophile, stabilized by both the phenyl ring and cyano group.',
+              r'The oxaphosphetane ring collapses via retro-[2+2] cleavage driven by the formation of the exceptionally strong phosphorus-oxygen bond ($P=O$, $\sim 540\text{ kJ/mol}$).',
           curvedArrowNotes:
-              r'$\alpha-H$ is abstracted; negative charge delocalizes into cyano group $[\text{Ph-C}^-(\text{OH})\text{CN} \leftrightarrow \text{Ph-C(OH)}=\text{C}=\text{N}^-]$.',
-          intermediate: r'$[\text{Ph-C}^-(\text{OH})\text{CN}]$ (Umpolung carbanion nucleophile)',
-        ),
-        ReactionStep(
-          stepNumber: 3,
-          title: 'Addition to Second Aldehyde & Cyanide Expulsion',
-          description:
-              r'The carbanion attacks the carbonyl carbon of a second benzaldehyde molecule. A rapid proton transfer occurs, followed by elimination of the cyanide catalyst to yield benzoin.',
-          curvedArrowNotes:
-              r'Alkoxide oxygen collapses to reform $C=O$ while $CN^-$ leaves as a regenerated catalytic species.',
-          intermediate: r'$\text{Ph-CH(OH)-CO-Ph}$ (Benzoin) + $\text{CN}^-$ (Catalyst regenerated)',
+              r'C-P bond electrons shift to form $C=C$ double bond; C-O bond electrons shift to form $P=O$ double bond.',
+          intermediate: r'Alkene + $\text{Ph}_3\text{P=O}$ (Triphenylphosphine oxide)',
         ),
       ],
     ),
 
-    // 7. GRIGNARD ADDITION TO CARBONYLS
-    const ReactionMechanism(
-      id: 'grignard',
-      name: 'Grignard Reaction',
-      aliases: ['Organomagnesium Carbonyl Addition'],
-      category: ReactionCategory.organometallics,
+    // 8. DIELS-ALDER CYCLOADDITION
+    ReactionMechanism(
+      id: 'diels_alder',
+      name: 'Diels-Alder [4+2] Cycloaddition',
+      aliases: ['[4+2] Cycloaddition', 'Diene-Dienophile Addition', 'Endo-Selective Cyclization'],
+      category: ReactionCategory.pericyclic,
       summary:
-          r'Addition of an organomagnesium halide ($\text{R-MgX}$) to aldehydes, ketones, or esters to synthesize primary, secondary, or tertiary alcohols with C-C bond formation.',
-      reactants: r'Carbonyl ($\text{HCHO}$, $\text{R-CHO}$, or $\text{R}_2\text{C}=\text{O}$) + Grignard Reagent ($\text{R}^\prime\text{MgX}$)',
-      reagentsAndConditions: r'Anhydrous ether or THF solvent ($\text{Et}_2\text{O}$), moisture-free ($N_2$ atmosphere), followed by acidic workup ($\text{H}_3\text{O}^+$)',
-      products: r'Alcohol ($1^\circ, 2^\circ, \text{ or } 3^\circ$) + $\text{Mg(OH)X}$',
+          r'Thermally allowed, concerted, suprafacial pericyclic $[4\pi_s + 2\pi_s]$ cycloaddition between a conjugated diene in s-cis conformation and a dienophile to form a cyclohexene ring with high stereospecificity and endo selectivity.',
+      reactants: r'Conjugated diene (s-cis) + Dienophile (electron-deficient alkene/alkyne)',
+      reagentsAndConditions: r'Thermal ($\Delta$, $25\text{–}150^\circ\text{C}$) or Lewis Acid catalyst ($\text{AlCl}_3, \text{TiCl}_4$)',
+      products: r'Substituted Cyclohexene Derivative (Endo Adduct)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('diels_alder'),
       isVerified: true,
       keyApplications: [
-        r'Versatile C-C bond construction in complex pharmaceutical targets and natural products.',
+        r'Construction of polycyclic frameworks, steroids, cantharidin, and reserpine.',
+        r'Total stereochemical control of up to 4 contiguous stereocenters in a single step.',
       ],
       limitations: [
-        r'Incompatible with acidic protons ($-OH, -NH_2, -COOH, -C\equiv CH$) which quench the reagent to alkane.',
+        r'Dienes locked in an s-trans conformation (e.g. fixed trans-rings) cannot undergo the reaction.',
       ],
       steps: [
         ReactionStep(
           stepNumber: 1,
-          title: 'Coordination & Nucleophilic Attack',
+          title: 'Concerted Suprafacial Overlap & Aromatic Transition State',
           description:
-              r'The magnesium atom coordinates to carbonyl oxygen, activating the carbonyl. The polarized carbon ($\text{R}^{\delta-}-\text{Mg}^{\delta+}$) attacks the electrophilic carbonyl carbon via a cyclic 6-membered or bimolecular transition state.',
+              r'HOMO of the diene interacts with the LUMO of the dienophile in a cyclic, 6-electron aromatic transition state without ionic or radical intermediates.',
           curvedArrowNotes:
-              r'$C-Mg$ bond pair attacks carbonyl carbon; carbonyl $\pi$-electrons coordinate to magnesium forming magnesium alkoxide salt.',
-          intermediate: r'$[\text{R}_2\text{C(R}^\prime)\text{-O}^-\text{MgX}^+]$ (Magnesium Alkoxide Complex)',
+              r'Three curved arrows moving synchronously around the 6-membered perimeter: diene $\pi \rightarrow$ new $\sigma$ bond, dienophile $\pi \rightarrow$ new $\sigma$ bond, residual diene $\pi \rightarrow$ new internal $\pi$ bond.',
+          intermediate: r'$[\text{Diene}\cdots\text{Dienophile}]^\ddagger$ (Aromatic 6-Electron Transition State)',
+        ),
+      ],
+    ),
+
+    // 9. GRIGNARD REACTION
+    ReactionMechanism(
+      id: 'grignard',
+      name: 'Grignard Reaction',
+      aliases: ['Organomagnesium Addition', 'Grignard Carbonyl Addition'],
+      category: ReactionCategory.organometallics,
+      summary:
+          r'Addition of an alkyl- or arylmagnesium halide ($\text{R-MgX}$) to an electrophilic carbonyl carbon (aldehyde, ketone, ester) followed by acidic hydrolysis to form an alcohol with a newly formed carbon-carbon bond.',
+      reactants: r'Carbonyl compound ($\text{R\x27}_2\text{C=O}$) + Grignard Reagent ($\text{R-MgX}$)',
+      reagentsAndConditions: r'Anhydrous ether or THF solvent under inert $\text{N}_2/\text{Ar}$ atmosphere, followed by $\text{H}_3\text{O}^+$ aqueous workup',
+      products: r'Alcohol ($1^\circ$ from $\text{HCHO}$, $2^\circ$ from aldehydes, $3^\circ$ from ketones/esters)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('grignard'),
+      isVerified: true,
+      keyApplications: [
+        r'Fundamental carbon-carbon bond forming reaction in organic synthesis for complex alcohol preparation.',
+        r'Synthesis of carboxylic acids via carboxylation of Grignard reagents with dry ice ($\text{CO}_2$).',
+      ],
+      limitations: [
+        r'Incompatible with acidic protons ($\text{-OH, -NH}_2, \text{-COOH, -SH}$) in the substrate or solvent (acts as a strong base instead).',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Nucleophilic Carbonyl Addition',
+          description:
+              r'The polarized, nucleophilic carbon of the Grignard reagent ($\text{R}^{\delta-}$) attacks the electrophilic carbonyl carbon, forming a halomagnesium alkoxide.',
+          curvedArrowNotes:
+              r'Electron pair from C-Mg bond attacks carbonyl carbon; carbonyl $\pi$-electrons shift to oxygen to coordinate with $MgX^+$.',
+          intermediate: r'$\text{R\x27}_2\text{C(R)-O}^-\text{MgX}^+$ (Halomagnesium Alkoxide Complex)',
         ),
         ReactionStep(
           stepNumber: 2,
           title: 'Acidic Hydrolysis Workup',
           description:
-              r'Dilute aqueous acid ($\text{H}_3\text{O}^+$ / $\text{NH}_4\text{Cl}$) protonates the alkoxide oxygen, releasing the target alcohol and water-soluble magnesium salts.',
+              r'Aqueous acid protonates the alkoxide oxygen, releasing the free alcohol and water-soluble magnesium salts.',
           curvedArrowNotes:
-              r'Alkoxide oxygen attacks $H_3O^+$ proton; $MgX^+$ coordinates with counterion.',
-          intermediate: r'$\text{R}_2\text{C(R}^\prime)\text{OH}$ (Substituted Alcohol)',
+              r'Alkoxide oxygen lone pair captures proton from $\text{H}_3\text{O}^+$.',
+          intermediate: r'$\text{R\x27}_2\text{C(R)-OH}$ (Alcohol Product) + $\text{MgX(OH)}$',
         ),
       ],
     ),
 
-    // 8. SN1 vs SN2 SUBSTITUTION
-    const ReactionMechanism(
-      id: 'sn1_sn2',
-      name: 'Nucleophilic Substitution (SN1 & SN2)',
-      aliases: ['Unimolecular vs Bimolecular Substitution'],
-      category: ReactionCategory.namedReactions,
+    // 10. BECKMANN REARRANGEMENT
+    ReactionMechanism(
+      id: 'beckmann',
+      name: 'Beckmann Rearrangement',
+      aliases: ['Ketoxime to Amide Rearrangement', 'Caprolactam Synthesis'],
+      category: ReactionCategory.rearrangements,
       summary:
-          r'Fundamental aliphatic substitution: $\text{S}_\text{N}1$ proceeds via a two-step carbocation pathway with racemization, whereas $\text{S}_\text{N}2$ proceeds via a one-step concerted backside attack with complete Walden inversion.',
-      reactants: r'Alkyl Halide ($\text{R-X}$) + Nucleophile ($\text{Nu}^-$)',
-      reagentsAndConditions: r'$\text{S}_\text{N}1$: Polar protic solvent ($\text{H}_2\text{O}, \text{EtOH}$); $\text{S}_\text{N}2$: Polar aprotic solvent ($\text{DMSO, DMF, Acetone}$)',
-      products: r'Substituted Product ($\text{R-Nu}$) + Halide Leaving Group ($\text{X}^-$)',
+          r'Acid-catalyzed rearrangement of a ketoxime to an N-substituted amide. Migration of the group positioned anti (trans) to the oxime hydroxyl group occurs concertedly with water loss, followed by nucleophilic hydration of the resulting nitrilium ion.',
+      reactants: r'Ketoxime ($\text{R(R\x27)C=N-OH}$)',
+      reagentsAndConditions: r'Acid catalyst ($\text{H}_2\text{SO}_4, \text{PCl}_5, \text{SOCl}_2, \text{PPA}$), Heat',
+      products: r'N-Substituted Amide ($\text{R-CO-NH-R\x27}$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('beckmann'),
       isVerified: true,
       keyApplications: [
-        r'Interconversion of functional groups (halides $\rightarrow$ alcohols, ethers, nitriles, amines, azides).',
+        r'Industrial synthesis of $\varepsilon$-caprolactam from cyclohexanone oxime for Nylon-6 production.',
+        r'Regioselective synthesis of secondary amides and lactams.',
       ],
       limitations: [
-        r'Aryl and vinyl halides do not undergo $\text{S}_\text{N}1$ or $\text{S}_\text{N}2$ due to $sp^2$ $C-X$ bond strength and steric repulsion.',
+        r'Requires specific anti-periplanar geometry: the migrating alkyl/aryl group must be strictly anti to the departing -OH leaving group.',
       ],
       steps: [
         ReactionStep(
           stepNumber: 1,
-          title: 'SN1 Step 1: Heterolysis & Planar Carbocation RDS',
+          title: 'Oxime Activation & Anti-Migration (Concerted)',
           description:
-              r'The leaving group departs spontaneously to generate a planar, $sp^2$-hybridized carbocation ($3^\circ > 2^\circ \gg 1^\circ$). This is the slow rate-determining step ($\text{Rate} = k[\text{RX}]$).',
+              r'Protonation of the oxime hydroxyl group converts it into a good leaving group ($\text{-OH}_2^+$). The alkyl/aryl group anti to the leaving group migrates with its electron pair to nitrogen as water departs.',
           curvedArrowNotes:
-              r'$C-X$ bond electrons leave with $X^-$; carbocation assumes $120^\circ$ trigonal planar geometry.',
-          intermediate: r'$[\text{R}_3\text{C}^+]$ (Planar Carbocation Intermediate)',
+              r'Curved arrow from anti C-C bond to nitrogen atom; curved arrow from N-O bond onto departing $\text{H}_2\text{O}$.',
+          intermediate: r'$[\text{R-C}\equiv\text{N-R\x27}]^+$ (Nitrilium Ion Intermediate)',
         ),
         ReactionStep(
           stepNumber: 2,
-          title: 'SN1 Step 2: Front / Back Nucleophilic Attack',
+          title: 'Hydration & Tautomerization',
           description:
-              r'Nucleophile attacks the vacant $p$-orbital of the carbocation with equal probability from either face, yielding a racemic mixture ($\text{Inversion} + \text{Retention}$).',
+              r'Water attacks the electrophilic carbon of the nitrilium ion. Deprotonation yields an imidic acid, which rapidly tautomerizes to the stable amide.',
           curvedArrowNotes:
-              r'Nucleophile lone pair attacks $p$-orbital from top or bottom face.',
-          intermediate: r'$\text{R}_3\text{C-Nu}$ (Racemized Product)',
+              r'Water oxygen attacks nitrilium carbon; imidic acid $O-H$ proton shifts to nitrogen.',
+          intermediate: r'$\text{R-CO-NH-R\x27}$ (N-Substituted Amide)',
+        ),
+      ],
+    ),
+
+    // 11. BENZOIN CONDENSATION
+    ReactionMechanism(
+      id: 'benzoin',
+      name: 'Benzoin Condensation',
+      aliases: ['Cyanide Umpolung', 'Acyloin Condensation of Aromatic Aldehydes'],
+      category: ReactionCategory.namedReactions,
+      summary:
+          r'Cyanide-catalyzed condensation between two molecules of an aromatic aldehyde to form an $\alpha$-hydroxy ketone (benzoin). Cyanide reverses the normal polarity (umpolung) of the carbonyl carbon, converting it into a powerful nucleophile.',
+      reactants: r'2 Aromatic aldehydes ($\text{Ar-CHO}$)',
+      reagentsAndConditions: r'Catalytic $\text{NaCN}$ or $\text{KCN}$ (or Thiamine vitamin B1) in aqueous ethanol, Reflux',
+      products: r'Benzoin ($\alpha$-hydroxy ketone, $\text{Ar-CH(OH)-CO-Ar}$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('benzoin'),
+      isVerified: true,
+      keyApplications: [
+        r'Synthesis of benzoin, benzil, and heterocyclic imidazole compounds.',
+        r'Classic demonstration of organocatalytic Umpolung (polarity reversal).',
+      ],
+      limitations: [
+        r'Limited to aromatic aldehydes and specific heterocyclic aldehydes lacking acidic $\alpha$-hydrogens.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Cyanide Addition & Umpolung Carbanion Formation',
+          description:
+              r'Cyanide ion adds to the carbonyl carbon. Subsequent intramolecular proton transfer produces a resonance-stabilized carbanion with reversed polarity ($d^1$ synthon).',
+          curvedArrowNotes:
+              r'Cyanide $:CN^-$ attacks carbonyl carbon; proton shifts from C to O; conjugate base formed with $C^-$ stabilized by cyano group.',
+          intermediate: r'$[\text{Ar-C}^-\text{(OH)(CN)}]$ (Umpolung Carbanion Intermediate)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Nucleophilic Addition to Second Aldehyde',
+          description:
+              r'The carbanion attacks the carbonyl group of a second aldehyde molecule to form a carbon-carbon bond.',
+          curvedArrowNotes:
+              r'Carbanion lone pair attacks second aldehyde carbonyl carbon; second carbonyl opens to $O^-$.',
+          intermediate: r'Alkoxide intermediate',
         ),
         ReactionStep(
           stepNumber: 3,
-          title: 'SN2 Concerted Pathway: Backside Attack & Walden Inversion',
+          title: 'Cyanide Elimination & Benzoin Formation',
           description:
-              r'Strong nucleophile attacks the $\sigma^*(\text{C-X})$ antibonding orbital at $180^\circ$ to the leaving group, passing through a pentacoordinate trigonal bipyramidal transition state with 100% Walden inversion.',
+              r'Proton transfer followed by collapse of the alkoxide ejects the cyanide ion as a leaving group, regenerating the catalyst.',
           curvedArrowNotes:
-              r'Concerted attack from back while $X^-$ departs from front $[\text{Nu}\cdots\text{C}\cdots\text{X}]^{\ddagger}$.',
-          intermediate: r'$\text{R-Nu}$ (Inverted Configuration Product)',
+              r'Alkoxide oxygen electron pair collapses to form $C=O$ double bond, expelling $:CN^-$ catalyst.',
+          intermediate: r'$\text{Ar-CH(OH)-CO-Ar}$ (Benzoin)',
         ),
       ],
     ),

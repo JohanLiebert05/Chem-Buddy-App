@@ -9,6 +9,9 @@ import '../utils/chemistry_text_formatter.dart';
 
 /// Reusable widget for rendering MSc Chemistry notes, AI answers,
 /// flashcard questions, and quiz options with native LaTeX math & chemical notation.
+///
+/// Fully supports simultaneous Markdown (headings, bold, lists, tables) AND
+/// LaTeX formulas (inline $...$ and display $$...$$) without raw syntax bleed-through.
 class ChemistryMarkdownView extends StatelessWidget {
   const ChemistryMarkdownView({
     super.key,
@@ -33,99 +36,25 @@ class ChemistryMarkdownView extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final raw = text.trim();
+    // 1. Sanitize chemistry & auto-wrap naked LaTeX expressions
+    final sanitized = _preprocessText(text.trim());
 
-    // Check if text contains LaTeX delimiters ($$...$$ or $...$)
-    // Guard against currency dollar signs: $n must be followed by a LaTeX char, not a digit or space alone
-    final hasDisplayMath = raw.contains(r'$$') || raw.contains(r'\[');
-    final hasInlineMath = raw.contains(r'\frac') ||
-        raw.contains(r'\xrightarrow') ||
-        raw.contains(r'\rightleftharpoons') ||
-        raw.contains(r'\text{') ||
-        RegExp(r'\$[A-Za-z\\{]').hasMatch(raw);
+    // 2. Check if display math blocks ($$...$$ or \[...\]) exist
+    final hasDisplayMath = sanitized.contains(r'$$') || sanitized.contains(r'\[');
+    final hasTable = RegExp(r'^\|.+\|', multiLine: true).hasMatch(sanitized);
 
-    final hasTable = RegExp(r'^\|.+\|', multiLine: true).hasMatch(raw);
-
-    if (!hasDisplayMath && !hasInlineMath) {
-      // Standard chemistry-formatted markdown
-      final formatted = ChemistryTextFormatter.format(raw);
-      final body = MarkdownBody(
-        data: formatted,
-        selectable: selectable,
-        styleSheet: _buildMarkdownStyleSheet(context, textStyle),
-        builders: hasTable ? {'table': _ScrollableTableBuilder()} : {},
-      );
-      return body;
+    if (!hasDisplayMath) {
+      // Direct unified markdown + inline LaTeX rendering
+      return _buildMarkdownBlock(context, sanitized, textStyle, selectable, hasTable);
     }
 
-    // Parse and render hybrid Markdown + LaTeX blocks
-    return _HybridChemistryRenderer(
-      content: raw,
-      textStyle: textStyle,
-      selectable: selectable,
-      hasTable: hasTable,
-    );
-  }
-
-
-  static MarkdownStyleSheet _buildMarkdownStyleSheet(BuildContext? context, TextStyle? overrideStyle) {
-    final base = overrideStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.45);
-    return MarkdownStyleSheet(
-      p: base,
-      strong: base.copyWith(fontWeight: FontWeight.bold, color: Colors.white),
-      em: base.copyWith(fontStyle: FontStyle.italic, color: AppColors.purpleBright),
-      h1: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800, height: 1.3),
-      h2: const TextStyle(color: Colors.white, fontSize: 17.5, fontWeight: FontWeight.w700, height: 1.3),
-      h3: const TextStyle(color: AppColors.purpleBright, fontSize: 15.5, fontWeight: FontWeight.w700, height: 1.3),
-      listBullet: const TextStyle(color: AppColors.purpleBright, fontSize: 14),
-      tableHead: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-      tableBorder: TableBorder.all(color: AppColors.border, width: 0.6),
-      tableBody: base,
-      tableColumnWidth: const FlexColumnWidth(),
-      code: TextStyle(
-        color: AppColors.purpleBright,
-        backgroundColor: AppColors.surfaceElevated,
-        fontFamily: 'monospace',
-        fontSize: (base.fontSize ?? 14) * 0.92,
-      ),
-      codeblockDecoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
-      ),
-      blockquoteDecoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
-      ),
-    );
-  }
-
-}
-
-class _HybridChemistryRenderer extends StatelessWidget {
-  const _HybridChemistryRenderer({
-    required this.content,
-    this.textStyle,
-    this.selectable = true,
-    this.hasTable = false,
-  });
-
-  final String content;
-  final TextStyle? textStyle;
-  final bool selectable;
-  final bool hasTable;
-
-
-  @override
-  Widget build(BuildContext context) {
+    // Split display math blocks ($$...$$) from Markdown narrative blocks
+    final blocks = _splitIntoBlocks(sanitized);
     final defaultStyle = textStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.45);
-    final blocks = _splitIntoBlocks(content);
 
     final widgetList = <Widget>[];
 
-    for (var i = 0; i < blocks.length; i++) {
-      final b = blocks[i];
+    for (final b in blocks) {
       if (b.isDisplayMath) {
         widgetList.add(
           Padding(
@@ -146,7 +75,7 @@ class _HybridChemistryRenderer extends StatelessWidget {
                   mathStyle: MathStyle.display,
                   textStyle: defaultStyle.copyWith(color: Colors.white, fontSize: (defaultStyle.fontSize ?? 14.5) * 1.1),
                   onErrorFallback: (err) => Text(
-                    ChemistryTextFormatter.format(b.text),
+                    ChemistryTextFormatter.toUnicodeMath(b.text),
                     style: defaultStyle.copyWith(color: AppColors.purpleBright, fontFamily: 'monospace'),
                   ),
                 ),
@@ -155,8 +84,9 @@ class _HybridChemistryRenderer extends StatelessWidget {
           ),
         );
       } else {
-        // Line with potential inline math
-        widgetList.add(_buildInlineMathParagraph(b.text, defaultStyle));
+        widgetList.add(
+          _buildMarkdownBlock(context, b.text, defaultStyle, false, hasTable),
+        );
       }
     }
 
@@ -172,62 +102,62 @@ class _HybridChemistryRenderer extends StatelessWidget {
     return column;
   }
 
-  Widget _buildInlineMathParagraph(String text, TextStyle defaultStyle) {
-    if (!text.contains(r'$') && !text.contains(r'\(')) {
-      // Pure markdown / chemistry text
-      final formatted = ChemistryTextFormatter.format(text);
-      return MarkdownBody(
-        data: formatted,
-        selectable: false,
-        styleSheet: ChemistryMarkdownView._buildMarkdownStyleSheet(null, defaultStyle),
-      );
-    }
-
-    final spans = <InlineSpan>[];
-    final pattern = RegExp(r'\$([^\$\n]+?)\$|\\\(([^\)]+?)\\\)');
-    var lastIndex = 0;
-
-    for (final match in pattern.allMatches(text)) {
-      if (match.start > lastIndex) {
-        final prefix = text.substring(lastIndex, match.start);
-        spans.add(TextSpan(text: ChemistryTextFormatter.format(prefix), style: defaultStyle));
-      }
-
-      final mathCode = match.group(1) ?? match.group(2) ?? '';
-      spans.add(
-        WidgetSpan(
-          alignment: PlaceholderAlignment.middle,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Math.tex(
-              _sanitizeLatex(mathCode),
-              mathStyle: MathStyle.text,
-              textStyle: defaultStyle.copyWith(color: Colors.white),
-              onErrorFallback: (err) => Text(
-                ChemistryTextFormatter.format(mathCode),
-                style: defaultStyle.copyWith(color: AppColors.purpleBright),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      lastIndex = match.end;
-    }
-
-    if (lastIndex < text.length) {
-      final suffix = text.substring(lastIndex);
-      spans.add(TextSpan(text: ChemistryTextFormatter.format(suffix), style: defaultStyle));
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text.rich(
-        TextSpan(children: spans),
-        style: defaultStyle,
-      ),
+  static Widget _buildMarkdownBlock(
+    BuildContext context,
+    String content,
+    TextStyle? textStyle,
+    bool selectable,
+    bool hasTable,
+  ) {
+    return MarkdownBody(
+      data: content,
+      selectable: selectable,
+      styleSheet: _buildMarkdownStyleSheet(context, textStyle),
+      extensionSet: md.ExtensionSet.gitHubFlavored,
+      inlineSyntaxes: [
+        LatexInlineSyntax(),
+      ],
+      builders: {
+        'latex-inline': _LatexInlineBuilder(textStyle: textStyle),
+        if (hasTable) 'table': _ScrollableTableBuilder(),
+      },
     );
+  }
+
+  static String _preprocessText(String input) {
+    var s = input;
+
+    // Normalize \[...\] display math → $$...$$
+    s = s.replaceAllMapped(RegExp(r'\\\[(.*?)\\\]', dotAll: true), (m) {
+      final inner = (m[1] ?? '').trim();
+      return '\n\$\$$inner\$\$\n';
+    });
+
+    // Normalize \(...\) inline math → $...$
+    s = s.replaceAllMapped(RegExp(r'\\\(([^\)]+?)\\\)'), (m) {
+      final inner = (m[1] ?? '').trim();
+      return '\$$inner\$';
+    });
+
+    // Wrap naked LaTeX expressions that LLM forgot to put in $...$
+    // e.g. "Kw = [H3O+][OH-] = 1.0 \times 10^{-14}" or "\frac{a}{b}" outside of $
+    s = s.replaceAllMapped(RegExp(r'(?<!\$|\w)(\b[A-Za-z0-9_+\-()\[\]\s=]+?\\times\s*10\^?\{?-?\d+\}?)(?!\$)'), (m) {
+      final expr = m[1]?.trim() ?? '';
+      return '\$$expr\$';
+    });
+
+    // Auto-balance single unclosed dollar signs in a line
+    final lines = s.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      final dollarCount = RegExp(r'(?<!\\)\$').allMatches(line).length;
+      if (dollarCount == 1 && (line.contains(r'\') || line.contains('=') || line.contains('^') || line.contains('_'))) {
+        lines[i] = '$line\$';
+      }
+    }
+    s = lines.join('\n');
+
+    return s;
   }
 
   static String _sanitizeLatex(String input) {
@@ -237,6 +167,9 @@ class _HybridChemistryRenderer extends StatelessWidget {
     s = s.replaceAll(r'->', r'\to');
     s = s.replaceAll(r'⇌', r'\rightleftharpoons');
     s = s.replaceAll(r'→', r'\to');
+    s = s.replaceAll(r'\degree', r'^\circ');
+    s = s.replaceAll(r'^\circ C', r'^\circ\text{C}');
+    s = s.replaceAll(r'^\circC', r'^\circ\text{C}');
     return s;
   }
 
@@ -270,6 +203,91 @@ class _HybridChemistryRenderer extends StatelessWidget {
 
     return blocks;
   }
+
+  static MarkdownStyleSheet _buildMarkdownStyleSheet(BuildContext? context, TextStyle? overrideStyle) {
+    final base = overrideStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.45);
+    return MarkdownStyleSheet(
+      p: base,
+      strong: base.copyWith(fontWeight: FontWeight.bold, color: Colors.white),
+      em: base.copyWith(fontStyle: FontStyle.italic, color: AppColors.purpleBright),
+      h1: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800, height: 1.3),
+      h2: const TextStyle(color: Colors.white, fontSize: 17.5, fontWeight: FontWeight.w700, height: 1.3),
+      h3: const TextStyle(color: AppColors.purpleBright, fontSize: 15.5, fontWeight: FontWeight.w700, height: 1.3),
+      listBullet: const TextStyle(color: AppColors.purpleBright, fontSize: 14),
+      tableHead: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+      tableBorder: TableBorder.all(color: AppColors.border, width: 0.6),
+      tableBody: base,
+      tableColumnWidth: const FlexColumnWidth(),
+      code: TextStyle(
+        color: AppColors.purpleBright,
+        backgroundColor: AppColors.surfaceElevated,
+        fontFamily: 'monospace',
+        fontSize: (base.fontSize ?? 14) * 0.92,
+      ),
+      codeblockDecoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      blockquoteDecoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+      ),
+    );
+  }
+}
+
+/// Custom InlineSyntax that catches `$math$` expressions and converts them to
+/// an element with tag 'latex-inline' for `_LatexInlineBuilder`.
+class LatexInlineSyntax extends md.InlineSyntax {
+  LatexInlineSyntax() : super(r'(?<!\\|\$)\$([^\$\n]+?)\$(?!\$)');
+
+  @override
+  bool onMatch(md.InlineParser parser, Match match) {
+    final math = match.group(1);
+    if (math == null || math.trim().isEmpty) return false;
+    final el = md.Element.text('latex-inline', math.trim());
+    parser.addNode(el);
+    return true;
+  }
+}
+
+/// Custom MarkdownElementBuilder that renders LaTeX inline formulas using
+/// `flutter_math_fork` with fallback to clean Unicode mathematical notation.
+class _LatexInlineBuilder extends MarkdownElementBuilder {
+  _LatexInlineBuilder({this.textStyle});
+
+  final TextStyle? textStyle;
+
+  @override
+  bool isBlockElement() => false;
+
+  @override
+  Widget? visitElementAfterWithContext(
+    BuildContext context,
+    md.Element element,
+    TextStyle? preferredStyle,
+    TextStyle? parentStyle,
+  ) {
+    final mathCode = element.textContent;
+    final style = preferredStyle ?? parentStyle ?? textStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5);
+    final sanitized = ChemistryMarkdownView._sanitizeLatex(mathCode);
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Math.tex(
+        sanitized,
+        mathStyle: MathStyle.text,
+        textStyle: style.copyWith(color: Colors.white),
+        onErrorFallback: (err) => Text(
+          ChemistryTextFormatter.toUnicodeMath(mathCode),
+          style: style.copyWith(color: AppColors.purpleBright, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
 }
 
 class _Block {
@@ -285,7 +303,6 @@ class _ScrollableTableBuilder extends MarkdownElementBuilder {
   Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
     if (element.tag != 'table') return null;
 
-    // Build the table widget using standard rendering, then wrap in horizontal scroll
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
@@ -300,7 +317,7 @@ class _ScrollableTableBuilder extends MarkdownElementBuilder {
           padding: const EdgeInsets.only(bottom: 6),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 280),
-            child: const SizedBox(), // Table will be rendered by MarkdownBody's own table builder
+            child: const SizedBox(),
           ),
         ),
       ),

@@ -94,6 +94,7 @@ class ReactionMechanism {
   final List<ReactionStep> steps;
   final String? svgPath;
   final String? svgUrl;
+  final String? svgContent;
   final List<String> keyApplications;
   final List<String> limitations;
   final bool isVerified;
@@ -110,6 +111,7 @@ class ReactionMechanism {
     this.steps = const [],
     this.svgPath,
     this.svgUrl,
+    this.svgContent,
     this.keyApplications = const [],
     this.limitations = const [],
     this.isVerified = false,
@@ -133,6 +135,7 @@ class ReactionMechanism {
           .toList(),
       svgPath: json['svg_path'] as String?,
       svgUrl: json['svg_url'] as String?,
+      svgContent: json['svg_content'] as String?,
       keyApplications: List<String>.from(json['key_applications'] as List? ?? const []),
       limitations: List<String>.from(json['limitations'] as List? ?? const []),
       isVerified: json['is_verified'] as bool? ?? false,
@@ -151,11 +154,13 @@ class ReactionMechanism {
     'steps': steps.map((s) => s.toJson()).toList(),
     if (svgPath != null) 'svg_path': svgPath,
     if (svgUrl != null) 'svg_url': svgUrl,
+    if (svgContent != null) 'svg_content': svgContent,
     'key_applications': keyApplications,
     'limitations': limitations,
     'is_verified': isVerified,
   };
 }
+
 
 enum AskAiIntent {
   conceptExplanation,

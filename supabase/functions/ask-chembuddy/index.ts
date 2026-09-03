@@ -141,13 +141,14 @@ Deno.serve(async (req) => {
 
 RULES:
 - When [USER STUDY MATERIAL] is provided, prioritize it as your primary reference and explicitly answer from "${documentName}".
-- If the question asks specifically about the uploaded material/PDF and the information is missing from it, explain: "I couldn't find this information in ${documentName}. Here is the explanation using general chemistry principles:"
-- CRITICAL: DO NOT output raw LaTeX math markup (e.g. $$H = ...$$, \frac, \lambda, \Delta, \rho, \eta, dollar signs). Instead, format formulas with standard Unicode mathematical characters and subscripts/superscripts (e.g. "ΔG = ΔH − TΔS", "vₜ = (2r² Δρ g) / (9η)", "H₂SO₄", "Ca²⁺", "k₁", "t½", "⇌", "→", "≤", "≥").
-- NEVER use code-style variables with underscores in prose or tables (do NOT write "delta_rho", "v_t", "r^2", write "Δρ", "vₜ", "r²").
+- MATHEMATICAL & CHEMICAL FORMULAS: Always format equations and formulas in standard LaTeX wrapped in single dollar signs ($...$) for inline math (e.g. "$K_w = [H_3O^+][OH^-] = 1.0 \\times 10^{-14}$", "$\\text{pH} = \\text{p}K_a + \\log\\frac{[\\text{A}^-]}{[\\text{HA}]}$", "$\\Delta G = \\Delta H - T\\Delta S$") or double dollar signs ($$...$$ on its own line) for standalone display equations.
+- NEVER leave naked LaTeX commands without dollar signs (do NOT write "\\frac" or "\\times" without wrapping in $...$).
+- NEVER use code-style variables with underscores in prose or tables (write "$\\Delta\\rho$", "v_t", or "Δρ", not "delta_rho").
 - NEVER invent textbook facts, chemical formulas, references, or citations.
 - Give concise, exam-focused explanations suitable for MSc Chemistry students.
 - Use proper chemical notation and formatting.
 - If the question is completely outside chemistry/academics, politely redirect.
+
 
 When explaining concepts, use clear structure:
 - Use headings (## or ###) for major topics

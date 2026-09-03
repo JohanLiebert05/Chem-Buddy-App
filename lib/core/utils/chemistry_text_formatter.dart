@@ -54,7 +54,15 @@ class ChemistryTextFormatter {
   /// Main public entry point: sanitizes and formats any chemistry text or AI response.
   static String format(String? raw) => sanitizeChemistryResponse(raw);
 
+  /// Public converter: converts any LaTeX math expression or equation to a clean,
+  /// formatted Unicode mathematical representation with zero raw TeX commands.
+  static String toUnicodeMath(String? expr) {
+    if (expr == null || expr.isEmpty) return '';
+    return _cleanMathExpression(expr.trim());
+  }
+
   /// Comprehensive chemistry-aware sanitization pipeline.
+
   /// IMPORTANT: Preserves $...$ and $$...$$ delimiters so ChemistryMarkdownView
   /// can pass them to flutter_math_fork for native KaTeX rendering.
   static String sanitizeChemistryResponse(String? raw) {

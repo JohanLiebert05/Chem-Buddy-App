@@ -16,9 +16,10 @@ void main() {
       expect(names, contains('Diels-Alder [4+2] Cycloaddition'));
       expect(names, contains('Beckmann Rearrangement'));
       expect(names, contains('Benzoin Condensation'));
-      expect(names, contains('Grignard Reaction'));
-      expect(names, contains('Nucleophilic Substitution (SN1 & SN2)'));
+      expect(names, contains('SN1 Nucleophilic Substitution'));
+      expect(names, contains('SN2 Nucleophilic Substitution'));
     });
+
 
     test('Search by query finds matching mechanism by name or description', () {
       final results = service.search('aldol');

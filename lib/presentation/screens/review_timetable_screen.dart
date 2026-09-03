@@ -7,6 +7,7 @@ import '../../core/utils/haptics.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/timetable_entry.dart';
+import '../../data/services/timetable_parser_service.dart';
 import '../providers/app_providers.dart';
 
 class ReviewTimetableScreen extends ConsumerStatefulWidget {
@@ -15,25 +16,30 @@ class ReviewTimetableScreen extends ConsumerStatefulWidget {
     required this.initialEntries,
     this.rawText = '',
     this.replaceAll = true,
+    this.metadata,
   });
 
   final List<TimetableEntry> initialEntries;
   final String rawText;
   final bool replaceAll;
+  final TimetableMetadata? metadata;
 
   static Route<bool> route({
     required List<TimetableEntry> initialEntries,
     String rawText = '',
     bool replaceAll = true,
+    TimetableMetadata? metadata,
   }) {
     return MaterialPageRoute<bool>(
       builder: (_) => ReviewTimetableScreen(
         initialEntries: initialEntries,
         rawText: rawText,
         replaceAll: replaceAll,
+        metadata: metadata,
       ),
     );
   }
+
 
   @override
   ConsumerState<ReviewTimetableScreen> createState() => _ReviewTimetableScreenState();
@@ -340,6 +346,51 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
           key: _formKey,
           child: Column(
             children: [
+              // Institutional Metadata Card (if detected)
+              if (widget.metadata != null &&
+                  (widget.metadata!.institution.isNotEmpty ||
+                      widget.metadata!.department.isNotEmpty ||
+                      widget.metadata!.semester.isNotEmpty))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                  child: GlowCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    borderColor: AppColors.brandPrimary.withValues(alpha: 0.35),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.school_rounded, color: AppColors.purpleBright, size: 16),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                widget.metadata!.institution.isNotEmpty
+                                    ? widget.metadata!.institution
+                                    : widget.metadata!.department,
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (widget.metadata!.semester.isNotEmpty || widget.metadata!.department.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            [
+                              if (widget.metadata!.department.isNotEmpty && widget.metadata!.institution.isNotEmpty)
+                                widget.metadata!.department,
+                              if (widget.metadata!.semester.isNotEmpty) widget.metadata!.semester,
+                              if (widget.metadata!.effectiveDate.isNotEmpty) 'w.e.f. ${widget.metadata!.effectiveDate}',
+                            ].join(' • '),
+                            style: const TextStyle(color: AppColors.purpleBright, fontSize: 11.5, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+
               // OCR Summary banner
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
@@ -353,7 +404,7 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                       Expanded(
                         child: Text(
                           widget.rawText.isNotEmpty
-                              ? 'OCR recognized ${_slots.length} class slots. Edit, correct, or add missing lectures.'
+                              ? 'OCR recognized ${_slots.length} class slots with auto-resolved faculty. Edit, correct, or add lectures.'
                               : 'Edit, correct, and organize your weekly chemistry routine.',
                           style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.3),
                         ),
@@ -362,6 +413,7 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                   ),
                 ),
               ),
+
 
               // Editable Class Slots List
               Expanded(

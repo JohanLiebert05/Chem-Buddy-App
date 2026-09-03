@@ -39,6 +39,7 @@ dependencies:
   flutter_math_fork: ^0.7.2
   pdfx: ^2.11.0
   speech_to_text: ^7.0.0
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:

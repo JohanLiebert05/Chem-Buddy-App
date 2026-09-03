@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_card.dart';
+import '../../core/widgets/molecule_loader.dart';
 import '../../data/services/timetable_ocr.dart';
 import '../../data/services/timetable_parser_service.dart';
 import '../screens/review_timetable_screen.dart';
@@ -28,7 +29,8 @@ class _TimetableScannerCardState extends ConsumerState<TimetableScannerCard> {
       if (file == null) return;
       setState(() => _busy = true);
       final text = await recognizeTimetableText(file.path);
-      final entries = _parser.parse(text);
+      final result = _parser.parseStructured(text);
+      final entries = result.entries;
       if (!mounted) return;
       setState(() => _busy = false);
       if (entries.length == 1 &&
@@ -43,8 +45,13 @@ class _TimetableScannerCardState extends ConsumerState<TimetableScannerCard> {
       }
       await Navigator.push<bool>(
         context,
-        ReviewTimetableScreen.route(initialEntries: entries, rawText: text),
+        ReviewTimetableScreen.route(
+          initialEntries: entries,
+          rawText: text,
+          metadata: result.metadata,
+        ),
       );
+
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -83,17 +90,15 @@ class _TimetableScannerCardState extends ConsumerState<TimetableScannerCard> {
           const SizedBox(height: 14),
           if (_busy)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(vertical: 16),
               child: Center(
-                child: Column(
-                  children: [
-                    CircularProgressIndicator(color: AppColors.purpleBright),
-                    SizedBox(height: 10),
-                    Text('Reading timetable…', style: TextStyle(color: AppColors.textMuted)),
-                  ],
+                child: BenzeneMoleculeLoader(
+                  size: 44,
+                  messages: ChemistryMicrocopy.timetable,
                 ),
               ),
             )
+
           else
             Row(
               children: [

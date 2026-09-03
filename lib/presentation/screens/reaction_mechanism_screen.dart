@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
@@ -268,6 +269,54 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                 ],
               ),
             ),
+            if (m.svgContent != null && m.svgContent!.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  const Icon(Icons.polyline_rounded, color: AppColors.purpleBright, size: 18),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Vector Reaction Diagram',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.purple.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
+                    ),
+                    child: const Text(
+                      'Pinch to Zoom 🔍',
+                      style: TextStyle(color: AppColors.purpleBright, fontSize: 10.5, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              GlowCard(
+                padding: const EdgeInsets.all(6),
+                borderColor: AppColors.purple.withValues(alpha: 0.4),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: InteractiveViewer(
+                    minScale: 1.0,
+                    maxScale: 3.5,
+                    child: SvgPicture.string(
+                      m.svgContent!,
+                      fit: BoxFit.contain,
+                      placeholderBuilder: (context) => const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24.0),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 18),
 
             // Stepwise Mechanism Breakdown
@@ -275,6 +324,7 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
               'Step-by-Step Reaction Mechanism & Electron Movement',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
             ),
+
             const SizedBox(height: 10),
 
             ...m.steps.map((step) => _buildStepCard(step)),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/title_cleaner.dart';
 import '../../core/widgets/glow_card.dart';
+import '../../core/widgets/molecule_loader.dart';
 import '../../data/services/gemini_flashcard_service.dart';
 import '../../data/services/pdf_text_extraction_service.dart';
 import '../../data/services/pdf_text_utils.dart';
@@ -92,17 +93,19 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
           ),
           const SizedBox(height: 20),
           if (stage.isNotEmpty) ...[
-            GlowCard(
-              child: Row(
-                children: [
-                  const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purpleBright)),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text(stage, style: const TextStyle(fontWeight: FontWeight.w700))),
-                ],
+            const GlowCard(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              borderColor: AppColors.borderSubtle,
+              child: Center(
+                child: BenzeneMoleculeLoader(
+                  size: 48,
+                  messages: ChemistryMicrocopy.flashcards,
+                ),
               ),
             ),
             const SizedBox(height: 12),
           ],
+
           if (error != null) ...[
             GlowCard(
               borderColor: AppColors.danger.withValues(alpha: 0.5),

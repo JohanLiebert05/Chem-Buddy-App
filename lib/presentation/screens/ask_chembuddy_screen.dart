@@ -26,6 +26,7 @@ import 'pdf_study_hub_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_study_screen.dart';
 import '../../data/models/smart_flashcard.dart';
+import '../../core/widgets/molecule_loader.dart';
 
 
 enum ChemBuddyAiMode {
@@ -827,24 +828,20 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
             ),
 
             if (chatState.isLoading)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: GlowCard(
-                  child: Row(
-                    children: const [
-                      SizedBox(
-                        width: 18, height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.purpleBright,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Text('ChemBuddy is formulating your MSc Chemistry answer...', style: TextStyle(color: AppColors.purpleBright, fontStyle: FontStyle.italic, fontSize: 13, fontWeight: FontWeight.w600)),
-                    ],
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  borderColor: AppColors.borderSubtle,
+                  child: Center(
+                    child: BenzeneMoleculeLoader(
+                      size: 42,
+                      messages: ChemistryMicrocopy.askAi,
+                    ),
                   ),
                 ),
               ),
+
 
             if (chatState.error != null)
               Padding(
