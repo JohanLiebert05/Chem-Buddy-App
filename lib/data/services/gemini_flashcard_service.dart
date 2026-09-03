@@ -251,135 +251,257 @@ Return strictly valid JSON with this shape:
         .toList();
   }
 
-  /// Synthesizes high-yield academic MSc Chemistry flashcards strictly and solely from the provided document text.
-  /// Generates standalone conceptual questions and 3-5 mandatory key terms without ellipses quotes.
+  /// Classifies a text chunk into one of 5 content types for targeted flashcard generation.
+  static _ChunkType _classifyChunk(String text) {
+    final lower = text.toLowerCase();
+
+    // Reaction mechanism markers
+    if (lower.contains('mechanism') ||
+        lower.contains('reaction') ||
+        lower.contains('intermediate') ||
+        lower.contains('catalyst') ||
+        lower.contains('nucleophilic') ||
+        lower.contains('electrophilic') ||
+        lower.contains('disproportionation') ||
+        lower.contains('hydride transfer') ||
+        lower.contains('oxidation state') ||
+        lower.contains('electron') ||
+        lower.contains('arrow-pushing') ||
+        lower.contains('transition state')) {
+      return _ChunkType.reactionMechanism;
+    }
+
+    // Formula / derivation markers
+    if (lower.contains('formula') ||
+        lower.contains('equation') ||
+        lower.contains('derivation') ||
+        lower.contains('mathematically') ||
+        lower.contains('concentration') ||
+        lower.contains('molarity') ||
+        lower.contains('normality') ||
+        lower.contains('pH =') ||
+        lower.contains('ka') ||
+        lower.contains('kb') ||
+        lower.contains('delta g') ||
+        lower.contains('rate law') ||
+        lower.contains('half life') ||
+        lower.contains('arrhenius') ||
+        lower.contains('beer') ||
+        lower.contains('lambert') ||
+        RegExp(r'=\s*[\d\[\\\{\-]').hasMatch(lower)) {
+      return _ChunkType.formulaDerivation;
+    }
+
+    // Procedure / method markers (instrumentation, chromatography, titration)
+    if (lower.contains('procedure') ||
+        lower.contains('method') ||
+        lower.contains('column') ||
+        lower.contains('flow rate') ||
+        lower.contains('mobile phase') ||
+        lower.contains('stationary phase') ||
+        lower.contains('detector') ||
+        lower.contains('retention') ||
+        lower.contains('injection') ||
+        lower.contains('calibration') ||
+        lower.contains('titration') ||
+        lower.contains('standardize') ||
+        lower.contains('suitability') ||
+        lower.contains('separation') ||
+        lower.contains('chromatography') ||
+        lower.contains('instrument') ||
+        lower.contains('spectrophotom') ||
+        lower.contains('sample preparation')) {
+      return _ChunkType.procedureMethod;
+    }
+
+    // Data / reference markers (tables, values, pKa, NMR shifts)
+    if (lower.contains('table') ||
+        lower.contains('pka') ||
+        lower.contains('shift') ||
+        lower.contains('wavenumber') ||
+        lower.contains('standard potential') ||
+        lower.contains('boiling point') ||
+        lower.contains('melting point') ||
+        lower.contains('solubility') ||
+        lower.contains('permissible limit') ||
+        lower.contains('ppm') ||
+        RegExp(r'\d+\s*(nm|cm|hz|ppm|°c|kj|mhz|ev)').hasMatch(lower)) {
+      return _ChunkType.dataReference;
+    }
+
+    // Default: definition / concept
+    return _ChunkType.definitionConcept;
+  }
+
+  /// Generates a grounded, type-specific flashcard question for a given chunk.
+  static ({String question, String answer, List<String> terms})? _generateTypedCard(
+    String chunk,
+    _ChunkType type,
+    String topic,
+  ) {
+    final clean = chunk.replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
+    if (clean.length < 15) return null;
+
+    final words = clean.split(RegExp(r'\s+')).where((w) => w.length > 3).take(4).join(' ');
+    if (words.isEmpty) return null;
+
+    switch (type) {
+      case _ChunkType.reactionMechanism:
+        return (
+          question: 'What is the mechanistic pathway and key intermediate(s) involved in $words?',
+          answer: '$clean',
+          terms: [words, 'Mechanism', 'Intermediate', topic],
+        );
+      case _ChunkType.formulaDerivation:
+        return (
+          question: 'State and derive the governing equation for $words, including all variables and units.',
+          answer: '$clean',
+          terms: [words, 'Formula', 'Units', topic],
+        );
+      case _ChunkType.procedureMethod:
+        // Extract the "label: value" key if this is a parameter specification
+        if (clean.contains(':')) {
+          final colonIdx = clean.indexOf(':');
+          final key = clean.substring(0, colonIdx).replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
+          final val = clean.substring(colonIdx + 1).trim();
+          if (key.length >= 2 && key.length <= 60 && val.length >= 2) {
+            return (
+              question: 'What is the recommended specification and analytical purpose of "$key" in $topic?',
+              answer: 'The specification for $key is: $val. Correct optimization ensures analytical reproducibility and system suitability.',
+              terms: [key, 'System Suitability', 'Analytical Method', topic],
+            );
+          }
+        }
+        return (
+          question: 'Describe the procedure and analytical rationale for $words in $topic.',
+          answer: '$clean',
+          terms: [words, 'Procedure', 'Analytical Method', topic],
+        );
+      case _ChunkType.dataReference:
+        return (
+          question: 'What are the key reference values, limits, or spectroscopic data associated with $words?',
+          answer: '$clean',
+          terms: [words, 'Reference Value', 'Spectroscopy', topic],
+        );
+      case _ChunkType.definitionConcept:
+        // Try to extract "X is defined as Y" patterns
+        final defPattern = RegExp(
+          r'^(.*?)\s+(?:is defined as|refers to|is used for|is used to|is called|consists of)\s+(.*)$',
+          caseSensitive: false,
+        ).firstMatch(clean);
+        if (defPattern != null) {
+          final subject = defPattern.group(1)?.trim() ?? '';
+          final predicate = defPattern.group(2)?.trim() ?? '';
+          if (subject.length >= 2 && subject.length <= 80) {
+            return (
+              question: 'Define "$subject" and explain its significance in $topic.',
+              answer: '$subject $predicate.',
+              terms: [subject, 'Definition', topic],
+            );
+          }
+        }
+        return (
+          question: 'Explain the concept of $words and its role in $topic.',
+          answer: '$clean',
+          terms: [words, 'Concept', topic],
+        );
+    }
+  }
+
+  /// Validates that a generated card answer is actually grounded in the source text.
+  /// Rejects filler that doesn't reference any real source content.
+  static bool _isGrounded(String answer, String sourceText) {
+    // Extract keywords from answer and check they exist in source
+    final answerWords = answer
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .split(RegExp(r'\s+'))
+        .where((w) => w.length > 4)
+        .toSet();
+    final sourceLower = sourceText.toLowerCase();
+    var matchCount = 0;
+    for (final w in answerWords) {
+      if (sourceLower.contains(w)) matchCount++;
+    }
+    // At least 40% of significant answer words must appear in source
+    return answerWords.isEmpty || (matchCount / answerWords.length) >= 0.40;
+  }
+
+  /// Synthesizes high-yield academic MSc Chemistry flashcards strictly from the provided document text.
+  /// Uses content-type classification for targeted, grounded question generation.
   List<GeneratedCard> _synthesizeLocalChemistryCards(String sourceText, int count, String topic) {
     final cards = <GeneratedCard>[];
     final seenQuestions = <String>{};
 
-    void addCard(String q, String a, [List<String>? terms]) {
+    void tryAddCard(String q, String a, List<String> terms) {
       final cleanQ = ChemistryTextFormatter.format(q.trim());
       final cleanA = ChemistryTextFormatter.format(a.trim());
-      if (cleanQ.length > 8 && cleanA.length > 3 && seenQuestions.add(cleanQ.toLowerCase())) {
-        final keyTerms = (terms != null && terms.isNotEmpty) ? terms : _extractKeywordsFromText('$cleanQ $cleanA', topic);
-        cards.add(
-          GeneratedCard(
-            question: cleanQ,
-            answer: cleanA,
-            topic: topic,
-            keyTerms: keyTerms.take(5).toList(),
-          ),
-        );
+      if (cleanQ.length > 8 &&
+          cleanA.length > 10 &&
+          seenQuestions.add(cleanQ.toLowerCase()) &&
+          _isGrounded(cleanA, sourceText)) {
+        final keyTerms = terms.isNotEmpty ? terms : _extractKeywordsFromText('$cleanQ $cleanA', topic);
+        cards.add(GeneratedCard(
+          question: cleanQ,
+          answer: cleanA,
+          topic: topic,
+          keyTerms: keyTerms.take(5).toList(),
+        ));
       }
     }
 
-    final rawLines = sourceText.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
-
-    // 1. Parameter Specifications and Instrumental Conditions (e.g. Column, Flow Rate, Mobile Phase, Detector)
-    for (final line in rawLines) {
-      if (cards.length >= count) break;
-      if (line.contains(':') && !line.startsWith('http')) {
-        final colonIdx = line.indexOf(':');
-        final key = line.substring(0, colonIdx).replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
-        final val = line.substring(colonIdx + 1).trim();
-        if (key.length >= 2 && key.length <= 60 && val.length >= 2 && val.length <= 400) {
-          final q = 'What is the operational role and recommended specification for $key in $topic?';
-          final a = 'The specification for $key is $val. Proper optimization ensures analytical reproducibility, system suitability, and baseline stability.';
-          addCard(q, a, [key, 'System Suitability', topic]);
-        }
-      }
-    }
-
-    // 2. Conceptual Headings & Core Principles
-    for (var i = 0; i < rawLines.length - 1; i++) {
-      if (cards.length >= count) break;
-      final line = rawLines[i];
-      if (line.startsWith('#') || (line.length <= 50 && !line.endsWith('.') && line.length > 3)) {
-        final heading = line.replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
-        final nextLine = rawLines[i + 1].trim();
-        if (heading.length >= 3 && nextLine.length >= 15 && !nextLine.startsWith('#')) {
-          final q = 'What is the fundamental chemical principle and theoretical significance of $heading?';
-          final a = '$nextLine In academic chemistry, understanding $heading is essential for reaction pathway determination and quantitative analysis.';
-          addCard(q, a, [heading, 'Mechanism', 'Reaction Pathway']);
-        }
-      }
-    }
-
-    // 3. Definitions and Explanatory Paragraphs
-    final rawSentences = sourceText
-        .split(RegExp(r'(?<=[.!?])\s+|\n+'))
-        .map((s) => s.replaceAll(RegExp(r'#{1,6}'), '').trim())
-        .where((s) => s.length >= 15 && s.length <= 400)
+    // 1. Classify each paragraph/line and generate a typed card
+    final paragraphs = sourceText
+        .split(RegExp(r'\n\s*\n|\r\n\s*\r\n'))
+        .map((p) => p.trim())
+        .where((p) => p.length >= 20)
         .toList();
 
-    for (final s in rawSentences) {
+    for (final para in paragraphs) {
       if (cards.length >= count) break;
-      final cleanText = s.replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
-      final lower = cleanText.toLowerCase();
+      final type = _classifyChunk(para);
+      final result = _generateTypedCard(para, type, topic);
+      if (result != null) {
+        tryAddCard(result.question, result.answer, result.terms);
+      }
+    }
 
-      // Definitions: "X is defined as Y", "X refers to Y", "X is used for Y"
-      if (lower.contains(' is defined as ') ||
-          lower.contains(' refers to ') ||
-          lower.contains(' is used for ') ||
-          lower.contains(' is used to ') ||
-          lower.contains(' is called ') ||
-          lower.contains(' consists of ')) {
-        final match = RegExp(
-          r'^(.*?)\s+(?:is defined as|refers to|is used for|is used to|is called|consists of)\s+(.*)$',
-          caseSensitive: false,
-        ).firstMatch(cleanText);
-
-        if (match != null) {
-          final subject = match.group(1)?.trim() ?? '';
-          final predicate = match.group(2)?.trim() ?? '';
-          if (subject.length >= 2 && subject.length <= 60 && predicate.isNotEmpty) {
-            final q = 'Define the term "$subject" and state its significance in $topic.';
-            final a = '$subject $predicate. This concept is fundamental for exam preparation and practical laboratory application.';
-            addCard(q, a, [subject, topic, 'Definition']);
-            continue;
+    // 2. Line-by-line pass for parameter specs missed by paragraph pass
+    if (cards.length < count) {
+      final lines = sourceText.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+      for (final line in lines) {
+        if (cards.length >= count) break;
+        if (line.contains(':') && !line.startsWith('http')) {
+          final type = _classifyChunk(line);
+          final result = _generateTypedCard(line, type, topic);
+          if (result != null) {
+            tryAddCard(result.question, result.answer, result.terms);
           }
         }
       }
-
-      // Reaction Mechanisms, Kinetics, and Analytical Principles
-      if (lower.contains('mechanism') ||
-          lower.contains('reaction') ||
-          lower.contains('retention') ||
-          lower.contains('calibration') ||
-          lower.contains('kinetics') ||
-          lower.contains('rate') ||
-          lower.contains('intermediate') ||
-          lower.contains('catalyst') ||
-          lower.contains('disproportionation') ||
-          lower.contains('hydride') ||
-          lower.contains('spectroscopy') ||
-          lower.contains('detector') ||
-          lower.contains('suitability') ||
-          lower.contains('separation')) {
-        // Extract main subject words
-        final words = cleanText.split(RegExp(r'\s+')).where((w) => w.length > 3).take(4).join(' ');
-        final q = 'What is the mechanism and chemical rationale governing $words in $topic?';
-        final a = '$cleanText This represents a key mechanistic concept in advanced MSc chemistry.';
-        addCard(q, a, [words, topic, 'Kinetics', 'Mechanism']);
-      }
     }
 
-    // 4. Standalone High-Yield Fallback if count still not reached
+    // 3. Sentence-level fallback
     if (cards.length < count) {
-      for (final s in rawSentences) {
+      final sentences = sourceText
+          .split(RegExp(r'(?<=[.!?])\s+|\n+'))
+          .map((s) => s.replaceAll(RegExp(r'#{1,6}'), '').trim())
+          .where((s) => s.length >= 20 && s.length <= 400)
+          .toList();
+      for (final sentence in sentences) {
         if (cards.length >= count) break;
-        final cleanText = s.replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
-        final words = cleanText.split(RegExp(r'\s+')).where((w) => w.length > 3).take(3).join(' ');
-        if (words.isNotEmpty) {
-          final q = 'Explain the key chemical concepts associated with $words in $topic.';
-          final a = '$cleanText';
-          addCard(q, a, [words, topic]);
+        final type = _classifyChunk(sentence);
+        final result = _generateTypedCard(sentence, type, topic);
+        if (result != null) {
+          tryAddCard(result.question, result.answer, result.terms);
         }
       }
     }
 
     return cards.take(count).toList();
   }
+
+
 
   /// Extracts 3 to 5 salient chemistry keywords from question/answer text.
   static List<String> _extractKeywordsFromText(String text, String topic) {
@@ -424,3 +546,18 @@ Return strictly valid JSON with this shape:
     return terms.take(5).toList();
   }
 }
+
+/// Content type classification for targeted flashcard generation.
+enum _ChunkType {
+  /// Organic/inorganic reaction pathways, electron movement, mechanisms
+  reactionMechanism,
+  /// Laws, theories, principles, definitions, academic concepts
+  definitionConcept,
+  /// Mathematical equations, thermodynamic derivations, rate equations
+  formulaDerivation,
+  /// Instrumentation, chromatography, titrations, analytical methods
+  procedureMethod,
+  /// Spectroscopy tables, pKa values, NMR shifts, reference data
+  dataReference,
+}
+

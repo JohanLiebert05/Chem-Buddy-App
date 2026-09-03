@@ -103,7 +103,11 @@ class ChatController extends Notifier<ChatState> {
         subject: subject,
         documentText: state.activeDocumentText,
         documentName: state.activeDocumentName,
-        history: state.messages,
+        // Only pass last 4 messages to prevent cross-topic context contamination.
+        // Full history caused stale topic context from prior turns to corrupt retrieval.
+        history: state.messages.length > 4
+            ? state.messages.sublist(state.messages.length - 4)
+            : state.messages,
       );
 
       final assistantMessage = AiMessage(

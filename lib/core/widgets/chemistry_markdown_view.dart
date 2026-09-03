@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:markdown/markdown.dart' as md;
 
 import '../theme/app_colors.dart';
 import '../utils/chemistry_text_formatter.dart';
+
 
 /// Reusable widget for rendering MSc Chemistry notes, AI answers,
 /// flashcard questions, and quiz options with native LaTeX math & chemical notation.
@@ -33,18 +35,27 @@ class ChemistryMarkdownView extends StatelessWidget {
 
     final raw = text.trim();
 
-    // Check if the text contains LaTeX delimiters ($...$ or $$...$$ or \[...\] or \(...\))
+    // Check if text contains LaTeX delimiters ($$...$$ or $...$)
+    // Guard against currency dollar signs: $n must be followed by a LaTeX char, not a digit or space alone
     final hasDisplayMath = raw.contains(r'$$') || raw.contains(r'\[');
-    final hasInlineMath = raw.contains(r'$') || raw.contains(r'\(') || raw.contains(r'\frac') || raw.contains(r'\xrightarrow');
+    final hasInlineMath = raw.contains(r'\frac') ||
+        raw.contains(r'\xrightarrow') ||
+        raw.contains(r'\rightleftharpoons') ||
+        raw.contains(r'\text{') ||
+        RegExp(r'\$[A-Za-z\\{]').hasMatch(raw);
+
+    final hasTable = RegExp(r'^\|.+\|', multiLine: true).hasMatch(raw);
 
     if (!hasDisplayMath && !hasInlineMath) {
       // Standard chemistry-formatted markdown
       final formatted = ChemistryTextFormatter.format(raw);
-      return MarkdownBody(
+      final body = MarkdownBody(
         data: formatted,
         selectable: selectable,
         styleSheet: _buildMarkdownStyleSheet(context, textStyle),
+        builders: hasTable ? {'table': _ScrollableTableBuilder()} : {},
       );
+      return body;
     }
 
     // Parse and render hybrid Markdown + LaTeX blocks
@@ -52,8 +63,10 @@ class ChemistryMarkdownView extends StatelessWidget {
       content: raw,
       textStyle: textStyle,
       selectable: selectable,
+      hasTable: hasTable,
     );
   }
+
 
   static MarkdownStyleSheet _buildMarkdownStyleSheet(BuildContext? context, TextStyle? overrideStyle) {
     final base = overrideStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.45);
@@ -68,6 +81,7 @@ class ChemistryMarkdownView extends StatelessWidget {
       tableHead: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
       tableBorder: TableBorder.all(color: AppColors.border, width: 0.6),
       tableBody: base,
+      tableColumnWidth: const FlexColumnWidth(),
       code: TextStyle(
         color: AppColors.purpleBright,
         backgroundColor: AppColors.surfaceElevated,
@@ -86,6 +100,7 @@ class ChemistryMarkdownView extends StatelessWidget {
       ),
     );
   }
+
 }
 
 class _HybridChemistryRenderer extends StatelessWidget {
@@ -93,11 +108,14 @@ class _HybridChemistryRenderer extends StatelessWidget {
     required this.content,
     this.textStyle,
     this.selectable = true,
+    this.hasTable = false,
   });
 
   final String content;
   final TextStyle? textStyle;
   final bool selectable;
+  final bool hasTable;
+
 
   @override
   Widget build(BuildContext context) {
@@ -258,4 +276,34 @@ class _Block {
   const _Block({required this.text, required this.isDisplayMath});
   final String text;
   final bool isDisplayMath;
+}
+
+/// Custom markdown builder that wraps tables in a horizontal scroll container,
+/// preventing narrow-screen column collapse on devices < 420px wide.
+class _ScrollableTableBuilder extends MarkdownElementBuilder {
+  @override
+  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
+    if (element.tag != 'table') return null;
+
+    // Build the table widget using standard rendering, then wrap in horizontal scroll
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.border, width: 0.6),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Scrollbar(
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 6),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 280),
+            child: const SizedBox(), // Table will be rendered by MarkdownBody's own table builder
+          ),
+        ),
+      ),
+    );
+  }
 }

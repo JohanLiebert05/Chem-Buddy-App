@@ -50,10 +50,22 @@ void main() {
       );
 
       final answer = res.answer;
-      expect(answer.contains('Gibbs Free Energy') || answer.contains('ΔG'), isTrue);
-      expect(answer.contains('ΔH') && answer.contains('ΔS'), isTrue);
+      // Phase 1.2: formatter now preserves $...$ for KaTeX, so accept both forms
+      expect(
+        answer.contains('Gibbs Free Energy') ||
+        answer.contains('ΔG') ||
+        answer.contains(r'\Delta G') ||
+        answer.contains('Gibbs'),
+        isTrue,
+      );
+      expect(
+        (answer.contains('ΔH') || answer.contains(r'\Delta H')) &&
+        (answer.contains('ΔS') || answer.contains(r'\Delta S')),
+        isTrue,
+      );
       expect(answer.contains('spontaneous') || answer.contains('Spontaneous'), isTrue);
     });
+
 
     test('5. Spectroscopy: "Beer Lambert law" returns A = epsilon b c and limitations', () {
       final res = ChemistryKnowledgeEngine.generateAcademicResponse(

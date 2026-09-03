@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/utils/chemistry_text_formatter.dart';
 import '../models/rag_models.dart';
+
 
 /// Comprehensive MSc & BSc Chemistry Academic Knowledge Engine.
 /// Provides authoritative, textbook-precise, mathematically sound answers for
@@ -925,37 +928,92 @@ $content
   // =========================================================================
 
   static String? _extractFromDocument(String question, String text, String docName) {
+    // Extract meaningful query terms (filter stopwords + very short tokens)
+    final stopwords = {
+      'what', 'explain', 'give', 'notes', 'from', 'about', 'this', 'that',
+      'how', 'does', 'does', 'with', 'and', 'the', 'for', 'are', 'why',
+      'which', 'when', 'where', 'define', 'state', 'describe', 'list',
+      'between', 'difference', 'compare', 'contrast', 'write', 'name',
+    };
+
     final qTerms = question
         .toLowerCase()
-        .replaceAll(RegExp(r'[^\w\s]'), '')
-        .split(' ')
-        .where((t) => t.length > 2 && !['what', 'explain', 'give', 'notes', 'from', 'about', 'this'].contains(t))
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .split(RegExp(r'\s+'))
+        .where((t) => t.length > 2 && !stopwords.contains(t))
+        .toSet()
         .toList();
 
-    if (qTerms.isEmpty) return null;
+    // Debug log: raw query and search terms
+    debugPrint('[RAG Debug] Raw Query: "$question"');
+    debugPrint('[RAG Debug] Search Terms (${qTerms.length}): ${qTerms.join(', ')}');
 
-    final paragraphs = text.split(RegExp(r'\n\s*\n|\r\n\s*\r\n'));
-    final scored = <MapEntry<String, int>>[];
-
-    for (final p in paragraphs) {
-      final pLower = p.toLowerCase();
-      var score = 0;
-      for (final term in qTerms) {
-        if (pLower.contains(term)) score += 2;
-      }
-      if (score > 0) scored.add(MapEntry(p, score));
+    if (qTerms.isEmpty) {
+      debugPrint('[RAG Debug] No meaningful terms extracted — skipping document extraction.');
+      return null;
     }
 
-    if (scored.isEmpty) return null;
+    // Split document into paragraphs
+    final paragraphs = text.split(RegExp(r'\n\s*\n|\r\n\s*\r\n'));
+    final scored = <MapEntry<String, double>>[];
+
+    for (final p in paragraphs) {
+      if (p.trim().length < 20) continue;
+      final pLower = p.toLowerCase();
+      var matchCount = 0;
+      for (final term in qTerms) {
+        if (pLower.contains(term)) matchCount++;
+      }
+      if (matchCount > 0) {
+        // Normalized score = fraction of query terms matched in this paragraph
+        final score = matchCount / qTerms.length;
+        scored.add(MapEntry(p, score));
+      }
+    }
+
+    if (scored.isEmpty) {
+      debugPrint('[RAG Debug] No paragraph matches in "$docName" — document does not cover this topic.');
+      return null;
+    }
 
     scored.sort((a, b) => b.value.compareTo(a.value));
-    final bestParagraphs = scored.take(3).map((e) => e.key.trim()).join('\n\n');
+
+    // Log top-3 retrieved chunks with similarity scores
+    debugPrint('[RAG Debug] Top-K Chunks from "$docName":');
+    for (var i = 0; i < scored.length && i < 3; i++) {
+      final excerpt = scored[i].key.trim().replaceAll('\n', ' ');
+      final preview = excerpt.length > 120 ? '${excerpt.substring(0, 120)}...' : excerpt;
+      debugPrint('[RAG Debug]   [${i + 1}] Similarity: ${(scored[i].value * 100).toStringAsFixed(1)}% | "$preview"');
+    }
+
+    // STRICT RELEVANCE THRESHOLD: require at least 35% of query terms to match.
+    // This prevents unrelated document content (e.g. pH buffer notes) from being
+    // returned when the query is about a completely different chemistry topic.
+    final topScore = scored.first.value;
+    const relevanceThreshold = 0.35;
+
+    if (topScore < relevanceThreshold) {
+      debugPrint('[RAG Debug] Top similarity ${(topScore * 100).toStringAsFixed(1)}% < ${(relevanceThreshold * 100).toStringAsFixed(0)}% threshold. '
+          'Document "$docName" does not sufficiently cover this topic — falling through to knowledge engine.');
+      return null;
+    }
+
+    // Only use paragraphs with score ≥ 50% of the best score (quality filter)
+    final qualityFloor = topScore * 0.5;
+    final bestParagraphs = scored
+        .where((e) => e.value >= qualityFloor)
+        .take(3)
+        .map((e) => e.key.trim())
+        .join('\n\n');
+
+    debugPrint('[RAG Debug] ✓ Returning grounded answer from "$docName" (top similarity: ${(topScore * 100).toStringAsFixed(1)}%)');
 
     return '''### **From Your Uploaded Notes: $docName**
 
 $bestParagraphs
 
 ---
-*Extracted directly from $docName based on your query.*''';
+*Extracted from $docName based on your query.*''';
   }
 }
+

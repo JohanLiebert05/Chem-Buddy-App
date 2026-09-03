@@ -55,6 +55,8 @@ class ChemistryTextFormatter {
   static String format(String? raw) => sanitizeChemistryResponse(raw);
 
   /// Comprehensive chemistry-aware sanitization pipeline.
+  /// IMPORTANT: Preserves $...$ and $$...$$ delimiters so ChemistryMarkdownView
+  /// can pass them to flutter_math_fork for native KaTeX rendering.
   static String sanitizeChemistryResponse(String? raw) {
     if (raw == null || raw.isEmpty) return '';
 
@@ -66,29 +68,64 @@ class ChemistryTextFormatter {
     // 2. Normalize malformed headings and strip decorative dot/separator noise
     text = _stripDecorativeNoise(text);
 
-    // 3. Process display math blocks: $$...$$ or \[...\]
-    text = text.replaceAllMapped(RegExp(r'\$\$(.*?)\$\$|\\\[(.*?)\\\]', dotAll: true), (m) {
-      final inner = (m[1] ?? m[2] ?? '').trim();
-      return '\n${_cleanMathExpression(inner)}\n';
+    // 3. Normalize \[...\] display math → $$...$$ (preserve KaTeX delimiters)
+    text = text.replaceAllMapped(RegExp(r'\\\[(.*?)\\\]', dotAll: true), (m) {
+      final inner = (m[1] ?? '').trim();
+      return '\n\$\$$inner\$\$\n';
     });
 
-    // 4. Process inline math blocks: $...$ or \(...\)
-    text = text.replaceAllMapped(RegExp(r'\$([^\$\n]+?)\$|\\\(([^\)]+?)\\\)'), (m) {
-      final inner = (m[1] ?? m[2] ?? '').trim();
-      return _cleanMathExpression(inner);
+    // 4. Normalize \(...\) inline math → $...$ (preserve KaTeX delimiters)
+    text = text.replaceAllMapped(RegExp(r'\\\(([^\)]+?)\\\)'), (m) {
+      final inner = (m[1] ?? '').trim();
+      return '\$$inner\$';
     });
 
-    // 5. Clean LaTeX macros in general text
-    text = _cleanMathExpression(text);
+    // 5. IMPORTANT: Do NOT strip $...$ or $$...$$ — leave them for the renderer.
+    // Only clean LaTeX in plaintext regions (outside math delimiters).
+    text = _cleanLatexInPlainTextRegions(text);
 
     // 6. Normalize chemical notation, equations, arrows, charges, and formulas
-    text = _normalizeChemistryTypography(text);
+    // Only outside of LaTeX math blocks to avoid corrupting formulas.
+    text = _normalizeChemistryInPlainTextRegions(text);
 
     // 7. Normalize Markdown headings, lists, and spacing
     text = _normalizeMarkdownStructure(text);
 
     return text.trim();
   }
+
+  /// Cleans LaTeX macros ONLY in plain-text regions outside of $...$ and $$...$$ blocks.
+  static String _cleanLatexInPlainTextRegions(String input) {
+    return _processOutsideMathDelimiters(input, _cleanMathExpression);
+  }
+
+  /// Normalizes chemistry typography ONLY in plain-text regions outside math blocks.
+  static String _normalizeChemistryInPlainTextRegions(String input) {
+    return _processOutsideMathDelimiters(input, _normalizeChemistryTypography);
+  }
+
+  /// Splits input at math delimiters, applies [fn] to non-math segments, and reassembles.
+  static String _processOutsideMathDelimiters(String input, String Function(String) fn) {
+    final result = StringBuffer();
+    final pattern = RegExp(r'\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$', dotAll: false);
+    var lastEnd = 0;
+    for (final match in pattern.allMatches(input)) {
+      // Apply fn to the plain-text segment before this math block
+      if (match.start > lastEnd) {
+        result.write(fn(input.substring(lastEnd, match.start)));
+      }
+      // Copy the math block verbatim — do not transform it
+      result.write(match[0]);
+      lastEnd = match.end;
+    }
+    // Apply fn to trailing plain-text after last math block
+    if (lastEnd < input.length) {
+      result.write(fn(input.substring(lastEnd)));
+    }
+    return result.toString();
+  }
+
+
 
   // =========================================================================
   // 1. PROMPT LEAK REMOVAL
@@ -253,8 +290,57 @@ class ChemistryTextFormatter {
     s = s.replaceAllMapped(RegExp(r'\^\{([^}]+)\}'), (m) => _toSuperscript(m[1] ?? ''));
     s = s.replaceAllMapped(RegExp(r'_\{([^}]+)\}'), (m) => _toSubscript(m[1] ?? ''));
 
-    // Remove remaining stray backslashes
-    s = s.replaceAll(RegExp(r'\\[a-zA-Z]+'), '');
+    // Remove only truly invalid/noise LaTeX commands (NOT valid KaTeX macros like \log, \ln, \sin, \left, \right)
+    // Safe to strip: display-only structure wrappers that have no Unicode equivalent
+    s = s.replaceAll(r'\displaystyle', '');
+    s = s.replaceAll(r'\textstyle', '');
+    s = s.replaceAll(r'\scriptstyle', '');
+    s = s.replaceAll(r'\scriptscriptstyle', '');
+    s = s.replaceAll(r'\normalsize', '');
+    s = s.replaceAll(r'\small', '');
+    s = s.replaceAll(r'\large', '');
+    s = s.replaceAll(r'\Large', '');
+    s = s.replaceAll(r'\LARGE', '');
+    s = s.replaceAll(r'\huge', '');
+    s = s.replaceAll(r'\Huge', '');
+    s = s.replaceAll(r'\noindent', '');
+    s = s.replaceAll(r'\hspace{', '');
+    s = s.replaceAll(r'\vspace{', '');
+    s = s.replaceAll(r'\quad', ' ');
+    s = s.replaceAll(r'\qquad', '  ');
+    s = s.replaceAll(r'\,', ' ');
+    s = s.replaceAll(r'\;', ' ');
+    s = s.replaceAll(r'\:', ' ');
+    s = s.replaceAll(r'\!', '');
+    // Strip \left and \right bracket modifiers (keep the bracket itself)
+    s = s.replaceAll(r'\left(', '(');
+    s = s.replaceAll(r'\right)', ')');
+    s = s.replaceAll(r'\left[', '[');
+    s = s.replaceAll(r'\right]', ']');
+    s = s.replaceAll(r'\left\{', '{');
+    s = s.replaceAll(r'\right\}', '}');
+    s = s.replaceAll(r'\left|', '|');
+    s = s.replaceAll(r'\right|', '|');
+    s = s.replaceAll(r'\left.', '');
+    s = s.replaceAll(r'\right.', '');
+    // Preserve \log, \ln, \sin, \cos, \tan etc. by converting to plain text
+    s = s.replaceAll(r'\log_{10}', 'log₁₀');
+    s = s.replaceAll(r'\log_{e}', 'ln');
+    s = s.replaceAll(r'\log', 'log');
+    s = s.replaceAll(r'\ln', 'ln');
+    s = s.replaceAll(r'\exp', 'exp');
+    s = s.replaceAll(r'\sin', 'sin');
+    s = s.replaceAll(r'\cos', 'cos');
+    s = s.replaceAll(r'\tan', 'tan');
+    s = s.replaceAll(r'\cot', 'cot');
+    s = s.replaceAll(r'\sec', 'sec');
+    s = s.replaceAll(r'\csc', 'csc');
+    s = s.replaceAll(r'\min', 'min');
+    s = s.replaceAll(r'\max', 'max');
+    s = s.replaceAll(r'\lim', 'lim');
+    // Strip remaining unknown backslash commands (noise only — after all valid ones handled above)
+    s = s.replaceAll(RegExp(r'\\(?![$\\])([a-zA-Z]+)\{'), r'\{'); // \cmd{ → { for bracket preservation
+    s = s.replaceAll(RegExp(r'\\(?![$\\])[a-zA-Z]+\b'), '');
     s = s.replaceAll(r'\', '');
 
     return s.trim();

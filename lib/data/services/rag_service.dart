@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
+
 import '../remote/supabase_service.dart';
 import '../models/rag_models.dart';
 import 'chemistry_knowledge_engine.dart';
+
 
 class RagService {
   final SupabaseService remote;
@@ -14,7 +17,10 @@ class RagService {
     String? documentName,
     List<AiMessage>? history,
   }) async {
+    debugPrint('[RAG] Incoming question: "$question" | subject: ${subject ?? "none"} | doc: ${documentName ?? "none"} | history: ${history?.length ?? 0} msgs');
+
     // 1. Try remote cloud first if configured
+
     if (remote.configured) {
       try {
         final response = await remote.invokeFunction('ask-chembuddy', {
