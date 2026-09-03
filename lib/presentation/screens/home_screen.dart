@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/attendance_math.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/animated_dashboard.dart';
+
 import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';

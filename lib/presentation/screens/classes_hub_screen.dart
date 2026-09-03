@@ -27,10 +27,11 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
   int timetableTab = 0;
 
   @override
-  void initState({super.key}) {
+  void initState() {
     super.initState();
     mainTab = widget.initialTab;
   }
+
 
   @override
   Widget build(BuildContext context) {
