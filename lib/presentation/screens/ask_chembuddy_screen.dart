@@ -24,6 +24,9 @@ import '../widgets/viva_practice_dialog.dart';
 import 'pdf_quiz_screen.dart';
 import 'pdf_study_hub_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
+import 'smart_flashcards_study_screen.dart';
+import '../../data/models/smart_flashcard.dart';
+
 
 enum ChemBuddyAiMode {
   concept,
@@ -749,6 +752,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                       textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 14, height: 1.45),
                                       selectable: true,
                                     ),
+                                    _buildAutoFlashcardBanner(context, msg),
                                     const SizedBox(height: 12),
                                     SingleChildScrollView(
                                       scrollDirection: Axis.horizontal,
@@ -1001,6 +1005,158 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
       ),
     );
   }
+
+  List<String> _extractKeyTerms(String content) {
+    final terms = <String>{};
+    final boldRegex = RegExp(r'\*\*([^*]+)\*\*');
+    for (final m in boldRegex.allMatches(content)) {
+      final term = m.group(1)?.trim() ?? '';
+      if (term.isNotEmpty && term.length > 3 && term.length < 35 && !term.toLowerCase().contains('step') && !term.toLowerCase().contains('note')) {
+        terms.add(term);
+      }
+    }
+    if (terms.length < 2) {
+      final lower = content.toLowerCase();
+      if (lower.contains('sn1')) terms.add('SN1 Mechanism');
+      if (lower.contains('sn2')) terms.add('SN2 Mechanism');
+      if (lower.contains('aldol')) terms.add('Aldol Condensation');
+      if (lower.contains('nmr')) terms.add('¹H NMR Shifts');
+      if (lower.contains('diels-alder')) terms.add('Diels-Alder Cycloaddition');
+      if (lower.contains('pericyclic')) terms.add('Woodward-Hoffmann Rules');
+      if (lower.contains('enolate')) terms.add('Enolate Chemistry');
+      if (lower.contains('spectroscopy')) terms.add('Spectroscopy');
+    }
+    return terms.take(4).toList();
+  }
+
+  Widget _buildAutoFlashcardBanner(BuildContext context, AiMessage msg) {
+    if (msg.content.length < 80) return const SizedBox.shrink();
+    final terms = _extractKeyTerms(msg.content);
+    if (terms.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8, bottom: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.brandPrimary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.35), width: 0.8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.auto_awesome, color: AppColors.brandBright, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Extracted Key Concepts 💡',
+                  style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  terms.join(' • '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.brandPrimary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
+            onPressed: () => _oneTapSaveFlashcards(msg, terms),
+            child: const Text('1-Tap Deck', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11.5)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _oneTapSaveFlashcards(AiMessage msg, List<String> terms) {
+    AppHaptics.confirm();
+    final setId = const Uuid().v4();
+    final topic = terms.firstOrNull ?? 'Chemistry Concepts';
+    final rawTitle = msg.content.split('\n').firstWhere(
+      (line) => line.trim().isNotEmpty,
+      orElse: () => topic,
+    ).replaceAll(RegExp(r'^[#*\s]+'), '');
+    final title = rawTitle.length > 36 ? '${rawTitle.substring(0, 36)}...' : rawTitle;
+
+    final newSet = SmartFlashcardSet(
+      id: setId,
+      title: title,
+      sourceFileName: 'Ask AI Chat',
+      topic: topic,
+      cardCount: terms.length,
+      createdAt: DateTime.now(),
+    );
+
+    final cards = <SmartFlashcard>[];
+    for (var i = 0; i < terms.length; i++) {
+      final term = terms[i];
+      cards.add(
+        SmartFlashcard(
+          id: const Uuid().v4(),
+          setId: setId,
+          position: i,
+          topic: topic,
+          question: 'What are the key chemical principles, mechanism, and significance of $term?',
+          answer: ChemistryTextFormatter.format(msg.content),
+          keyTerms: terms,
+          sourceBacklink: msg.content,
+        ),
+      );
+    }
+
+    final service = ref.read(flashcardServiceProvider);
+    service.saveSet(newSet, cards);
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: AppColors.statusSuccess, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Created flashcard deck with ${cards.length} cards! 🎉',
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        action: SnackBarAction(
+          label: 'Study Now →',
+          textColor: AppColors.brandBright,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => SmartFlashcardsStudyScreen(setId: setId),
+              ),
+            );
+          },
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.bg2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.borderHighlight, width: 0.8),
+        ),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
 }
 
 class _SuggestionTile extends StatelessWidget {
@@ -1032,6 +1188,8 @@ class _SuggestionTile extends StatelessWidget {
     );
   }
 }
+
+
 
 class _ActionChip extends StatelessWidget {
   const _ActionChip({required this.icon, required this.label, required this.onTap});

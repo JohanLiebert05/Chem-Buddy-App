@@ -91,6 +91,7 @@ class SmartFlashcard {
     this.repetitionCount = 0,
     this.lapseCount = 0,
     this.lastReviewedAt,
+    this.sourceBacklink = '',
   });
 
   final String id;
@@ -109,6 +110,8 @@ class SmartFlashcard {
   final int repetitionCount;
   final int lapseCount;
   final DateTime? lastReviewedAt;
+  final String sourceBacklink;
+
 
   bool get isNew => srState == FlashcardSrState.newCard && repetitionCount == 0 && lastReviewedAt == null;
   bool get isLearning => srState == FlashcardSrState.learning || srState == FlashcardSrState.lapse;
@@ -130,6 +133,7 @@ class SmartFlashcard {
     int? repetitionCount,
     int? lapseCount,
     DateTime? lastReviewedAt,
+    String? sourceBacklink,
   }) {
     return SmartFlashcard(
       id: id,
@@ -148,6 +152,7 @@ class SmartFlashcard {
       repetitionCount: repetitionCount ?? this.repetitionCount,
       lapseCount: lapseCount ?? this.lapseCount,
       lastReviewedAt: lastReviewedAt ?? this.lastReviewedAt,
+      sourceBacklink: sourceBacklink ?? this.sourceBacklink,
     );
   }
 
@@ -169,6 +174,7 @@ class SmartFlashcard {
         'repetition_count': repetitionCount,
         'lapse_count': lapseCount,
         'last_reviewed_at': lastReviewedAt?.toIso8601String(),
+        'source_backlink': sourceBacklink,
       };
 
   factory SmartFlashcard.fromJson(Map<String, dynamic> json) {
@@ -219,8 +225,10 @@ class SmartFlashcard {
       repetitionCount: json['repetition_count'] as int? ?? 0,
       lapseCount: json['lapse_count'] as int? ?? 0,
       lastReviewedAt: json['last_reviewed_at'] != null ? DateTime.tryParse('${json['last_reviewed_at']}') : null,
+      sourceBacklink: json['source_backlink'] as String? ?? json['sourceBacklink'] as String? ?? '',
     );
   }
+
 }
 
 class ReviewSchedulePreview {

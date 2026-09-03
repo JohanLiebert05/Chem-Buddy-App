@@ -288,11 +288,38 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                       )).toList(),
                     ),
                   ],
+                  if (card.sourceBacklink.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    InkWell(
+                      onTap: () => _showBacklinkSheet(context, card.sourceBacklink),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.brandPrimary.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.35)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.link_rounded, size: 14, color: AppColors.brandBright),
+                            SizedBox(width: 6),
+                            Text(
+                              'View Original AI Source Explanation',
+                              style: TextStyle(color: AppColors.brandBright, fontSize: 11.5, fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
+
 
 
           // Action Phase: Type Answer & Show Answer or Rate Recall
@@ -843,4 +870,49 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
       ),
     );
   }
+
+  void _showBacklinkSheet(BuildContext context, String backlink) {
+    AppHaptics.selection();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.bg1,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        side: BorderSide(color: AppColors.borderHighlight),
+      ),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.92,
+        expand: false,
+        builder: (_, scroll) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: ListView(
+            controller: scroll,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.menu_book_rounded, color: AppColors.brandBright, size: 20),
+                  const SizedBox(width: 8),
+                  const Text('Source AI Derivation & Notes', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800)),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppColors.textMuted),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const Divider(color: AppColors.borderSubtle, height: 20),
+              ChemistryMarkdownView(
+                text: backlink,
+                textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13.5, height: 1.45),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
+

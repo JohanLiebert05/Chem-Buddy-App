@@ -71,7 +71,25 @@ class FlashcardService {
     return list;
   }
 
+  Future<void> saveSet(SmartFlashcardSet set, List<SmartFlashcard> cards) async {
+    await store.put(store.smartSets, set.id, set.toJson());
+    for (final card in cards) {
+      await store.put(store.smartCards, card.id, card.toJson());
+    }
+    await _tryRemote(() async {
+      await remote.upsert('flashcard_sets', set.toJson());
+      for (final card in cards) {
+        await remote.upsert('flashcards', {
+          ...card.toJson(),
+          'user_id': remote.userId,
+        });
+      }
+    }, kind: 'set', payload: set.toJson());
+  }
+
+
   Future<SmartFlashcardSet> saveGeneratedSet({
+
     required String title,
     required String sourceFileName,
     required String topic,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
 import '../../data/models/pdf_study_models.dart';
@@ -11,6 +12,9 @@ import '../widgets/reaction_mechanisms_card.dart';
 import 'pdf_library_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_hub.dart';
+import 'spectroscopy_hub_screen.dart';
+import 'pericyclic_hub_screen.dart';
+import 'exam_pattern_quiz_screen.dart';
 
 class ResourcesScreen extends ConsumerStatefulWidget {
   const ResourcesScreen({super.key});
@@ -28,7 +32,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       children: [
-        const Text('Library & Tools', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+        const Text('Library & MSc Tools', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
         const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -43,6 +47,10 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
               _TabChip(label: 'Quizzes', selected: tab == 3, onTap: () => setState(() => tab = 3)),
               const SizedBox(width: 8),
               _TabChip(label: 'Notes', selected: tab == 4, onTap: () => setState(() => tab = 4)),
+              const SizedBox(width: 8),
+              _TabChip(label: '🧲 Spectroscopy', selected: tab == 5, onTap: () => setState(() => tab = 5)),
+              const SizedBox(width: 8),
+              _TabChip(label: '🌀 Pericyclics', selected: tab == 6, onTap: () => setState(() => tab = 6)),
             ],
           ),
         ),
@@ -52,10 +60,13 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         if (tab == 2) const SmartFlashcardsHub(),
         if (tab == 3) const _QuizzesAndMasteryTab(),
         if (tab == 4) _NotesTab(state: state),
+        if (tab == 5) const SizedBox(height: 650, child: SpectroscopyHubScreen()),
+        if (tab == 6) const SizedBox(height: 650, child: PericyclicHubScreen()),
       ],
     );
   }
 }
+
 
 class _TabChip extends StatelessWidget {
   const _TabChip({required this.label, required this.selected, required this.onTap});
@@ -120,28 +131,71 @@ class _QuizzesAndMasteryTab extends ConsumerWidget {
       allQuizzes.addAll(repo.getPdfQuizzes(pdf.id));
     }
 
-    if (allQuizzes.isEmpty) {
-      return const GlowCard(
-        child: Column(
+    final examCard = Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: GlowCard(
+        borderColor: AppColors.accentGold.withValues(alpha: 0.4),
+        padding: const EdgeInsets.all(14),
+        onTap: () {
+          AppHaptics.confirm();
+          Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ExamPatternQuizScreen()));
+        },
+        child: Row(
           children: [
-            Icon(Icons.quiz_outlined, size: 48, color: AppColors.purpleBright),
-            SizedBox(height: 12),
-            Text('No Quiz History Yet', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-            SizedBox(height: 8),
-            Text(
-              'Take a quiz from any uploaded PDF notes to track your Strong 🟢, Moderate 🟡, and Weak 🔴 chemistry topic mastery here.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.accentGold.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.school_rounded, color: AppColors.accentGold, size: 20),
             ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('University Exam Pattern Paper 📝', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white)),
+                  SizedBox(height: 2),
+                  Text('Practice authentic 2M, 5M, and 10M questions with model marking schemes.', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.accentGold, size: 20),
           ],
         ),
+      ),
+    );
+
+    if (allQuizzes.isEmpty) {
+      return Column(
+        children: [
+          examCard,
+          const GlowCard(
+            child: Column(
+              children: [
+                Icon(Icons.quiz_outlined, size: 48, color: AppColors.purpleBright),
+                SizedBox(height: 12),
+                Text('No Quiz History Yet', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                SizedBox(height: 8),
+                Text(
+                  'Take a quiz from any uploaded PDF notes to track your Strong 🟢, Moderate 🟡, and Weak 🔴 chemistry topic mastery here.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        examCard,
         const Text('Chemistry Topic Mastery 🧠', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+
         const SizedBox(height: 8),
         const Text(
           'Adaptive tracking based on your PDF quiz performance:',

@@ -23,8 +23,13 @@ import 'reaction_mechanism_screen.dart';
 import 'search_screen.dart';
 import 'smart_flashcards_hub.dart';
 import 'smart_flashcards_study_screen.dart';
+import 'spectroscopy_hub_screen.dart';
+import 'pericyclic_hub_screen.dart';
+import 'exam_pattern_quiz_screen.dart';
+import '../../data/services/study_analytics_service.dart';
 import '../widgets/reaction_mechanisms_card.dart';
 import '../widgets/viva_practice_dialog.dart';
+
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -367,8 +372,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         const SizedBox(height: 16),
 
+        // MSc Specialization & Advanced Tools
+        const SectionTitle('MSc Chemistry Hub 🎓'),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildMscToolCard(
+                title: 'Spectroscopy Hub',
+                subtitle: '¹H/¹³C NMR, FT-IR & MS',
+                icon: Icons.graphic_eq_rounded,
+                color: AppColors.brandBright,
+                onTap: () {
+                  AppHaptics.selection();
+                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SpectroscopyHubScreen()));
+                },
+              ),
+              const SizedBox(width: 10),
+              _buildMscToolCard(
+                title: 'Pericyclic Rules',
+                subtitle: 'Woodward-Hoffmann & FMO',
+                icon: Icons.all_inclusive_rounded,
+                color: AppColors.accentCyan,
+                onTap: () {
+                  AppHaptics.selection();
+                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PericyclicHubScreen()));
+                },
+              ),
+              const SizedBox(width: 10),
+              _buildMscToolCard(
+                title: 'University Exams',
+                subtitle: '2M, 5M & 10M Rubrics',
+                icon: Icons.school_rounded,
+                color: AppColors.accentGold,
+                onTap: () {
+                  AppHaptics.selection();
+                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ExamPatternQuizScreen()));
+                },
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
         // 6. Next class or schedule status
         const SectionTitle('Schedule & Classes 🏫'),
+
         _NextClassCard(state: state),
         const SizedBox(height: 12),
 
@@ -668,6 +718,101 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 
   Widget _buildStudyRecommendation(AppState state) {
+    final analyticsService = ref.watch(studyAnalyticsServiceProvider);
+    final analytics = analyticsService.computeSummary(streakDays: ref.watch(chemRepositoryProvider).streak());
+    final weakTopics = analytics.weakTopics;
+
+
+    if (weakTopics.isNotEmpty) {
+      final primaryWeak = weakTopics.first;
+      return GlowCard(
+        borderColor: AppColors.statusDanger.withValues(alpha: 0.4),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.statusDanger.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.crisis_alert_rounded, color: AppColors.statusDanger, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Targeted Weak-Topic Revision 🎯',
+                        style: TextStyle(color: AppColors.statusDanger, fontWeight: FontWeight.w800, fontSize: 12.5),
+                      ),
+                      Text(
+                        '${primaryWeak.topic} (${primaryWeak.accuracy.toStringAsFixed(0)}% accuracy in quizzes)',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your quiz and flashcard history indicates retention lapses in ${primaryWeak.topic}. Review key principles and practice questions to strengthen mastery.',
+              style: const TextStyle(color: AppColors.textPrimary, fontSize: 12.5, height: 1.35),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.brandBright,
+                    side: const BorderSide(color: AppColors.borderHighlight),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  ),
+                  onPressed: () {
+                    AppHaptics.tap();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SmartFlashcardsPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.style, size: 15),
+                  label: const Text('Review Cards', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.brandPrimary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  ),
+                  onPressed: () {
+                    AppHaptics.confirm();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => ExamPatternQuizScreen(examTitle: '${primaryWeak.topic} Practice Exam'),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.quiz_outlined, size: 15),
+                  label: const Text('Targeted Quiz', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
     final now = DateTime.now();
     final today = state.entries.where((e) => e.weekdayNumber == now.weekday).toList()
       ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
@@ -728,7 +873,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildMscToolCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 175,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.35), width: 1.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showAddTestDialog(BuildContext context, WidgetRef ref, AppState state) {
+
     final title = TextEditingController();
     final desc = TextEditingController();
     var type = EventType.test;
