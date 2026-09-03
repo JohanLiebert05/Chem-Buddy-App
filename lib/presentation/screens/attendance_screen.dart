@@ -13,7 +13,9 @@ import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_hub.dart';
 
 class AttendanceScreen extends ConsumerWidget {
-  const AttendanceScreen({super.key});
+  final bool embedded;
+
+  const AttendanceScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,10 +29,13 @@ class AttendanceScreen extends ConsumerWidget {
     final projected = overall.projectedPercent(remaining: remaining);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+      padding: EdgeInsets.fromLTRB(20, embedded ? 4 : 12, 20, 100),
       children: [
-        const Text('Attendance', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 12),
+        if (!embedded) ...[
+          const Text('Attendance', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 12),
+        ],
+
         GlowCard(
           child: Row(
             children: [

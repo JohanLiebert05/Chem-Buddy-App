@@ -308,7 +308,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _QuickTile(
               icon: Icons.chat_bubble_outline,
               label: 'Ask AI',
-              onTap: () => ref.read(shellTabProvider.notifier).state = 1,
+              onTap: () => ref.read(shellTabProvider.notifier).state = 2,
             ),
             _QuickTile(
               icon: Icons.quiz_outlined,
@@ -329,15 +329,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _QuickTile(
               icon: Icons.upload_file_outlined,
               label: 'Upload',
-              onTap: () => ref.read(shellTabProvider.notifier).state = 4,
+              onTap: () => ref.read(shellTabProvider.notifier).state = 3,
             ),
             _QuickTile(
               icon: Icons.science_outlined,
               label: 'Mechanism',
-              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ReactionMechanismsScreen())),
+              onTap: () {
+                AppHaptics.selection();
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.hourglass_top_rounded, color: AppColors.accentGold, size: 20),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Reaction Mechanisms Explorer is coming soon! ⚗️',
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: const Color(0xFF1E1B38),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: AppColors.borderHighlight, width: 0.8),
+                    ),
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              },
             ),
           ],
         ),
+
         const SizedBox(height: 16),
 
         // 6. Next class or schedule status
@@ -347,10 +374,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         // 7. Attendance health status
         GlowCard(
-          onTap: () => ref.read(shellTabProvider.notifier).state = 2,
+          onTap: () => ref.read(shellTabProvider.notifier).state = 1,
           child: Row(
             children: [
               CircularAttendance(percent: overall.percent),
+
               const SizedBox(width: 16),
               Expanded(
                 child: Column(

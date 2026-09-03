@@ -52,3 +52,7 @@ app.*.map.json
 .env.*
 *.env.local
 !.env.example
+
+# Release APKs (too large for GitHub)
+*.apk
+build/

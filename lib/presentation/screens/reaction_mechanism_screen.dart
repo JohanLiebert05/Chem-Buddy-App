@@ -337,10 +337,11 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () {
-                      ref.read(shellTabProvider.notifier).state = 1; // Go to Ask AI
+                      ref.read(shellTabProvider.notifier).state = 2; // Go to Ask AI
                       Navigator.pop(context);
                     },
                     icon: const Icon(Icons.chat_bubble_outline, size: 18),
+
                     label: const Text('Ask ChemBuddy', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                   ),
                 ),

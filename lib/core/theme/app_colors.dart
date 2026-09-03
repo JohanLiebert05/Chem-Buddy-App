@@ -1,11 +1,43 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const background = Color(0xFF111318);
-  static const backgroundAlt = Color(0xFF1A1C22);
-  static const surface = Color(0xFF1A1C22);
-  static const surfaceElevated = Color(0xFF22242C);
-  static const card = Color(0xE01A1C22);
+  // --- Authoritative Design System v3.0 Tokens ---
+  static const bg0 = Color(0xFF0A0914); // Deepest canvas background
+  static const bg1 = Color(0xFF131127); // Standard card & container surface
+  static const bg2 = Color(0xFF1E1B38); // Elevated surfaces, chips, inputs
+
+  static const borderSubtle = Color(0x14FFFFFF); // Hairline borders
+  static const borderHighlight = Color(0x47A78BFA); // Selected/focused states
+  static const borderAccent = Color(0x808B5CF6); // Interactive card highlights
+
+  static const brandPrimary = Color(0xFF8B5CF6); // Vibrant brand purple
+  static const brandBright = Color(0xFFA78BFA); // Lavender heading/LaTeX
+  static const brandDeep = Color(0xFF6B45FA); // Royal glow violet
+  static const accentCyan = Color(0xFF06B6D4); // Spectroscopy / lab cyan
+  static const accentGold = Color(0xFFF59E0B); // Streaks / mastery gold
+
+  static const statusSuccess = Color(0xFF10B981);
+  static const statusWarning = Color(0xFFF59E0B);
+  static const statusDanger = Color(0xFFEF4444);
+  static const statusInfo = Color(0xFF60A5FA);
+
+  static const brandGradient = LinearGradient(
+    colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const brandGlowGradient = RadialGradient(
+    colors: [Color(0x338B5CF6), Colors.transparent],
+    radius: 0.8,
+  );
+
+  // --- Legacy Compatibility Aliases (Preserve 100% existing code) ---
+  static const background = Color(0xFF0A0914);
+  static const backgroundAlt = Color(0xFF131127);
+  static const surface = Color(0xFF131127);
+  static const surfaceElevated = Color(0xFF1E1B38);
+  static const card = Color(0xE0131127);
   static const border = Color(0x14FFFFFF);
   static const purple = Color(0xFFA78BFA);
   static const purpleBright = Color(0xFFA78BFA);

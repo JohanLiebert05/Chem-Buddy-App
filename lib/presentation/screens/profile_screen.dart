@@ -165,9 +165,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         TextButton(
                           onPressed: () {
-                            ref.read(shellTabProvider.notifier).state = 1; // Ask AI tab
+                            ref.read(shellTabProvider.notifier).state = 2; // Ask AI tab
                           },
                           style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
+
                           child: const Text('Study →', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 12)),
                         ),
                       ],
