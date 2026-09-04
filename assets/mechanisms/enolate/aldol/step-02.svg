@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>Aldol condensation mechanism - step 2</title>
+  <desc>Enolate carbon attacks a second acetaldehyde carbonyl. Enolate pi/lone pair equivalent to the electrophilic carbonyl carbon; C=O pi bond to oxygen.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">C-C bond formation</text></g>
+  <g id="intermediate-1">
+    <line x1="140" y1="200" x2="200" y2="200" stroke="#111" stroke-width="2.1"/>
+    <line x1="140" y1="194" x2="200" y2="194" stroke="#111" stroke-width="2.1"/>
+    <text x="90" y="198" font-family="Arial, Helvetica, sans-serif" font-size="16">O-</text>
+    <line x1="140" y1="200" x2="110" y2="160" stroke="#111" stroke-width="2.1"/>
+    <line x1="320" y1="200" x2="380" y2="200" stroke="#111" stroke-width="2.1"/>
+    <line x1="380" y1="200" x2="420" y2="150" stroke="#111" stroke-width="2.1"/>
+    <line x1="376" y1="200" x2="416" y2="150" stroke="#111" stroke-width="2.1"/>
+    <text x="424" y="146" font-family="Arial, Helvetica, sans-serif" font-size="16">O</text>
+    <text x="388" y="230" font-family="Arial, Helvetica, sans-serif" font-size="14">H</text>
+  </g>
+  <g id="electron-arrows">
+    <path d="M 200 198 C 250 170 300 170 368 188" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 398 168 C 415 150 420 145 428 148" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+  </g>
+  <g id="labels"><text x="220" y="280" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">enolate C to carbonyl C</text></g>
+
+</svg>

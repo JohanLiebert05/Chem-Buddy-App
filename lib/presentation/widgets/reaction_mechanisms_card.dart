@@ -17,16 +17,16 @@ class ReactionMechanismsCard extends StatelessWidget {
   final VoidCallback? onNotifyTap;
 
   static const _previewReactions = [
-    'SN1 Substitution',
-    'SN2 Inversion',
-    'E1 Elimination',
-    'E2 Anti-Periplanar',
-    'Cannizzaro Redox',
-    'Wittig Olefination',
-    'Diels-Alder (4+2)',
-    'Grignard Addition',
-    'Beckmann Rearrangement',
-    'Benzoin Condensation',
+    ('sn2', 'SN2 Inversion'),
+    ('sn1', 'SN1 Substitution'),
+    ('e2', 'E2 Anti-Periplanar'),
+    ('e1', 'E1 Elimination'),
+    ('cannizzaro', 'Cannizzaro Redox'),
+    ('wittig', 'Wittig Olefination'),
+    ('diels_alder', 'Diels-Alder (4+2)'),
+    ('grignard', 'Grignard Addition'),
+    ('beckmann', 'Beckmann Rearrangement'),
+    ('benzoin', 'Benzoin Condensation'),
   ];
 
   void _openMechanisms(BuildContext context, [String? query]) {
@@ -201,9 +201,11 @@ class ReactionMechanismsCard extends StatelessWidget {
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            children: _previewReactions.map((name) {
+            children: _previewReactions.map((entry) {
+              final id = entry.$1;
+              final name = entry.$2;
               return InkWell(
-                onTap: () => _openMechanisms(context, name),
+                onTap: () => _openMechanisms(context, id),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),

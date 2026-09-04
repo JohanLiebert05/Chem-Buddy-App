@@ -10,6 +10,7 @@ import '../../core/widgets/hex_background.dart';
 import '../../data/models/reaction_models.dart';
 import '../../data/services/reaction_mechanism_service.dart';
 import '../providers/app_providers.dart';
+import '../widgets/mechanism_step_viewer.dart';
 import 'smart_flashcards_generate_screen.dart';
 
 class ReactionMechanismsScreen extends ConsumerStatefulWidget {
@@ -248,9 +249,20 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                         ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.verified, color: AppColors.success, size: 18),
+                      Icon(
+                        m.isVerified ? Icons.verified : Icons.science_outlined,
+                        color: m.isVerified ? AppColors.success : AppColors.warning,
+                        size: 18,
+                      ),
                       const SizedBox(width: 4),
-                      const Text('Verified MSc Mechanism', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 11)),
+                      Text(
+                        m.isVerified ? 'Verified MSc Mechanism' : 'Needs chemical review',
+                        style: TextStyle(
+                          color: m.isVerified ? AppColors.success : AppColors.warning,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -266,11 +278,21 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                   _buildSpecRow('Reagents & Conditions', m.reagentsAndConditions),
                   const SizedBox(height: 8),
                   _buildSpecRow('Products', m.products),
+                  if (m.representativeExample != null) ...[
+                    const SizedBox(height: 8),
+                    _buildSpecRow('Representative example', m.representativeExample!),
+                  ],
                 ],
               ),
             ),
-            if (m.svgContent != null && m.svgContent!.isNotEmpty) ...[
-              const SizedBox(height: 18),
+            const SizedBox(height: 18),
+            if (m.hasChemDrawSteps)
+              GlowCard(
+                padding: const EdgeInsets.all(14),
+                borderColor: AppColors.purple.withValues(alpha: 0.4),
+                child: MechanismStepViewer(mechanism: m),
+              )
+            else if (m.svgContent != null && m.svgContent!.isNotEmpty) ...[
               Row(
                 children: [
                   const Icon(Icons.polyline_rounded, color: AppColors.purpleBright, size: 18),

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>SN1 reaction mechanism - step 2</title>
+  <desc>Planar tert-butyl cation. Water oxygen lone pair attacks the empty p orbital at carbon from either face.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">planar carbocation</text></g>
+  <g id="intermediate-1">
+    <line x1="300" y1="200" x2="300" y2="130" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="300" y1="200" x2="240" y2="240" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="300" y1="200" x2="360" y2="240" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <text x="286" y="118" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+    <text x="208" y="258" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+    <text x="354" y="258" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+    <text x="308" y="196" font-family="Arial, Helvetica, sans-serif" font-size="16">+</text>
+    <ellipse cx="300" cy="200" rx="10" ry="26" fill="none" stroke="#555" stroke-dasharray="3 3"/>
+    <text x="80" y="208" font-family="Arial, Helvetica, sans-serif" font-size="18">H2O</text>
+    <ellipse cx="130" cy="192" rx="2.2" ry="2.2" fill="#111"/>
+    <ellipse cx="130" cy="204" rx="2.2" ry="2.2" fill="#111"/>
+  </g>
+  <g id="electron-arrows">
+    <path d="M 140 198 C 200 160 250 160 288 188" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+  </g>
+  <g id="labels"><text x="70" y="240" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">water lone pair to C+</text></g>
+
+</svg>

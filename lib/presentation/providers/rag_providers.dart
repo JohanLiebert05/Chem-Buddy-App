@@ -77,10 +77,11 @@ class ChatController extends Notifier<ChatState> {
     state = state.copyWith(clearDocument: true);
   }
 
-  Future<void> sendMessage(String question, {String? subject}) async {
+  Future<void> sendMessage(String question, {String? subject, String? modelPrompt}) async {
     final ragService = ref.read(ragServiceProvider);
     final userId = SupabaseService.instance.userId ?? 'anonymous';
     final tempId = const Uuid().v4();
+    final prior = List<AiMessage>.from(state.messages);
 
     final userMessage = AiMessage(
       id: tempId,
@@ -92,22 +93,19 @@ class ChatController extends Notifier<ChatState> {
     );
 
     state = state.copyWith(
-      messages: [...state.messages, userMessage],
+      messages: [...prior, userMessage],
       isLoading: true,
       clearError: true,
     );
 
     try {
+      final history = prior.length > 4 ? prior.sublist(prior.length - 4) : prior;
       final response = await ragService.ask(
-        question: question,
+        question: modelPrompt ?? question,
         subject: subject,
         documentText: state.activeDocumentText,
         documentName: state.activeDocumentName,
-        // Only pass last 4 messages to prevent cross-topic context contamination.
-        // Full history caused stale topic context from prior turns to corrupt retrieval.
-        history: state.messages.length > 4
-            ? state.messages.sublist(state.messages.length - 4)
-            : state.messages,
+        history: history,
       );
 
       final assistantMessage = AiMessage(
@@ -139,7 +137,7 @@ class ChatController extends Notifier<ChatState> {
     }
   }
   
-  void clearChat() => state = state.copyWith(messages: const []);
+  void clearChat() => state = state.copyWith(messages: const [], clearError: true, clearDocument: false);
 }
 
 final chatControllerProvider = NotifierProvider<ChatController, ChatState>(ChatController.new);

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>SN2 reaction mechanism - step 3</title>
+  <desc>Walden inversion product: (R)-butan-2-ol. Hydroxide is fully bonded at C2. The methyl and hydrogen stereochemical markers are inverted relative to the starting (S)-2-bromobutane. Bromide is the leaving-group product.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions">
+    <text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">inversion of configuration</text>
+  </g>
+
+  <g id="products">
+    <g id="butan-2-ol">
+      <line x1="232" y1="200" x2="300" y2="200" stroke="#111111" stroke-width="2.1" stroke-linecap="round"/>
+      <text x="188" y="208" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="600" fill="#111111">HO</text>
+      <line x1="300" y1="200" x2="338" y2="262" stroke="#111111" stroke-width="2.1" stroke-linecap="round"/>
+      <line x1="338" y1="262" x2="402" y2="262" stroke="#111111" stroke-width="2.1" stroke-linecap="round"/>
+      <g id="hash-me">
+        <line x1="294" y1="186" x2="306" y2="186" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="291" y1="174" x2="309" y2="174" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="288" y1="162" x2="312" y2="162" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="285" y1="150" x2="315" y2="150" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="282" y1="138" x2="318" y2="138" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="279" y1="126" x2="321" y2="126" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+      </g>
+      <text x="236" y="104" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#111111">CH3</text>
+      <polygon id="wedge-h" points="300,200 268,292 292,292" fill="#111111"/>
+      <text x="272" y="316" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#111111">H</text>
+    </g>
+    <g id="bromide">
+      <text x="560" y="208" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600" fill="#111111">Br</text>
+      <text x="592" y="176" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#111111">-</text>
+      <ellipse cx="548" cy="190" rx="2.2" ry="2.2" fill="#111111"/>
+      <ellipse cx="548" cy="200" rx="2.2" ry="2.2" fill="#111111"/>
+      <ellipse cx="548" cy="210" rx="2.2" ry="2.2" fill="#111111"/>
+      <ellipse cx="548" cy="220" rx="2.2" ry="2.2" fill="#111111"/>
+    </g>
+  </g>
+
+  <g id="electron-arrows"></g>
+
+  <g id="labels">
+    <text x="300" y="86" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444444">(R)-butan-2-ol</text>
+    <text x="576" y="248" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444444">bromide</text>
+  </g>
+</svg>

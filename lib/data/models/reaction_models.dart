@@ -48,12 +48,41 @@ extension ReactionCategoryExtension on ReactionCategory {
   }
 }
 
+class ElectronFlow {
+  const ElectronFlow({
+    required this.type,
+    required this.source,
+    required this.destination,
+  });
+
+  /// `two-electron` or `fishhook`.
+  final String type;
+  final String source;
+  final String destination;
+
+  factory ElectronFlow.fromJson(Map<String, dynamic> json) {
+    return ElectronFlow(
+      type: json['type'] as String? ?? 'two-electron',
+      source: json['source'] as String? ?? '',
+      destination: json['destination'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'source': source,
+    'destination': destination,
+  };
+}
+
 class ReactionStep {
   final int stepNumber;
   final String title;
   final String description;
   final String? curvedArrowNotes;
   final String? intermediate;
+  final String? svgAsset;
+  final List<ElectronFlow> electronFlow;
 
   const ReactionStep({
     required this.stepNumber,
@@ -61,6 +90,8 @@ class ReactionStep {
     required this.description,
     this.curvedArrowNotes,
     this.intermediate,
+    this.svgAsset,
+    this.electronFlow = const [],
   });
 
   factory ReactionStep.fromJson(Map<String, dynamic> json) {
@@ -70,6 +101,10 @@ class ReactionStep {
       description: json['description'] as String? ?? '',
       curvedArrowNotes: json['curved_arrow_notes'] as String?,
       intermediate: json['intermediate'] as String?,
+      svgAsset: json['svg'] as String? ?? json['svg_asset'] as String?,
+      electronFlow: (json['electron_flow'] as List? ?? const [])
+          .map((e) => ElectronFlow.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList(),
     );
   }
 
@@ -79,6 +114,8 @@ class ReactionStep {
     'description': description,
     if (curvedArrowNotes != null) 'curved_arrow_notes': curvedArrowNotes,
     if (intermediate != null) 'intermediate': intermediate,
+    if (svgAsset != null) 'svg_asset': svgAsset,
+    if (electronFlow.isNotEmpty) 'electron_flow': electronFlow.map((e) => e.toJson()).toList(),
   };
 }
 
@@ -98,6 +135,8 @@ class ReactionMechanism {
   final List<String> keyApplications;
   final List<String> limitations;
   final bool isVerified;
+  final String? representativeExample;
+  final String verificationStatus;
 
   const ReactionMechanism({
     required this.id,
@@ -115,7 +154,11 @@ class ReactionMechanism {
     this.keyApplications = const [],
     this.limitations = const [],
     this.isVerified = false,
+    this.representativeExample,
+    this.verificationStatus = 'needs_review',
   });
+
+  bool get hasChemDrawSteps => steps.any((s) => s.svgAsset != null && s.svgAsset!.isNotEmpty);
 
   factory ReactionMechanism.fromJson(Map<String, dynamic> json) {
     return ReactionMechanism(
@@ -139,6 +182,8 @@ class ReactionMechanism {
       keyApplications: List<String>.from(json['key_applications'] as List? ?? const []),
       limitations: List<String>.from(json['limitations'] as List? ?? const []),
       isVerified: json['is_verified'] as bool? ?? false,
+      representativeExample: json['representative_example'] as String?,
+      verificationStatus: json['verification_status'] as String? ?? 'needs_review',
     );
   }
 
@@ -158,6 +203,8 @@ class ReactionMechanism {
     'key_applications': keyApplications,
     'limitations': limitations,
     'is_verified': isVerified,
+    if (representativeExample != null) 'representative_example': representativeExample,
+    'verification_status': verificationStatus,
   };
 }
 

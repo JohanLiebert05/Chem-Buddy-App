@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>Aldol condensation mechanism - step 1</title>
+  <desc>Ethoxide deprotonates acetaldehyde at the alpha carbon, forming the enolate. Lone pair on oxygen of ethoxide to alpha-H; C-H bonding pair to the carbonyl pi system / enolate oxygen.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">NaOEt, EtOH</text></g>
+  <g id="reactants">
+    <text x="40" y="208" font-family="Arial, Helvetica, sans-serif" font-size="18">EtO-</text>
+    <ellipse cx="95" cy="192" rx="2.2" ry="2.2" fill="#111"/>
+    <text x="150" y="230" font-family="Arial, Helvetica, sans-serif" font-size="14">H</text>
+    <line x1="160" y1="218" x2="210" y2="200" stroke="#111" stroke-width="2.1"/>
+    <line x1="210" y1="200" x2="270" y2="200" stroke="#111" stroke-width="2.1"/>
+    <line x1="270" y1="200" x2="310" y2="150" stroke="#111" stroke-width="2.1"/>
+    <line x1="266" y1="200" x2="306" y2="150" stroke="#111" stroke-width="2.1"/>
+    <text x="314" y="146" font-family="Arial, Helvetica, sans-serif" font-size="16">O</text>
+    <text x="278" y="230" font-family="Arial, Helvetica, sans-serif" font-size="14">H</text>
+    <line x1="270" y1="200" x2="285" y2="230" stroke="#111" stroke-width="2"/>
+  </g>
+  <g id="electron-arrows">
+    <path d="M 104 194 C 125 210 140 220 158 218" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 180 210 C 230 170 260 160 300 160" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+  </g>
+  <g id="labels"><text x="120" y="290" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">base to alpha-H; C-H to enolate O</text></g>
+
+</svg>

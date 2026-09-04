@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>Cannizzaro reaction mechanism - step 2</title>
+  <desc>Hydride transfer from the tetrahedral intermediate to a second benzaldehyde. The C-H bonding pair is the hydride source; destination is the second carbonyl carbon.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">hydride transfer</text></g>
+  <g id="intermediate-1">
+    <polygon points="160,160 190,175 190,205 160,220 130,205 130,175" fill="none" stroke="#111" stroke-width="2"/>
+    <line x1="190" y1="190" x2="250" y2="190" stroke="#111" stroke-width="2.1"/>
+    <text x="256" y="180" font-family="Arial, Helvetica, sans-serif" font-size="14">O-</text>
+    <line x1="250" y1="190" x2="250" y2="240" stroke="#111" stroke-width="2.1"/>
+    <text x="244" y="262" font-family="Arial, Helvetica, sans-serif" font-size="14">H</text>
+    <line x1="250" y1="190" x2="290" y2="150" stroke="#111" stroke-width="2.1"/>
+    <text x="292" y="146" font-family="Arial, Helvetica, sans-serif" font-size="14">OH</text>
+    <polygon points="480,160 510,175 510,205 480,220 450,205 450,175" fill="none" stroke="#111" stroke-width="2"/>
+    <line x1="510" y1="190" x2="570" y2="190" stroke="#111" stroke-width="2.1"/>
+    <line x1="570" y1="190" x2="610" y2="140" stroke="#111" stroke-width="2.1"/>
+    <line x1="566" y1="190" x2="606" y2="140" stroke="#111" stroke-width="2.1"/>
+    <text x="614" y="136" font-family="Arial, Helvetica, sans-serif" font-size="16">O</text>
+  </g>
+  <g id="electron-arrows">
+    <path d="M 252 230 C 320 250 400 230 555 198" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 588 168 C 605 150 610 145 618 148" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+  </g>
+  <g id="labels"><text x="280" y="310" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">C-H hydride to second carbonyl C</text></g>
+
+</svg>

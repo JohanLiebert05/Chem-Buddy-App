@@ -33,8 +33,12 @@ class RagService {
         if (response is Map<String, dynamic> && response['answer'] != null) {
           return RagResponse.fromJson(response);
         }
-      } catch (_) {
-        // Fall back seamlessly to local academic chemistry knowledge engine
+      } catch (e) {
+        final msg = e.toString().toLowerCase();
+        if (msg.contains('sign in') || msg.contains('401')) {
+          rethrow;
+        }
+        debugPrint('[RAG] Cloud ask failed, using local engine: $e');
       }
     }
 

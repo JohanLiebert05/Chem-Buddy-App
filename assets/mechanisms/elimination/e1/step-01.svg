@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>E1 reaction mechanism - step 1</title>
+  <desc>Leaving-group departure from tert-butyl bromide to the tert-butyl cation. Same ionization as SN1; E1 vs SN1 is decided in the next step.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">heat, polar protic</text></g>
+  <g id="reactants">
+    <line x1="220" y1="200" x2="220" y2="130" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="220" y1="200" x2="160" y2="240" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="220" y1="200" x2="280" y2="240" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="220" y1="200" x2="330" y2="200" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <text x="338" y="208" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600">Br</text>
+  </g>
+  <g id="electron-arrows">
+    <path d="M 270 192 C 300 150 320 152 342 188" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+  </g>
+  <g id="labels"><text x="180" y="300" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">C-Br to Br</text></g>
+
+</svg>

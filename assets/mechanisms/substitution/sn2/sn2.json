@@ -1,0 +1,60 @@
+{
+  "id": "sn2",
+  "name": "SN2 Reaction",
+  "category": "substitution",
+  "representative_example": "(S)-2-bromobutane + hydroxide ion → (R)-butan-2-ol + bromide",
+  "representative_example_source": "canonical_example_not_specified_in_source_directory",
+  "conditions": ["NaOH", "DMSO (polar aprotic)"],
+  "number_of_steps": 3,
+  "stereochemistry": true,
+  "mechanism_type": "two-electron",
+  "svg_path": "assets/mechanisms/substitution/sn2/",
+  "verification_status": "needs_review",
+  "verified": false,
+  "review_notes": "SN2 electron flow and Walden inversion are textbook-standard. Confirm CIP labels (S)-2-bromobutane → (R)-butan-2-ol against the drawn wedges before marking verified.",
+  "steps": [
+    {
+      "step": 1,
+      "title": "Backside nucleophilic attack with simultaneous C–Br cleavage",
+      "description": "Hydroxide donates a lone pair into the C–Br σ* orbital from 180° opposite bromine. The C–Br bonding pair departs onto bromine in the same concerted step.",
+      "svg": "assets/mechanisms/substitution/sn2/step-01.svg",
+      "electron_flow": [
+        {
+          "type": "two-electron",
+          "source": "hydroxide oxygen lone pair",
+          "destination": "electrophilic C2 of 2-bromobutane"
+        },
+        {
+          "type": "two-electron",
+          "source": "C2–Br σ bond",
+          "destination": "bromine atom (leaving group)"
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Trigonal bipyramidal transition state",
+      "description": "Pentacoordinate carbon with collinear HO···C···Br. Methyl, hydrogen, and ethyl occupy the equatorial plane. This is a transition state, not a discrete intermediate.",
+      "svg": "assets/mechanisms/substitution/sn2/step-02.svg",
+      "electron_flow": [
+        {
+          "type": "two-electron",
+          "source": "partial C–O bond forming",
+          "destination": "electrophilic carbon (already in flight)"
+        },
+        {
+          "type": "two-electron",
+          "source": "partial C–Br bond breaking",
+          "destination": "bromine"
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "title": "Walden inversion — (R)-butan-2-ol",
+      "description": "The nucleophile is fully bonded. Configuration at C2 is inverted relative to the starting alkyl bromide. Bromide is the leaving-group product.",
+      "svg": "assets/mechanisms/substitution/sn2/step-03.svg",
+      "electron_flow": []
+    }
+  ]
+}

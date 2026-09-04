@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>Grignard reaction mechanism - step 2</title>
+  <desc>Tetrahedral alkoxide-magnesium complex. Do not skip this intermediate.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">alkoxide-MgX complex</text></g>
+  <g id="intermediate-1">
+    <line x1="250" y1="140" x2="300" y2="190" stroke="#111" stroke-width="2.1"/>
+    <line x1="250" y1="240" x2="300" y2="190" stroke="#111" stroke-width="2.1"/>
+    <line x1="200" y1="190" x2="300" y2="190" stroke="#111" stroke-width="2.1"/>
+    <text x="168" y="196" font-family="Arial, Helvetica, sans-serif" font-size="14">H3C</text>
+    <line x1="300" y1="190" x2="360" y2="150" stroke="#111" stroke-width="2.1"/>
+    <text x="364" y="146" font-family="Arial, Helvetica, sans-serif" font-size="16">O- MgBr+</text>
+  </g>
+  <g id="electron-arrows"></g>
+  <g id="labels"><text x="180" y="290" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">tert-alkoxide (from acetone + MeMgBr)</text></g>
+
+</svg>

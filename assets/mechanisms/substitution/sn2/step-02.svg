@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>SN2 reaction mechanism - step 2</title>
+  <desc>Trigonal bipyramidal SN2 transition state. Hydroxide and bromine are collinear and partially bound. Methyl, hydrogen, and ethyl occupy the equatorial plane. This is a transition state, not a carbocation intermediate.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions">
+    <text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">concerted TS - no discrete intermediate</text>
+  </g>
+
+  <g id="intermediate-1">
+    <text x="52" y="208" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#111111">HO</text>
+    <text x="86" y="176" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#111111">d-</text>
+    <line x1="92" y1="200" x2="268" y2="200" stroke="#111111" stroke-width="2.0" stroke-dasharray="7 5" stroke-linecap="round"/>
+    <circle cx="300" cy="200" r="2.4" fill="#111111"/>
+    <line x1="332" y1="200" x2="498" y2="200" stroke="#111111" stroke-width="2.0" stroke-dasharray="7 5" stroke-linecap="round"/>
+    <text x="504" y="208" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600" fill="#111111">Br</text>
+    <text x="538" y="176" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#111111">d-</text>
+    <line x1="300" y1="200" x2="338" y2="262" stroke="#111111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="338" y1="262" x2="402" y2="262" stroke="#111111" stroke-width="2.1" stroke-linecap="round"/>
+    <polygon points="300,200 268,108 292,108" fill="#111111"/>
+    <text x="236" y="104" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#111111">CH3</text>
+    <g>
+      <line x1="294" y1="214" x2="306" y2="214" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="291" y1="226" x2="309" y2="226" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="288" y1="238" x2="312" y2="238" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="285" y1="250" x2="315" y2="250" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="282" y1="262" x2="318" y2="262" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+    </g>
+    <text x="268" y="302" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#111111">H</text>
+    <text x="292" y="78" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#333333">[HO...C...Br] TS</text>
+  </g>
+
+  <g id="electron-arrows">
+    <path d="M 160 188 C 210 150 250 150 288 188" fill="none" stroke="#111111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 380 188 C 430 148 470 150 508 188" fill="none" stroke="#111111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+  </g>
+
+  <g id="labels">
+    <text x="120" y="236" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444444">forming C-O</text>
+    <text x="400" y="236" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444444">breaking C-Br</text>
+  </g>
+</svg>

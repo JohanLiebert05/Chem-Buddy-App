@@ -1,0 +1,20 @@
+{
+  "library": "chembuddy-chemdraw-mechanisms",
+  "version": "0.2.0",
+  "source_of_truth": "Comprehensive Directory of Organic Chemistry Reaction Mechanisms (reaction CLASSES). Representative examples are canonical textbook substrates.",
+  "storage": "bundled SVG assets",
+  "in_app_set": 10,
+  "mechanisms": [
+    {"id": "sn1", "category": "substitution", "steps": 3},
+    {"id": "sn2", "category": "substitution", "steps": 3},
+    {"id": "e1", "category": "elimination", "steps": 3},
+    {"id": "e2", "category": "elimination", "steps": 2},
+    {"id": "cannizzaro", "category": "named", "steps": 3},
+    {"id": "aldol", "category": "enolate", "steps": 3},
+    {"id": "wittig", "category": "carbonyl", "steps": 3},
+    {"id": "diels_alder", "category": "pericyclic", "steps": 2},
+    {"id": "grignard", "category": "carbonyl", "steps": 3},
+    {"id": "beckmann", "category": "rearrangements", "steps": 3},
+    {"id": "benzoin", "category": "named", "steps": 3}
+  ]
+}

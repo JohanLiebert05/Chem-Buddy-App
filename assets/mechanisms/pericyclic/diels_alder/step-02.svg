@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>Diels-Alder reaction mechanism - step 2</title>
+  <desc>Cyclohexene. The new sigma bonds and the remaining endocyclic alkene are the concerted cycloaddition product. Stereochemistry is syn with respect to the diene/dienophile approach.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">cyclohexene</text></g>
+  <g id="products">
+    <polygon points="300,120 360,150 360,210 300,240 240,210 240,150" fill="none" stroke="#111" stroke-width="2.1"/>
+    <line x1="240" y1="150" x2="300" y2="120" stroke="#111" stroke-width="2.1"/>
+    <line x1="242" y1="156" x2="298" y2="126" stroke="#111" stroke-width="2.1"/>
+  </g>
+  <g id="electron-arrows"></g>
+  <g id="labels"><text x="250" y="290" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">new C-C bonds at the former termini</text></g>
+
+</svg>

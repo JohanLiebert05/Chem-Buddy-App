@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>Grignard reaction mechanism - step 1</title>
+  <desc>Methylmagnesium bromide attacks acetone. The C-Mg bonding pair is the nucleophile source and attacks the carbonyl carbon; C=O pi electrons move to oxygen, which coordinates Mg.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">dry Et2O; then H3O+ workup later</text></g>
+  <g id="reactants">
+    <text x="40" y="208" font-family="Arial, Helvetica, sans-serif" font-size="16">H3C-MgBr</text>
+    <line x1="250" y1="140" x2="290" y2="190" stroke="#111" stroke-width="2.1"/>
+    <line x1="250" y1="240" x2="290" y2="190" stroke="#111" stroke-width="2.1"/>
+    <line x1="290" y1="190" x2="340" y2="140" stroke="#111" stroke-width="2.1"/>
+    <line x1="286" y1="190" x2="336" y2="140" stroke="#111" stroke-width="2.1"/>
+    <text x="344" y="136" font-family="Arial, Helvetica, sans-serif" font-size="16">O</text>
+    <text x="218" y="136" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+    <text x="218" y="256" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+  </g>
+  <g id="electron-arrows">
+    <path d="M 130 200 C 180 160 240 160 280 178" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 315 160 C 330 145 335 140 344 144" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+  </g>
+  <g id="labels"><text x="80" y="280" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">C-Mg to carbonyl C; pi to O</text></g>
+
+</svg>

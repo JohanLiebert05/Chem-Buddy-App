@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -17,12 +16,14 @@ import '../../data/models/library_models.dart';
 import '../../data/models/rag_models.dart';
 import '../../data/services/pdf_text_extraction_service.dart';
 import '../../data/services/pdf_text_utils.dart';
+import '../../data/services/reaction_mechanism_service.dart';
 import '../providers/app_providers.dart';
 import '../providers/rag_providers.dart';
 import '../widgets/reaction_mechanisms_card.dart';
 import '../widgets/viva_practice_dialog.dart';
 import 'pdf_quiz_screen.dart';
 import 'pdf_study_hub_screen.dart';
+import 'reaction_mechanism_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_study_screen.dart';
 import '../../data/models/smart_flashcard.dart';
@@ -128,12 +129,12 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
           });
         }
       },
+      listenFor: const Duration(seconds: 30),
+      pauseFor: const Duration(seconds: 3),
       listenOptions: SpeechListenOptions(
         partialResults: true,
         cancelOnError: true,
         listenMode: ListenMode.confirmation,
-        listenFor: const Duration(seconds: 30),
-        pauseFor: const Duration(seconds: 3),
       ),
     );
   }
@@ -156,21 +157,35 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
     final rawText = textOverride ?? _controller.text.trim();
     if (rawText.isEmpty) return;
 
-    String promptToSend = rawText;
+    if (_currentMode == ChemBuddyAiMode.mechanisms) {
+      final hit = ReactionMechanismService.instance.find(rawText);
+      if (hit != null) {
+        _lastSentQuestion = rawText;
+        if (textOverride == null) _controller.clear();
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ReactionMechanismsScreen(initialReactionId: hit.id),
+          ),
+        );
+        return;
+      }
+    }
+
+    String? modelPrompt;
     if (_currentMode == ChemBuddyAiMode.concept) {
-      promptToSend = '[Explain in Academic Concept Mode: Focus on deep understanding, physical/chemical intuition, orbital or thermodynamic principles, and clear chemical notation]: $rawText';
-    } else if (_currentMode == ChemBuddyAiMode.exam2M && !rawText.contains('2-Mark')) {
-      promptToSend = '[Format as a concise 2-Mark University Exam Answer: Provide 1) Definition (1-2 sentences), 2) Balanced Reaction or Equation, 3) Key Condition/Nuance. DO NOT over-explain]: $rawText';
-    } else if (_currentMode == ChemBuddyAiMode.exam5M && !rawText.contains('5-Mark')) {
-      promptToSend = '''[Format as a structured 5-Mark MSc Chemistry University Rubric:
+      modelPrompt = '[Explain in Academic Concept Mode: Focus on deep understanding, physical/chemical intuition, orbital or thermodynamic principles, and clear chemical notation]: $rawText';
+    } else if (_currentMode == ChemBuddyAiMode.exam2M) {
+      modelPrompt = '[Format as a concise 2-Mark University Exam Answer: Provide 1) Definition (1-2 sentences), 2) Balanced Reaction or Equation, 3) Key Condition/Nuance. DO NOT over-explain]: $rawText';
+    } else if (_currentMode == ChemBuddyAiMode.exam5M) {
+      modelPrompt = '''[Format as a structured 5-Mark MSc Chemistry University Rubric:
 - Definition & Statement of Principle
 - Main Explanation & Driving Force
 - Balanced Chemical Reaction / Equation
 - Step-by-Step Mechanism / Intermediates
 - Important Points & Synthetic Applications
 - Concise Conclusion]: $rawText''';
-    } else if (_currentMode == ChemBuddyAiMode.exam10M && !rawText.contains('10-Mark')) {
-      promptToSend = '''[Format as a comprehensive 10-Mark MSc Chemistry Exam Answer:
+    } else if (_currentMode == ChemBuddyAiMode.exam10M) {
+      modelPrompt = '''[Format as a comprehensive 10-Mark MSc Chemistry Exam Answer:
 1. Definition & Core Concept
 2. Chemical Principle & Thermodynamics
 3. Reaction Equation & Conditions
@@ -181,12 +196,12 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
 8. Synthetic & Industrial Applications
 9. Limitations & Side Reactions
 10. Academic Conclusion]: $rawText''';
-    } else if (_currentMode == ChemBuddyAiMode.mechanisms && !rawText.toLowerCase().contains('mechanism')) {
-      promptToSend = 'Explain the full stepwise reaction mechanism, curved arrow electron displacement, intermediates, and driving force for: $rawText';
+    } else if (_currentMode == ChemBuddyAiMode.mechanisms) {
+      modelPrompt = 'Explain the full stepwise reaction mechanism, curved arrow electron displacement, intermediates, and driving force for: $rawText';
     }
-    
+
     _lastSentQuestion = rawText;
-    ref.read(chatControllerProvider.notifier).sendMessage(promptToSend);
+    ref.read(chatControllerProvider.notifier).sendMessage(rawText, modelPrompt: modelPrompt);
     if (textOverride == null) _controller.clear();
     
     Future.delayed(const Duration(milliseconds: 100), () {
@@ -324,7 +339,15 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
       );
       if (result == null || result.files.isEmpty) return;
       final file = result.files.first;
-      if (file.path == null) return;
+      final path = file.path;
+      if (path == null || path.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not access that PDF path on this device.')),
+          );
+        }
+        return;
+      }
 
       setState(() {
         _extracting = true;
@@ -332,19 +355,17 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
       });
 
       final text = await PdfTextExtractionService.instance.extractFromPath(
-        file.path!,
+        path,
         onProgress: (status) {
           if (mounted) setState(() => _extractingStatus = status);
         },
       );
-      final fileObj = File(file.path!);
-      final size = await fileObj.length();
 
       ref.read(chatControllerProvider.notifier).attachDocument(
         name: file.name,
         text: text,
-        path: file.path!,
-        size: size,
+        path: path,
+        size: file.size,
       );
 
       if (mounted) {
@@ -843,7 +864,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
               ),
 
 
-            if (chatState.error != null)
+    if (chatState.error != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: GlowCard(
@@ -857,7 +878,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                       ),
                       if (_lastSentQuestion != null)
                         TextButton(
-                          onPressed: () => _sendMessage(_lastSentQuestion),
+                          onPressed: chatState.isLoading ? null : () => _sendMessage(_lastSentQuestion),
                           child: const Text('Retry', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700)),
                         ),
                     ],

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>SN1 reaction mechanism - step 3</title>
+  <desc>Oxonium deprotonation. A second water molecule removes a proton from the oxygen, giving tert-butanol. Attack from either face of the cation gives racemization on a chiral analogue.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">deprotonation / racemic if chiral</text></g>
+  <g id="products">
+    <line x1="260" y1="200" x2="260" y2="130" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="260" y1="200" x2="200" y2="240" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="260" y1="200" x2="320" y2="240" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="260" y1="200" x2="330" y2="200" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <text x="336" y="208" font-family="Arial, Helvetica, sans-serif" font-size="18">OH</text>
+    <text x="246" y="118" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+    <text x="168" y="258" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+    <text x="314" y="258" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+    <text x="520" y="208" font-family="Arial, Helvetica, sans-serif" font-size="18">H3O+</text>
+  </g>
+  <g id="electron-arrows"></g>
+  <g id="labels"><text x="200" y="300" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">tert-butanol</text></g>
+
+</svg>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>Benzoin condensation mechanism - step 2</title>
+  <desc>The umpolung carbanion attacks a second benzaldehyde. Carbanion lone pair to the second carbonyl carbon.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">C-C bond to second ArCHO</text></g>
+  <g id="intermediate-1">
+    <polygon points="150,160 180,175 180,205 150,220 120,205 120,175" fill="none" stroke="#111" stroke-width="2"/>
+    <line x1="180" y1="190" x2="240" y2="190" stroke="#111" stroke-width="2.1"/>
+    <text x="220" y="176" font-family="Arial, Helvetica, sans-serif" font-size="14">-</text>
+    <text x="246" y="186" font-family="Arial, Helvetica, sans-serif" font-size="14">OH,CN</text>
+    <polygon points="430,160 460,175 460,205 430,220 400,205 400,175" fill="none" stroke="#111" stroke-width="2"/>
+    <line x1="460" y1="190" x2="520" y2="190" stroke="#111" stroke-width="2.1"/>
+    <line x1="520" y1="190" x2="560" y2="140" stroke="#111" stroke-width="2.1"/>
+    <line x1="516" y1="190" x2="556" y2="140" stroke="#111" stroke-width="2.1"/>
+    <text x="564" y="136" font-family="Arial, Helvetica, sans-serif" font-size="16">O</text>
+  </g>
+  <g id="electron-arrows">
+    <path d="M 240 188 C 320 160 400 160 508 178" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 538 168 C 555 150 560 145 568 148" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+  </g>
+  <g id="labels"><text x="250" y="280" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">carbanion to second carbonyl C</text></g>
+
+</svg>

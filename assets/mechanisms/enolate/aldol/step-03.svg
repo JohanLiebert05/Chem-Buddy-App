@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>Aldol condensation mechanism - step 3</title>
+  <desc>After protonation of the alkoxide, E1cB dehydration (heat) gives crotonaldehyde. Shown as the condensed enone product plus water.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">protonation then heat / dehydration</text></g>
+  <g id="products">
+    <line x1="200" y1="200" x2="260" y2="200" stroke="#111" stroke-width="2.1"/>
+    <line x1="260" y1="200" x2="320" y2="200" stroke="#111" stroke-width="2.1"/>
+    <line x1="260" y1="194" x2="320" y2="194" stroke="#111" stroke-width="2.1"/>
+    <line x1="320" y1="200" x2="380" y2="200" stroke="#111" stroke-width="2.1"/>
+    <line x1="380" y1="200" x2="420" y2="150" stroke="#111" stroke-width="2.1"/>
+    <line x1="376" y1="200" x2="416" y2="150" stroke="#111" stroke-width="2.1"/>
+    <text x="424" y="146" font-family="Arial, Helvetica, sans-serif" font-size="16">O</text>
+    <text x="188" y="196" font-family="Arial, Helvetica, sans-serif" font-size="14">H3C</text>
+    <text x="500" y="208" font-family="Arial, Helvetica, sans-serif" font-size="16">H2O</text>
+  </g>
+  <g id="electron-arrows"></g>
+  <g id="labels"><text x="220" y="280" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">but-2-enal (crotonaldehyde)</text></g>
+
+</svg>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>E2 reaction mechanism - step 1</title>
+  <desc>Concerted anti-periplanar elimination of (2R,3R)-relative 2-bromobutane with ethoxide. Base lone pair to beta-H, C-H to C-C, C-Br to Br, all in one step.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">EtO-, EtOH, heat; anti-periplanar</text></g>
+  <g id="reactants">
+    <text x="40" y="208" font-family="Arial, Helvetica, sans-serif" font-size="18">EtO-</text>
+    <ellipse cx="100" cy="192" rx="2.2" ry="2.2" fill="#111"/>
+    <text x="150" y="150" font-family="Arial, Helvetica, sans-serif" font-size="14">H</text>
+    <line x1="160" y1="158" x2="220" y2="200" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="220" y1="200" x2="300" y2="200" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="180" y1="200" x2="220" y2="200" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="160" y1="240" x2="220" y2="200" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="300" y1="200" x2="360" y2="160" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="300" y1="200" x2="380" y2="200" stroke="#111" stroke-width="2.1" stroke-linecap="round"/>
+    <text x="388" y="208" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600">Br</text>
+    <text x="148" y="268" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+    <text x="368" y="150" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+  </g>
+  <g id="electron-arrows">
+    <path d="M 108 194 C 130 150 145 140 158 152" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 180 170 C 200 180 210 190 218 198" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 340 192 C 365 155 385 158 402 188" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+  </g>
+  <g id="labels"><text x="200" y="320" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">three arrows, one step</text></g>
+
+</svg>

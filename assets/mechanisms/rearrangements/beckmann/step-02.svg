@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360" role="img">
+  <title>Beckmann rearrangement mechanism - step 2</title>
+  <desc>Nitrilium-like ring expansion intermediate is hydrated. Water attacks carbon; tautomerization gives epsilon-caprolactam.</desc>
+  <defs>
+    <marker id="electron-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#111111"/>
+    </marker>
+    <marker id="fishhook" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 2 L 10 5 L 0 5 Z" fill="#111111"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="360" fill="#ffffff"/>
+
+  <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">hydration</text></g>
+  <g id="intermediate-1">
+    <polygon points="240,150 310,150 340,200 310,250 240,250 210,200" fill="none" stroke="#111" stroke-width="2.1"/>
+    <line x1="310" y1="150" x2="360" y2="120" stroke="#111" stroke-width="2.1"/>
+    <line x1="306" y1="150" x2="356" y2="120" stroke="#111" stroke-width="2.1"/>
+    <text x="364" y="116" font-family="Arial, Helvetica, sans-serif" font-size="16">N+</text>
+    <text x="80" y="208" font-family="Arial, Helvetica, sans-serif" font-size="16">H2O</text>
+  </g>
+  <g id="electron-arrows">
+    <path d="M 120 200 C 180 160 250 140 300 148" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+  </g>
+  <g id="labels"><text x="200" y="300" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">water to nitrilium carbon</text></g>
+
+</svg>

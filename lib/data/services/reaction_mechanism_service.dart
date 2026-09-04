@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/reaction_models.dart';
+import 'chemdraw_library.dart';
 import 'reaction_diagram_svg_catalog.dart';
 
 /// Service providing verified, step-by-step MSc chemistry reaction mechanisms,
@@ -40,7 +41,10 @@ class ReactionMechanismService {
     return svg;
   }
 
-  static final List<ReactionMechanism> curatedMechanisms = [
+  static final List<ReactionMechanism> curatedMechanisms =
+      _baseMechanisms.map(ChemDrawLibrary.attach).toList(growable: false);
+
+  static final List<ReactionMechanism> _baseMechanisms = [
     // 1. SN1 SUBSTITUTION
     ReactionMechanism(
       id: 'sn1',
@@ -95,8 +99,12 @@ class ReactionMechanismService {
       reactants: r'Methyl / $1^\circ$ Alkyl halide ($\text{R-CH}_2\text{-X}$)',
       reagentsAndConditions: r'Strong nucleophile ($\text{I}^-, \text{CN}^-, \text{N}_3^-, \text{OH}^-$) in Polar Aprotic Solvent (DMSO, DMF, Acetone)',
       products: r'Inverted Configuration Product ($\text{Nu-CH}_2\text{-R}$)',
-      svgContent: ReactionDiagramSvgCatalog.getSvgFor('sn2'),
-      isVerified: true,
+      representativeExample:
+          '(S)-2-bromobutane + hydroxide → (R)-butan-2-ol + bromide (canonical example; source directory lists the SN2 class, not this substrate)',
+      verificationStatus: 'needs_review',
+      isVerified: false,
+      svgPath: 'assets/mechanisms/substitution/sn2/',
+      svgContent: null,
       keyApplications: [
         r'Stereospecific synthesis of chiral alcohols, amines, azides, and nitriles with inversion of stereocenters.',
         r'Williamson ether synthesis: $\text{R-O}^- + \text{R\x27-X} \rightarrow \text{R-O-R\x27} + \text{X}^-$.',
@@ -108,12 +116,40 @@ class ReactionMechanismService {
       steps: [
         ReactionStep(
           stepNumber: 1,
-          title: 'Concerted Backside Attack & Walden Inversion',
+          title: 'Backside nucleophilic attack with simultaneous C–Br cleavage',
           description:
-              r'Nucleophile donates electron density into the antibonding $\sigma^*(\text{C-X})$ orbital directly opposite to the leaving group, passing through a $[\text{Nu}\cdots\text{C}\cdots\text{X}]^\ddagger$ trigonal bipyramidal transition state.',
+              r'Hydroxide donates a lone pair into $\sigma^*(\text{C-Br})$ from $180^\circ$ opposite bromine. The C–Br pair departs onto Br in the same concerted step.',
           curvedArrowNotes:
-              r'Simultaneous curved arrow from :Nu⁻ to central carbon and from C-X bond to leaving group X⁻.',
-          intermediate: r'$[\text{Nu}\cdots\text{C(H)}_2\cdots\text{X}]^\ddagger$ Pentacoordinate Transition State',
+              r'Two-electron arrow: O lone pair → C2. Two-electron arrow: C2–Br bond → Br.',
+          intermediate: r'Concerted; no carbocation. Proceeds through $[\text{HO}\cdots\text{C}\cdots\text{Br}]^\ddagger$.',
+          svgAsset: 'assets/mechanisms/substitution/sn2/step-01.svg',
+          electronFlow: const [
+            ElectronFlow(type: 'two-electron', source: 'hydroxide oxygen lone pair', destination: 'electrophilic C2'),
+            ElectronFlow(type: 'two-electron', source: 'C2–Br σ bond', destination: 'bromine atom'),
+          ],
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Trigonal bipyramidal transition state',
+          description:
+              r'Pentacoordinate carbon with collinear $\text{HO}\cdots\text{C}\cdots\text{Br}$. Methyl, hydrogen, and ethyl are equatorial. This is a transition state, not an intermediate.',
+          curvedArrowNotes:
+              r'Partial C–O forming and C–Br breaking remain collinear (180°).',
+          intermediate: r'$[\text{HO}\cdots\text{C}\cdots\text{Br}]^\ddagger$ (transition state)',
+          svgAsset: 'assets/mechanisms/substitution/sn2/step-02.svg',
+          electronFlow: const [
+            ElectronFlow(type: 'two-electron', source: 'forming C–O', destination: 'C2'),
+            ElectronFlow(type: 'two-electron', source: 'breaking C–Br', destination: 'Br'),
+          ],
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'Walden inversion — (R)-butan-2-ol',
+          description:
+              r'The nucleophile is fully bonded. Configuration at C2 is inverted relative to (S)-2-bromobutane. Bromide is the leaving-group product.',
+          curvedArrowNotes: r'No further electron flow after collapse of the transition state.',
+          intermediate: r'$(R)$-butan-2-ol + $\text{Br}^-$',
+          svgAsset: 'assets/mechanisms/substitution/sn2/step-03.svg',
         ),
       ],
     ),

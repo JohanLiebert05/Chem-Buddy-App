@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:chem_buddy/data/services/chemdraw_library.dart';
 import 'package:chem_buddy/data/services/reaction_mechanism_service.dart';
-import 'package:chem_buddy/presentation/screens/reaction_mechanism_screen.dart';
 import 'package:chem_buddy/presentation/widgets/reaction_mechanisms_card.dart';
 
 void main() {
@@ -23,10 +24,27 @@ void main() {
       for (final id in requiredIds) {
         final mechanism = ReactionMechanismService.instance.find(id);
         expect(mechanism, isNotNull, reason: 'Mechanism $id should be found');
-        expect(mechanism!.svgContent, isNotNull, reason: 'Mechanism $id should have svgContent');
-        expect(mechanism.svgContent!.contains('<svg'), isTrue, reason: 'Mechanism $id svgContent should start with <svg');
-        expect(mechanism.svgContent!.contains('</svg>'), isTrue, reason: 'Mechanism $id svgContent should end with </svg>');
-        expect(mechanism.steps.isNotEmpty, isTrue, reason: 'Mechanism $id should have stepwise breakdown');
+        expect(mechanism!.steps.isNotEmpty, isTrue, reason: 'Mechanism $id should have stepwise breakdown');
+        if (id == 'sn2' || ChemDrawLibrary.folders.containsKey(id)) {
+          expect(mechanism.hasChemDrawSteps, isTrue, reason: id);
+          expect(mechanism.steps.every((s) => s.svgAsset != null), isTrue, reason: id);
+        } else {
+          expect(mechanism.svgContent, isNotNull, reason: 'Mechanism $id should have svgContent');
+          expect(mechanism.svgContent!.contains('<svg'), isTrue);
+          expect(mechanism.svgContent!.contains('</svg>'), isTrue);
+        }
+      }
+    });
+
+    testWidgets('All ChemDraw mechanism SVG assets are bundled', (tester) async {
+      for (final folder in ChemDrawLibrary.folders.values) {
+        final mechanismId = folder.split('/')[folder.split('/').length - 2];
+        final steps = ChemDrawLibrary.stepsFor(mechanismId)!;
+        for (final step in steps) {
+          final svg = await rootBundle.loadString(step.svgAsset!);
+          expect(svg.contains('<svg'), isTrue, reason: step.svgAsset);
+          expect(svg.contains('viewBox'), isTrue, reason: step.svgAsset);
+        }
       }
     });
 

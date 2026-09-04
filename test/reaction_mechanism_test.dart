@@ -45,8 +45,9 @@ void main() {
       final cannizzaro = service.find('Cannizzaro Reaction');
       expect(cannizzaro, isNotNull);
       expect(cannizzaro!.steps, isNotEmpty);
-      expect(cannizzaro.steps.first.curvedArrowNotes, isNotNull);
-      expect(cannizzaro.steps.any((s) => s.intermediate != null), isTrue);
+      expect(cannizzaro.hasChemDrawSteps, isTrue);
+      expect(cannizzaro.steps.first.svgAsset, isNotNull);
+      expect(cannizzaro.steps.any((s) => s.electronFlow.isNotEmpty || s.svgAsset != null), isTrue);
     });
   });
 }

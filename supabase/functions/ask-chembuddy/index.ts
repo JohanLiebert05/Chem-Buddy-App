@@ -163,8 +163,13 @@ ${context ? `AVAILABLE STUDY CONTEXT:\n${context}` : "Answer from your chemistry
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
     // Add conversation history if provided
+    // History already excludes the current question on the client.
+    // Skip a trailing duplicate user turn if an older client still sent it.
     if (conversationHistory && conversationHistory.length > 0) {
-      for (const msg of conversationHistory.slice(-6)) {
+      const last = conversationHistory[conversationHistory.length - 1];
+      const skipLast = last?.role === "user" && String(last.content ?? "").trim() === question;
+      const hist = skipLast ? conversationHistory.slice(0, -1) : conversationHistory;
+      for (const msg of hist.slice(-6)) {
         contents.push({
           role: msg.role === "user" ? "user" : "model",
           parts: [{ text: msg.content }],

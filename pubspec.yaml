@@ -50,3 +50,15 @@ flutter:
   uses-material-design: true
   assets:
     - .env.example
+    - assets/mechanisms/
+    - assets/mechanisms/substitution/sn1/
+    - assets/mechanisms/substitution/sn2/
+    - assets/mechanisms/elimination/e1/
+    - assets/mechanisms/elimination/e2/
+    - assets/mechanisms/named/cannizzaro/
+    - assets/mechanisms/named/benzoin/
+    - assets/mechanisms/enolate/aldol/
+    - assets/mechanisms/carbonyl/wittig/
+    - assets/mechanisms/carbonyl/grignard/
+    - assets/mechanisms/pericyclic/diels_alder/
+    - assets/mechanisms/rearrangements/beckmann/
