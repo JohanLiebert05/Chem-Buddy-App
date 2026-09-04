@@ -1,0 +1,3 @@
+[functions]
+  [functions.predict-important-questions]
+    verify_jwt = true

@@ -19,16 +19,14 @@ import '../providers/app_providers.dart';
 import 'beginner_tutorial_dialog.dart';
 import 'pdf_library_screen.dart';
 import 'pdf_study_hub_screen.dart';
-import 'reaction_mechanism_screen.dart';
 import 'search_screen.dart';
 import 'smart_flashcards_hub.dart';
 import 'smart_flashcards_study_screen.dart';
 import 'spectroscopy_hub_screen.dart';
 import 'pericyclic_hub_screen.dart';
 import 'exam_pattern_quiz_screen.dart';
-import '../../data/services/study_analytics_service.dart';
 import '../widgets/reaction_mechanisms_card.dart';
-import '../widgets/viva_practice_dialog.dart';
+import '../widgets/home_widgets.dart';
 
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -111,6 +109,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: const Icon(Icons.search),
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+
+        // Personalized Study Priorities (Analytics & Diagnostic Driven)
+        StudyPrioritiesCard(
+          weakTopics: analytics.weakTopics,
+          moderateTopics: analytics.moderateTopics,
         ),
         const SizedBox(height: 16),
 
@@ -717,161 +722,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
 
-  Widget _buildStudyRecommendation(AppState state) {
-    final analyticsService = ref.watch(studyAnalyticsServiceProvider);
-    final analytics = analyticsService.computeSummary(streakDays: ref.watch(chemRepositoryProvider).streak());
-    final weakTopics = analytics.weakTopics;
 
-
-    if (weakTopics.isNotEmpty) {
-      final primaryWeak = weakTopics.first;
-      return GlowCard(
-        borderColor: AppColors.statusDanger.withValues(alpha: 0.4),
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.statusDanger.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.crisis_alert_rounded, color: AppColors.statusDanger, size: 20),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Targeted Weak-Topic Revision 🎯',
-                        style: TextStyle(color: AppColors.statusDanger, fontWeight: FontWeight.w800, fontSize: 12.5),
-                      ),
-                      Text(
-                        '${primaryWeak.topic} (${primaryWeak.accuracy.toStringAsFixed(0)}% accuracy in quizzes)',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your quiz and flashcard history indicates retention lapses in ${primaryWeak.topic}. Review key principles and practice questions to strengthen mastery.',
-              style: const TextStyle(color: AppColors.textPrimary, fontSize: 12.5, height: 1.35),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.brandBright,
-                    side: const BorderSide(color: AppColors.borderHighlight),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  ),
-                  onPressed: () {
-                    AppHaptics.tap();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SmartFlashcardsPage(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.style, size: 15),
-                  label: const Text('Review Cards', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  ),
-                  onPressed: () {
-                    AppHaptics.confirm();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => ExamPatternQuizScreen(examTitle: '${primaryWeak.topic} Practice Exam'),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.quiz_outlined, size: 15),
-                  label: const Text('Targeted Quiz', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-
-    final now = DateTime.now();
-    final today = state.entries.where((e) => e.weekdayNumber == now.weekday).toList()
-      ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
-    final minutes = now.hour * 60 + now.minute;
-    final nextClass = today.where((e) => e.startMinutes > minutes).firstOrNull ?? (today.isNotEmpty ? today.first : null);
-
-    String topicTip = 'Revise reaction mechanisms, spectroscopy principles, and practice viva questions today.';
-    String subjectName = 'MSc Chemistry';
-    if (nextClass != null) {
-      subjectName = nextClass.displayName;
-      final lower = subjectName.toLowerCase();
-      if (lower.contains('organic')) {
-        topicTip = 'Upcoming $subjectName: Revise Aldol, Wittig, and Diels-Alder mechanisms before lecture.';
-      } else if (lower.contains('inorganic') || lower.contains('coordination')) {
-        topicTip = 'Upcoming $subjectName: Practice Crystal Field Theory (Δ_oct vs Δ_tet) and spectrochemical series.';
-      } else if (lower.contains('physical') || lower.contains('kinetic') || lower.contains('thermo')) {
-        topicTip = 'Upcoming $subjectName: Review Arrhenius activation energy and reaction rate order equations.';
-      } else if (lower.contains('spectro') || lower.contains('analytical') || lower.contains('nmr')) {
-        topicTip = 'Upcoming $subjectName: Check ¹H NMR chemical shifts (δ ppm) and spin-spin splitting rules.';
-      } else {
-        topicTip = 'Upcoming $subjectName: Review your latest study notes and practice flashcards.';
-      }
-    }
-
-    return GlowCard(
-      borderColor: AppColors.purple.withValues(alpha: 0.35),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.purple.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.tips_and_updates_outlined, color: AppColors.purpleBright, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Today\'s Study Focus 🎯',
-                  style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 12.5),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  topicTip,
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 12.5, height: 1.35),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildMscToolCard({
     required String title,

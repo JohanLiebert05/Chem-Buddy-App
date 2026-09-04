@@ -24,6 +24,7 @@ class HiveBoxes {
   static const pdfQuizzes = 'pdf_quizzes';
   static const quizResults = 'quiz_results';
   static const appTutorialState = 'app_tutorial_state';
+  static const pyqPredictions = 'pyq_predictions';
 
   static Future<void> openAll() async {
     await Hive.initFlutter();
@@ -51,6 +52,7 @@ class HiveBoxes {
       Hive.openBox(pdfQuizzes),
       Hive.openBox(quizResults),
       Hive.openBox(appTutorialState),
+      Hive.openBox(pyqPredictions),
     ]);
   }
 }
@@ -79,6 +81,7 @@ class LocalStore {
   Box get pdfQuizzes => Hive.box(HiveBoxes.pdfQuizzes);
   Box get quizResults => Hive.box(HiveBoxes.quizResults);
   Box get appTutorialState => Hive.box(HiveBoxes.appTutorialState);
+  Box get pyqPredictions => Hive.box(HiveBoxes.pyqPredictions);
 
   Map<String, dynamic>? getProfile() {
     final raw = _profile.get('current');
@@ -108,6 +111,12 @@ class LocalStore {
       settings.clear(),
       aiConversations.clear(),
       aiMessages.clear(),
+      pdfSummaries.clear(),
+      pdfTopics.clear(),
+      pdfQuizzes.clear(),
+      quizResults.clear(),
+      appTutorialState.clear(),
+      pyqPredictions.clear(),
     ]);
   }
 

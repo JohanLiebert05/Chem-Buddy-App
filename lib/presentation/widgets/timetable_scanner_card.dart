@@ -8,7 +8,6 @@ import '../../core/widgets/molecule_loader.dart';
 import '../../data/services/timetable_ocr.dart';
 import '../../data/services/timetable_parser_service.dart';
 import '../screens/review_timetable_screen.dart';
-import 'timetable_review_dialog.dart';
 
 /// Dashboard card: gallery / camera → OCR → review → save to Hive timetable.
 class TimetableScannerCard extends ConsumerStatefulWidget {

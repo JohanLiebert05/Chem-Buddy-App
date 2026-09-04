@@ -10,6 +10,8 @@ Deno.serve(async (req) => {
       return json({ error: "Sign in required to ask ChemBuddy." }, 401);
     }
 
+    const userId = getUserIdFromToken(auth);
+
     // 2. Verify Gemini key
     const geminiKey = Deno.env.get("GEMINI_API_KEY") ?? "";
     if (!geminiKey) {
@@ -28,7 +30,7 @@ Deno.serve(async (req) => {
       return json({ error: "Please ask a more specific question." }, 400);
     }
 
-    // 4. Get Supabase client for DB operations
+    // 4. Supabase credentials
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
@@ -36,56 +38,99 @@ Deno.serve(async (req) => {
       return json({ error: "Database is not configured." }, 500);
     }
 
-    // 5. Generate embedding for the question
-    const model = Deno.env.get("GEMINI_EMBEDDING_MODEL") || "text-embedding-004";
-    const embeddingUrl =
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent?key=${geminiKey}`;
+    const dbHeaders = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${supabaseServiceKey}`,
+      "apikey": supabaseServiceKey,
+    };
 
-    const embeddingRes = await fetch(embeddingUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: `models/${model}`,
-        content: { parts: [{ text: question }] },
-        taskType: "RETRIEVAL_QUERY",
-      }),
-    });
+    // 5. Check AI Usage Limits (if user identified)
+    const today = new Date().toISOString().split("T")[0];
+    let dailyLimit = 20;
 
-    if (!embeddingRes.ok) {
-      const detail = await embeddingRes.text();
-      return json({ error: "Could not process your question.", detail }, 502);
+    if (userId) {
+      try {
+        const [profileRes, configRes, usageRes] = await Promise.all([
+          fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=role`, { headers: dbHeaders }),
+          fetch(`${supabaseUrl}/rest/v1/app_config?select=key,value`, { headers: dbHeaders }),
+          fetch(`${supabaseUrl}/rest/v1/ai_usage?user_id=eq.${userId}&date=eq.${today}&select=request_count`, { headers: dbHeaders }),
+        ]);
+
+        let isAdmin = false;
+        if (profileRes.ok) {
+          const profiles = await profileRes.json();
+          isAdmin = profiles?.[0]?.role === "admin";
+        }
+
+        if (configRes.ok) {
+          const configs: Array<{ key: string; value: string }> = await configRes.json();
+          const targetKey = isAdmin ? "ai_daily_limit_admin" : "ai_daily_limit_student";
+          const match = configs.find((c) => c.key === targetKey);
+          if (match?.value) {
+            dailyLimit = parseInt(match.value, 10) || 20;
+          }
+        }
+
+        if (usageRes.ok) {
+          const usages: Array<{ request_count: number }> = await usageRes.json();
+          const used = usages?.[0]?.request_count ?? 0;
+          if (used >= dailyLimit) {
+            return json(
+              {
+                error: "limit_reached",
+                message:
+                  "AI limit reached for today. You can continue studying your saved notes and flashcards.",
+                used,
+                limit: dailyLimit,
+              },
+              429,
+            );
+          }
+        }
+      } catch (e) {
+        console.warn("Usage limit check bypassed due to error:", e);
+      }
     }
 
-    const embeddingData = await embeddingRes.json();
-    const embedding = embeddingData?.embedding?.values;
+    // 6. Check AI Response Cache
+    const cacheKey = await buildCacheKey([
+      question.toLowerCase().trim(),
+      subject || "",
+      documentName || "",
+      String(conversationHistory?.length ?? 0),
+    ]);
 
-    if (!embedding || !Array.isArray(embedding)) {
-      return json({ error: "Could not generate question embedding." }, 502);
+    try {
+      const cacheRes = await fetch(
+        `${supabaseUrl}/rest/v1/ai_cache?cache_key=eq.${cacheKey}&select=response,hit_count,expires_at`,
+        { headers: dbHeaders },
+      );
+
+      if (cacheRes.ok) {
+        const entries = await cacheRes.json();
+        if (entries && entries.length > 0) {
+          const entry = entries[0];
+          const notExpired = !entry.expires_at || new Date(entry.expires_at) > new Date();
+          if (notExpired && entry.response) {
+            fetch(`${supabaseUrl}/rest/v1/ai_cache?cache_key=eq.${cacheKey}`, {
+              method: "PATCH",
+              headers: dbHeaders,
+              body: JSON.stringify({ hit_count: (entry.hit_count || 0) + 1 }),
+            }).catch(() => {});
+
+            return json({
+              ...entry.response,
+              cached: true,
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Cache lookup bypassed due to error:", e);
     }
 
-    // 6. Search for relevant chunks via RPC
-    const matchRes = await fetch(`${supabaseUrl}/rest/v1/rpc/match_rag_chunks`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${supabaseServiceKey}`,
-        "apikey": supabaseServiceKey,
-      },
-      body: JSON.stringify({
-        query_embedding: `[${embedding.join(",")}]`,
-        match_count: 6,
-        match_threshold: 0.3,
-        filter_subject: subject || null,
-      }),
-    });
-
-    if (!matchRes.ok) {
-      const detail = await matchRes.text();
-      console.error("match_rag_chunks error:", detail);
-      // Fall back to answering without context
-    }
-
-    const chunks = matchRes.ok ? (await matchRes.json()) as Array<{
+    // 7. Generate embedding for RAG search
+    let chunks: Array<{
       id: string;
       content: string;
       subject: string;
@@ -94,9 +139,49 @@ Deno.serve(async (req) => {
       document_title: string;
       file_name: string;
       similarity: number;
-    }> : [];
+    }> = [];
 
-    // 7. Build context and prompt
+    try {
+      const model = Deno.env.get("GEMINI_EMBEDDING_MODEL") || "text-embedding-004";
+      const embeddingUrl =
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent?key=${geminiKey}`;
+
+      const embeddingRes = await fetch(embeddingUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: `models/${model}`,
+          content: { parts: [{ text: question }] },
+          taskType: "RETRIEVAL_QUERY",
+        }),
+      });
+
+      if (embeddingRes.ok) {
+        const embeddingData = await embeddingRes.json();
+        const embedding = embeddingData?.embedding?.values;
+
+        if (Array.isArray(embedding)) {
+          const matchRes = await fetch(`${supabaseUrl}/rest/v1/rpc/match_rag_chunks`, {
+            method: "POST",
+            headers: dbHeaders,
+            body: JSON.stringify({
+              query_embedding: `[${embedding.join(",")}]`,
+              match_count: 6,
+              match_threshold: 0.3,
+              filter_subject: subject || null,
+            }),
+          });
+
+          if (matchRes.ok) {
+            chunks = await matchRes.json();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("RAG retrieval skipped or failed:", e);
+    }
+
+    // 8. Build context and sources
     let context = "";
     const sources: Array<{
       documentTitle: string;
@@ -107,7 +192,6 @@ Deno.serve(async (req) => {
       similarity: number;
     }> = [];
 
-    // Prioritize user's uploaded document if provided
     if (documentText && documentText.trim().length > 0) {
       sources.push({
         documentTitle: documentName,
@@ -136,7 +220,7 @@ Deno.serve(async (req) => {
         .join("\n\n---\n\n");
     }
 
-    // 8. Build conversation for Gemini
+    // 9. Build conversation for Gemini
     const systemPrompt = `You are ChemBuddy AI, an expert Chemistry tutor for MSc Chemistry students.
 
 RULES:
@@ -148,7 +232,6 @@ RULES:
 - Give concise, exam-focused explanations suitable for MSc Chemistry students.
 - Use proper chemical notation and formatting.
 - If the question is completely outside chemistry/academics, politely redirect.
-
 
 When explaining concepts, use clear structure:
 - Use headings (## or ###) for major topics
@@ -177,13 +260,12 @@ ${context ? `AVAILABLE STUDY CONTEXT:\n${context}` : "Answer from your chemistry
       }
     }
 
-    // Add current question
     contents.push({
       role: "user",
       parts: [{ text: question }],
     });
 
-    // 9. Generate answer with Gemini
+    // 10. Generate answer with Gemini
     const chatModel = Deno.env.get("GEMINI_MODEL") || "gemini-2.0-flash";
     const chatUrl =
       `https://generativelanguage.googleapis.com/v1beta/models/${chatModel}:generateContent?key=${geminiKey}`;
@@ -214,13 +296,47 @@ ${context ? `AVAILABLE STUDY CONTEXT:\n${context}` : "Answer from your chemistry
       return json({ error: "ChemBuddy produced an empty response." }, 502);
     }
 
-    // 10. Return answer with sources
-    return json({
+    const responseData = {
       answer,
       sources: sources.length > 0 ? sources : [],
       hasContext: chunks.length > 0,
       chunksUsed: chunks.length,
-    });
+      cached: false,
+    };
+
+    // 11. Write to Cache & Increment Usage Asynchronously
+    const ttlDays = 7;
+    const expiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000).toISOString();
+
+    fetch(`${supabaseUrl}/rest/v1/ai_cache`, {
+      method: "POST",
+      headers: { ...dbHeaders, "Prefer": "resolution=merge-duplicates" },
+      body: JSON.stringify({
+        cache_key: cacheKey,
+        feature: "chat",
+        prompt_version: "v1",
+        response: responseData,
+        user_id: userId,
+        source_id: subject || documentName,
+        hit_count: 0,
+        expires_at: expiresAt,
+      }),
+    }).catch((e) => console.warn("Cache write failed:", e));
+
+    if (userId) {
+      fetch(`${supabaseUrl}/rest/v1/ai_usage`, {
+        method: "POST",
+        headers: { ...dbHeaders, "Prefer": "resolution=merge-duplicates" },
+        body: JSON.stringify({
+          user_id: userId,
+          date: today,
+          request_count: 1,
+          last_request_at: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+    }
+
+    return json(responseData);
   } catch (error) {
     console.error("ask-chembuddy error:", error);
     return json(
@@ -229,6 +345,29 @@ ${context ? `AVAILABLE STUDY CONTEXT:\n${context}` : "Answer from your chemistry
     );
   }
 });
+
+function getUserIdFromToken(authHeader: string): string | null {
+  try {
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const jsonStr = atob(base64);
+    const payload = JSON.parse(jsonStr);
+    return payload.sub ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function buildCacheKey(parts: string[]): Promise<string> {
+  const raw = parts.join("|");
+  const encoder = new TextEncoder();
+  const data = encoder.encode(raw);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 function cors() {
   return {

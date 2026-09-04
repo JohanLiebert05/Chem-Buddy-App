@@ -7,7 +7,6 @@ import '../../core/utils/haptics.dart';
 import '../../core/widgets/hex_background.dart';
 import '../providers/app_providers.dart';
 import '../screens/ask_chembuddy_screen.dart';
-import '../screens/attendance_screen.dart';
 import '../screens/classes_hub_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';

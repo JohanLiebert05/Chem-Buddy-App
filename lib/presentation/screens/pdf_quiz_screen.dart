@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
 
@@ -241,22 +240,18 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
               final isCorrect = q.correctIndex == optIdx;
 
               Color borderColor = AppColors.borderSubtle;
-              Color bgColor = AppColors.card;
               Color textColor = Colors.white;
 
               if (_submittedCurrent) {
                 if (isCorrect) {
                   borderColor = AppColors.statusSuccess;
-                  bgColor = AppColors.statusSuccess.withValues(alpha: 0.16);
                   textColor = AppColors.statusSuccess;
                 } else if (isChosen && !isCorrect) {
                   borderColor = AppColors.statusDanger;
-                  bgColor = AppColors.statusDanger.withValues(alpha: 0.16);
                   textColor = AppColors.statusDanger;
                 }
               } else if (isChosen) {
                 borderColor = AppColors.brandBright;
-                bgColor = AppColors.brandPrimary.withValues(alpha: 0.14);
               }
 
               return AnimatedContainer(

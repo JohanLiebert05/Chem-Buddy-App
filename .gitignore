@@ -41,6 +41,7 @@ app.*.map.json
 
 # Android Studio will place build artifacts here
 /android/app/debug
+
 /android/app/profile
 /android/app/release
 
@@ -52,6 +53,17 @@ app.*.map.json
 .env.*
 *.env.local
 !.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+service_account*.json
+
+# Supabase CLI caches & local state
+supabase/.temp/
+.supabase/
+supabase/.branches/
 
 # Release APKs (too large for GitHub)
 *.apk

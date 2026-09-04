@@ -15,6 +15,9 @@ import 'smart_flashcards_hub.dart';
 import 'spectroscopy_hub_screen.dart';
 import 'pericyclic_hub_screen.dart';
 import 'exam_pattern_quiz_screen.dart';
+import 'predict_important_questions_screen.dart';
+import 'syllabus_browser_screen.dart';
+import 'chemistry_toolkit_screen.dart';
 
 class ResourcesScreen extends ConsumerStatefulWidget {
   const ResourcesScreen({super.key});
@@ -51,6 +54,12 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
               _TabChip(label: '🧲 Spectroscopy', selected: tab == 5, onTap: () => setState(() => tab = 5)),
               const SizedBox(width: 8),
               _TabChip(label: '🌀 Pericyclics', selected: tab == 6, onTap: () => setState(() => tab = 6)),
+              const SizedBox(width: 8),
+              _TabChip(label: '🔮 Predict PYQ', selected: tab == 7, onTap: () => setState(() => tab = 7)),
+              const SizedBox(width: 8),
+              _TabChip(label: '📖 Syllabus', selected: tab == 8, onTap: () => setState(() => tab = 8)),
+              const SizedBox(width: 8),
+              _TabChip(label: '🧮 Toolkit', selected: tab == 9, onTap: () => setState(() => tab = 9)),
             ],
           ),
         ),
@@ -60,8 +69,11 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         if (tab == 2) const SmartFlashcardsHub(),
         if (tab == 3) const _QuizzesAndMasteryTab(),
         if (tab == 4) _NotesTab(state: state),
-        if (tab == 5) const SizedBox(height: 650, child: SpectroscopyHubScreen()),
-        if (tab == 6) const SizedBox(height: 650, child: PericyclicHubScreen()),
+        if (tab == 5) const SizedBox(height: 700, child: SpectroscopyHubScreen()),
+        if (tab == 6) const SizedBox(height: 700, child: PericyclicHubScreen()),
+        if (tab == 7) const SizedBox(height: 750, child: PredictImportantQuestionsScreen()),
+        if (tab == 8) const SizedBox(height: 750, child: SyllabusBrowserScreen()),
+        if (tab == 9) const SizedBox(height: 750, child: ChemistryToolkitScreen()),
       ],
     );
   }

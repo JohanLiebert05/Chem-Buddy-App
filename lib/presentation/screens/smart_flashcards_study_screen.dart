@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/flip_card_3d.dart';

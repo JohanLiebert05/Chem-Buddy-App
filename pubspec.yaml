@@ -40,6 +40,9 @@ dependencies:
   pdfx: ^2.11.0
   speech_to_text: ^7.0.0
   flutter_svg: ^2.3.0
+  shared_preferences: ^2.3.2
+  crypto: ^3.0.3
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

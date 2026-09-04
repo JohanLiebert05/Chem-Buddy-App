@@ -9,6 +9,8 @@ Deno.serve(async (req) => {
       return json({ error: "Authorization required to generate flashcards." }, 401);
     }
 
+    const userId = getUserIdFromToken(auth);
+
     const geminiKey = Deno.env.get("GEMINI_API_KEY") ?? "";
     if (!geminiKey) {
       return json({ error: "Gemini is not configured on the server." }, 500);
@@ -27,7 +29,103 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    // Smart chunking / truncation to 12,000 characters to prevent input token overflow
+    // 2. Supabase credentials
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const dbHeaders = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${supabaseServiceKey}`,
+      "apikey": supabaseServiceKey,
+    };
+
+    // 3. Usage limit check
+    const today = new Date().toISOString().split("T")[0];
+    let dailyLimit = 20;
+
+    if (userId && supabaseUrl && supabaseServiceKey) {
+      try {
+        const [profileRes, configRes, usageRes] = await Promise.all([
+          fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=role`, { headers: dbHeaders }),
+          fetch(`${supabaseUrl}/rest/v1/app_config?select=key,value`, { headers: dbHeaders }),
+          fetch(`${supabaseUrl}/rest/v1/ai_usage?user_id=eq.${userId}&date=eq.${today}&select=request_count`, { headers: dbHeaders }),
+        ]);
+
+        let isAdmin = false;
+        if (profileRes.ok) {
+          const profiles = await profileRes.json();
+          isAdmin = profiles?.[0]?.role === "admin";
+        }
+
+        if (configRes.ok) {
+          const configs: Array<{ key: string; value: string }> = await configRes.json();
+          const targetKey = isAdmin ? "ai_daily_limit_admin" : "ai_daily_limit_student";
+          const match = configs.find((c) => c.key === targetKey);
+          if (match?.value) {
+            dailyLimit = parseInt(match.value, 10) || 20;
+          }
+        }
+
+        if (usageRes.ok) {
+          const usages: Array<{ request_count: number }> = await usageRes.json();
+          const used = usages?.[0]?.request_count ?? 0;
+          if (used >= dailyLimit) {
+            return json(
+              {
+                error: "limit_reached",
+                message:
+                  "AI limit reached for today. You can continue studying your saved notes and flashcards.",
+                used,
+                limit: dailyLimit,
+              },
+              429,
+            );
+          }
+        }
+      } catch (e) {
+        console.warn("Usage limit check error:", e);
+      }
+    }
+
+    // 4. Cache check
+    const cacheKey = await buildCacheKey([
+      sourceText.slice(0, 3000).toLowerCase().trim(),
+      String(count),
+      topic.toLowerCase().trim(),
+      "flashcards_v1",
+    ]);
+
+    if (supabaseUrl && supabaseServiceKey) {
+      try {
+        const cacheRes = await fetch(
+          `${supabaseUrl}/rest/v1/ai_cache?cache_key=eq.${cacheKey}&select=response,hit_count,expires_at`,
+          { headers: dbHeaders },
+        );
+
+        if (cacheRes.ok) {
+          const entries = await cacheRes.json();
+          if (entries && entries.length > 0) {
+            const entry = entries[0];
+            const notExpired = !entry.expires_at || new Date(entry.expires_at) > new Date();
+            if (notExpired && entry.response?.flashcards) {
+              fetch(`${supabaseUrl}/rest/v1/ai_cache?cache_key=eq.${cacheKey}`, {
+                method: "PATCH",
+                headers: dbHeaders,
+                body: JSON.stringify({ hit_count: (entry.hit_count || 0) + 1 }),
+              }).catch(() => {});
+
+              return json({
+                flashcards: entry.response.flashcards,
+                cached: true,
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Cache lookup error:", e);
+      }
+    }
+
+    // 5. Smart chunking / truncation to 12,000 characters
     const clipped = sourceText.length > 12000 ? sourceText.slice(0, 12000) : sourceText;
 
     const prompt = `You are an expert MSc Chemistry academic tutor creating rigorous, exam-quality active-recall flashcards based strictly on the uploaded document.
@@ -81,14 +179,13 @@ ${clipped}`;
       }
     };
 
-    // 2. Exponential backoff retry loop for network resilience (handling 429, 503, 500)
+    // 6. Exponential backoff retry loop for network resilience
     let aiResponse = null;
     let lastErrorDetail = "";
     let lastStatusCode = 500;
 
     for (let attempt = 0; attempt <= 2; attempt++) {
       if (attempt > 0) {
-        // Wait 1s, then 2s before retry
         await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
       }
 
@@ -106,7 +203,6 @@ ${clipped}`;
         } else {
           lastErrorDetail = await res.text();
           console.error(`Gemini attempt ${attempt + 1} failed [HTTP ${res.status}]:`, lastErrorDetail);
-          // If client error other than 429 (Rate Limit), don't retry blindly
           if (res.status !== 429 && res.status < 500) {
             break;
           }
@@ -127,7 +223,7 @@ ${clipped}`;
       }, lastStatusCode >= 400 && lastStatusCode < 600 ? lastStatusCode : 502);
     }
 
-    // 3. Inspect finishReason and response safety
+    // 7. Inspect finishReason
     const candidate = aiResponse?.candidates?.[0];
     const finishReason = candidate?.finishReason;
 
@@ -153,17 +249,73 @@ ${clipped}`;
       }, 502);
     }
 
-    return json({ flashcards: parsed.slice(0, count) });
+    const finalCards = parsed.slice(0, count);
+
+    // 8. Cache response & update usage
+    if (supabaseUrl && supabaseServiceKey) {
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      fetch(`${supabaseUrl}/rest/v1/ai_cache`, {
+        method: "POST",
+        headers: { ...dbHeaders, "Prefer": "resolution=merge-duplicates" },
+        body: JSON.stringify({
+          cache_key: cacheKey,
+          feature: "flashcards",
+          prompt_version: "v1",
+          response: { flashcards: finalCards },
+          user_id: userId,
+          source_id: topic,
+          hit_count: 0,
+          expires_at: expiresAt,
+        }),
+      }).catch((e) => console.warn("Cache write failed:", e));
+
+      if (userId) {
+        fetch(`${supabaseUrl}/rest/v1/ai_usage`, {
+          method: "POST",
+          headers: { ...dbHeaders, "Prefer": "resolution=merge-duplicates" },
+          body: JSON.stringify({
+            user_id: userId,
+            date: today,
+            request_count: 1,
+            last_request_at: new Date().toISOString(),
+          }),
+        }).catch(() => {});
+      }
+    }
+
+    return json({ flashcards: finalCards, cached: false });
   } catch (error) {
     console.error("Unhandled error in generate-flashcards:", error);
     return json({ error: "Could not generate flashcards.", detail: String(error) }, 500);
   }
 });
 
-function parseCards(raw, defaultTopic = "Chemistry") {
+function getUserIdFromToken(authHeader: string): string | null {
+  try {
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const jsonStr = atob(base64);
+    const payload = JSON.parse(jsonStr);
+    return payload.sub ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function buildCacheKey(parts: string[]): Promise<string> {
+  const raw = parts.join("|");
+  const encoder = new TextEncoder();
+  const data = encoder.encode(raw);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function parseCards(raw: string, defaultTopic = "Chemistry") {
   let text = String(raw ?? "").trim();
   
-  // Clean / strip markdown code fence blocks (```json ... ``` or ``` ...)
   const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fence) {
     text = fence[1].trim();
@@ -173,7 +325,6 @@ function parseCards(raw, defaultTopic = "Chemistry") {
   try {
     data = JSON.parse(text);
   } catch {
-    // Attempt robust substring extraction if surrounding noise exists
     const startObj = text.indexOf("{");
     const endObj = text.lastIndexOf("}");
     if (startObj >= 0 && endObj > startObj) {
@@ -182,7 +333,6 @@ function parseCards(raw, defaultTopic = "Chemistry") {
       } catch (_) {}
     }
     
-    // Also try array matching if root was an array
     if (!data) {
       const startArr = text.indexOf("[");
       const endArr = text.lastIndexOf("]");
@@ -202,7 +352,7 @@ function parseCards(raw, defaultTopic = "Chemistry") {
     : (Array.isArray(data) ? data : []);
 
   return list
-    .map((item) => {
+    .map((item: any) => {
       const q = String(item?.question ?? item?.front ?? item?.prompt ?? "").trim();
       const a = String(item?.answer ?? item?.back ?? item?.response ?? "").trim();
       const expl = String(item?.explanation ?? "").trim();
@@ -217,7 +367,7 @@ function parseCards(raw, defaultTopic = "Chemistry") {
         key_terms: terms,
       };
     })
-    .filter((item) => item.question.length > 3 && item.answer.length > 1);
+    .filter((item: any) => item.question.length > 3 && item.answer.length > 1);
 }
 
 function cors() {
@@ -227,7 +377,7 @@ function cors() {
   };
 }
 
-function json(body, status = 200) {
+function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...cors(), "Content-Type": "application/json" },

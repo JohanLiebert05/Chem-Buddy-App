@@ -859,6 +859,10 @@ Rearrangement of **Cyclohexanone oxime** with concentrated $\text{H}_2\text{SO}_
       buffer.writeln(r'* **Stepwise Transformation**: Initiated by orbital overlap, electrophile-nucleophile pairing, or radical initiation.');
       buffer.writeln(r'* **Transition State / Intermediates**: Governed by electronic stabilization (resonance, inductive effects) and steric hindrance.');
       buffer.writeln(r'* **Driving Force**: Formation of thermodynamically stable products ($\Delta G < 0$) or irreversible loss of small stable molecules ($\text{H}_2\text{O}, \text{CO}_2, \text{N}_2$).');
+    } else if (isAnalytical) {
+      buffer.writeln(r'#### **2. Analytical & Instrumentation Context**');
+      buffer.writeln(r'* **Detection Principle**: Based on molecular transitions, absorption/emission spectra, or chromatographic retention factors.');
+      buffer.writeln(r'* **Quantitative Standard**: Obey Beer-Lambert law ($A = \epsilon b c$) or standard calibration curves.');
     } else if (isPhysicalOrThermo) {
       buffer.writeln(r'#### **2. Thermodynamic & Kinetic Framework**');
       buffer.writeln(r'* **Energetics**: Controlled by energy conservation ($\Delta H$), entropy generation ($\Delta S$), and spontaneity conditions ($\Delta G = \Delta H - T\Delta S$).');
@@ -931,7 +935,7 @@ $content
     // Extract meaningful query terms (filter stopwords + very short tokens)
     final stopwords = {
       'what', 'explain', 'give', 'notes', 'from', 'about', 'this', 'that',
-      'how', 'does', 'does', 'with', 'and', 'the', 'for', 'are', 'why',
+      'how', 'does', 'with', 'and', 'the', 'for', 'are', 'why',
       'which', 'when', 'where', 'define', 'state', 'describe', 'list',
       'between', 'difference', 'compare', 'contrast', 'write', 'name',
     };

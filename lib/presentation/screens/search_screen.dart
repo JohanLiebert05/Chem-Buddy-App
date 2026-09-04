@@ -6,6 +6,9 @@ import '../../core/widgets/glow_card.dart';
 import '../../data/services/global_search.dart';
 import '../providers/app_providers.dart';
 import 'pdf_reader_screen.dart';
+import 'reaction_mechanism_screen.dart';
+import 'chemistry_toolkit_screen.dart';
+import 'smart_flashcards_hub.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -59,7 +62,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         final hit = hits[i];
                         return GlowCard(
                           onTap: () {
-                            if (hit.kind == 'PDF' && hit.id != null) {
+                            if (hit.kind == 'Mechanism') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(builder: (_) => const ReactionMechanismsScreen()),
+                              );
+                            } else if (hit.kind == 'Calculator') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(builder: (_) => const ChemistryToolkitScreen()),
+                              );
+                            } else if (hit.kind == 'Flashcard') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsHub()),
+                              );
+                            } else if (hit.kind == 'PDF' && hit.id != null) {
                               final doc = state.pdfs.where((p) => p.id == hit.id);
                               if (doc.isNotEmpty) {
                                 Navigator.push(

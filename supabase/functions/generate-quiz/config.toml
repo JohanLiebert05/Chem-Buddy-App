@@ -1,0 +1,3 @@
+[functions]
+  [functions.generate-quiz]
+    verify_jwt = true
