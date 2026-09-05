@@ -1,11 +1,16 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/branding/chembuddy_mascot.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/library_models.dart';
+import '../../data/models/models.dart';
+import '../../data/services/pdf_ai_study_service.dart';
 import '../../data/services/pdf_library_service.dart';
+import '../../data/services/pdf_text_extraction_service.dart';
 import '../providers/app_providers.dart';
 import 'pdf_reader_screen.dart';
 import 'pdf_study_hub_screen.dart';
@@ -96,19 +101,11 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
         const SizedBox(height: 12),
         if (loading) const Center(child: CircularProgressIndicator(color: AppColors.purpleBright)),
         if (!loading && docs.isEmpty)
-          GlowCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(Icons.picture_as_pdf, size: 48, color: AppColors.purpleBright),
-                const SizedBox(height: 12),
-                const Text('Your study library is empty.', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                const SizedBox(height: 8),
-                const Text('Import notes into your subject folders.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
-                const SizedBox(height: 16),
-                PrimaryButton(label: 'Add PDF', onPressed: () => _import(state)),
-              ],
-            ),
+          MascotEmptyState(
+            title: 'Your Study Library is Empty',
+            description: 'Import MSc Chemistry syllabus PDFs, lecture slides, or exam notes into your subject folders to start studying.',
+            buttonLabel: 'Import First PDF',
+            onAction: () => _import(state),
           ),
         ...docs.map((d) {
           String subjectName = 'Other';
@@ -261,7 +258,62 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
     });
     try {
       final doc = await PdfLibraryService.instance.importPdf(subjectId: sid);
-      if (doc != null) await ref.read(appControllerProvider.notifier).savePdf(doc);
+      if (doc != null) {
+        await ref.read(appControllerProvider.notifier).savePdf(doc);
+
+        // Content-based subject classification validation
+        try {
+          final sampleText = await PdfTextExtractionService.instance.extractFromPath(doc.localPath);
+          final classification = classifyDocumentSubject(
+            sampleText.substring(0, min(sampleText.length, 3000)),
+            doc.displayName,
+          );
+          final currentSubject = state.subjects.firstWhere((s) => s.id == sid, orElse: () => state.subjects.first);
+
+          final currentLower = currentSubject.name.toLowerCase();
+          final detectedLower = classification.detectedSubject.toLowerCase();
+          final mismatch = !currentLower.contains(detectedLower.split(' ').first) &&
+              !detectedLower.contains(currentLower.split(' ').first) &&
+              classification.confidence >= 0.5;
+
+          if (mismatch && mounted) {
+            final matchingSubject = state.subjects.cast<Subject?>().firstWhere(
+              (s) => s?.name.toLowerCase().contains(classification.detectedSubject.toLowerCase().split(' ').first) ?? false,
+              orElse: () => null,
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.surfaceElevated,
+                duration: const Duration(seconds: 7),
+                content: Row(
+                  children: [
+                    const Icon(Icons.lightbulb_outline, color: AppColors.accentGold, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'This looks like ${classification.detectedSubject} content — update tag?',
+                        style: const TextStyle(fontSize: 12.5, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                action: SnackBarAction(
+                  label: matchingSubject != null ? 'Update to ${matchingSubject.name}' : 'Change Tag',
+                  textColor: AppColors.purpleBright,
+                  onPressed: () async {
+                    if (matchingSubject != null) {
+                      await ref.read(appControllerProvider.notifier).savePdf(doc.copyWith(subjectId: matchingSubject.id));
+                    } else {
+                      _menu(doc, 'move', state);
+                    }
+                  },
+                ),
+              ),
+            );
+          }
+        } catch (_) {}
+      }
     } catch (e) {
       setState(() => error = 'Could not import that file. Choose a valid PDF.');
     }

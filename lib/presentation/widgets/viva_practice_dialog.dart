@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
@@ -39,10 +40,13 @@ class _VivaPracticeDialogState extends ConsumerState<VivaPracticeDialog> {
 
   static const _vivaTopics = [
     'Organic Reaction Mechanisms',
+    'Pericyclic & Asymmetric Synthesis',
     'Coordination Chemistry & CFT',
-    'NMR & IR Spectroscopy',
-    'Chemical Kinetics & Catalysis',
-    'HPLC & Analytical Chemistry',
+    'Organometallics & Catalytic Cycles',
+    'Quantum Chemistry & Stat Thermo',
+    'Chemical Kinetics & Dynamics',
+    'HPLC & Separation Science',
+    'Spectroscopy & Instrumental Analysis',
   ];
 
   static const _topicQuestions = {
@@ -51,25 +55,40 @@ class _VivaPracticeDialogState extends ConsumerState<VivaPracticeDialog> {
       'Why does the S_N2 reaction proceed with complete inversion of configuration (Walden inversion)?',
       'What is the mechanism of the Wittig reaction, and what intermediate is formed during the [2+2] cycloaddition?',
     ],
+    'Pericyclic & Asymmetric Synthesis': [
+      'State the Woodward-Hoffmann rule for thermal [4+2] cycloaddition and explain why [2+2] is thermally forbidden.',
+      'Explain the origin of enantioselectivity in Sharpless asymmetric epoxidation of allylic alcohols.',
+      'How does secondary orbital overlap explain endo selectivity in the Diels-Alder reaction?',
+    ],
     'Coordination Chemistry & CFT': [
       'Why is Δ_tet (tetrahedral crystal field splitting) approximately 4/9 of Δ_oct (octahedral)?',
       'Explain the Jahn-Teller distortion in high-spin d⁹ complexes (like Cu²⁺ complexes).',
       'What is the spectrochemical series, and how does π-backbonding affect ligand field strength?',
     ],
-    'NMR & IR Spectroscopy': [
-      'In ¹H NMR, what is the chemical mechanism behind the Karplus curve for vicinal coupling constants (³J_HH)?',
-      'Why does the carbonyl (C=O) stretching frequency decrease when conjugated with an α,β-unsaturated alkene?',
-      'Explain the difference between enantiotopic and diastereotopic protons in NMR spectroscopy.',
+    'Organometallics & Catalytic Cycles': [
+      'Explain the elementary steps of the Monsanto acetic acid catalytic cycle using [Rh(CO)2I2]⁻.',
+      'How does the 18-electron rule explain the metal-metal bond in Mn₂(CO)₁₀?',
+      'Compare oxidative addition with reductive elimination in homogeneous palladium catalysis.',
     ],
-    'Chemical Kinetics & Catalysis': [
+    'Quantum Chemistry & Stat Thermo': [
+      'Why must quantum mechanical operators corresponding to physical observables be Hermitian?',
+      'Derive the zero-point energy of a 1D harmonic oscillator and relate it to the Heisenberg uncertainty principle.',
+      'How is the canonical partition function Q related to macroscopic internal energy U and Helmholtz free energy A?',
+    ],
+    'Chemical Kinetics & Dynamics': [
       'Explain the steady-state approximation and the conditions under which it remains valid.',
       'How does the Arrhenius pre-exponential factor A relate to the transition state theory entropy of activation (ΔS‡)?',
-      'Differentiate between homogeneous and heterogeneous catalytic turnover frequency (TOF).',
+      'Formulate the Lindemann-Hinshelwood mechanism for unimolecular gas-phase reactions.',
     ],
-    'HPLC & Analytical Chemistry': [
+    'HPLC & Separation Science': [
       'In reverse-phase HPLC, what causes chromatographic peak tailing and how can it be mitigated?',
       'Explain each term of the Van Deemter equation (H = A + B/u + C·u) and how linear velocity affects HETP.',
       'What is the difference between Limit of Detection (LOD) and Limit of Quantification (LOQ) per ICH guidelines?',
+    ],
+    'Spectroscopy & Instrumental Analysis': [
+      'In ¹H NMR, what is the chemical mechanism behind the Karplus curve for vicinal coupling constants (³J_HH)?',
+      'Explain the McLafferty rearrangement in mass spectrometry and state the structural prerequisites.',
+      'Compare Flame AAS with Graphite Furnace AAS regarding atomization temperatures and matrix modifiers.',
     ],
   };
 
@@ -106,6 +125,22 @@ class _VivaPracticeDialogState extends ConsumerState<VivaPracticeDialog> {
     AppHaptics.tap();
     setState(() => _evaluating = true);
 
+    final cacheKey = 'viva_eval_${_selectedTopic.hashCode}_${_questionIndex}_${answer.toLowerCase().trim().hashCode}';
+
+    // Check offline cache first to conserve free-tier Gemini API calls
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedEval = prefs.getString(cacheKey);
+      if (cachedEval != null && cachedEval.isNotEmpty) {
+        setState(() {
+          _feedback = cachedEval;
+          _score += 1;
+          _evaluating = false;
+        });
+        return;
+      }
+    } catch (_) {}
+
     try {
       final remote = SupabaseService.instance;
       String evaluation = '';
@@ -130,8 +165,14 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
       }
 
       if (evaluation.isEmpty) {
-        evaluation = '✓ **Correctness**: Good conceptual attempt.\n• **Key Concepts Included**: Clear articulation of principles.\n• **Examiner Tip**: Emphasize precise thermodynamic vs kinetic terminology and temperature thresholds.';
+        evaluation = '✓ **Correctness**: Good conceptual attempt.\n• **Key Concepts Included**: Clear articulation of scientific principles.\n• **Examiner Tip**: Emphasize exact thermodynamic thresholds, symmetry labels, and precise IUPAC/mechanistic terminology.';
       }
+
+      // Persist to offline cache
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(cacheKey, evaluation);
+      } catch (_) {}
 
       setState(() {
         _feedback = evaluation;
@@ -140,7 +181,7 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
       });
     } catch (_) {
       setState(() {
-        _feedback = '✓ **Answer Recorded**: Your explanation demonstrated good foundational knowledge.\n• **Examiner Tip**: Remember to state exact reaction conditions and orbital symmetries.';
+        _feedback = '✓ **Answer Recorded**: Your explanation demonstrated good foundational knowledge.\n• **Examiner Tip**: Remember to state exact reaction conditions, spin states, and orbital symmetries.';
         _score += 1;
         _evaluating = false;
       });

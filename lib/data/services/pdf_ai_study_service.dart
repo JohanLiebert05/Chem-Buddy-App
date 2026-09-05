@@ -25,6 +25,11 @@ class PdfAiStudyService {
     return result.any((e) => e != ConnectivityResult.none);
   }
 
+  /// Classifies document text and title to detect chemistry branch or physics.
+  static SubjectClassificationResult classifyDocumentSubject(String sampleText, String docTitle) {
+    return _classifyDocumentSubjectImpl(sampleText, docTitle);
+  }
+
   // ==========================================
   // 1. EXTRACT & PREPARE
   // ==========================================
@@ -939,3 +944,114 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
     return result;
   }
 }
+
+class SubjectClassificationResult {
+  final String detectedSubject;
+  final String branchCategory;
+  final double confidence;
+  final String reason;
+
+  const SubjectClassificationResult({
+    required this.detectedSubject,
+    required this.branchCategory,
+    required this.confidence,
+    required this.reason,
+  });
+
+  String get detectedSubjectId {
+    final lower = branchCategory.toLowerCase();
+    if (lower.contains('inorganic')) return 'inorganic';
+    if (lower.contains('organic')) return 'organic';
+    if (lower.contains('physical')) return 'physical';
+    if (lower.contains('analytical')) return 'analytical';
+    if (lower.contains('physics')) return 'physics';
+    return 'organic';
+  }
+}
+
+SubjectClassificationResult classifyDocumentSubject(String sampleText, String docTitle) =>
+    _classifyDocumentSubjectImpl(sampleText, docTitle);
+
+SubjectClassificationResult _classifyDocumentSubjectImpl(String sampleText, String docTitle) {
+  final content = '$docTitle $sampleText'.toLowerCase();
+
+  final physicsKeywords = [
+    'quantum mechanics', 'wavefunction', 'schrodinger equation', 'hamiltonian',
+    'lagrangian', 'gravitational', 'relativity', 'electromagnetism', 'magnetic field',
+    'electric field', 'optics', 'diffraction', 'interference', 'lorentz', 'spacetime',
+    'newtonian', 'kinematics', 'angular momentum', 'special relativity', 'particle physics'
+  ];
+
+  final inorganicKeywords = [
+    'crystal field', 'ligand field', 'coordination', 'transition metal', 'complex',
+    'tanabe-sugano', 'point group', 'character table', 'spectrochemical',
+    'organometallic', 'backbonding', 'chelate', 'lanthanide', 'spinel', 'isomerism in coordination',
+    'cfse', 'jahn-teller', 'ferrocene', 'octahedral', 'tetrahedral'
+  ];
+
+  final physicalKeywords = [
+    'thermodynamics', 'chemical kinetics', 'entropy', 'enthalpy', 'gibbs free energy',
+    'helmholtz', 'activation energy', 'arrhenius', 'rate constant', 'order of reaction',
+    'electrochemistry', 'nernst', 'cell potential', 'overpotential', 'debye-huckel',
+    'phase equilibrium', 'clapeyron', 'partition function', 'colligative'
+  ];
+
+  final analyticalKeywords = [
+    'chromatography', 'hplc', 'gc-ms', 'retention time', 'stationary phase',
+    'mobile phase', 'beer-lambert', 'spectrophotometry', 'uv-vis', 'absorbance',
+    'titration', 'standard deviation', 'error analysis', 'detection limit', 'lod',
+    'loq', 'calibration curve', 'gravimetric', 'van deemter', 'voltammetry'
+  ];
+
+  final organicKeywords = [
+    'organic synthesis', 'reaction mechanism', 'enolate', 'aldehyde', 'ketone',
+    'alkene', 'alkyne', 'benzene', 'aromatic', 'nucleophile', 'electrophile',
+    'stereochemistry', 'chiral', 'enantiomer', 'sn1', 'sn2', 'e1', 'e2',
+    'diels-alder', 'grignard', 'rearrangement', 'pericyclic', 'wittig', 'aldol',
+    'ester', 'amine', 'carboxylic', 'heterocyclic', 'carbocation'
+  ];
+
+  int countMatches(List<String> keywords) {
+    var score = 0;
+    for (final kw in keywords) {
+      if (content.contains(kw)) score += 2;
+    }
+    return score;
+  }
+
+  final pScore = countMatches(physicsKeywords);
+  final inorgScore = countMatches(inorganicKeywords);
+  final physScore = countMatches(physicalKeywords);
+  final analScore = countMatches(analyticalKeywords);
+  final orgScore = countMatches(organicKeywords);
+
+  final scores = {
+    'Organic Chemistry': orgScore,
+    'Inorganic Chemistry': inorgScore,
+    'Physical Chemistry': physScore,
+    'Analytical Chemistry': analScore,
+    'Physics': pScore,
+  };
+
+  final sorted = scores.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+  final best = sorted.first;
+
+  final total = orgScore + inorgScore + physScore + analScore + pScore;
+
+  if (best.value >= 2 && total > 0) {
+    return SubjectClassificationResult(
+      detectedSubject: best.key,
+      branchCategory: best.key,
+      confidence: (best.value / total).clamp(0.4, 0.95),
+      reason: 'Detected dominant keywords and concepts characteristic of ${best.key}.',
+    );
+  }
+
+  return const SubjectClassificationResult(
+    detectedSubject: 'Chemistry',
+    branchCategory: 'General Chemistry',
+    confidence: 0.5,
+    reason: 'General chemistry concepts detected.',
+  );
+}
+

@@ -31,12 +31,10 @@ class FlipCard3D extends StatefulWidget {
 class FlipCard3DState extends State<FlipCard3D> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  late bool _isFront;
 
   @override
   void initState() {
     super.initState();
-    _isFront = !widget.isFlipped;
     _controller = AnimationController(
       vsync: this,
       duration: widget.duration,
@@ -71,26 +69,21 @@ class FlipCard3DState extends State<FlipCard3D> with SingleTickerProviderStateMi
   void flip() {
     AppHaptics.selection();
     if (_controller.isAnimating) return;
-    final willShowBack = _isFront;
-    if (_isFront) {
+    if (_controller.value < 0.5) {
       _flipToBack();
+      widget.onFlip?.call(true);
     } else {
       _flipToFront();
+      widget.onFlip?.call(false);
     }
-    widget.onFlip?.call(willShowBack);
   }
 
-
   void _flipToBack() {
-    _controller.forward().then((_) {
-      if (mounted) setState(() => _isFront = false);
-    });
+    _controller.forward();
   }
 
   void _flipToFront() {
-    _controller.reverse().then((_) {
-      if (mounted) setState(() => _isFront = true);
-    });
+    _controller.reverse();
   }
 
   @override

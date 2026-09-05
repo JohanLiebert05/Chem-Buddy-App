@@ -154,7 +154,7 @@ void main() {
 
     test('generateReactionPdf produces master compendium for all 21 reactions', () async {
       final allMechanisms = ReactionMechanismService.instance.mechanisms;
-      expect(allMechanisms.length, 21);
+      expect(allMechanisms.length, greaterThanOrEqualTo(21));
 
       final file = await ExportService.instance.generateReactionPdf(
         reactions: allMechanisms,

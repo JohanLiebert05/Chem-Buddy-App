@@ -9,7 +9,7 @@ import '../../core/utils/attendance_math.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/animated_dashboard.dart';
 
-import '../../core/widgets/atom_logo.dart';
+import '../../core/widgets/branding/chembuddy_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
 import '../../data/models/smart_flashcard.dart';
@@ -17,6 +17,7 @@ import '../../data/models/timetable_entry.dart';
 import '../../data/services/daily_chemistry_service.dart';
 import '../providers/app_providers.dart';
 import 'beginner_tutorial_dialog.dart';
+import 'chemistry_toolkit_screen.dart';
 import 'pdf_library_screen.dart';
 import 'pdf_study_hub_screen.dart';
 import 'search_screen.dart';
@@ -25,6 +26,7 @@ import 'smart_flashcards_study_screen.dart';
 import 'spectroscopy_hub_screen.dart';
 import 'pericyclic_hub_screen.dart';
 import 'exam_pattern_quiz_screen.dart';
+import 'reaction_mechanism_screen.dart';
 import '../widgets/reaction_mechanisms_card.dart';
 import '../widgets/home_widgets.dart';
 
@@ -84,7 +86,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // 1. Header with greeting and search
         Row(
           children: [
-            const AtomLogo(size: 42),
+            const ChemBuddyLogo(size: 42),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -346,28 +348,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               label: 'Mechanism',
               onTap: () {
                 AppHaptics.selection();
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.hourglass_top_rounded, color: AppColors.accentGold, size: 20),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Reaction Mechanisms Explorer is coming soon! ⚗️',
-                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                          ),
-                        ),
-                      ],
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: const Color(0xFF1E1B38),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: AppColors.borderHighlight, width: 0.8),
-                    ),
-                    duration: const Duration(seconds: 3),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ReactionMechanismsScreen(),
                   ),
                 );
               },
@@ -383,6 +367,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
+              _buildMscToolCard(
+                title: 'Chemistry Toolkit',
+                subtitle: '5 Postgrad Calculators',
+                icon: Icons.calculate_rounded,
+                color: AppColors.purpleBright,
+                onTap: () {
+                  AppHaptics.selection();
+                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ChemistryToolkitScreen()));
+                },
+              ),
+              const SizedBox(width: 10),
               _buildMscToolCard(
                 title: 'Spectroscopy Hub',
                 subtitle: '¹H/¹³C NMR, FT-IR & MS',

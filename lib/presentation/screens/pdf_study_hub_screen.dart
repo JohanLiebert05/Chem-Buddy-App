@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/chemistry_text_formatter.dart';
+import '../../core/widgets/branding/chembuddy_mascot.dart';
+import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/claude_loading_text.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
@@ -476,19 +477,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(width: 36, height: 36, child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.purpleBright)),
-              const SizedBox(height: 16),
-              Text(
-                _progressStatus.isEmpty ? 'Analyzing document...' : _progressStatus,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Colors.white),
-              ),
-              const SizedBox(height: 6),
-              const Text('Extracting key concepts, formulas and exam priorities', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-            ],
+          child: MascotLoading(
+            title: _progressStatus.isEmpty ? 'Analyzing Chemistry Document...' : _progressStatus,
+            subtitle: 'Extracting key concepts, formulas and exam priorities',
+            size: MascotSize.medium,
           ),
         ),
       );
@@ -517,29 +509,12 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
         const SizedBox(height: 8),
 
         if (_topics == null || _topics!.isEmpty)
-          GlowCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                const Icon(Icons.analytics_outlined, size: 40, color: AppColors.purpleBright),
-                const SizedBox(height: 12),
-                const Text('No topics extracted yet.', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.white)),
-                const SizedBox(height: 6),
-                const Text('Tap below to analyze this PDF with AI.', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: _fetchTopics,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.purple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  icon: const Icon(Icons.auto_awesome, size: 16),
-                  label: const Text('Analyze Topics with AI', style: TextStyle(fontWeight: FontWeight.w700)),
-                ),
-              ],
-            ),
+          MascotEmptyState(
+            title: 'No Topics Extracted Yet',
+            description: 'Analyze this MSc Chemistry document to extract key reaction schemes, theorems, and exam weightages.',
+            buttonLabel: 'Analyze Topics with AI',
+            onAction: _fetchTopics,
+            size: MascotSize.medium,
           )
         else
           ..._topics!.map((topic) {
@@ -641,28 +616,19 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.summarize_outlined, size: 48, color: AppColors.purpleBright),
-              const SizedBox(height: 16),
-              const Text('Structured Academic Summary', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-              const SizedBox(height: 8),
-              const Text(
-                'Generate an overview, core concepts, definitions, equations, and exam focus points from this PDF.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
-              ),
-              const SizedBox(height: 20),
               if (_loading)
-                const ClaudeThinkingIndicator(
-                  thoughts: ClaudeThinkingMicrocopy.summary,
-                  isCard: true,
-                  thinkingHeader: 'Distilling Academic Summary',
+                const MascotLoading(
+                  title: 'Distilling Academic Summary...',
+                  subtitle: 'Synthesizing definitions, mechanisms, and exam weightages',
+                  size: MascotSize.medium,
                 )
               else
-                ElevatedButton.icon(
-                  onPressed: _fetchSummary,
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.purple, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
-                  icon: const Icon(Icons.auto_awesome),
-                  label: const Text('Generate Summary with AI', style: TextStyle(fontWeight: FontWeight.w700)),
+                MascotEmptyState(
+                  title: 'Structured Academic Summary',
+                  description: 'Generate an executive postgraduate summary with definitions, reaction pathways, and exam focus points.',
+                  buttonLabel: 'Generate Summary with AI',
+                  onAction: _fetchSummary,
+                  size: MascotSize.medium,
                 ),
             ],
           ),
@@ -944,10 +910,16 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                     child: GlowCard(
                       borderColor: isUser ? AppColors.purple.withValues(alpha: 0.6) : AppColors.border,
                       padding: const EdgeInsets.all(12),
-                      child: Text(
-                        m.content,
-                        style: const TextStyle(color: Colors.white, fontSize: 13.5, height: 1.35),
-                      ),
+                      child: isUser
+                          ? Text(
+                              m.content,
+                              style: const TextStyle(color: Colors.white, fontSize: 13.5, height: 1.35),
+                            )
+                          : ChemistryMarkdownView(
+                              text: m.content,
+                              textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13.5, height: 1.45),
+                              selectable: true,
+                            ),
                     ),
                   ),
                 );
@@ -1024,9 +996,9 @@ class _SummarySection extends StatelessWidget {
                   children: [
                     const Text('• ', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.bold, fontSize: 14)),
                     Expanded(
-                      child: Text(
-                        ChemistryTextFormatter.format(c),
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+                      child: ChemistryMarkdownView(
+                        text: c,
+                        textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
                       ),
                     ),
                   ],

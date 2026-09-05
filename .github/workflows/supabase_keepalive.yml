@@ -1,0 +1,38 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Runs at 04:00 UTC every Sunday and Wednesday (bi-weekly) to prevent free-tier project pausing
+    - cron: '0 4 * * 0,3'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping Supabase Free-Tier Project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST Endpoint
+        run: |
+          SUPABASE_URL="${{ secrets.SUPABASE_URL }}"
+          SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+
+          if [ -z "$SUPABASE_URL" ]; then
+            SUPABASE_URL="https://tqhrvvcxrrkppdfrbxnz.supabase.co"
+          fi
+
+          if [ -z "$SUPABASE_ANON_KEY" ]; then
+            SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxaHJ2dmN4cnJrcHBkZnJieG56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MTQxOTksImV4cCI6MjEwMjM5MDE5OX0.ulLIKMS13JTOSgNA5V4btIjLZy98aB5aFWoQ4Qx4U4s"
+          fi
+
+          echo "Pinging Supabase REST endpoint: $SUPABASE_URL"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X GET "$SUPABASE_URL/rest/v1/profiles?select=count&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
+          echo "Response HTTP Status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 500 ]; then
+            echo "✅ Supabase project is active and healthy (HTTP $HTTP_STATUS)."
+          else
+            echo "⚠️ Unexpected response status: $HTTP_STATUS"
+            exit 1
+          fi

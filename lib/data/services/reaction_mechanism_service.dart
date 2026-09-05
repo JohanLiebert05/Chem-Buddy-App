@@ -998,6 +998,309 @@ class ReactionMechanismService {
         ),
       ],
     ),
+    // 22. FISCHER INDOLE SYNTHESIS (Heterocyclic Chemistry)
+    ReactionMechanism(
+      id: 'fischer_indole',
+      name: 'Fischer Indole Synthesis',
+      aliases: ['Indole Synthesis', 'Fischer Indolization', 'Arylhydrazone Rearrangement'],
+      category: ReactionCategory.heterocyclic,
+      summary:
+          r'Acid-catalyzed synthesis of the indole bicyclic system from an arylhydrazine and an aldehyde or ketone. Key steps involve arylhydrazone formation, tautomerization to an ene-hydrazine, concerted [3,3]-sigmatropic rearrangement cleaving the N-N bond, rearomatization, and cyclization with loss of ammonia ($\text{NH}_3$).',
+      reactants: r'Phenylhydrazine ($\text{PhNHNH}_2$) + Ketone / Aldehyde ($\text{RCH}_2\text{COR}$)',
+      reagentsAndConditions: r'Brønsted/Lewis acid ($\text{ZnCl}_2, \text{AcOH}, \text{H}_2\text{SO}_4$, or $\text{PPA}$), heat ($100-150^\circ\text{C}$)',
+      products: r'Substituted Indole + Ammonium salt ($\text{NH}_4^+$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('fischer_indole'),
+      isVerified: true,
+      keyApplications: [
+        r'Total synthesis of indole alkaloids (strychnine, reserpine, vinblastine).',
+        r'Pharmaceutical synthesis of anti-inflammatory indomethacin and triptan migraine medications.',
+        r'Biochemical synthesis of unnatural tryptophan derivatives and serotonin analogues.',
+      ],
+      limitations: [
+        r'Unsymmetrical aliphatic ketones may yield regioisomeric indoles via competitive ene-hydrazine tautomers.',
+        r'Strong protic acid conditions can hydrolyze acid-labile protective groups or acetals.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Hydrazone Formation & Ene-Hydrazine Tautomerization',
+          description:
+              r'Condensation between phenylhydrazine and the carbonyl compound yields phenylhydrazone. Acid catalyst accelerates prototropic tautomerization into the nucleophilic ene-hydrazine form.',
+          curvedArrowNotes:
+              r'Amine lone pair attacks carbonyl carbon; dehydration yields C=N hydrazone; proton transfer from adjacent $\alpha$-carbon establishes the ene-hydrazine C=C double bond.',
+          intermediate: r'Ene-hydrazine intermediate (ene-diamine tautomer)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Concerted [3,3]-Sigmatropic Shift (N-N Cleavage)',
+          description:
+              r'The protonated ene-hydrazine undergoes a concerted [3,3]-sigmatropic rearrangement. The weak N-N $\sigma$-bond ($ca.\ 160\text{ kJ/mol}$) cleaves as a new C-C $\sigma$-bond forms at the aromatic ortho position.',
+          curvedArrowNotes:
+              r'Three pairs of electrons shift concertedly around a 6-membered chair-like transition state, breaking the N-N bond and making an ortho C-C bond.',
+          intermediate: r'Dienone-diimine intermediate (disrupted benzene aromaticity)',
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'Rearomatization, Pyrrole Ring Closure & Ammonia Elimination',
+          description:
+              r'Rapid proton shift restores the thermodynamic stability of the benzene ring. The aniline-like nitrogen attacks the imine carbon to form a 5-membered cyclic hemiaminal, which eliminates ammonia ($\text{NH}_3$) to afford the aromatic indole.',
+          curvedArrowNotes:
+              r'Proton loss re-aromatizes the 6-membered ring; N-lone pair attacks imine carbon; expulsion of $\text{NH}_4^+$ leaves the 10$\pi$-electron aromatic indole core.',
+          intermediate: r'Dihydroindole hemiaminal $\to$ Indole product',
+        ),
+      ],
+    ),
+    // 23. PAAL-KNORR PYRROLE SYNTHESIS (Heterocyclic Chemistry)
+    ReactionMechanism(
+      id: 'paal_knorr',
+      name: 'Paal-Knorr Pyrrole Synthesis',
+      aliases: ['Paal-Knorr Synthesis', '1,4-Dicarbonyl Condensation', 'Pyrrole Synthesis'],
+      category: ReactionCategory.heterocyclic,
+      summary:
+          r'Classic and versatile synthesis of 1,2,5-trisubstituted or 2,5-disubstituted pyrroles via condensation of a 1,4-dicarbonyl compound (1,4-diketone or 1,4-dialdehyde) with ammonia or a primary amine, proceeding through hemiaminal formation and double dehydration.',
+      reactants: r"1,4-Dicarbonyl compound ($\text{RCOCH}_2\text{CH}_2\text{COR}$) + Primary amine / Ammonia ($\text{R}''\text{NH}_2$)",
+      reagentsAndConditions: r'Mild acid catalyst ($\text{AcOH}, p\text{-TsOH}$, microwave irradiation or reflux)',
+      products: r'Substituted Pyrrole + $2\,\text{H}_2\text{O}$',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('paal_knorr'),
+      isVerified: true,
+      keyApplications: [
+        r'Synthesis of pyrrole cores in porphyrins, corroles, and heme/chlorophyll bio-mimetic systems.',
+        r'Commercial route to cholesterol-lowering statins (Atorvastatin / Lipitor pyrrole core).',
+        r'Preparation of conducting polypyrrole polymers and photoactive organic electronics.',
+      ],
+      limitations: [
+        r'Sterically congested 1,4-diketones or amines experience significantly lower yields.',
+        r'Without an amine, acid conditions dehydrate 1,4-diketones into furans instead of pyrroles.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Nucleophilic Amine Attack & Hemiaminal Formation',
+          description:
+              r'The primary amine nucleophile attacks one carbonyl group of the 1,4-diketone. Subsequent proton transfer generates an acyclic hemiaminal intermediate.',
+          curvedArrowNotes:
+              r'Amine nitrogen lone pair attacks carbonyl carbon; carbonyl $\pi$-electrons shift to oxygen; proton transfer yields carbinolamine.',
+          intermediate: r'Acyclic hemiaminal (carbinolamine) intermediate',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Intramolecular Cyclization to 5-Membered Ring',
+          description:
+              r'The secondary amino nitrogen of the hemiaminal performs an intramolecular nucleophilic attack on the second carbonyl group, closing the 5-membered cyclic pyrrolidine-2,5-diol.',
+          curvedArrowNotes:
+              r'Amine lone pair attacks the second carbonyl carbon; cyclization establishes the five-membered nitrogen-containing heterocyclic ring.',
+          intermediate: r'Cyclic 2,5-dihydroxypyrrolidine intermediate',
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'Acid-Catalyzed Double Dehydration to Aromatic Pyrrole',
+          description:
+              r'Successive loss of two molecules of water ($2\,\text{H}_2\text{O}$) establishes two conjugated double bonds, completing the planar 6$\pi$-electron aromatic sextet of the pyrrole nucleus.',
+          curvedArrowNotes:
+              r'Protonation of -OH followed by E1/E2 elimination of $\text{H}_2\text{O}$; repeated on second -OH to deliver aromatic pyrrole.',
+          intermediate: r'Aromatic Pyrrole Product ($6\pi$ aromatic ring)',
+        ),
+      ],
+    ),
+    // 24. CHICHIBABIN AMINATION (Heterocyclic Chemistry)
+    ReactionMechanism(
+      id: 'chichibabin',
+      name: 'Chichibabin Amination / Pyridine Synthesis',
+      aliases: ['Chichibabin Reaction', 'Nucleophilic Pyridine Substitution', '2-Aminopyridine Formation'],
+      category: ReactionCategory.heterocyclic,
+      summary:
+          r'Direct nucleophilic aromatic substitution ($S_N\text{Ar}$) on electron-deficient heteroaromatic azines (pyridine, quinoline, isoquinoline) using sodium amide ($\text{NaNH}_2$) as a potent nucleophile. Attack occurs selectively at the $\alpha$ (C2) position to yield 2-aminopyridine with expulsion of hydride ($\text{H}_2$).',
+      reactants: r'Pyridine ($\text{C}_5\text{H}_5\text{N}$) + Sodium amide ($\text{NaNH}_2$)',
+      reagentsAndConditions: r'Inert solvent (toluene, xylene, dimethylaniline) or liquid $\text{NH}_3$, $100-160^\circ\text{C}$, aqueous quench',
+      products: r'2-Aminopyridine + $\text{H}_2 \uparrow$ (molecular hydrogen)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('chichibabin'),
+      isVerified: true,
+      keyApplications: [
+        r'Essential industrial intermediate for sulfa drugs (sulfapyridine antibiotic).',
+        r'Synthesis of first-generation antihistamines (mepyramine, tripelennamine).',
+        r'Direct method for introducing an amino directing group on pyridine for subsequent cross-coupling.',
+      ],
+      limitations: [
+        r'Requires handling moisture-sensitive and pyrophoric sodium amide ($\text{NaNH}_2$).',
+        r'Substituted pyridines with acidic alkyl hydrogens (e.g., 2-methylpyridine) undergo deprotonation rather than nucleophilic attack.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Nucleophilic Addition of Amide Ion at C2',
+          description:
+              r'The strongly basic amide ion ($\text{NH}_2^-$) attacks the electron-poor C2 carbon of pyridine. The aromatic sextet is broken, placing negative charge onto the electronegative nitrogen atom.',
+          curvedArrowNotes:
+              r'Amide lone pair attacks C2; pyridine C=N double bond $\pi$-electrons localize onto ring nitrogen as a formal negative charge.',
+          intermediate: r'Anionic Meisenheimer-type $\sigma$-complex (anionic dihydropyridine)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Hydride Elimination & Hydrogen Gas Evolution',
+          description:
+              r'At elevated temperatures, a hydride ion ($\text{H}^-$) is expelled from C2 to restore the highly favorable aromaticity of the pyridine ring. The eliminated hydride reacts with an amine proton to release hydrogen gas ($\text{H}_2 \uparrow$).',
+          curvedArrowNotes:
+              r'Nitrogen lone pair kicks back into the ring; hydride $\text{H}^-$ leaves and abstracts proton from amide/solvent to release $\text{H}_2$.',
+          intermediate: r'Sodium 2-pyridylamide salt + $\text{H}_2 \uparrow$',
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'Aqueous Quench to Neutral 2-Aminopyridine',
+          description:
+              r'Addition of water neutralizes the sodium salt, yielding 2-aminopyridine which exists primarily in the aromatic amino tautomer rather than the imino form.',
+          curvedArrowNotes:
+              r'Pyridine nitrogen deprotonates water; 2-aminopyridine crystallizes out.',
+          intermediate: r'2-Aminopyridine product (aromatic)',
+        ),
+      ],
+    ),
+    // 25. OXIDATIVE ADDITION (Organometallic Chemistry)
+    ReactionMechanism(
+      id: 'oxidative_addition',
+      name: 'Oxidative Addition',
+      aliases: ['Ox-Add', 'Oxidative Addition Mechanism', 'C-X Activation'],
+      category: ReactionCategory.organometallics,
+      summary:
+          r'Fundamental organometallic transformation where a low-valent transition metal center ($M^n, d^m$) inserts into a substrate single bond ($R-X$). The reaction increases the metal formal oxidation state by $+2$, coordination number by $2$, and valence electron count by $2e^-$. Serves as the critical entry step in Pd/Ni catalytic cross-coupling cycles.',
+      reactants: r'14e⁻ / 16e⁻ Metal Complex ($[Pd(PPh_3)_2]$ or Vaska’s complex $[IrCl(CO)(PPh_3)_2]$) + Substrate ($R-X$)',
+      reagentsAndConditions: r'Coordinatively unsaturated metal, polar/non-polar solvent, mild to moderate heating ($25-80^\circ\text{C}$)',
+      products: r'16e⁻ / 18e⁻ Oxidized Complex ($[L_n M^{n+2}(R)(X)]$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('oxidative_addition'),
+      isVerified: true,
+      keyApplications: [
+        r'Initial step in Suzuki-Miyaura, Heck, Negishi, and Stille palladium cross-coupling reactions.',
+        r'Homogeneous hydrogenation catalyzed by Wilkinson’s catalyst $[RhCl(PPh_3)_3]$ via $H_2$ addition.',
+        r'C-H bond functionalization and industrial carbonylation processes.',
+      ],
+      limitations: [
+        r'Aryl chlorides react very slowly compared to iodides and bromides without bulky, electron-rich phosphines.',
+        r'Metals in their highest formal oxidation states ($d^0$) cannot undergo oxidative addition.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Ligand Dissociation & Coordination Unsaturation',
+          description:
+              r'A coordinatively saturated precursor dissociates a labile ligand (e.g., phosphine) to expose a vacant coordination site, forming a reactive 14-electron $Pd^0$ species.',
+          curvedArrowNotes:
+              r'Metal-ligand bonding pair localizes onto departing ligand; open site ready for coordination.',
+          intermediate: r'14-electron $[Pd(PPh_3)_2]$ reactive intermediate',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Substrate Coordination & 3-Centered / SN2 Insertion',
+          description:
+              r'For non-polar bonds ($H-H, C-H$), addition proceeds concertedly via a 3-centered transition state yielding cis addition. For alkyl/aryl halides ($R-X$), nucleophilic attack by metal ($S_N2$-like) yields the oxidized metal-alkyl halide adduct.',
+          curvedArrowNotes:
+              r'Metal $d$-electrons donate into the $\sigma^*$-antibonding orbital of R-X; simultaneously, R-X $\sigma$-bonding electrons donate into metal empty $d/p$-orbitals.',
+          intermediate: r'3-Centered transition state or tight ion pair $[L_n M-R]^+ X^-$',
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'Formation of 16-Electron Octahedral / Square Planar Adduct',
+          description:
+              r'Re-coordination of halide yields the stable 16e- square-planar $[L_2Pd(Ar)(X)]$ complex, poised for subsequent transmetalation.',
+          curvedArrowNotes:
+              r'Halide coordinates directly to the metal center to complete the coordination sphere.',
+          intermediate: r'trans-$[Pd(PPh_3)_2(Ar)(X)]$ stable adduct',
+        ),
+      ],
+    ),
+    // 26. MIGRATORY INSERTION (Organometallic Chemistry)
+    ReactionMechanism(
+      id: 'migratory_insertion',
+      name: 'Migratory Insertion (CO Insertion)',
+      aliases: ['1,1-Insertion', 'Alkyl Migration', 'Carbonylation Mechanism'],
+      category: ReactionCategory.organometallics,
+      summary:
+          r'Intramolecular elementary reaction where an anionic ligand (typically an alkyl or hydride group) migrates onto an adjacent cis-coordinated neutral ligand (such as carbon monoxide $CO$ or an alkene). This generates an acyl or alkyl ligand and simultaneously creates a vacant coordination site without changing the metal formal oxidation state.',
+      reactants: r'Metal-alkyl carbonyl complex ($[CH_3-Mn(CO)_5]$ or $[Rh(CO)_2 I_2(CH_3)]^-$)',
+      reagentsAndConditions: r'Adjacent cis geometry of migrating alkyl and $CO$, trapping ligand ($CO$, phosphine, or solvent)',
+      products: r'Metal-acyl complex ($[CH_3C(=O)-Mn(CO)_4(L)]$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('migratory_insertion'),
+      isVerified: true,
+      keyApplications: [
+        r'Key C-C bond-forming step in the industrial Monsanto and Cativa acetic acid processes.',
+        r'Hydroformylation (Oxo process) converting alkenes and syngas into aldehydes.',
+        r'Ziegler-Natta and Brookhart olefin polymerization cycles (alkene insertion into metal-alkyl chain).',
+      ],
+      limitations: [
+        r'Requires strictly cis mutually adjacent orientation; trans isomers cannot insert directly without isomerization.',
+        r'Sterically bulky alkyl groups migrate faster, while strongly electronegative groups (e.g., fluoroalkyl) retard migration.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Intramolecular Alkyl Migration to cis-CO Carbon',
+          description:
+              r'The coordinated alkyl group undergoes a concerted 1,2-migration onto the carbon atom of an adjacent coordinated $CO$ molecule, forming a coordinated $\eta^1$-acyl ligand.',
+          curvedArrowNotes:
+              r'M-C(alkyl) $\sigma$-bonding pair attacks the electrophilic carbonyl carbon; $M=C=O$ $\pi$-backbond shifts onto oxygen.',
+          intermediate: r'16-electron pentacoordinate metal-acyl intermediate with vacant site',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Trapping by External Ligand / Solvent',
+          description:
+              r'An incoming neutral ligand ($CO$, $PPh_3$, or solvent) rapidly captures the newly generated coordination vacancy to restore the stable 18-electron count.',
+          curvedArrowNotes:
+              r'Incoming phosphine/CO lone pair coordinates into the empty metal orbital.',
+          intermediate: r'Octahedral 18-electron acyl complex $[CH_3C(=O)Mn(CO)_4(PPh_3)]$',
+        ),
+      ],
+    ),
+    // 27. REDUCTIVE ELIMINATION (Organometallic Chemistry)
+    ReactionMechanism(
+      id: 'reductive_elimination',
+      name: 'Reductive Elimination',
+      aliases: ['Red-Elim', 'C-C Coupling Step', 'Catalyst Regeneration'],
+      category: ReactionCategory.organometallics,
+      summary:
+          r'The microscopic reverse of oxidative addition: two mutually cis ligands on a high-valent transition metal center couple together to form a new covalent bond and dissociate from the metal. The reaction decreases the metal formal oxidation state by $-2$, coordination number by $2$, and valence electron count by $2e^-$, regenerating the active low-valent catalyst.',
+      reactants: r'cis-Dialkyl / Diaryl / Alkyl-halide complex ($cis-[Pd(PPh_3)_2(Ar)(R)]$ or $[Pt(Me)_2(PPh_3)_2]$)',
+      reagentsAndConditions: r'Strict cis coplanar geometry, bulky / electron-withdrawing ancillary ligands accelerate rate',
+      products: r'Cross-coupled organic product ($Ar-R$) + Low-valent catalyst ($[Pd(PPh_3)_2]$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('reductive_elimination'),
+      isVerified: true,
+      keyApplications: [
+        r'Product-releasing step in all palladium-catalyzed cross-couplings (Suzuki, Stille, Negishi, Buchwald-Hartwig).',
+        r'Final C-H bond formation in catalytic hydrogenation cycles.',
+        r'C-C bond formation in decarbonylation and cross-dehydrogenative couplings.',
+      ],
+      limitations: [
+        r'trans-Isomers must first undergo trans-to-cis isomerization before reductive elimination can take place.',
+        r'Electron-rich metal centers with strongly donating ligands eliminate sluggishly compared to electron-deficient metals.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'trans-to-cis Geometric Isomerization',
+          description:
+              r'If the two coupling ligands are positioned trans, the complex undergoes phosphine dissociation or Berry pseudorotation to place the coupling groups mutually cis.',
+          curvedArrowNotes:
+              r'Ligand reorganization places both carbon ligands within bonding distance ($ca.\ 2.0\text{ \AA}$).',
+          intermediate: r'cis-$[Pd(PPh_3)_2(Ar)(R)]$ pre-elimination conformer',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Concerted 3-Centered C-C Bond Formation',
+          description:
+              r'The two cis ligands undergo concerted coupling through a 3-centered transition state with retention of stereochemistry at the migrating centers, transferring electrons back to the metal.',
+          curvedArrowNotes:
+              r'Both M-C $\sigma$-bonds break as electrons pair into the new C-C $\sigma$-bond; metal receives two electrons, reducing from $Pd^{II}$ to $Pd^0$.',
+          intermediate: r'3-Centered transition state $[Ar \cdots Pd \cdots R]^{\ddagger}$',
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'Product Dissociation & Active Catalyst Regeneration',
+          description:
+              r'The newly formed biaryl or alkyl-arene product dissociates into solution, freeing the 14-electron $Pd^0$ complex to enter the next catalytic turnover cycle.',
+          curvedArrowNotes:
+              r'Weakly bound $\pi$-complex dissociates, yielding free product and active catalyst.',
+          intermediate: r'Regenerated 14e- $[Pd(PPh_3)_2]$ catalyst + Ar-R product',
+        ),
+      ],
+    ),
   ];
 
   /// Find mechanism by ID or keyword/alias.

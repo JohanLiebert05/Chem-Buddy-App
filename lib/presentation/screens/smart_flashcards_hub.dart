@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/title_cleaner.dart';
+import '../../core/widgets/branding/chembuddy_mascot.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/smart_flashcard.dart';
 import '../providers/app_providers.dart';
@@ -147,23 +148,14 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
         const SizedBox(height: 10),
 
         if (sets.isEmpty)
-          GlowCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(Icons.style, size: 48, color: AppColors.purpleBright),
-                const SizedBox(height: 12),
-                const Text('No flashcards yet. Create some from your chemistry notes or Ask ChemBuddy!', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
-                const SizedBox(height: 16),
-                PrimaryButton(
-                  label: 'Generate Flashcards',
-                  onPressed: () async {
-                    await Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsGenerateScreen()));
-                    if (mounted) setState(() {});
-                  },
-                ),
-              ],
-            ),
+          MascotEmptyState(
+            title: 'No Flashcard Decks Yet',
+            description: 'Generate active-recall flashcard decks from your chemistry notes or conversational answers with SM-2 spaced repetition.',
+            buttonLabel: 'Generate First Deck',
+            onAction: () async {
+              await Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsGenerateScreen()));
+              if (mounted) setState(() {});
+            },
           ),
 
         ...sets.map((s) {

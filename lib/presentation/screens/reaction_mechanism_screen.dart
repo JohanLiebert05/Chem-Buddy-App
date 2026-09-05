@@ -120,11 +120,19 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                     children: [
                       const Icon(Icons.science_outlined, size: 48, color: AppColors.textMuted),
                       const SizedBox(height: 12),
-                      const Text('No mechanisms found', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                      Text(
+                        _selectedCategory != null
+                            ? 'No ${_selectedCategory!.displayName} matches'
+                            : 'No mechanisms found',
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                      ),
                       const SizedBox(height: 6),
                       Text(
-                        'Try searching for "Aldol", "Cannizzaro", "Wittig", or "Diels-Alder"',
+                        _selectedCategory == ReactionCategory.heterocyclic
+                            ? 'Heterocyclic mechanisms & advanced ring syntheses are actively curated.'
+                            : 'Try searching for "Fischer Indole", "Aldol", "Cannizzaro", or "Diels-Alder"',
                         style: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.8), fontSize: 13),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),

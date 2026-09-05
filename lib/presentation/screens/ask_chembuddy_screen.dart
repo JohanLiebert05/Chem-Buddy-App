@@ -27,6 +27,7 @@ import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_study_screen.dart';
 import '../../data/models/smart_flashcard.dart';
 import '../../core/widgets/claude_loading_text.dart';
+import '../../core/widgets/branding/chembuddy_mascot.dart';
 
 
 enum ChemBuddyAiMode {
@@ -645,13 +646,9 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(18),
-                              decoration: BoxDecoration(
-                                color: AppColors.purple.withValues(alpha: 0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.science_outlined, size: 48, color: AppColors.purpleBright),
+                            const ChemBuddyMascot(
+                              state: MascotState.idle,
+                              size: MascotSize.large,
                             ),
                             const SizedBox(height: 16),
                             const Text(

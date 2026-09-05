@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/seed_data.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_by_prajwal.dart';
-import '../../core/widgets/atom_logo.dart';
+import '../../core/widgets/branding/chembuddy_logo.dart';
+import '../../core/widgets/branding/chembuddy_mascot.dart';
+import '../../core/widgets/branding/chembuddy_wordmark.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/models.dart';
@@ -95,16 +97,9 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                 ),
               ] else ...[
                 const SizedBox(height: 12),
-                const AtomLogo(size: 72),
-                Text(
-                  'CHEM BUDDY',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 2,
-                    color: AppColors.purpleBright,
-                  ),
-                ),
+                const ChemBuddyLogo(size: 64),
+                const SizedBox(height: 8),
+                const ChemBuddyWordmark(fontSize: 22),
               ],
               Expanded(
                 child: PageView(
@@ -218,24 +213,16 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
           child: Column(
             children: [
               const Spacer(),
-              const AtomLogo(size: 130, animated: true),
-              const SizedBox(height: 24),
-              Text(
-                'CHEM BUDDY',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 3.5,
-                  color: AppColors.purpleBright,
-                ),
-              ),
-              const SizedBox(height: 6),
+              const ChemBuddyMascot(size: MascotSize.large, state: MascotState.idle),
+              const SizedBox(height: 20),
+              const ChemBuddyWordmark(fontSize: 32, showTag: false),
+              const SizedBox(height: 4),
               Text(
                 'BY PRAJWAL A KAMBAR',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 3,
+                  letterSpacing: 2.5,
                   color: AppColors.textMuted,
                 ),
               ),

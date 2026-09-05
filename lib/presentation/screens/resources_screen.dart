@@ -322,37 +322,42 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         if (_searchQuery.isNotEmpty)
           _buildGlobalSearchResults(context, state)
         else ...[
-          // Subtle Section Indicator
-          GestureDetector(
-            onTap: () => _showSectionPicker(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceElevated.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.borderSubtle),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(_currentSection.icon, style: const TextStyle(fontSize: 13)),
-                  const SizedBox(width: 8),
-                  Text(
-                    _currentSection.title,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+          // Horizontal Section Selector Bar (Direct 1-tap switching)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: LibrarySection.values.map((section) {
+                final isSel = _currentSection == section;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    avatar: Text(section.icon, style: const TextStyle(fontSize: 13)),
+                    label: Text(
+                      section.title,
+                      style: TextStyle(
+                        color: isSel ? Colors.white : AppColors.textSecondary,
+                        fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    selected: isSel,
+                    selectedColor: AppColors.purple,
+                    backgroundColor: AppColors.surfaceElevated,
+                    side: BorderSide(
+                      color: isSel ? AppColors.purpleBright : AppColors.borderSubtle,
+                    ),
+                    onSelected: (val) {
+                      if (val) {
+                        AppHaptics.selection();
+                        setState(() => _currentSection = section);
+                      }
+                    },
                   ),
-                  const Spacer(),
-                  const Text(
-                    'Tap ⋮ to change',
-                    style: TextStyle(fontSize: 11, color: AppColors.purpleBright, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.keyboard_arrow_down, size: 14, color: AppColors.purpleBright),
-                ],
-              ),
+                );
+              }).toList(),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           // Main Section Content
           if (_currentSection == LibrarySection.pdfs)
@@ -901,8 +906,15 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
         const SizedBox(height: 20),
 
         // 1. CALCULATIONS CATEGORY
-        if (_shouldShow('calculations', ['molar mass', 'molarity', 'normality', 'dilution', 'ph', 'buffer', 'titration'])) ...[
-          const _ToolCategoryHeader(title: 'CALCULATIONS', icon: '🧮'),
+        if (_shouldShow('calculations', ['molar mass', 'stoichiometry', 'moles', 'yield', 'conversion', 'molarity', 'normality', 'dilution', 'ph', 'buffer', 'titration'])) ...[
+          const _ToolCategoryHeader(title: 'CALCULATIONS & STOICHIOMETRY', icon: '🧮'),
+          _ToolListTile(
+            title: 'Stoichiometry & Unit Conversions',
+            subtitle: 'Mass ⇄ mole ⇄ particles, gas volume at STP, percent yield & chemical units',
+            icon: Icons.sync_alt,
+            iconColor: AppColors.accentCyan,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 1))),
+          ),
           _ToolListTile(
             title: 'Molar Mass Calculator',
             subtitle: 'Supports chemical names (e.g. benzoic acid) & formulas (CuSO4·5H2O)',
@@ -929,7 +941,7 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
             subtitle: 'Weak acid/base equilibria, buffer capacity and pKa calculations',
             icon: Icons.science_outlined,
             iconColor: AppColors.accentGold,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 1))),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 2))),
           ),
           const SizedBox(height: 16),
         ],
@@ -942,28 +954,28 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
             subtitle: 'Spontaneity analysis, enthalpy, entropy & temperature dependence',
             icon: Icons.local_fire_department,
             iconColor: Colors.deepOrangeAccent,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 2))),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 3))),
           ),
           _ToolListTile(
             title: 'Arrhenius Activation Energy (Ea)',
             subtitle: 'Two-temperature rate constant ratios & reaction kinetics',
             icon: Icons.speed,
             iconColor: Colors.amber,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 2))),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 3))),
           ),
           _ToolListTile(
             title: 'Nernst Equation & Cell Potential',
             subtitle: 'Non-standard EMF, reaction quotient Q and transfer electrons n',
             icon: Icons.bolt,
             iconColor: AppColors.accentGold,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 4))),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 5))),
           ),
           _ToolListTile(
             title: 'Beer-Lambert & Photon Energy (E = hν)',
             subtitle: 'Spectrophotometric absorbance A = ε·c·l and photon transitions',
             icon: Icons.lightbulb_outline,
             iconColor: Colors.tealAccent,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 3))),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 4))),
           ),
           const SizedBox(height: 16),
         ],

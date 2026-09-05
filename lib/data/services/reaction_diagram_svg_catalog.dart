@@ -55,6 +55,23 @@ class ReactionDiagramSvgCatalog {
       case 'claisen_sigmatropic':
       case 'claisen-sigmatropic':
         return claisenSigmatropicSvg;
+      case 'fischer_indole':
+      case 'fischer-indole':
+        return fischerIndoleSvg;
+      case 'paal_knorr':
+      case 'paal-knorr':
+        return paalKnorrSvg;
+      case 'chichibabin':
+        return chichibabinSvg;
+      case 'oxidative_addition':
+      case 'oxidative-addition':
+        return oxidativeAdditionSvg;
+      case 'migratory_insertion':
+      case 'migratory-insertion':
+        return migratoryInsertionSvg;
+      case 'reductive_elimination':
+      case 'reductive-elimination':
+        return reductiveEliminationSvg;
       default:
         return defaultGenericSvg(mechanismId);
     }
@@ -723,6 +740,267 @@ class ReactionDiagramSvgCatalog {
   <text x="552" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">o-(CH₂=CH-CH₂)C₆H₄-OH</text>
   <text x="552" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">Restores aromatic resonance</text>
   <text x="552" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Aliphatic: γ,δ-unsaturated carbonyl</text>
+</svg>
+""";
+
+  // 22. FISCHER INDOLE SYNTHESIS SVG
+  static const String fischerIndoleSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="fi_arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+    <marker id="fi_gold" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#F59E0B" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Fischer Indole Synthesis: Arylhydrazine + Carbonyl via [3,3]-Sigmatropic Shift</text>
+  
+  <!-- Step 1: Ene-hydrazine -->
+  <rect x="25" y="48" width="195" height="135" rx="10" fill="#1E1A38" stroke="#38BDF8" stroke-width="1.2"/>
+  <text x="35" y="70" fill="#38BDF8" font-family="sans-serif" font-size="11.5" font-weight="bold">Ene-Hydrazine Tautomer</text>
+  <text x="35" y="94" fill="#FFFFFF" font-family="sans-serif" font-size="12">Ph-NH-N=C(R)CH₂R'</text>
+  <text x="35" y="116" fill="#F59E0B" font-family="sans-serif" font-size="11">⇌ Ph-NH-NH-C(R)=CHR'</text>
+  <text x="35" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10">Condensation of PhNHNH₂</text>
+  <text x="35" y="158" fill="#94A3B8" font-family="sans-serif" font-size="10">+ Ketone under acid (H⁺)</text>
+
+  <line x1="225" y1="115" x2="265" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#fi_arr)"/>
+  <text x="230" y="105" fill="#F59E0B" font-family="sans-serif" font-size="10" font-weight="bold">Δ / H⁺</text>
+
+  <!-- Step 2: [3,3]-Sigmatropic Rearrangement -->
+  <rect x="270" y="48" width="220" height="135" rx="10" fill="#1E1A38" stroke="#F59E0B" stroke-width="1.2"/>
+  <text x="280" y="70" fill="#F59E0B" font-family="sans-serif" font-size="11.5" font-weight="bold">[3,3]-Sigmatropic Shift</text>
+  <text x="280" y="94" fill="#E2E8F0" font-family="sans-serif" font-size="11.5">Cleaves weak N-N σ-bond</text>
+  <text x="280" y="114" fill="#38BDF8" font-family="sans-serif" font-size="11.5">Forms new ortho C-C bond</text>
+  <text x="280" y="138" fill="#94A3B8" font-family="sans-serif" font-size="10">Dienone-diimine intermediate</text>
+  <text x="280" y="156" fill="#A78BFA" font-family="sans-serif" font-size="10">Spontaneous rearomatization</text>
+
+  <line x1="495" y1="115" x2="535" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#fi_arr)"/>
+  <text x="498" y="105" fill="#10B981" font-family="sans-serif" font-size="10" font-weight="bold">- NH₃</text>
+
+  <!-- Step 3: Indole Product -->
+  <rect x="540" y="48" width="195" height="135" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="550" y="72" fill="#10B981" font-family="sans-serif" font-size="13" font-weight="bold">Substituted Indole</text>
+  <text x="550" y="96" fill="#FFFFFF" font-family="sans-serif" font-size="12">10π Electron Bicyclic Core</text>
+  <text x="550" y="120" fill="#38BDF8" font-family="sans-serif" font-size="11">Fused Benzene + Pyrrole</text>
+  <text x="550" y="142" fill="#E2E8F0" font-family="sans-serif" font-size="10.5">High thermodynamic gain</text>
+  <text x="550" y="160" fill="#94A3B8" font-family="sans-serif" font-size="10">Byproduct: NH₄⁺ (Ammonium salt)</text>
+</svg>
+""";
+
+  // 23. PAAL-KNORR PYRROLE SYNTHESIS SVG
+  static const String paalKnorrSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="pk_arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Paal-Knorr Pyrrole Synthesis: 1,4-Dicarbonyl Condensation with Amines</text>
+
+  <!-- Step 1: Reactants -->
+  <rect x="25" y="48" width="195" height="135" rx="10" fill="#1E1A38" stroke="#38BDF8" stroke-width="1.2"/>
+  <text x="35" y="70" fill="#38BDF8" font-family="sans-serif" font-size="11.5" font-weight="bold">1,4-Dicarbonyl Substrate</text>
+  <text x="35" y="94" fill="#FFFFFF" font-family="sans-serif" font-size="12">R-CO-CH₂-CH₂-CO-R'</text>
+  <text x="35" y="116" fill="#F59E0B" font-family="sans-serif" font-size="11">+ Primary Amine (R''-NH₂)</text>
+  <text x="35" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10">Nucleophilic addition of -NH₂</text>
+  <text x="35" y="158" fill="#94A3B8" font-family="sans-serif" font-size="10">to C1 carbonyl group</text>
+
+  <line x1="225" y1="115" x2="265" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#pk_arr)"/>
+  <text x="228" y="105" fill="#F59E0B" font-family="sans-serif" font-size="10" font-weight="bold">H⁺ Cat</text>
+
+  <!-- Step 2: Cyclic Hemiaminal Intermediate -->
+  <rect x="270" y="48" width="220" height="135" rx="10" fill="#1E1A38" stroke="#F59E0B" stroke-width="1.2"/>
+  <text x="280" y="70" fill="#F59E0B" font-family="sans-serif" font-size="11.5" font-weight="bold">Cyclic Hemiaminal Diol</text>
+  <text x="280" y="94" fill="#E2E8F0" font-family="sans-serif" font-size="11.5">Intramolecular cyclization</text>
+  <text x="280" y="114" fill="#38BDF8" font-family="sans-serif" font-size="11.5">5-Membered pyrrolidine-2,5-diol</text>
+  <text x="280" y="138" fill="#94A3B8" font-family="sans-serif" font-size="10">Amine lone pair attacks C4</text>
+  <text x="280" y="156" fill="#A78BFA" font-family="sans-serif" font-size="10">Forms bicyclic/cyclic conformer</text>
+
+  <line x1="495" y1="115" x2="535" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#pk_arr)"/>
+  <text x="496" y="105" fill="#10B981" font-family="sans-serif" font-size="10" font-weight="bold">- 2 H₂O</text>
+
+  <!-- Step 3: Pyrrole Product -->
+  <rect x="540" y="48" width="195" height="135" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="550" y="72" fill="#10B981" font-family="sans-serif" font-size="13" font-weight="bold">Substituted Pyrrole</text>
+  <text x="550" y="96" fill="#FFFFFF" font-family="sans-serif" font-size="12">1,2,5-Trisubstituted Ring</text>
+  <text x="550" y="120" fill="#38BDF8" font-family="sans-serif" font-size="11">6π Aromatic Heterocycle</text>
+  <text x="550" y="142" fill="#E2E8F0" font-family="sans-serif" font-size="10.5">Planar aromatic stabilization</text>
+  <text x="550" y="160" fill="#94A3B8" font-family="sans-serif" font-size="10">Key building block for porphyrins</text>
+</svg>
+""";
+
+  // 24. CHICHIBABIN AMINATION SVG
+  static const String chichibabinSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="ch_arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Chichibabin Amination: Nucleophilic Aromatic Substitution on Pyridine (SNAr)</text>
+
+  <!-- Step 1: Pyridine + NaNH2 -->
+  <rect x="25" y="48" width="195" height="135" rx="10" fill="#1E1A38" stroke="#38BDF8" stroke-width="1.2"/>
+  <text x="35" y="70" fill="#38BDF8" font-family="sans-serif" font-size="11.5" font-weight="bold">Electron-Poor Pyridine</text>
+  <text x="35" y="94" fill="#FFFFFF" font-family="sans-serif" font-size="12">C₅H₅N + NaNH₂</text>
+  <text x="35" y="116" fill="#F59E0B" font-family="sans-serif" font-size="11">Strong Nu: NH₂⁻ attacks C2</text>
+  <text x="35" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10">Selectivity: C2 is most</text>
+  <text x="35" y="158" fill="#94A3B8" font-family="sans-serif" font-size="10">electron-deficient carbon</text>
+
+  <line x1="225" y1="115" x2="265" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#ch_arr)"/>
+  <text x="230" y="105" fill="#F59E0B" font-family="sans-serif" font-size="10" font-weight="bold">130°C</text>
+
+  <!-- Step 2: Meisenheimer-type σ-adduct -->
+  <rect x="270" y="48" width="220" height="135" rx="10" fill="#1E1A38" stroke="#F59E0B" stroke-width="1.2"/>
+  <text x="280" y="70" fill="#F59E0B" font-family="sans-serif" font-size="11.5" font-weight="bold">Anionic σ-Complex Intermediate</text>
+  <text x="280" y="94" fill="#E2E8F0" font-family="sans-serif" font-size="11.5">Meisenheimer-type adduct</text>
+  <text x="280" y="114" fill="#38BDF8" font-family="sans-serif" font-size="11.5">Negative charge on ring N⁻</text>
+  <text x="280" y="138" fill="#94A3B8" font-family="sans-serif" font-size="10">Disrupted aromatic sextet</text>
+  <text x="280" y="156" fill="#A78BFA" font-family="sans-serif" font-size="10">Thermal hydride (H⁻) expulsion</text>
+
+  <line x1="495" y1="115" x2="535" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#ch_arr)"/>
+  <text x="496" y="105" fill="#10B981" font-family="sans-serif" font-size="10" font-weight="bold">- H₂ ↑</text>
+
+  <!-- Step 3: 2-Aminopyridine Product -->
+  <rect x="540" y="48" width="195" height="135" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="550" y="72" fill="#10B981" font-family="sans-serif" font-size="13" font-weight="bold">2-Aminopyridine</text>
+  <text x="550" y="96" fill="#FFFFFF" font-family="sans-serif" font-size="12">2-(NH₂)C₅H₄N + H₂ gas</text>
+  <text x="550" y="120" fill="#38BDF8" font-family="sans-serif" font-size="11">Restored 6π Aromatic Ring</text>
+  <text x="550" y="142" fill="#E2E8F0" font-family="sans-serif" font-size="10.5">Exists in amino tautomer</text>
+  <text x="550" y="160" fill="#94A3B8" font-family="sans-serif" font-size="10">Precursor to sulfa drugs &amp; dyes</text>
+</svg>
+""";
+
+  // 25. OXIDATIVE ADDITION SVG
+  static const String oxidativeAdditionSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="oa_arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Oxidative Addition: Mⁿ + R-X → Mⁿ⁺²(R)(X) (ΔOS = +2, ΔCN = +2, ΔVE = +2e⁻)</text>
+
+  <!-- Step 1: Low-valent metal precursor -->
+  <rect x="25" y="48" width="195" height="135" rx="10" fill="#1E1A38" stroke="#38BDF8" stroke-width="1.2"/>
+  <text x="35" y="70" fill="#38BDF8" font-family="sans-serif" font-size="11.5" font-weight="bold">Low-Valent Metal (d¹⁰)</text>
+  <text x="35" y="94" fill="#FFFFFF" font-family="sans-serif" font-size="12">Pd⁰(PPh₃)₂ (14e⁻ species)</text>
+  <text x="35" y="116" fill="#F59E0B" font-family="sans-serif" font-size="11">+ Substrate: Ar-Br / R-X</text>
+  <text x="35" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10">Coordinatively unsaturated</text>
+  <text x="35" y="158" fill="#94A3B8" font-family="sans-serif" font-size="10">Linear 2-coordinate geometry</text>
+
+  <line x1="225" y1="115" x2="265" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#oa_arr)"/>
+  <text x="228" y="105" fill="#F59E0B" font-family="sans-serif" font-size="10" font-weight="bold">3-Center</text>
+
+  <!-- Step 2: 3-Centered / SN2 Transition State -->
+  <rect x="270" y="48" width="220" height="135" rx="10" fill="#1E1A38" stroke="#F59E0B" stroke-width="1.2"/>
+  <text x="280" y="70" fill="#F59E0B" font-family="sans-serif" font-size="11.5" font-weight="bold">3-Centered Transition State</text>
+  <text x="280" y="94" fill="#E2E8F0" font-family="sans-serif" font-size="11.5">[Ar ··· Pd ··· Br]‡</text>
+  <text x="280" y="114" fill="#38BDF8" font-family="sans-serif" font-size="11.5">M(d) → σ*(C-Br) backbonding</text>
+  <text x="280" y="138" fill="#94A3B8" font-family="sans-serif" font-size="10">Simultaneous bond cleavage</text>
+  <text x="280" y="156" fill="#A78BFA" font-family="sans-serif" font-size="10">and 2-electron metal oxidation</text>
+
+  <line x1="495" y1="115" x2="535" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#oa_arr)"/>
+  <text x="498" y="105" fill="#10B981" font-family="sans-serif" font-size="10" font-weight="bold">+2e⁻</text>
+
+  <!-- Step 3: Oxidized Adduct -->
+  <rect x="540" y="48" width="195" height="135" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="550" y="72" fill="#10B981" font-family="sans-serif" font-size="13" font-weight="bold">Pd(II) Adduct (d⁸)</text>
+  <text x="550" y="96" fill="#FFFFFF" font-family="sans-serif" font-size="12">trans-[Pd(PPh₃)₂(Ar)(Br)]</text>
+  <text x="550" y="120" fill="#38BDF8" font-family="sans-serif" font-size="11">16-Electron Square Planar</text>
+  <text x="550" y="142" fill="#E2E8F0" font-family="sans-serif" font-size="10.5">Oxidation State: Pd(0) → Pd(II)</text>
+  <text x="550" y="160" fill="#94A3B8" font-family="sans-serif" font-size="10">Poised for transmetalation</text>
+</svg>
+""";
+
+  // 26. MIGRATORY INSERTION SVG
+  static const String migratoryInsertionSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="mi_arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Migratory Insertion: Intramolecular Alkyl Shift to cis-CO (ΔOS = 0, ΔCN = -1, ΔVE = -2e⁻)</text>
+
+  <!-- Step 1: Reactant Octahedral Complex -->
+  <rect x="25" y="48" width="195" height="135" rx="10" fill="#1E1A38" stroke="#38BDF8" stroke-width="1.2"/>
+  <text x="35" y="70" fill="#38BDF8" font-family="sans-serif" font-size="11.5" font-weight="bold">18e⁻ Saturated Complex</text>
+  <text x="35" y="94" fill="#FFFFFF" font-family="sans-serif" font-size="12">[CH₃-Mn(CO)₅]</text>
+  <text x="35" y="116" fill="#F59E0B" font-family="sans-serif" font-size="11">Octahedral Geometry</text>
+  <text x="35" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10">CH₃ and CO mutually cis</text>
+  <text x="35" y="158" fill="#94A3B8" font-family="sans-serif" font-size="10">Formal oxidation state: Mn(I)</text>
+
+  <line x1="225" y1="115" x2="265" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#mi_arr)"/>
+  <text x="228" y="105" fill="#F59E0B" font-family="sans-serif" font-size="10" font-weight="bold">1,1-Shift</text>
+
+  <!-- Step 2: 16e- Acyl Intermediate with Vacant Site -->
+  <rect x="270" y="48" width="220" height="135" rx="10" fill="#1E1A38" stroke="#F59E0B" stroke-width="1.2"/>
+  <text x="280" y="70" fill="#F59E0B" font-family="sans-serif" font-size="11.5" font-weight="bold">16e⁻ Acyl Intermediate</text>
+  <text x="280" y="94" fill="#E2E8F0" font-family="sans-serif" font-size="11.5">[CH₃C(=O)-Mn(CO)₄(□)]</text>
+  <text x="280" y="114" fill="#38BDF8" font-family="sans-serif" font-size="11.5">Alkyl migrates to carbonyl C</text>
+  <text x="280" y="138" fill="#94A3B8" font-family="sans-serif" font-size="10">Creates open vacant site (□)</text>
+  <text x="280" y="156" fill="#A78BFA" font-family="sans-serif" font-size="10">Pentacoordinate geometry</text>
+
+  <line x1="495" y1="115" x2="535" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#mi_arr)"/>
+  <text x="498" y="105" fill="#10B981" font-family="sans-serif" font-size="10" font-weight="bold">+ L</text>
+
+  <!-- Step 3: Trapped Saturated Product -->
+  <rect x="540" y="48" width="195" height="135" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="550" y="72" fill="#10B981" font-family="sans-serif" font-size="13" font-weight="bold">18e⁻ Trapped Acyl</text>
+  <text x="550" y="96" fill="#FFFFFF" font-family="sans-serif" font-size="12">[CH₃C(=O)-Mn(CO)₄(L)]</text>
+  <text x="550" y="120" fill="#38BDF8" font-family="sans-serif" font-size="11">Restored Octahedral 18e⁻</text>
+  <text x="550" y="142" fill="#E2E8F0" font-family="sans-serif" font-size="10.5">Monsanto Acetic Acid step</text>
+  <text x="550" y="160" fill="#94A3B8" font-family="sans-serif" font-size="10">L = CO, PPh₃, or Solvent</text>
+</svg>
+""";
+
+  // 27. REDUCTIVE ELIMINATION SVG
+  static const String reductiveEliminationSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="re_arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Reductive Elimination: cis-[L₂Mⁿ⁺²(R)(R')] → R-R' + L₂Mⁿ (Product Release &amp; Catalyst Regeneration)</text>
+
+  <!-- Step 1: cis-Organometallic Complex -->
+  <rect x="25" y="48" width="195" height="135" rx="10" fill="#1E1A38" stroke="#38BDF8" stroke-width="1.2"/>
+  <text x="35" y="70" fill="#38BDF8" font-family="sans-serif" font-size="11.5" font-weight="bold">cis-Pd(II) Intermediate</text>
+  <text x="35" y="94" fill="#FFFFFF" font-family="sans-serif" font-size="12">cis-[Pd(PPh₃)₂(Ar)(Me)]</text>
+  <text x="35" y="116" fill="#F59E0B" font-family="sans-serif" font-size="11">16-Electron Square Planar</text>
+  <text x="35" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10">Coupling ligands must be cis</text>
+  <text x="35" y="158" fill="#94A3B8" font-family="sans-serif" font-size="10">C-C distance ~ 2.0 Å</text>
+
+  <line x1="225" y1="115" x2="265" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#re_arr)"/>
+  <text x="228" y="105" fill="#F59E0B" font-family="sans-serif" font-size="10" font-weight="bold">Coupling</text>
+
+  <!-- Step 2: 3-Centered Transition State -->
+  <rect x="270" y="48" width="220" height="135" rx="10" fill="#1E1A38" stroke="#F59E0B" stroke-width="1.2"/>
+  <text x="280" y="70" fill="#F59E0B" font-family="sans-serif" font-size="11.5" font-weight="bold">3-Centered Transition State</text>
+  <text x="280" y="94" fill="#E2E8F0" font-family="sans-serif" font-size="11.5">[Ar ··· Pd ··· Me]‡</text>
+  <text x="280" y="114" fill="#38BDF8" font-family="sans-serif" font-size="11.5">M-C bonds cleave concertedly</text>
+  <text x="280" y="138" fill="#94A3B8" font-family="sans-serif" font-size="10">Forms new C-C σ-bond</text>
+  <text x="280" y="156" fill="#A78BFA" font-family="sans-serif" font-size="10">2e⁻ return to Pd: Pd(II) → Pd(0)</text>
+
+  <line x1="495" y1="115" x2="535" y2="115" stroke="#38BDF8" stroke-width="2" marker-end="url(#re_arr)"/>
+  <text x="498" y="105" fill="#10B981" font-family="sans-serif" font-size="10" font-weight="bold">-2e⁻</text>
+
+  <!-- Step 3: Product + Regenerated Catalyst -->
+  <rect x="540" y="48" width="195" height="135" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="550" y="72" fill="#10B981" font-family="sans-serif" font-size="13" font-weight="bold">Ar-Me Product + Pd⁰</text>
+  <text x="550" y="96" fill="#FFFFFF" font-family="sans-serif" font-size="12">Cross-Coupled Arenes</text>
+  <text x="550" y="120" fill="#38BDF8" font-family="sans-serif" font-size="11">Regenerates 14e⁻ Pd⁰(PPh₃)₂</text>
+  <text x="550" y="142" fill="#E2E8F0" font-family="sans-serif" font-size="10.5">Enters next catalytic turnover</text>
+  <text x="550" y="160" fill="#94A3B8" font-family="sans-serif" font-size="10">Suzuki / Heck terminal step</text>
 </svg>
 """;
 

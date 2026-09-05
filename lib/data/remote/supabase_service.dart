@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -138,40 +139,73 @@ class SupabaseService {
     } catch (_) {}
   }
 
-  /// Calls a Supabase Edge Function with a 45-second timeout and network resilience.
-  Future<dynamic> invokeFunction(String name, Map<String, dynamic> body, {Duration timeout = const Duration(seconds: 45)}) async {
+  /// Calls a Supabase Edge Function with automatic exponential backoff retry for 429 rate limits,
+  /// jitter, and network resilience.
+  Future<dynamic> invokeFunction(
+    String name,
+    Map<String, dynamic> body, {
+    Duration timeout = const Duration(seconds: 45),
+    int maxRetries = 3,
+  }) async {
     final c = client;
     if (c == null) {
       throw StateError('Unable to connect to cloud services. Please check your internet connection and try again.');
     }
-    try {
-      final response = await c.functions.invoke(name, body: body).timeout(
-        timeout,
-        onTimeout: () => throw StateError('Request timed out while waiting for $name (45s). Please check your network.'),
-      );
-      if (response.status >= 400) {
-        final data = response.data;
-        if (data is Map && data['error'] != null) {
-          final detail = data['detail'] != null ? ' (${data['detail']})' : '';
-          throw StateError('${data['error']}$detail');
+
+    int attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        final response = await c.functions.invoke(name, body: body).timeout(
+          timeout,
+          onTimeout: () => throw StateError('Request timed out while waiting for $name (${timeout.inSeconds}s). Please check your network.'),
+        );
+        if (response.status >= 400) {
+          if (response.status == 429 && attempt <= maxRetries) {
+            // Exponential backoff + jitter (e.g., attempt 1: ~1000-1350ms, attempt 2: ~2000-2350ms, attempt 3: ~4000-4350ms)
+            final jitterMs = math.Random().nextInt(350);
+            final delayMs = (1000 * math.pow(2, attempt - 1)).toInt() + jitterMs;
+            await Future<void>.delayed(Duration(milliseconds: delayMs));
+            continue;
+          }
+          final data = response.data;
+          if (data is Map && data['error'] != null) {
+            final detail = data['detail'] != null ? ' (${data['detail']})' : '';
+            throw StateError('${data['error']}$detail');
+          }
+          throw StateError('The $name service encountered an issue (HTTP ${response.status}). Please try again.');
         }
-        throw StateError('The $name service encountered an issue (HTTP ${response.status}). Please try again.');
+        return response.data;
+      } on FunctionException catch (fe) {
+        if (fe.status == 429 && attempt <= maxRetries) {
+          final jitterMs = math.Random().nextInt(350);
+          final delayMs = (1000 * math.pow(2, attempt - 1)).toInt() + jitterMs;
+          await Future<void>.delayed(Duration(milliseconds: delayMs));
+          continue;
+        }
+        if (fe.details is Map && fe.details['error'] != null) {
+          throw StateError(fe.details['error'].toString());
+        }
+        if (fe.status == 401) {
+          throw StateError('Sign in required to use cloud AI features.');
+        }
+        if (fe.status == 429) {
+          throw StateError('AI service rate limit reached. Please wait a moment and retry.');
+        }
+        throw StateError('Cloud service temporarily unavailable (${fe.status}).');
+      } catch (e) {
+        if (attempt <= maxRetries &&
+            (e.toString().contains('429') ||
+             e.toString().contains('rate limit') ||
+             e.toString().contains('RESOURCE_EXHAUSTED'))) {
+          final jitterMs = math.Random().nextInt(350);
+          final delayMs = (1000 * math.pow(2, attempt - 1)).toInt() + jitterMs;
+          await Future<void>.delayed(Duration(milliseconds: delayMs));
+          continue;
+        }
+        if (e is StateError) rethrow;
+        throw StateError('Network connection issue ($e). Please check your internet and try again.');
       }
-      return response.data;
-    } on FunctionException catch (fe) {
-      if (fe.details is Map && fe.details['error'] != null) {
-        throw StateError(fe.details['error'].toString());
-      }
-      if (fe.status == 401) {
-        throw StateError('Sign in required to use cloud AI features.');
-      }
-      if (fe.status == 429) {
-        throw StateError('AI service rate limit reached. Please wait a moment and retry.');
-      }
-      throw StateError('Cloud service temporarily unavailable (${fe.status}).');
-    } catch (e) {
-      if (e is StateError) rethrow;
-      throw StateError('Network connection issue ($e). Please check your internet and try again.');
     }
   }
 }

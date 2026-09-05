@@ -3,6 +3,10 @@ name: Build Android APK
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -42,9 +46,25 @@ jobs:
       - name: Build Release APK
         run: flutter build apk --release
 
+      - name: Copy Named APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: chem-buddy-msc-apk
+          path: Chem-Buddy-MSc-Release.apk
           retention-days: 30
+
+      - name: Create GitHub Release (Tags only)
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: Chem-Buddy-MSc-Release.apk
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## ChemBuddy Release ${{ github.ref_name }}
+            - Complete 4-Branch MSc Chemistry Parity (Organic, Inorganic, Physical, Analytical).
+            - ChemBuddy Mascot & Design System.
+            - Spaced repetition flashcards & university exam mode.
+            - Offline-first caching with exponential backoff load management.
