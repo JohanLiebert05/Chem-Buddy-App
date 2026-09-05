@@ -336,7 +336,7 @@ class _ExamPatternQuizScreenState extends ConsumerState<ExamPatternQuizScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('• ', style: TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w800)),
-                                Expanded(child: Text(rubric, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5))),
+                                Expanded(child: ChemistryMarkdownView(text: rubric, textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5))),
                               ],
                             ),
                           )),

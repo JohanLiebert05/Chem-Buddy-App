@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/claude_loading_text.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
@@ -745,9 +745,9 @@ class _PredictedQuestionCardState extends State<_PredictedQuestionCard> {
             ],
           ),
           const SizedBox(height: 10),
-          SelectableText(
-            'Q${widget.index}. ${ChemistryTextFormatter.format(q.question)}',
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.35),
+          ChemistryMarkdownView(
+            text: '**Q${widget.index}.** ${q.question}',
+            textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.35, color: Colors.white),
           ),
           if (q.reason.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -792,9 +792,9 @@ class _PredictedQuestionCardState extends State<_PredictedQuestionCard> {
                           children: [
                             const Text('• ', style: TextStyle(color: AppColors.purpleBright, fontSize: 13)),
                             Expanded(
-                              child: Text(
-                                ChemistryTextFormatter.format(hint),
-                                style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, height: 1.3),
+                              child: ChemistryMarkdownView(
+                                text: hint,
+                                textStyle: const TextStyle(fontSize: 12, color: AppColors.textPrimary, height: 1.3),
                               ),
                             ),
                           ],

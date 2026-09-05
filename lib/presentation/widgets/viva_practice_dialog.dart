@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/remote/supabase_service.dart';
 
@@ -356,9 +356,9 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            ChemistryTextFormatter.format(_currentQuestion),
-                            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, height: 1.35),
+                          ChemistryMarkdownView(
+                            text: _currentQuestion,
+                            textStyle: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, height: 1.35),
                           ),
                         ],
                       ),
@@ -395,9 +395,9 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
                               ],
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              ChemistryTextFormatter.format(_feedback!),
-                              style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, height: 1.4),
+                            ChemistryMarkdownView(
+                              text: _feedback!,
+                              textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13, height: 1.4),
                             ),
                           ],
                         ),

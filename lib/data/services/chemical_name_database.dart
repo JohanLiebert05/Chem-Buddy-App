@@ -23,6 +23,26 @@ class ChemicalCompound {
   final String? hydrationState;
 }
 
+class PolymerBiomoleculeEntry {
+  const PolymerBiomoleculeEntry({
+    required this.name,
+    required this.category,
+    required this.repeatUnitFormula,
+    required this.repeatUnitMolarMass,
+    required this.explanation,
+    this.synonyms = const [],
+    this.typicalMolecularWeightRange,
+  });
+
+  final String name;
+  final String category;
+  final String repeatUnitFormula;
+  final double repeatUnitMolarMass;
+  final String explanation;
+  final List<String> synonyms;
+  final String? typicalMolecularWeightRange;
+}
+
 class ChemicalParseResult {
   const ChemicalParseResult({
     required this.input,
@@ -34,6 +54,12 @@ class ChemicalParseResult {
     this.iupacName,
     this.elementBreakdown = const {},
     this.elementPercentages = const {},
+    this.isPolymerOrBiomolecule = false,
+    this.polymerCategory,
+    this.repeatUnitFormula,
+    this.repeatUnitMolarMass,
+    this.polymerExplanation,
+    this.typicalMolecularWeightRange,
   });
 
   final String input;
@@ -45,6 +71,12 @@ class ChemicalParseResult {
   final String? iupacName;
   final Map<String, int> elementBreakdown;
   final Map<String, double> elementPercentages;
+  final bool isPolymerOrBiomolecule;
+  final String? polymerCategory;
+  final String? repeatUnitFormula;
+  final double? repeatUnitMolarMass;
+  final String? polymerExplanation;
+  final String? typicalMolecularWeightRange;
 
   String get formula => canonicalFormula;
 }
@@ -204,15 +236,290 @@ class ChemicalNameDatabase {
     const ChemicalCompound(commonName: 'Potassium sodium tartrate tetrahydrate', formula: 'KNaC4H4O6·4H2O', molarMass: 282.22, synonyms: ['rochelle salt']),
   ];
 
-  /// Resolves input: auto-detects formula vs chemical name, queries the curated database first,
-  /// and calculates deterministic molecular mass and element breakdown.
+  /// Curated database of macromolecules, biopolymers, and synthetic polymers with variable chain length
+  static final List<PolymerBiomoleculeEntry> polymerDatabase = [
+    const PolymerBiomoleculeEntry(
+      name: 'Sodium alginate',
+      category: 'Polysaccharide / Biopolymer',
+      repeatUnitFormula: '(C6H7NaO6)n',
+      repeatUnitMolarMass: 198.11,
+      typicalMolecularWeightRange: '32,000 – 250,000 g/mol',
+      synonyms: ['algin', 'sodium salt of alginic acid', 'alginate', 'sodium polymannuronate-guluronate'],
+      explanation: 'Sodium alginate is a natural linear anionic polysaccharide copolymer of β-D-mannuronate (M) and α-L-guluronate (G) residues with variable degree of polymerization n. Because chain length varies widely across commercial and natural batches, it has no single molecular formula or fixed molar mass.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Alginic acid',
+      category: 'Polysaccharide / Biopolymer',
+      repeatUnitFormula: '(C6H8O6)n',
+      repeatUnitMolarMass: 176.12,
+      typicalMolecularWeightRange: '20,000 – 240,000 g/mol',
+      synonyms: ['alginic acid polymer', 'poly(beta-D-mannuronic acid)'],
+      explanation: 'Alginic acid is a hydrophilic carbohydrate biopolymer consisting of (1→4)-linked D-mannuronic and L-guluronic acid units with variable chain length n.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Cellulose',
+      category: 'Polysaccharide / Structural Polymer',
+      repeatUnitFormula: '(C6H10O5)n',
+      repeatUnitMolarMass: 162.14,
+      typicalMolecularWeightRange: '300,000 – 1,000,000+ g/mol',
+      synonyms: ['microcrystalline cellulose', 'cotton cellulose', 'plant cellulose'],
+      explanation: 'Cellulose is a linear polysaccharide of β(1→4) linked D-glucose units with several hundred to over 10,000 repeat units (n).',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Starch',
+      category: 'Polysaccharide / Storage Carbohydrate',
+      repeatUnitFormula: '(C6H10O5)n',
+      repeatUnitMolarMass: 162.14,
+      typicalMolecularWeightRange: '50,000 – 10,000,000+ g/mol',
+      synonyms: ['amylose', 'amylopectin', 'cornstarch', 'potato starch'],
+      explanation: 'Starch is a polymeric carbohydrate consisting of amylose (linear α(1→4)) and amylopectin (branched α(1→6)) glucose polymers of variable chain length.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Glycogen',
+      category: 'Polysaccharide / Branched Biopolymer',
+      repeatUnitFormula: '(C6H10O5)n',
+      repeatUnitMolarMass: 162.14,
+      typicalMolecularWeightRange: '10⁶ – 10⁸ g/mol',
+      synonyms: ['animal starch'],
+      explanation: 'Glycogen is a multibranched polysaccharide of glucose that serves as energy storage in animals and fungi, with variable macromolecular mass.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Chitosan',
+      category: 'Polysaccharide / Biopolymer',
+      repeatUnitFormula: '(C6H11NO4)n',
+      repeatUnitMolarMass: 161.16,
+      typicalMolecularWeightRange: '50,000 – 1,000,000 g/mol',
+      synonyms: ['deacetylated chitin', 'poly(D-glucosamine)'],
+      explanation: 'Chitosan is a linear polysaccharide composed of randomly distributed β-(1→4)-linked D-glucosamine and N-acetyl-D-glucosamine with variable degree of deacetylation and chain length.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Chitin',
+      category: 'Polysaccharide / Biopolymer',
+      repeatUnitFormula: '(C8H13NO5)n',
+      repeatUnitMolarMass: 203.19,
+      typicalMolecularWeightRange: '100,000 – 1,000,000+ g/mol',
+      synonyms: ['poly(N-acetyl-D-glucosamine)'],
+      explanation: 'Chitin is a long-chain polymer of N-acetylglucosamine forming cell walls in fungi and exoskeletons of arthropods.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Hyaluronic acid',
+      category: 'Glycosaminoglycan / Biomolecule',
+      repeatUnitFormula: '(C14H21NO11)n',
+      repeatUnitMolarMass: 379.32,
+      typicalMolecularWeightRange: '100,000 – 5,000,000 g/mol',
+      synonyms: ['hyaluronan', 'sodium hyaluronate', 'HA'],
+      explanation: 'Hyaluronic acid is an anionic, non-sulfated glycosaminoglycan distributed widely throughout connective, epithelial, and neural tissues.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Pectin',
+      category: 'Polysaccharide / Complex Carbohydrate',
+      repeatUnitFormula: '(C6H8O6)n',
+      repeatUnitMolarMass: 176.12,
+      typicalMolecularWeightRange: '60,000 – 130,000 g/mol',
+      synonyms: ['polygalacturonic acid'],
+      explanation: 'Pectin is a structural acidic heteropolysaccharide contained in primary and middle lamella and cell walls of terrestrial plants.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Agarose',
+      category: 'Polysaccharide / Matrix Biopolymer',
+      repeatUnitFormula: '(C12H18O9)n',
+      repeatUnitMolarMass: 306.27,
+      typicalMolecularWeightRange: '100,000 – 150,000 g/mol',
+      synonyms: ['agar'],
+      explanation: 'Agarose is a linear polymer made up of the repeating unit of agarobiose, a disaccharide made up of D-galactose and 3,6-anhydro-L-galactopyranose.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Dextran',
+      category: 'Polysaccharide / Complex Glucan',
+      repeatUnitFormula: '(C6H10O5)n',
+      repeatUnitMolarMass: 162.14,
+      typicalMolecularWeightRange: '10,000 – 2,000,000 g/mol',
+      synonyms: ['polyglucan'],
+      explanation: 'Dextran is a complex branched glucan composed of chains of varying lengths predominantly with α-1,6 glycosidic linkages.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Polyethylene',
+      category: 'Synthetic Polymer / Thermoplastic',
+      repeatUnitFormula: '(C2H4)n',
+      repeatUnitMolarMass: 28.05,
+      typicalMolecularWeightRange: '10,000 – 5,000,000 g/mol',
+      synonyms: ['polythene', 'PE', 'HDPE', 'LDPE', 'UHMWPE'],
+      explanation: 'Polyethylene is the most common synthetic polymer produced by free-radical, Ziegler-Natta, or metallocene polymerization of ethylene with polydisperse chain length.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Polypropylene',
+      category: 'Synthetic Polymer / Thermoplastic',
+      repeatUnitFormula: '(C3H6)n',
+      repeatUnitMolarMass: 42.08,
+      typicalMolecularWeightRange: '30,000 – 500,000 g/mol',
+      synonyms: ['polypropene', 'PP'],
+      explanation: 'Polypropylene is a thermoplastic addition polymer produced from the monomer propylene.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Polystyrene',
+      category: 'Synthetic Polymer / Aromatic Thermoplastic',
+      repeatUnitFormula: '(C8H8)n',
+      repeatUnitMolarMass: 104.15,
+      typicalMolecularWeightRange: '50,000 – 400,000 g/mol',
+      synonyms: ['poly(1-phenylethene-1,2-diyl)', 'PS', 'Styrofoam'],
+      explanation: 'Polystyrene is a synthetic aromatic hydrocarbon polymer made from the monomer known as styrene.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Polyvinyl chloride',
+      category: 'Synthetic Polymer / Halogenated Polymer',
+      repeatUnitFormula: '(C2H3Cl)n',
+      repeatUnitMolarMass: 62.50,
+      typicalMolecularWeightRange: '30,000 – 150,000 g/mol',
+      synonyms: ['PVC', 'poly(vinyl chloride)', 'polychloroethene'],
+      explanation: 'Polyvinyl chloride is a versatile synthetic polymer produced by polymerization of vinyl chloride monomer (VCM).',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Polytetrafluoroethylene',
+      category: 'Synthetic Fluoropolymer',
+      repeatUnitFormula: '(C2F4)n',
+      repeatUnitMolarMass: 100.02,
+      typicalMolecularWeightRange: '10⁵ – 10⁷ g/mol',
+      synonyms: ['PTFE', 'Teflon', 'fluon'],
+      explanation: 'Polytetrafluoroethylene is a synthetic fluoropolymer of tetrafluoroethylene with extreme chemical inertness and variable chain length.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Poly(methyl methacrylate)',
+      category: 'Synthetic Polymer / Acrylic',
+      repeatUnitFormula: '(C5H8O2)n',
+      repeatUnitMolarMass: 100.12,
+      typicalMolecularWeightRange: '50,000 – 1,000,000 g/mol',
+      synonyms: ['PMMA', 'poly(methyl 2-methylpropenoate)', 'Plexiglas', 'Lucite', 'acrylic glass'],
+      explanation: 'PMMA is a transparent thermoplastic produced by free radical or anionic polymerization of methyl methacrylate.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Polyethylene terephthalate',
+      category: 'Synthetic Polymer / Polyester',
+      repeatUnitFormula: '(C10H8O4)n',
+      repeatUnitMolarMass: 192.17,
+      typicalMolecularWeightRange: '20,000 – 50,000 g/mol',
+      synonyms: ['PET', 'PETE', 'polyester', 'Dacron', 'Terylene', 'Mylar'],
+      explanation: 'PET is the most common thermoplastic polymer resin of the polyester family produced from ethylene glycol and dimethyl terephthalate or terephthalic acid.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Nylon 6',
+      category: 'Synthetic Polymer / Polyamide',
+      repeatUnitFormula: '(C6H11NO)n',
+      repeatUnitMolarMass: 113.16,
+      typicalMolecularWeightRange: '10,000 – 40,000 g/mol',
+      synonyms: ['polycaprolactam', 'polyamide 6', 'PA6'],
+      explanation: 'Nylon 6 is a semicrystalline polyamide synthesized by ring-opening polymerization of caprolactam.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Nylon 6,6',
+      category: 'Synthetic Polymer / Polyamide',
+      repeatUnitFormula: '(C12H22N2O2)n',
+      repeatUnitMolarMass: 226.32,
+      typicalMolecularWeightRange: '12,000 – 50,000 g/mol',
+      synonyms: ['nylon 66', 'polyamide 6,6', 'poly(hexamethylene adipamide)', 'PA66'],
+      explanation: 'Nylon 6,6 is a polyamide made of hexamethylenediamine and adipic acid repeating units.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Polyacrylamide',
+      category: 'Synthetic Polymer / Water-Soluble Polymer',
+      repeatUnitFormula: '(C3H5NO)n',
+      repeatUnitMolarMass: 71.08,
+      typicalMolecularWeightRange: '100,000 – 30,000,000 g/mol',
+      synonyms: ['PAM', 'poly(1-carbamoylethylene)'],
+      explanation: 'Polyacrylamide is a water-soluble polymer synthesized from acrylamide subunits, widely used in PAGE gel electrophoresis and water treatment.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Polyvinyl alcohol',
+      category: 'Synthetic Polymer / Water-Soluble Polymer',
+      repeatUnitFormula: '(C2H4O)n',
+      repeatUnitMolarMass: 44.05,
+      typicalMolecularWeightRange: '20,000 – 200,000 g/mol',
+      synonyms: ['PVA', 'PVOH', 'polyviol'],
+      explanation: 'Polyvinyl alcohol is a water-soluble synthetic polymer prepared by hydrolysis of polyvinyl acetate.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Polyvinylpyrrolidone',
+      category: 'Synthetic Polymer / Water-Soluble Polymer',
+      repeatUnitFormula: '(C6H9NO)n',
+      repeatUnitMolarMass: 111.14,
+      typicalMolecularWeightRange: '10,000 – 1,000,000 g/mol',
+      synonyms: ['PVP', 'povidone', 'polyvidone'],
+      explanation: 'Polyvinylpyrrolidone is a water-soluble polymer made from the monomer N-vinylpyrrolidone used as a binder and dispersing agent.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Polyethylene glycol',
+      category: 'Polyether / Synthetic Polymer',
+      repeatUnitFormula: 'H(C2H4O)nOH',
+      repeatUnitMolarMass: 44.05,
+      typicalMolecularWeightRange: '200 – 10,000,000 g/mol (PEG / PEO)',
+      synonyms: ['PEG', 'polyethylene oxide', 'PEO', 'polyoxyethylene'],
+      explanation: 'PEG is a polyether compound produced by polymerization of ethylene oxide with commercially specified molecular weights (e.g. PEG 400, PEG 6000).',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Bovine Serum Albumin',
+      category: 'Globular Protein / Biomolecule',
+      repeatUnitFormula: 'Polypeptide (583 AA)',
+      repeatUnitMolarMass: 66463.0,
+      typicalMolecularWeightRange: '~66.5 kDa (monomer)',
+      synonyms: ['BSA', 'serum albumin', 'Fraction V'],
+      explanation: 'Bovine Serum Albumin is a 583-amino acid globular protein derived from bovine plasma. It is a single defined macromolecule (~66.5 kDa) with no small repeating chemical formula.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'Hemoglobin',
+      category: 'Metalloprotein / Biomolecule',
+      repeatUnitFormula: 'Tetrameric Globin Protein (α2β2 + 4 Heme)',
+      repeatUnitMolarMass: 64500.0,
+      typicalMolecularWeightRange: '~64.5 kDa (tetramer)',
+      synonyms: ['Hb', 'haemoglobin'],
+      explanation: 'Hemoglobin is an iron-containing oxygen-transport metalloprotein in red blood cells consisting of two α and two β polypeptide chains.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'DNA',
+      category: 'Nucleic Acid / Biological Macromolecule',
+      repeatUnitFormula: '(Deoxynucleotide)n',
+      repeatUnitMolarMass: 330.0,
+      typicalMolecularWeightRange: 'Variable (Millions to Billions g/mol)',
+      synonyms: ['deoxyribonucleic acid'],
+      explanation: 'DNA is a biological polymer composed of two polynucleotide chains that coil around each other to form a double helix. Average nucleotide residue mass is ~330 g/mol.',
+    ),
+    const PolymerBiomoleculeEntry(
+      name: 'RNA',
+      category: 'Nucleic Acid / Biological Macromolecule',
+      repeatUnitFormula: '(Ribonucleotide)n',
+      repeatUnitMolarMass: 340.0,
+      typicalMolecularWeightRange: 'Variable (Thousands to Millions g/mol)',
+      synonyms: ['ribonucleic acid', 'mRNA', 'tRNA', 'rRNA'],
+      explanation: 'RNA is a polymeric molecule essential in various biological roles. Average nucleotide residue mass is ~340 g/mol.',
+    ),
+  ];
+
+  /// Resolves input: auto-detects polymer/biomolecule vs formula vs chemical name,
+  /// queries the curated database first, and calculates deterministic molecular mass.
   static ChemicalParseResult resolve(String input) {
     final cleanInput = input.trim();
     if (cleanInput.isEmpty) {
       throw ArgumentError('Input cannot be empty');
     }
 
-    // 1. Try Curated Database lookup (by common name, IUPAC, or synonyms)
+    // 1. Check for Polymer / Biomolecule with variable chain length first
+    final polymer = lookupPolymer(cleanInput);
+    if (polymer != null) {
+      return ChemicalParseResult(
+        input: cleanInput,
+        canonicalFormula: polymer.repeatUnitFormula,
+        formattedFormula: polymer.repeatUnitFormula,
+        molarMass: polymer.repeatUnitMolarMass,
+        isFromDatabase: true,
+        compoundName: polymer.name,
+        isPolymerOrBiomolecule: true,
+        polymerCategory: polymer.category,
+        repeatUnitFormula: polymer.repeatUnitFormula,
+        repeatUnitMolarMass: polymer.repeatUnitMolarMass,
+        polymerExplanation: polymer.explanation,
+        typicalMolecularWeightRange: polymer.typicalMolecularWeightRange,
+      );
+    }
+
+    // 2. Try Curated Database lookup (by common name, IUPAC, or synonyms)
     final matchedCompound = lookupByName(cleanInput);
     if (matchedCompound != null) {
       final breakdown = parseFormula(matchedCompound.formula);
@@ -231,7 +538,7 @@ class ChemicalNameDatabase {
       );
     }
 
-    // 2. Parse as Molecular Formula (with support for parentheses, hydrates, brackets)
+    // 3. Parse as Molecular Formula (with support for parentheses, hydrates, brackets)
     final breakdown = parseFormula(cleanInput);
     final mass = calculateMolarMass(breakdown);
     final percentages = calculatePercentages(breakdown, mass);
@@ -247,28 +554,76 @@ class ChemicalNameDatabase {
     );
   }
 
-  /// Searches the curated database for exact or fuzzy match on common name, IUPAC, or synonyms.
-  static ChemicalCompound? lookupByName(String query) {
+  /// Searches the polymer/biomolecule database for exact or word-boundary match.
+  static PolymerBiomoleculeEntry? lookupPolymer(String query) {
     final normalized = query.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
+    if (normalized.isEmpty) return null;
 
-    // Exact matches
-    for (final comp in curatedDatabase) {
-      if (comp.commonName.toLowerCase() == normalized) return comp;
-      if (comp.iupacName?.toLowerCase() == normalized) return comp;
-      for (final syn in comp.synonyms) {
-        if (syn.toLowerCase() == normalized) return comp;
+    // 1. Exact matches on full polymer name or synonyms
+    for (final poly in polymerDatabase) {
+      final pNorm = poly.name.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
+      if (pNorm == normalized) return poly;
+      for (final syn in poly.synonyms) {
+        final synNorm = syn.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
+        if (synNorm == normalized) return poly;
       }
     }
 
-    // Substring or typo-tolerant matching
+    // 2. Word boundary matching (e.g. "sodium alginate powder", "pure cellulose sample")
+    final sorted = List<PolymerBiomoleculeEntry>.from(polymerDatabase)
+      ..sort((a, b) => b.name.length.compareTo(a.name.length));
+
+    for (final poly in sorted) {
+      final pNorm = poly.name.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
+      final pRegex = RegExp(r'\b' + RegExp.escape(pNorm) + r'\b');
+      if (pRegex.hasMatch(normalized)) {
+        return poly;
+      }
+      for (final syn in poly.synonyms) {
+        final synNorm = syn.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
+        if (synNorm.length >= 3) {
+          final sRegex = RegExp(r'\b' + RegExp.escape(synNorm) + r'\b');
+          if (sRegex.hasMatch(normalized)) {
+            return poly;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /// Searches the curated database for exact or prefix match on common name, IUPAC, or synonyms.
+  static ChemicalCompound? lookupByName(String query) {
+    final normalized = query.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
+    if (normalized.isEmpty) return null;
+
+    // 1. Exact matches
     for (final comp in curatedDatabase) {
-      final compNorm = comp.commonName.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
-      if (compNorm == normalized || compNorm.contains(normalized) || normalized.contains(compNorm)) {
+      final cNorm = comp.commonName.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
+      if (cNorm == normalized) return comp;
+      if (comp.iupacName != null) {
+        final iNorm = comp.iupacName!.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
+        if (iNorm == normalized) return comp;
+      }
+      for (final syn in comp.synonyms) {
+        final synNorm = syn.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
+        if (synNorm == normalized) return comp;
+      }
+    }
+
+    // 2. Prefix matching (e.g. "benzoic" -> "Benzoic acid")
+    final sorted = List<ChemicalCompound>.from(curatedDatabase)
+      ..sort((a, b) => b.commonName.length.compareTo(a.commonName.length));
+
+    for (final comp in sorted) {
+      final cNorm = comp.commonName.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
+      if (cNorm.startsWith(normalized)) {
         return comp;
       }
       for (final syn in comp.synonyms) {
         final synNorm = syn.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
-        if (synNorm == normalized || synNorm.contains(normalized) || normalized.contains(synNorm)) {
+        if (synNorm.startsWith(normalized)) {
           return comp;
         }
       }

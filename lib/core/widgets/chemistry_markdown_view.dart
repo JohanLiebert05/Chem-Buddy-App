@@ -131,37 +131,110 @@ class ChemistryMarkdownView extends StatelessWidget {
   static String _preprocessText(String input) {
     var s = input;
 
-    // Normalize \[...\] display math → $$...$$
+    // 1. Normalize markdown headings: ensure any heading (#, ##, ###) has a leading blank line so it never bleeds into paragraphs
+    s = s.replaceAllMapped(RegExp(r'([^\n])\n(#{1,6}\s+.+)'), (m) {
+      return '${m[1]}\n\n${m[2]}';
+    });
+
+    // 2. Normalize \[...\] display math → $$...$$
     s = s.replaceAllMapped(RegExp(r'\\\[(.*?)\\\]', dotAll: true), (m) {
       final inner = (m[1] ?? '').trim();
       return '\n\$\$$inner\$\$\n';
     });
 
-    // Normalize \(...\) inline math → $...$
+    // 3. Normalize \(...\) inline math → $...$
     s = s.replaceAllMapped(RegExp(r'\\\(([^\)]+?)\\\)'), (m) {
       final inner = (m[1] ?? '').trim();
       return '\$$inner\$';
     });
 
-    // Wrap naked LaTeX expressions that LLM forgot to put in $...$
-    // e.g. "Kw = [H3O+][OH-] = 1.0 \times 10^{-14}" or "\frac{a}{b}" outside of $
-    s = s.replaceAllMapped(RegExp(r'(?<!\$|\w)(\b[A-Za-z0-9_+\-()\[\]\s=]+?\\times\s*10\^?\{?-?\d+\}?)(?!\$)'), (m) {
-      final expr = m[1]?.trim() ?? '';
-      return '\$$expr\$';
-    });
-
-    // Auto-balance single unclosed dollar signs in a line
+    // 4. Wrap naked multi-line or standalone equations if the whole line is an equation with LaTeX commands
     final lines = s.split('\n');
     for (var i = 0; i < lines.length; i++) {
-      final line = lines[i];
+      var line = lines[i].trim();
       final dollarCount = RegExp(r'(?<!\\)\$').allMatches(line).length;
-      if (dollarCount == 1 && (line.contains(r'\') || line.contains('=') || line.contains('^') || line.contains('_'))) {
+
+      if (dollarCount == 0 && _containsLatexCommand(line)) {
+        if (!line.startsWith('#') && !line.startsWith('>')) {
+          lines[i] = '\$$line\$';
+          continue;
+        }
+      }
+
+      // Auto-balance single unclosed dollar signs in a line
+      if (dollarCount % 2 != 0 && (line.contains(r'\') || line.contains('=') || line.contains('^') || line.contains('_'))) {
         lines[i] = '$line\$';
       }
     }
     s = lines.join('\n');
 
+    // 5. Wrap inline naked LaTeX fragments that appear within regular text without $...$
+    s = _wrapInlineNakedLatex(s);
+
+    // 6. Wrap naked scientific notation (e.g. 1.0 \times 10^{-14}) if not enclosed in $
+    s = s.replaceAllMapped(RegExp(r'(?<!\$|\w)(\b[A-Za-z0-9_+\-()\[\]\s=]+?\\times\s*10\^?\{?-?\d+\}?)(?!\$)'), (m) {
+      final expr = m[1]?.trim() ?? '';
+      return '\$$expr\$';
+    });
+
     return s;
+  }
+
+  static bool _containsLatexCommand(String text) {
+    if (text.isEmpty) return false;
+    return text.contains(r'\frac') ||
+        text.contains(r'\text') ||
+        text.contains(r'\sqrt') ||
+        text.contains(r'\Delta') ||
+        text.contains(r'\Phi') ||
+        text.contains(r'\alpha') ||
+        text.contains(r'\beta') ||
+        text.contains(r'\gamma') ||
+        text.contains(r'\theta') ||
+        text.contains(r'\lambda') ||
+        text.contains(r'\mu') ||
+        text.contains(r'\nu') ||
+        text.contains(r'\pi') ||
+        text.contains(r'\sigma') ||
+        text.contains(r'\omega') ||
+        text.contains(r'\Omega') ||
+        text.contains(r'\Psi') ||
+        text.contains(r'\psi') ||
+        text.contains(r'\times') ||
+        text.contains(r'\cdot') ||
+        text.contains(r'\pm') ||
+        text.contains(r'\mp') ||
+        text.contains(r'\degree') ||
+        text.contains(r'^\circ') ||
+        text.contains(r'\circ') ||
+        text.contains(r'\log') ||
+        text.contains(r'\ln') ||
+        text.contains(r'\exp') ||
+        text.contains(r'\quad') ||
+        text.contains(r'\qquad') ||
+        text.contains(r'\rightarrow') ||
+        text.contains(r'\to') ||
+        text.contains(r'\rightleftharpoons') ||
+        text.contains(r'\sum') ||
+        text.contains(r'\int') ||
+        text.contains(r'\partial') ||
+        text.contains(r'\varepsilon') ||
+        text.contains(r'\approx') ||
+        text.contains(r'\neq') ||
+        text.contains(r'\leq') ||
+        text.contains(r'\geq') ||
+        text.contains(r'\infty');
+  }
+
+  static String _wrapInlineNakedLatex(String input) {
+    return input.replaceAllMapped(
+      RegExp(r'(?<!\$|\w)(\\[a-zA-Z]+(?:\{[^{}]*\}|[a-zA-Z0-9_\^\+\-\(\)\[\]·=])+(?:[\s\-_+\/*=]+\\[a-zA-Z]+(?:\{[^{}]*\}|[a-zA-Z0-9_\^\+\-\(\)\[\]·=])*)*)(?!\$)'),
+      (match) {
+        final raw = match[1]?.trim() ?? '';
+        if (raw.isEmpty || raw.startsWith('#')) return raw;
+        return '\$$raw\$';
+      },
+    );
   }
 
   static String _sanitizeLatex(String input) {
@@ -174,6 +247,11 @@ class ChemistryMarkdownView extends StatelessWidget {
     s = s.replaceAll(r'\degree', r'^\circ');
     s = s.replaceAll(r'^\circ C', r'^\circ\text{C}');
     s = s.replaceAll(r'^\circC', r'^\circ\text{C}');
+    s = s.replaceAll(r'°C', r'^\circ\text{C}');
+    s = s.replaceAll(r'° C', r'^\circ\text{C}');
+    s = s.replaceAll(r'°', r'^\circ');
+    s = s.replaceAll(r'\quad', r'\space\space');
+    s = s.replaceAll(r'\qquad', r'\space\space\space\space');
     // Wrap naked superscripts/subscripts for KaTeX
     s = s.replaceAllMapped(RegExp(r'\^([-+])(?![{a-zA-Z0-9])'), (m) => '^{${m[1]}}');
     s = s.replaceAllMapped(RegExp(r'\^([0-9]+[-+])(?![{a-zA-Z0-9])'), (m) => '^{${m[1]}}');

@@ -364,8 +364,15 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Formula: ${q.numerical!.formula}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11.5)),
-                            Text('Calculation: ${q.numerical!.calculation} = ${q.numerical!.answer} ${q.numerical!.unit}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                            ChemistryMarkdownView(
+                              text: '**Formula**: ${q.numerical!.formula}',
+                              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11.5, color: Colors.white),
+                            ),
+                            const SizedBox(height: 2),
+                            ChemistryMarkdownView(
+                              text: '**Calculation**: ${q.numerical!.calculation} = ${q.numerical!.answer} ${q.numerical!.unit}',
+                              textStyle: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                            ),
                           ],
                         ),
                       ),

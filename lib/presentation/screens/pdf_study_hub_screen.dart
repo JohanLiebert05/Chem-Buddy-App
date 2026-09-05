@@ -562,9 +562,9 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      topic.explanation,
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+                    ChemistryMarkdownView(
+                      text: topic.explanation,
+                      textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
                     ),
                     if (topic.keyFormulas.isNotEmpty) ...[
                       const SizedBox(height: 6),
@@ -577,7 +577,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                             color: AppColors.surfaceElevated,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(f, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                          child: ChemistryMarkdownView(
+                            text: f,
+                            textStyle: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                          ),
                         )).toList(),
                       ),
                     ],
@@ -678,14 +681,9 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                   const SizedBox(height: 10),
                   ...s.definitions.map((d) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: RichText(
-                      text: TextSpan(
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
-                        children: [
-                          TextSpan(text: '${d["term"] ?? ""}: ', style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
-                          TextSpan(text: d["definition"] ?? ""),
-                        ],
-                      ),
+                    child: ChemistryMarkdownView(
+                      text: '**${d["term"] ?? ""}**: ${d["definition"] ?? ""}',
+                      textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
                     ),
                   )),
                 ],

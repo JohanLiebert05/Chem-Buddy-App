@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/services/chemical_name_database.dart';
@@ -237,24 +238,30 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          _parsedResult!.compoundName!,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                        Expanded(
+                          child: Text(
+                            _parsedResult!.compoundName!,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.purple.withValues(alpha: 0.25),
+                            color: _parsedResult!.isPolymerOrBiomolecule
+                                ? AppColors.accentCyan.withValues(alpha: 0.2)
+                                : AppColors.purple.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Text(
-                            'Verified Compound',
+                          child: Text(
+                            _parsedResult!.isPolymerOrBiomolecule
+                                ? (_parsedResult!.polymerCategory ?? 'Biopolymer / Polymer')
+                                : 'Verified Compound',
                             style: TextStyle(
-                              color: AppColors.purpleBright,
+                              color: _parsedResult!.isPolymerOrBiomolecule ? AppColors.accentCyan : AppColors.purpleBright,
                               fontSize: 10.5,
                               fontWeight: FontWeight.w700,
                             ),
@@ -271,21 +278,47 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                     ],
                     const Divider(color: AppColors.borderSubtle, height: 16),
                   ],
+
+                  if (_parsedResult!.isPolymerOrBiomolecule) ...[
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentCyan.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('ℹ️', style: TextStyle(fontSize: 14)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'No single molecular formula — ${_parsedResult!.compoundName ?? "this compound"} is a macromolecule/polymer with variable chain length (degree of polymerization n).',
+                              style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.35),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Molecular Formula:',
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          Text(
+                            _parsedResult!.isPolymerOrBiomolecule ? 'Repeating Unit Formula:' : 'Molecular Formula:',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             _parsedResult!.formattedFormula,
                             style: const TextStyle(
-                              fontSize: 19,
+                              fontSize: 18,
                               fontWeight: FontWeight.w900,
                               color: AppColors.purpleBright,
                               letterSpacing: 0.5,
@@ -296,23 +329,45 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text(
-                            'Molar Mass:',
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          Text(
+                            _parsedResult!.isPolymerOrBiomolecule ? 'Repeat Unit Mass:' : 'Molar Mass:',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             '${_parsedResult!.molarMass.toStringAsFixed(2)} g/mol',
                             style: const TextStyle(
-                              fontSize: 19,
+                              fontSize: 18,
                               fontWeight: FontWeight.w900,
                               color: AppColors.success,
                             ),
                           ),
+                          if (_parsedResult!.isPolymerOrBiomolecule)
+                            const Text('(per repeat unit n)', style: TextStyle(fontSize: 10.5, color: AppColors.textMuted)),
                         ],
                       ),
                     ],
                   ),
+
+                  if (_parsedResult!.typicalMolecularWeightRange != null) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const Text('Typical Average MW Range: ', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                        Text(_parsedResult!.typicalMolecularWeightRange!, style: const TextStyle(fontSize: 11.5, color: AppColors.accentGold, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ],
+
+                  if (_parsedResult!.polymerExplanation != null) ...[
+                    const SizedBox(height: 10),
+                    ChemistryMarkdownView(
+                      text: _parsedResult!.polymerExplanation!,
+                      textStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.35),
+                      selectable: false,
+                    ),
+                  ],
+
                   if (_parsedResult!.elementBreakdown.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     const Text(
@@ -342,9 +397,19 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                   ],
                   const SizedBox(height: 14),
                   // Related Tool Suggestions
-                  const Text(
-                    'Related Tools:',
-                    style: TextStyle(fontSize: 11.5, color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Related Tools:',
+                        style: TextStyle(fontSize: 11.5, color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                      ),
+                      if (_parsedResult!.isPolymerOrBiomolecule)
+                        const Text(
+                          '(Uses repeat unit mass)',
+                          style: TextStyle(fontSize: 10.5, color: AppColors.textMuted, fontStyle: FontStyle.italic),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   Wrap(
@@ -571,7 +636,11 @@ class _PhCalculatorState extends State<_PhCalculator> {
         children: [
           const Text('pH & pOH Calculator', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          const Text(r'pH = -\log[H^+], \quad pOH = 14 - pH', style: TextStyle(fontSize: 12, color: AppColors.purpleBright)),
+          const ChemistryMarkdownView(
+            text: r'$$\text{pH} = -\log[\text{H}^+], \quad \text{pOH} = 14 - \text{pH}$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 12),
           TextField(controller: _hConc, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '[H+] Ion Concentration (mol/L)')),
           const SizedBox(height: 12),
@@ -632,7 +701,11 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
         children: [
           const Text('Henderson-Hasselbalch Buffer pH', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          const Text(r'pH = pK_a + \log\frac{[A^-]}{[HA]}', style: TextStyle(fontSize: 12, color: AppColors.purpleBright)),
+          const ChemistryMarkdownView(
+            text: r'$$\text{pH} = \text{p}K_a + \log\frac{[\text{A}^-]}{[\text{HA}]}$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -693,7 +766,13 @@ class _GibbsFreeEnergyCalculatorState extends State<_GibbsFreeEnergyCalculator> 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Gibbs Free Energy (ΔG = ΔH - TΔS)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('Gibbs Free Energy', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          const ChemistryMarkdownView(
+            text: r'$$\Delta G = \Delta H - T\Delta S$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -765,7 +844,11 @@ class _ArrheniusCalculatorState extends State<_ArrheniusCalculator> {
         children: [
           const Text('Arrhenius Equation (Rate Constant k)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          const Text(r'k = A \exp(-E_a / RT)', style: TextStyle(fontSize: 12, color: AppColors.purpleBright)),
+          const ChemistryMarkdownView(
+            text: r'$$k = A \exp\left(-\frac{E_a}{RT}\right)$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -793,7 +876,7 @@ class _ArrheniusCalculatorState extends State<_ArrheniusCalculator> {
 }
 
 // ==========================================
-// 8. BEER-LAMBERT LAW
+// 8. BEER-LAMBERT ABSORBANCE
 // ==========================================
 class _BeerLambertCalculator extends StatefulWidget {
   const _BeerLambertCalculator();
@@ -803,20 +886,20 @@ class _BeerLambertCalculator extends StatefulWidget {
 }
 
 class _BeerLambertCalculatorState extends State<_BeerLambertCalculator> {
-  final _molarAbs = TextEditingController(text: '15000'); // L/mol·cm
+  final _molarAbs = TextEditingController(text: '8400'); // M-1 cm-1
   final _pathLength = TextEditingController(text: '1.0'); // cm
-  final _conc = TextEditingController(text: '0.00005'); // mol/L
-  double? _absorbance = 0.75;
-  double? _transmittance;
+  final _conc = TextEditingController(text: '1.5e-4'); // M
+  double? _absorbance = 1.26;
+  double? _transmittance = 5.50;
 
   void _calculate() {
-    final eps = double.tryParse(_molarAbs.text);
+    final e = double.tryParse(_molarAbs.text);
     final l = double.tryParse(_pathLength.text);
     final c = double.tryParse(_conc.text);
 
-    if (eps != null && l != null && c != null) {
-      final a = eps * c * l;
-      final t = pow(10, -a) * 100;
+    if (e != null && l != null && c != null) {
+      final a = e * c * l;
+      final t = pow(10, -a) * 100.0;
       setState(() {
         _absorbance = a;
         _transmittance = t.toDouble();
@@ -833,7 +916,11 @@ class _BeerLambertCalculatorState extends State<_BeerLambertCalculator> {
         children: [
           const Text('Beer-Lambert Law (UV-Vis Absorbance)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          const Text(r'A = \varepsilon \cdot c \cdot l', style: TextStyle(fontSize: 12, color: AppColors.purpleBright)),
+          const ChemistryMarkdownView(
+            text: r'$$A = \varepsilon \cdot c \cdot l$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -910,7 +997,13 @@ class _PhotonEnergyCalculatorState extends State<_PhotonEnergyCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(r'Photon Energy & Frequency (E = hc/λ)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('Photon Energy & Frequency', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          const ChemistryMarkdownView(
+            text: r'$$E = h\nu = \frac{hc}{\lambda}$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 12),
           TextField(controller: _wavelength, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Wavelength λ (nm)')),
           const SizedBox(height: 12),
@@ -978,7 +1071,11 @@ class _NernstCalculatorState extends State<_NernstCalculator> {
         children: [
           const Text('Nernst Equation at 298 K', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          const Text(r'E = E^\circ - \frac{0.0592}{n} \log Q', style: TextStyle(fontSize: 12, color: AppColors.purpleBright)),
+          const ChemistryMarkdownView(
+            text: r'$$E = E^\circ - \frac{0.0592}{n} \log Q$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -1049,7 +1146,11 @@ class _CellPotentialCalculatorState extends State<_CellPotentialCalculator> {
         children: [
           const Text('Standard Cell Potential & ΔG°', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          const Text(r'E^\circ_{cell} = E^\circ_{cathode} - E^\circ_{anode}, \quad \Delta G^\circ = -nFE^\circ_{cell}', style: TextStyle(fontSize: 12, color: AppColors.purpleBright)),
+          const ChemistryMarkdownView(
+            text: r'$$E^\circ_{\text{cell}} = E^\circ_{\text{cathode}} - E^\circ_{\text{anode}}, \quad \Delta G^\circ = -nFE^\circ_{\text{cell}}$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -1162,9 +1263,10 @@ class _StoichiometryCalculatorState extends State<_StoichiometryCalculator> {
             ],
           ),
           const SizedBox(height: 4),
-          const Text(
-            r'n = m / M,   N = n × NA,   V_STP = n × 22.414 L',
-            style: TextStyle(fontSize: 12, color: AppColors.purpleBright),
+          const ChemistryMarkdownView(
+            text: r'$$n = \frac{m}{M}, \quad N = n \times N_A, \quad V_{\text{STP}} = n \times 22.414\text{ L}$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
           ),
           const SizedBox(height: 12),
           Row(
@@ -1677,18 +1779,18 @@ class _IntegratedRateLawCalculatorState extends State<_IntegratedRateLawCalculat
     String linearPlot = '';
 
     if (_order == 0) {
-      equation = r'[A]ₜ = [A]₀ - kt';
-      linearPlot = r'Plot [A] vs t (slope = -k)';
+      equation = r'$$[\text{A}]_t = [\text{A}]_0 - kt$$';
+      linearPlot = r'Plot $[\text{A}]$ vs $t$ (slope $= -k$)';
       at = max(0.0, a0 - (k * t));
       halfLife = a0 / (2 * k);
     } else if (_order == 1) {
-      equation = r'ln[A]ₜ = ln[A]₀ - kt ⟹ [A]ₜ = [A]₀·e⁻ᵏᵗ';
-      linearPlot = r'Plot ln[A] vs t (slope = -k)';
+      equation = r'$$\ln[\text{A}]_t = \ln[\text{A}]_0 - kt \implies [\text{A}]_t = [\text{A}]_0 e^{-kt}$$';
+      linearPlot = r'Plot $\ln[\text{A}]$ vs $t$ (slope $= -k$)';
       at = a0 * exp(-k * t);
       halfLife = log(2) / k;
     } else {
-      equation = r'1/[A]ₜ = 1/[A]₀ + kt';
-      linearPlot = r'Plot 1/[A] vs t (slope = +k)';
+      equation = r'$$\frac{1}{[\text{A}]_t} = \frac{1}{[\text{A}]_0} + kt$$';
+      linearPlot = r'Plot $\frac{1}{[\text{A}]}$ vs $t$ (slope $= +k$)';
       at = 1.0 / ((1.0 / a0) + (k * t));
       halfLife = 1.0 / (k * a0);
     }
@@ -1772,9 +1874,17 @@ class _IntegratedRateLawCalculatorState extends State<_IntegratedRateLawCalculat
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Equation: $equation', style: const TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 12)),
+                ChemistryMarkdownView(
+                  text: equation,
+                  textStyle: const TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 13),
+                  selectable: false,
+                ),
                 const SizedBox(height: 4),
-                Text('Linearization: $linearPlot', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5)),
+                ChemistryMarkdownView(
+                  text: linearPlot,
+                  textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5),
+                  selectable: false,
+                ),
                 const Divider(color: Colors.white12, height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1863,6 +1973,12 @@ class _QuantumChemistryCalculatorState extends State<_QuantumChemistryCalculator
           ),
           const SizedBox(height: 14),
           const Text('Particle in a 1D Box (Electron)', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(height: 4),
+          const ChemistryMarkdownView(
+            text: r'$$E_n = \frac{n^2 h^2}{8mL^2}$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -1903,7 +2019,13 @@ class _QuantumChemistryCalculatorState extends State<_QuantumChemistryCalculator
             ),
           ),
           const SizedBox(height: 16),
-          const Text('de Broglie Wavelength (λ = h / mv)', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.bold, fontSize: 13)),
+          const Text('de Broglie Wavelength', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(height: 4),
+          const ChemistryMarkdownView(
+            text: r'$$\lambda = \frac{h}{mv}$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 10),
           TextField(
             controller: _vCtrl,
@@ -2134,7 +2256,11 @@ class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
             ],
           ),
           const SizedBox(height: 14),
-          const Text('Equation: H = A + (B / u) + (C · u)', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.bold, fontSize: 12.5)),
+          const ChemistryMarkdownView(
+            text: r'$$H = A + \frac{B}{u} + C \cdot u, \quad u_{\text{opt}} = \sqrt{\frac{B}{C}}$$',
+            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            selectable: false,
+          ),
           const SizedBox(height: 10),
           Row(
             children: [
