@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/claude_loading_text.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../core/widgets/molecule_loader.dart';
@@ -197,18 +198,14 @@ class _PredictImportantQuestionsScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const BenzeneMoleculeLoader(size: 90, color: AppColors.purpleBright),
-            const SizedBox(height: 32),
-            Text(
-              'Exam Question Prediction Engine',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _statusText,
-              style: const TextStyle(fontSize: 14, color: AppColors.purpleBright),
-              textAlign: TextAlign.center,
+            const BenzeneMoleculeLoader(size: 80, color: AppColors.purpleBright),
+            const SizedBox(height: 24),
+            ClaudeThinkingIndicator(
+              thoughts: _statusText.isNotEmpty
+                  ? [_statusText, ...ClaudeThinkingMicrocopy.predictQuestions]
+                  : ClaudeThinkingMicrocopy.predictQuestions,
+              isCard: true,
+              thinkingHeader: 'Analyzing Question Papers',
             ),
             const SizedBox(height: 24),
             ClipRRect(

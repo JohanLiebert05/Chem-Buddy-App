@@ -26,7 +26,7 @@ import 'reaction_mechanism_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_study_screen.dart';
 import '../../data/models/smart_flashcard.dart';
-import '../../core/widgets/molecule_loader.dart';
+import '../../core/widgets/claude_loading_text.dart';
 
 
 enum ChemBuddyAiMode {
@@ -128,12 +128,12 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
           });
         }
       },
-      listenFor: const Duration(seconds: 30),
-      pauseFor: const Duration(seconds: 3),
       listenOptions: SpeechListenOptions(
         partialResults: true,
         cancelOnError: true,
         listenMode: ListenMode.confirmation,
+        listenFor: const Duration(seconds: 30),
+        pauseFor: const Duration(seconds: 3),
       ),
     );
   }
@@ -286,19 +286,15 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => Center(
-        child: GlowCard(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(color: AppColors.purpleBright),
-              const SizedBox(height: 16),
-              Text(
-                'Generating Chemistry Quiz on "$topicTitle"...',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13.5),
-                textAlign: TextAlign.center,
-              ),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 28),
+          child: ClaudeThinkingIndicator(
+            thoughts: [
+              'Generating Chemistry Quiz on "$topicTitle"...',
+              ...ClaudeThinkingMicrocopy.quiz,
             ],
+            isCard: true,
+            thinkingHeader: 'Creating Quiz',
           ),
         ),
       ),
@@ -410,6 +406,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
 
     return HexBackground(
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: Row(
@@ -442,20 +439,14 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
             if (_extracting)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: GlowCard(
-                  borderColor: AppColors.purpleBright.withValues(alpha: 0.5),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purpleBright)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _extractingStatus,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
+                child: ClaudeThinkingIndicator(
+                  thoughts: [
+                    _extractingStatus.isNotEmpty ? _extractingStatus : 'Parsing PDF study notes...',
+                    'Extracting chemical formulas & syllabus chapters...',
+                    'Cataloging reaction mechanisms & key definitions...',
+                  ],
+                  isCard: true,
+                  thinkingHeader: 'Reading Notes',
                 ),
               ),
 
@@ -850,15 +841,8 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
             if (chatState.isLoading)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: GlowCard(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  borderColor: AppColors.borderSubtle,
-                  child: Center(
-                    child: BenzeneMoleculeLoader(
-                      size: 42,
-                      messages: ChemistryMicrocopy.askAi,
-                    ),
-                  ),
+                child: ClaudeThinkingBubble(
+                  thoughts: ClaudeThinkingMicrocopy.askAi,
                 ),
               ),
 
@@ -928,9 +912,9 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
             // Input Bar with responsive spacing above bottom navigation bar
             Builder(
               builder: (context) {
-                final insets = MediaQuery.viewInsetsOf(context).bottom;
+                final isKeyboardOpen = View.of(context).viewInsets.bottom > 0;
                 final safeBottom = MediaQuery.paddingOf(context).bottom;
-                final bottomPadding = insets > 0 ? 8.0 : (62.0 + max(6.0, safeBottom));
+                final bottomPadding = isKeyboardOpen ? 8.0 : (64.0 + safeBottom);
 
                 return Container(
                   padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),

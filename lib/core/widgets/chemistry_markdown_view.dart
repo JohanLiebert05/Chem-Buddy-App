@@ -5,6 +5,8 @@ import 'package:markdown/markdown.dart' as md;
 
 import '../theme/app_colors.dart';
 import '../utils/chemistry_text_formatter.dart';
+import 'chemistry_equation.dart';
+import 'chemistry_reaction_view.dart';
 
 
 /// Reusable widget for rendering MSc Chemistry notes, AI answers,
@@ -56,33 +58,35 @@ class ChemistryMarkdownView extends StatelessWidget {
 
     for (final b in blocks) {
       if (b.isDisplayMath) {
-        widgetList.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceElevated.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.purple.withValues(alpha: 0.25)),
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Math.tex(
-                  _sanitizeLatex(b.text),
-                  mathStyle: MathStyle.display,
-                  textStyle: defaultStyle.copyWith(color: Colors.white, fontSize: (defaultStyle.fontSize ?? 14.5) * 1.1),
-                  onErrorFallback: (err) => Text(
-                    ChemistryTextFormatter.toUnicodeMath(b.text),
-                    style: defaultStyle.copyWith(color: AppColors.purpleBright, fontFamily: 'monospace'),
-                  ),
-                ),
-              ),
+        final isReaction = b.text.contains('→') ||
+            b.text.contains(r'\rightarrow') ||
+            b.text.contains(r'\to') ||
+            b.text.contains('->') ||
+            b.text.contains('⇌') ||
+            b.text.contains(r'\rightleftharpoons') ||
+            b.text.contains(r'\xrightarrow') ||
+            b.text.contains(r'\text{Ph}') ||
+            b.text.contains('(=O)');
+
+        if (isReaction) {
+          widgetList.add(
+            ChemistryReactionView(
+              reaction: b.text,
+              selectable: false,
             ),
-          ),
-        );
+          );
+        } else {
+          widgetList.add(
+            ChemistryEquation(
+              equation: b.text,
+              textStyle: defaultStyle.copyWith(
+                color: Colors.white,
+                fontSize: (defaultStyle.fontSize ?? 14.5) * 1.1,
+              ),
+              selectable: false,
+            ),
+          );
+        }
       } else {
         widgetList.add(
           _buildMarkdownBlock(context, b.text, defaultStyle, false, hasTable),
@@ -170,6 +174,9 @@ class ChemistryMarkdownView extends StatelessWidget {
     s = s.replaceAll(r'\degree', r'^\circ');
     s = s.replaceAll(r'^\circ C', r'^\circ\text{C}');
     s = s.replaceAll(r'^\circC', r'^\circ\text{C}');
+    // Wrap naked superscripts/subscripts for KaTeX
+    s = s.replaceAllMapped(RegExp(r'\^([-+])(?![{a-zA-Z0-9])'), (m) => '^{${m[1]}}');
+    s = s.replaceAllMapped(RegExp(r'\^([0-9]+[-+])(?![{a-zA-Z0-9])'), (m) => '^{${m[1]}}');
     return s;
   }
 

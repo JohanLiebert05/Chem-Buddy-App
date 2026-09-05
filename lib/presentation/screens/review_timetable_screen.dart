@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import 'dart:math';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/glow_card.dart';
@@ -177,6 +179,36 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
     final endMin = _parseTimeToMinutes(end);
     if (startMin == null || endMin == null) return true; // If unparseable, don't hard-block
     return startMin < endMin;
+  }
+
+  List<int> _findOverlappingSlots(int slotIndex) {
+    if (slotIndex >= _slots.length) return const [];
+    final current = _slots[slotIndex];
+    final currentStart = _parseTimeToMinutes(current.startTime);
+    final currentEnd = _parseTimeToMinutes(current.endTime);
+    if (currentStart == null || currentEnd == null || currentStart >= currentEnd) {
+      return const [];
+    }
+
+    final overlaps = <int>[];
+    for (var i = 0; i < _slots.length; i++) {
+      if (i == slotIndex) continue;
+      final other = _slots[i];
+      if (other.dayOfWeek.trim().toLowerCase() != current.dayOfWeek.trim().toLowerCase()) {
+        continue;
+      }
+
+      final otherStart = _parseTimeToMinutes(other.startTime);
+      final otherEnd = _parseTimeToMinutes(other.endTime);
+      if (otherStart == null || otherEnd == null || otherStart >= otherEnd) {
+        continue;
+      }
+
+      if (currentStart < otherEnd && otherStart < currentEnd) {
+        overlaps.add(i);
+      }
+    }
+    return overlaps;
   }
 
   bool get _hasAnyValidationErrors {
@@ -445,13 +477,17 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                     final slot = _slots[index];
                     final isTimeValid = _isTimeRangeValid(slot.startTime, slot.endTime);
                     final isSubjectValid = slot.subjectCode.trim().isNotEmpty || slot.subjectName.trim().isNotEmpty;
+                    final overlaps = _findOverlappingSlots(index);
+                    final hasOverlap = overlaps.isNotEmpty;
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 14),
                       child: GlowCard(
                         borderColor: (!isTimeValid || !isSubjectValid)
                             ? AppColors.danger.withValues(alpha: 0.6)
-                            : AppColors.border,
+                            : hasOverlap
+                                ? AppColors.warning.withValues(alpha: 0.8)
+                                : AppColors.border,
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -587,6 +623,29 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                 ],
                               ),
                             ],
+                            if (hasOverlap) ...[
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.warning.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.warning.withValues(alpha: 0.5)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 15),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        'Time Conflict: Overlaps with Slot #${overlaps.map((i) => i + 1).join(', #')} on ${slot.dayOfWeek}',
+                                        style: const TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.w700),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 12),
 
                             // Subject Name & Code Row
@@ -598,6 +657,8 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                   child: TextFormField(
                                     initialValue: slot.subjectName,
                                     onChanged: (v) => slot.subjectName = v,
+                                    minLines: 1,
+                                    maxLines: 2,
                                     style: const TextStyle(fontSize: 13.5, color: Colors.white),
                                     decoration: InputDecoration(
                                       labelText: 'Subject Name',
@@ -658,6 +719,8 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                   child: TextFormField(
                                     initialValue: slot.teacherName,
                                     onChanged: (v) => slot.teacherName = v,
+                                    minLines: 1,
+                                    maxLines: 2,
                                     style: const TextStyle(fontSize: 12.5, color: Colors.white),
                                     decoration: InputDecoration(
                                       labelText: 'Teacher',
@@ -677,6 +740,8 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                   child: TextFormField(
                                     initialValue: slot.room,
                                     onChanged: (v) => slot.room = v,
+                                    minLines: 1,
+                                    maxLines: 2,
                                     style: const TextStyle(fontSize: 12.5, color: Colors.white),
                                     decoration: InputDecoration(
                                       labelText: 'Room / Hall',
@@ -746,7 +811,7 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
               BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, -2)),
             ],
           ),
-          padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).viewInsets.bottom + 16),
+          padding: EdgeInsets.fromLTRB(16, 12, 16, max(14.0, MediaQuery.paddingOf(context).bottom)),
           child: Row(
             children: [
               Expanded(
@@ -759,7 +824,7 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 13,
-                        color: validSlotsCount == _slots.length ? AppColors.success : AppColors.warning,
+                        color: (validSlotsCount == _slots.length && !_hasAnyValidationErrors) ? AppColors.success : AppColors.warning,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -779,7 +844,7 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 4,
                 ),
-                onPressed: _saving ? null : _confirmAndSave,
+                onPressed: (_saving || _hasAnyValidationErrors) ? null : _confirmAndSave,
                 child: _saving
                     ? const SizedBox(
                         width: 18,

@@ -5,18 +5,26 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
+import '../../data/services/chemical_name_database.dart';
 
 class ChemistryToolkitScreen extends StatefulWidget {
-  const ChemistryToolkitScreen({super.key});
+  const ChemistryToolkitScreen({super.key, this.initialCategory = 0});
+  final int initialCategory;
 
   @override
   State<ChemistryToolkitScreen> createState() => _ChemistryToolkitScreenState();
 }
 
 class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
-  int _selectedCategory = 0; // 0: Solutions, 1: Acid-Base, 2: Thermo/Kinetics, 3: Spectroscopy, 4: Electrochemistry
+  late int _selectedCategory; // 0: Solutions, 1: Acid-Base, 2: Thermo/Kinetics, 3: Spectroscopy, 4: Electrochemistry
 
   final _categories = ['Solutions', 'Acid-Base', 'Thermo & Kinetics', 'Spectroscopy', 'Electrochem'];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = widget.initialCategory.clamp(0, _categories.length - 1);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +68,13 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
             const SizedBox(height: 16),
 
             if (_selectedCategory == 0) ...[
-              const _MolarMassCalculator(),
+              _MolarMassCalculator(
+                onSelectTool: (tool) {
+                  if (tool == 'Molarity' || tool == 'Normality' || tool == 'Dilution') {
+                    setState(() => _selectedCategory = 0);
+                  }
+                },
+              ),
               const SizedBox(height: 16),
               const _MolarityCalculator(),
               const SizedBox(height: 16),
@@ -93,76 +107,47 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
 // 1. MOLAR MASS CALCULATOR
 // ==========================================
 class _MolarMassCalculator extends StatefulWidget {
-  const _MolarMassCalculator();
+  const _MolarMassCalculator({this.onSelectTool});
+  final ValueChanged<String>? onSelectTool;
 
   @override
   State<_MolarMassCalculator> createState() => _MolarMassCalculatorState();
 }
 
 class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
-  final _controller = TextEditingController(text: 'H2SO4');
-  double? _result = 98.079;
+  final _controller = TextEditingController(text: 'benzoic acid');
+  ChemicalParseResult? _parsedResult;
   String? _error;
 
-  static const Map<String, double> _atomicMasses = {
-    'H': 1.008, 'He': 4.003, 'Li': 6.941, 'Be': 9.012, 'B': 10.811,
-    'C': 12.011, 'N': 14.007, 'O': 15.999, 'F': 18.998, 'Ne': 20.180,
-    'Na': 22.990, 'Mg': 24.305, 'Al': 26.982, 'Si': 28.086, 'P': 30.974,
-    'S': 32.065, 'Cl': 35.453, 'Ar': 39.948, 'K': 39.098, 'Ca': 40.078,
-    'Sc': 44.956, 'Ti': 47.867, 'V': 50.942, 'Cr': 51.996, 'Mn': 54.938,
-    'Fe': 55.845, 'Co': 58.933, 'Ni': 58.693, 'Cu': 63.546, 'Zn': 65.38,
-    'Ga': 69.723, 'Ge': 72.630, 'As': 74.922, 'Se': 78.96, 'Br': 79.904,
-    'Kr': 83.798, 'Rb': 85.468, 'Sr': 87.62, 'Y': 88.906, 'Zr': 91.224,
-    'Ag': 107.868, 'Cd': 112.411, 'Sn': 118.710, 'I': 126.904, 'Ba': 137.327,
-    'Pt': 195.084, 'Au': 196.967, 'Hg': 200.592, 'Pb': 207.2, 'U': 238.029,
-  };
+  @override
+  void initState() {
+    super.initState();
+    _calculate();
+  }
 
   void _calculate() {
-    final formula = _controller.text.trim();
-    if (formula.isEmpty) {
+    final query = _controller.text.trim();
+    if (query.isEmpty) {
       setState(() {
-        _result = null;
-        _error = 'Please enter a chemical formula';
+        _parsedResult = null;
+        _error = 'Please enter a chemical formula or chemical name';
       });
       return;
     }
 
-    final regex = RegExp(r'([A-Z][a-z]?)(\d*)');
-    final matches = regex.allMatches(formula);
-
-    double total = 0.0;
-    bool valid = false;
-
-    for (final match in matches) {
-      final elem = match.group(1);
-      final countStr = match.group(2);
-      if (elem == null || elem.isEmpty) continue;
-
-      final count = countStr == null || countStr.isEmpty ? 1 : int.tryParse(countStr) ?? 1;
-      final mass = _atomicMasses[elem];
-
-      if (mass != null) {
-        total += mass * count;
-        valid = true;
-      } else {
-        setState(() {
-          _result = null;
-          _error = 'Unknown element symbol: $elem';
-        });
-        return;
-      }
-    }
-
-    if (valid) {
+    try {
+      final res = ChemicalNameDatabase.resolve(query);
       setState(() {
-        _result = total;
+        _parsedResult = res;
         _error = null;
       });
       AppHaptics.confirm();
-    } else {
+    } catch (e) {
       setState(() {
-        _result = null;
-        _error = 'Could not parse formula. Example: KMnO4 or C6H12O6';
+        _parsedResult = null;
+        _error = e is FormatException
+            ? e.message
+            : 'Could not parse chemical input. Try e.g. "benzoic acid", "C6H6", "CuSO4·5H2O", or "sodium chloride".';
       });
     }
   }
@@ -175,21 +160,28 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
         children: [
           Row(
             children: [
-              const Icon(Icons.grain, color: AppColors.purpleBright, size: 20),
+              const Icon(Icons.science, color: AppColors.purpleBright, size: 20),
               const SizedBox(width: 8),
-              const Text('Molar Mass Formula Parser', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text(
+                'Molar Mass Calculator',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          const Text('Enter molecular formula with standard capitalization (e.g. H2SO4, KMnO4, C6H12O6):', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          const SizedBox(height: 6),
+          const Text(
+            'Enter formula or chemical name (e.g. benzoic acid, ethanol, CuSO4·5H2O, C6H6, sodium chloride):',
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _controller,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(hintText: 'e.g. C6H12O6'),
+                  decoration: const InputDecoration(
+                    hintText: 'Enter formula or chemical name',
+                  ),
                   onSubmitted: (_) => _calculate(),
                 ),
               ),
@@ -204,19 +196,157 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
             const SizedBox(height: 8),
             Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
           ],
-          if (_result != null) ...[
-            const SizedBox(height: 16),
+          if (_parsedResult != null) ...[
+            const SizedBox(height: 14),
             Container(
-              padding: const EdgeInsets.all(12),
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppColors.bg0,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.success.withValues(alpha: 0.5)),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Molar Mass = ', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
-                  Text('${_result!.toStringAsFixed(3)} g/mol', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.success)),
+                  if (_parsedResult!.compoundName != null) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _parsedResult!.compoundName!,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.purple.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'Verified Compound',
+                            style: TextStyle(
+                              color: AppColors.purpleBright,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_parsedResult!.iupacName != null && _parsedResult!.iupacName != _parsedResult!.compoundName) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'IUPAC: ${_parsedResult!.iupacName}',
+                        style: const TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+                      ),
+                    ],
+                    const Divider(color: AppColors.borderSubtle, height: 16),
+                  ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Molecular Formula:',
+                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _parsedResult!.formattedFormula,
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.purpleBright,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text(
+                            'Molar Mass:',
+                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${_parsedResult!.molarMass.toStringAsFixed(2)} g/mol',
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.success,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  if (_parsedResult!.elementBreakdown.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Elemental Composition:',
+                      style: TextStyle(fontSize: 11.5, color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: _parsedResult!.elementBreakdown.entries.map((entry) {
+                        final pct = _parsedResult!.elementPercentages[entry.key] ?? 0.0;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceElevated,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.borderSubtle),
+                          ),
+                          child: Text(
+                            '${entry.key} × ${entry.value} (${pct.toStringAsFixed(1)}%)',
+                            style: const TextStyle(fontSize: 11.5, color: Colors.white, fontWeight: FontWeight.w600),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                  // Related Tool Suggestions
+                  const Text(
+                    'Related Tools:',
+                    style: TextStyle(fontSize: 11.5, color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      ActionChip(
+                        avatar: const Icon(Icons.water_drop_outlined, size: 14, color: AppColors.purpleBright),
+                        label: const Text('Molarity Calculator', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                        backgroundColor: AppColors.surfaceElevated,
+                        onPressed: () => widget.onSelectTool?.call('Molarity'),
+                      ),
+                      ActionChip(
+                        avatar: const Icon(Icons.science_outlined, size: 14, color: AppColors.purpleBright),
+                        label: const Text('Normality Calculator', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                        backgroundColor: AppColors.surfaceElevated,
+                        onPressed: () => widget.onSelectTool?.call('Normality'),
+                      ),
+                      ActionChip(
+                        avatar: const Icon(Icons.opacity, size: 14, color: AppColors.purpleBright),
+                        label: const Text('Dilution Calculator', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                        backgroundColor: AppColors.surfaceElevated,
+                        onPressed: () => widget.onSelectTool?.call('Dilution'),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

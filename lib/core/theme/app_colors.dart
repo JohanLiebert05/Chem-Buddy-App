@@ -53,6 +53,7 @@ class AppColors {
   static const present = Color(0xFF34D399);
   static const absent = Color(0xFFF87171);
   static const postponed = Color(0xFF60A5FA);
+  static const excused = Color(0xFF38BDF8);
 
   static const subjectPalette = [
     Color(0xFFA78BFA),

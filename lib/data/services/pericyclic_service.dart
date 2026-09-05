@@ -1,6 +1,7 @@
 /// MSc Chemistry Pericyclic Service
 /// Encapsulates the Woodward-Hoffmann rules, Frontier Molecular Orbital (FMO) analysis,
 /// and stereochemical predictions for electrocyclic reactions, cycloadditions, and sigmatropic shifts.
+library;
 
 enum PericyclicType {
   electrocyclic,

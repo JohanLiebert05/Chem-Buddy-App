@@ -23,7 +23,8 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
   final TextEditingController _nmrPeaksCtrl = TextEditingController(text: '2.6, 7.5, 7.9');
   final TextEditingController _msPeaksCtrl = TextEditingController(text: '120, 105, 77');
 
-  String _analysisResult = '';
+  SpectroscopyAnalysisResult? _analysisResult;
+  bool _showFullReport = false;
 
   @override
   void initState() {
@@ -61,7 +62,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
         .toList();
 
     setState(() {
-      _analysisResult = SpectroscopyService.analyzeUserSpectra(
+      _analysisResult = SpectroscopyService.analyzeSpectraStructured(
         formula: _formulaCtrl.text,
         irPeaks: irList,
         nmrPeaks: nmrList,
@@ -338,15 +339,132 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
           ),
         ),
         const SizedBox(height: 16),
-        if (_analysisResult.isNotEmpty)
-          AppCard(
-            padding: const EdgeInsets.all(16),
-            child: ChemistryMarkdownView(
-              text: _analysisResult,
-              textStyle: const TextStyle(fontSize: 13, height: 1.4, color: Colors.white),
+        if (_analysisResult != null) ...[
+          if (!_analysisResult!.isValid)
+            AppCard(
+              padding: const EdgeInsets.all(16),
+              borderColor: AppColors.statusDanger.withValues(alpha: 0.6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.error_outline_rounded, color: AppColors.statusDanger, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Formula Validation Error',
+                          style: TextStyle(color: AppColors.statusDanger, fontWeight: FontWeight.w800, fontSize: 14),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _analysisResult!.errorMessage ?? 'Invalid formula',
+                          style: const TextStyle(color: Colors.white, fontSize: 12.5, height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            // Deduction Header Card
+            GlowCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              borderColor: AppColors.brandBright.withValues(alpha: 0.5),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.verified_outlined, color: AppColors.accentCyan, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            _analysisResult!.formula,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentGold.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'DBE = ${_analysisResult!.dbe.toStringAsFixed(1).replaceAll('.0', '')}',
+                              style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w800, fontSize: 11.5),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.brandPrimary.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${_analysisResult!.molarMass} g/mol',
+                              style: const TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w800, fontSize: 11.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        '8-Step Spectroscopy Interpretation',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          AppHaptics.selection();
+                          setState(() => _showFullReport = !_showFullReport);
+                        },
+                        child: Row(
+                          children: [
+                            Icon(
+                              _showFullReport ? Icons.view_agenda_outlined : Icons.description_outlined,
+                              size: 14,
+                              color: AppColors.brandBright,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _showFullReport ? 'Step View' : 'Full Report',
+                              style: const TextStyle(color: AppColors.brandBright, fontSize: 11.5, fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        const SizedBox(height: 20),
+            const SizedBox(height: 12),
+            if (_showFullReport)
+              AppCard(
+                padding: const EdgeInsets.all(16),
+                child: ChemistryMarkdownView(
+                  text: _analysisResult!.markdownFull,
+                  textStyle: const TextStyle(fontSize: 13, height: 1.45, color: Colors.white),
+                ),
+              )
+            else
+              ..._analysisResult!.steps.map((step) => _buildDeductionStepCard(step)),
+          ],
+        ],
+        const SizedBox(height: 24),
         const Text(
           'Curated MSc Examination Case Studies',
           style: TextStyle(color: AppColors.brandBright, fontSize: 14, fontWeight: FontWeight.w800),
@@ -412,6 +530,70 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.borderSubtle)),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.borderSubtle)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.brandBright)),
+      ),
+    );
+  }
+
+  Widget _buildDeductionStepCard(DeductionStep step) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: AppCard(
+        padding: EdgeInsets.zero,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: step.stepNumber == 1 || step.stepNumber == 7,
+            tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.brandPrimary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(step.icon, color: AppColors.brandBright, size: 20),
+            ),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentCyan.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Step ${step.stepNumber}',
+                    style: const TextStyle(color: AppColors.accentCyan, fontSize: 10.5, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    step.title,
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                step.summary,
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: ChemistryMarkdownView(
+                  text: step.content,
+                  textStyle: const TextStyle(fontSize: 12.5, height: 1.45, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

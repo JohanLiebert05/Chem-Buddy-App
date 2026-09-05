@@ -51,7 +51,7 @@ class Subject {
       );
 }
 
-enum AttendanceStatus { present, absent, postponed }
+enum AttendanceStatus { present, absent, postponed, excused }
 
 class AttendanceRecord {
   const AttendanceRecord({
@@ -61,6 +61,7 @@ class AttendanceRecord {
     required this.status,
     this.slotId,
     this.markedAt,
+    this.note,
   });
 
   final String id;
@@ -69,6 +70,7 @@ class AttendanceRecord {
   final AttendanceStatus status;
   final String? slotId;
   final DateTime? markedAt;
+  final String? note;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -77,16 +79,22 @@ class AttendanceRecord {
         'status': status.name,
         if (slotId != null) 'slotId': slotId,
         if (markedAt != null) 'markedAt': markedAt!.toIso8601String(),
+        if (note != null && note!.isNotEmpty) 'note': note,
       };
 
   factory AttendanceRecord.fromJson(Map<String, dynamic> json) {
+    final statusStr = json['status'] as String? ?? 'present';
     return AttendanceRecord(
       id: json['id'] as String,
       subjectId: json['subjectId'] as String,
       date: DateTime.parse(json['date'] as String),
-      status: AttendanceStatus.values.byName(json['status'] as String),
+      status: AttendanceStatus.values.firstWhere(
+        (v) => v.name.toLowerCase() == statusStr.toLowerCase(),
+        orElse: () => AttendanceStatus.present,
+      ),
       slotId: json['slotId'] as String?,
       markedAt: json['markedAt'] != null ? DateTime.tryParse(json['markedAt'] as String) : null,
+      note: json['note'] as String?,
     );
   }
 }

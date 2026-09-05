@@ -7,6 +7,7 @@ import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/services/pericyclic_service.dart';
+import 'reaction_mechanism_screen.dart';
 
 class PericyclicHubScreen extends StatefulWidget {
   const PericyclicHubScreen({super.key});
@@ -98,133 +99,128 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Select Reaction Parameters',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15),
+                'Reaction Parameters',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
               ),
               const SizedBox(height: 12),
-
-              // 1. Reaction Class Selector
-              const Text('REACTION CLASS', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w800)),
+              const Text('Reaction Type:', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
               SegmentedButton<PericyclicType>(
                 segments: const [
-                  ButtonSegment(value: PericyclicType.electrocyclic, label: Text('Electrocyclic', style: TextStyle(fontSize: 11.5))),
-                  ButtonSegment(value: PericyclicType.cycloaddition, label: Text('Cycloaddition', style: TextStyle(fontSize: 11.5))),
-                  ButtonSegment(value: PericyclicType.sigmatropic, label: Text('Sigmatropic', style: TextStyle(fontSize: 11.5))),
+                  ButtonSegment(value: PericyclicType.electrocyclic, label: Text('Electrocyclic', style: TextStyle(fontSize: 11))),
+                  ButtonSegment(value: PericyclicType.cycloaddition, label: Text('Cycloadd.', style: TextStyle(fontSize: 11))),
+                  ButtonSegment(value: PericyclicType.sigmatropic, label: Text('Sigmatropic', style: TextStyle(fontSize: 11))),
                 ],
                 selected: {_selectedType},
-                onSelectionChanged: (val) {
+                onSelectionChanged: (set) {
                   AppHaptics.selection();
-                  setState(() => _selectedType = val.first);
+                  setState(() => _selectedType = set.first);
                 },
               ),
-              const SizedBox(height: 14),
-
-              // 2. Electron System (4n vs 4n+2)
-              const Text('PI ELECTRON COUNT', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 12),
+              const Text('Electron Framework (π / σ):', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              SegmentedButton<int>(
-                segments: const [
-                  ButtonSegment(value: 4, label: Text('4n (4 e⁻: Butadiene / [2+2])', style: TextStyle(fontSize: 11.5))),
-                  ButtonSegment(value: 6, label: Text('4n+2 (6 e⁻: Hexatriene / [4+2])', style: TextStyle(fontSize: 11.5))),
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Center(child: Text('4n Electrons (e.g. 4π)')),
+                      selected: _selectedElectrons == 4,
+                      onSelected: (selected) {
+                        if (selected) {
+                          AppHaptics.selection();
+                          setState(() => _selectedElectrons = 4);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Center(child: Text('4n + 2 Electrons (e.g. 6π)')),
+                      selected: _selectedElectrons == 6,
+                      onSelected: (selected) {
+                        if (selected) {
+                          AppHaptics.selection();
+                          setState(() => _selectedElectrons = 6);
+                        }
+                      },
+                    ),
+                  ),
                 ],
-                selected: {_selectedElectrons},
-                onSelectionChanged: (val) {
-                  AppHaptics.selection();
-                  setState(() => _selectedElectrons = val.first);
-                },
               ),
-              const SizedBox(height: 14),
-
-              // 3. Condition (Thermal vs Photochemical)
-              const Text('REACTION CONDITIONS', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 12),
+              const Text('Activation Mode:', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              SegmentedButton<ReactionCondition>(
-                segments: const [
-                  ButtonSegment(
-                    value: ReactionCondition.thermal,
-                    icon: Icon(Icons.local_fire_department, size: 16, color: AppColors.accentGold),
-                    label: Text('Thermal (Δ)', style: TextStyle(fontSize: 12)),
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Center(child: Text('Thermal (Δ)')),
+                      selected: _selectedCondition == ReactionCondition.thermal,
+                      onSelected: (selected) {
+                        if (selected) {
+                          AppHaptics.selection();
+                          setState(() => _selectedCondition = ReactionCondition.thermal);
+                        }
+                      },
+                    ),
                   ),
-                  ButtonSegment(
-                    value: ReactionCondition.photochemical,
-                    icon: Icon(Icons.wb_sunny_outlined, size: 16, color: AppColors.accentCyan),
-                    label: Text('Photochemical (hν)', style: TextStyle(fontSize: 12)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Center(child: Text('Photochemical (hν)')),
+                      selected: _selectedCondition == ReactionCondition.photochemical,
+                      onSelected: (selected) {
+                        if (selected) {
+                          AppHaptics.selection();
+                          setState(() => _selectedCondition = ReactionCondition.photochemical);
+                        }
+                      },
+                    ),
                   ),
                 ],
-                selected: {_selectedCondition},
-                onSelectionChanged: (val) {
-                  AppHaptics.selection();
-                  setState(() => _selectedCondition = val.first);
-                },
               ),
             ],
           ),
         ),
         const SizedBox(height: 16),
-
-        // Result Prediction Card
-        AppCard(
+        GlowCard(
+          borderColor: prediction.isThermallyAllowed ? AppColors.success.withValues(alpha: 0.5) : AppColors.brandBright.withValues(alpha: 0.5),
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.statusSuccess.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.verified_rounded, color: AppColors.statusSuccess, size: 20),
+                  Icon(
+                    prediction.isThermallyAllowed ? Icons.check_circle_rounded : Icons.wb_sunny_rounded,
+                    color: prediction.isThermallyAllowed ? AppColors.success : AppColors.brandBright,
+                    size: 22,
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('WOODWARD-HOFFMANN OUTCOME', style: TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w800)),
-                        Text(
-                          prediction.allowedMode.toUpperCase(),
-                          style: const TextStyle(color: AppColors.statusSuccess, fontSize: 18, fontWeight: FontWeight.w900),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: (prediction.isThermallyAllowed ? AppColors.accentGold : AppColors.accentCyan).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _selectedCondition == ReactionCondition.thermal ? 'THERMAL Δ' : 'PHOTO hν',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: _selectedCondition == ReactionCondition.thermal ? AppColors.accentGold : AppColors.accentCyan,
-                      ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Predicted Mode: ${prediction.allowedMode}',
+                    style: TextStyle(
+                      color: prediction.isThermallyAllowed ? AppColors.success : AppColors.brandBright,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
                     ),
                   ),
                 ],
               ),
-              const Divider(color: AppColors.borderSubtle, height: 24),
-              _buildDetailRow('Allowed Mode:', prediction.allowedMode, AppColors.statusSuccess),
-              const SizedBox(height: 6),
-              _buildDetailRow('Forbidden Mode:', prediction.forbiddenMode, AppColors.statusDanger),
-              const SizedBox(height: 6),
-              _buildDetailRow('TS Topology:', prediction.transitionStateSymmetry, AppColors.brandBright),
               const SizedBox(height: 12),
-              const Text('Frontier Molecular Orbital (FMO) Analysis:', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 4),
-              Text(prediction.homoState, style: const TextStyle(color: Colors.white, fontSize: 12.5, height: 1.35)),
+              _buildDetailRow('Symmetry Conservation:', prediction.transitionStateSymmetry, Colors.white),
+              const SizedBox(height: 8),
+              _buildDetailRow('Active FMO:', prediction.homoState, AppColors.brandBright),
               const SizedBox(height: 12),
+              const Divider(color: AppColors.borderSubtle),
+              const SizedBox(height: 8),
               const Text('Stereochemical Benchmark Example:', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
               const SizedBox(height: 4),
               ChemistryMarkdownView(
                 text: prediction.stereochemistryExample,
-                textStyle: const TextStyle(color: AppColors.accentCyan, fontSize: 12.5, height: 1.35, fontWeight: FontWeight.w600),
+                textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
               ),
             ],
           ),
@@ -234,15 +230,12 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
   }
 
   Widget _buildRulesTab() {
-    return ListView(
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      children: [
-        const Text(
-          'Master Woodward-Hoffmann Selection Rules Matrix',
-          style: TextStyle(color: AppColors.brandBright, fontSize: 14, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 10),
-        ...PericyclicService.selectionRules.map((r) => Padding(
+      itemCount: PericyclicService.selectionRules.length,
+      itemBuilder: (context, index) {
+        final rule = PericyclicService.selectionRules[index];
+        return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: AppCard(
             padding: const EdgeInsets.all(16),
@@ -252,46 +245,28 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(r.reactionType, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text(rule.reactionType, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.brandPrimary.withValues(alpha: 0.15),
+                        color: AppColors.purple.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text(r.electronCount, style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontWeight: FontWeight.w700)),
+                      child: Text(rule.electronCount, style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontWeight: FontWeight.w700)),
                     ),
                   ],
                 ),
-                const Divider(color: AppColors.borderSubtle, height: 18),
-                Row(
-                  children: [
-                    const Icon(Icons.local_fire_department, size: 16, color: AppColors.accentGold),
-                    const SizedBox(width: 6),
-                    const Text('Thermal (Δ): ', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                    Expanded(
-                      child: Text(r.thermalMode, style: const TextStyle(color: AppColors.statusSuccess, fontWeight: FontWeight.w700, fontSize: 12.5)),
-                    ),
-                  ],
-                ),
+                const SizedBox(height: 10),
+                _buildDetailRow('Thermal (Δ):', rule.thermalMode, AppColors.success),
                 const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.wb_sunny_outlined, size: 16, color: AppColors.accentCyan),
-                    const SizedBox(width: 6),
-                    const Text('Photochemical (hν): ', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                    Expanded(
-                      child: Text(r.photochemicalMode, style: const TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.w700, fontSize: 12.5)),
-                    ),
-                  ],
-                ),
+                _buildDetailRow('Photochemical (hν):', rule.photochemicalMode, AppColors.accentCyan),
                 const SizedBox(height: 8),
-                Text(r.homoSymmetry, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.3)),
+                Text(rule.homoSymmetry, style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5, fontStyle: FontStyle.italic)),
               ],
             ),
           ),
-        )),
-      ],
+        );
+      },
     );
   }
 
@@ -318,6 +293,24 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
             'Endo Rule: Electron-withdrawing substituents on the dienophile point toward the developing diene double bond due to secondary orbital interaction.',
             '[2s+2s] Photochemical: Irradiation promotes an electron into pi*, allowing constructive suprafacial overlap to form cyclobutanes.',
           ],
+          actionWidget: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.accentCyan),
+              foregroundColor: AppColors.accentCyan,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              AppHaptics.selection();
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const ReactionMechanismsScreen(initialReactionId: 'diels_alder'),
+                ),
+              );
+            },
+            icon: const Icon(Icons.view_in_ar_rounded, size: 16),
+            label: const Text('Explore Diels-Alder 3D Lab & Vectors ⚗️', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          ),
         ),
         const SizedBox(height: 12),
         _buildClassCard(
@@ -328,12 +321,68 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
             '[3,3]-Claisen Rearrangement: Thermal rearrangement of allyl vinyl ethers or allyl aryl ethers into gamma,delta-unsaturated carbonyls.',
             '[1,5]-Sigmatropic Hydrogen Shift: Thermally allowed with suprafacial migration across a pentadienyl system (retention of configuration).',
           ],
+          actionWidget: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.purpleBright),
+                        foregroundColor: AppColors.purpleBright,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        AppHaptics.selection();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => const ReactionMechanismsScreen(initialReactionId: 'cope'),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.sync_alt_rounded, size: 15),
+                      label: const Text('Cope 3D Lab 🔄', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.accentCyan),
+                        foregroundColor: AppColors.accentCyan,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        AppHaptics.selection();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => const ReactionMechanismsScreen(initialReactionId: 'claisen_sigmatropic'),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.science_rounded, size: 15),
+                      label: const Text('Claisen 3D Lab 🧪', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildClassCard({required String title, required String subtitle, required List<String> bullets}) {
+  Widget _buildClassCard({
+    required String title,
+    required String subtitle,
+    required List<String> bullets,
+    Widget? actionWidget,
+  }) {
     return AppCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -353,6 +402,10 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
               ],
             ),
           )),
+          if (actionWidget != null) ...[
+            const SizedBox(height: 10),
+            actionWidget,
+          ],
         ],
       ),
     );

@@ -119,16 +119,19 @@ class GeminiFlashcardService {
           'ask-chembuddy',
           {
             'question': '''Act as an expert MSc Chemistry academic tutor.
-Create exactly $count rigorous, high-yield active-recall flashcards based EXCLUSIVELY and STRICTLY on the attached document "$topic".
+Create up to $count rigorous, high-yield active-recall flashcards based EXCLUSIVELY and STRICTLY on the attached document "$topic".
 
 RULES:
-1. QUESTION FORMAT: Formulate standalone, high-yield conceptual interrogative questions (e.g., reaction mechanisms, stereochemistry, regioselectivity, rate laws, analytical parameters, instrumentation, and thermodynamic principles).
-2. FORBIDDEN: NEVER quote verbatim snippets with trailing ellipses (e.g., NEVER write 'Explain the following point: "..."' or 'What does the document state regarding "..."'). Every question must be a complete, standalone question.
-3. ANSWER FORMAT: Provide accurate, comprehensive explanations using clean chemical equations and inline LaTeX notation where applicable.
-4. KEY TERMS: For each card, provide 3 to 5 mandatory chemical concepts or keywords required for a complete answer.
+1. STRICT PDF GROUNDING: Use ONLY the supplied document content as the source of factual information and question content. Do not introduce facts, reactions, examples, definitions, mechanisms, named reactions, or questions that are absent from the supplied document.
+2. QUESTION COUNT: If the requested number of questions ($count) cannot be supported by the document, return fewer questions rather than hallucinating. For example, if only 7 questions are supported, return 7 and include "limit_note".
+3. QUESTION FORMAT: Formulate standalone, high-yield conceptual interrogative questions (e.g., reaction mechanisms, stereochemistry, regioselectivity, rate laws, analytical parameters, instrumentation, and thermodynamic principles).
+4. FORBIDDEN: NEVER quote verbatim snippets with trailing ellipses (e.g., NEVER write 'Explain the following point: "..."' or 'What does the document state regarding "..."'). Every question must be a complete, standalone question.
+5. ANSWER FORMAT: Provide accurate, comprehensive explanations using clean chemical equations and inline LaTeX notation where applicable.
+6. KEY TERMS: For each card, provide 3 to 5 mandatory chemical concepts or keywords required for a complete answer.
 
 Return strictly valid JSON with this shape:
 {
+  "limit_note": "Optional note if fewer questions were supported",
   "flashcards": [
     {
       "question": "Standalone conceptual question?",
@@ -349,13 +352,13 @@ Return strictly valid JSON with this shape:
       case _ChunkType.reactionMechanism:
         return (
           question: 'What is the mechanistic pathway and key intermediate(s) involved in $words?',
-          answer: '$clean',
+          answer: clean,
           terms: [words, 'Mechanism', 'Intermediate', topic],
         );
       case _ChunkType.formulaDerivation:
         return (
           question: 'State and derive the governing equation for $words, including all variables and units.',
-          answer: '$clean',
+          answer: clean,
           terms: [words, 'Formula', 'Units', topic],
         );
       case _ChunkType.procedureMethod:
@@ -374,13 +377,13 @@ Return strictly valid JSON with this shape:
         }
         return (
           question: 'Describe the procedure and analytical rationale for $words in $topic.',
-          answer: '$clean',
+          answer: clean,
           terms: [words, 'Procedure', 'Analytical Method', topic],
         );
       case _ChunkType.dataReference:
         return (
           question: 'What are the key reference values, limits, or spectroscopic data associated with $words?',
-          answer: '$clean',
+          answer: clean,
           terms: [words, 'Reference Value', 'Spectroscopy', topic],
         );
       case _ChunkType.definitionConcept:
@@ -402,7 +405,7 @@ Return strictly valid JSON with this shape:
         }
         return (
           question: 'Explain the concept of $words and its role in $topic.',
-          answer: '$clean',
+          answer: clean,
           terms: [words, 'Concept', topic],
         );
     }

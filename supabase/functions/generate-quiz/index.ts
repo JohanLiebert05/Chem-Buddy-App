@@ -132,14 +132,15 @@ Deno.serve(async (req) => {
 Subject: ${topic}
 Difficulty: ${difficulty} (easy=BSc level, medium=MSc level, hard=competitive exam, msc_exam=end-semester exam pattern)
 Quiz Type: ${quizType}
-Number of Questions: ${questionCount}
+Target Questions: ${questionCount}
 
 CRITICAL RULES:
-1. Base ALL questions strictly on the provided study material below.
-2. MCQ options must be plausible and chemically meaningful. Exactly 4 options for each question.
-3. Use standard chemical notation and inline LaTeX ($...$) for chemical formulas and equations.
-4. Explanations must clearly explain WHY the correct answer is right and why others are incorrect.
-5. Generate exactly ${questionCount} questions.
+1. STRICT PDF GROUNDING: Use ONLY the supplied document content as the source of factual information and question content. Do not introduce facts, reactions, examples, definitions, mechanisms, named reactions, or questions that are absent from the supplied document.
+2. QUESTION COUNT: If the requested number of questions (${questionCount}) cannot be supported by the document, return fewer questions rather than hallucinating. For example, if the document only supports 7 questions, generate 7 high-quality questions and set "limit_note" to "Only 7 document-grounded questions were available from this material." NEVER invent unsupported questions.
+3. MCQ options must be plausible and chemically meaningful. Exactly 4 options for each question.
+4. Use standard chemical notation and inline LaTeX ($...$) for chemical formulas and equations.
+5. Explanations must clearly explain WHY the correct answer is right and why others are incorrect, grounded in the text.
+6. SOURCE CITATION: For each question, supply the "source_chunk_id" or "source_text" excerpt that proves the correct answer.
 
 Study Material:
 ${sourceText.slice(0, 12000)}`;
@@ -149,6 +150,7 @@ ${sourceText.slice(0, 12000)}`;
       properties: {
         quiz_title: { type: "STRING" },
         total_marks: { type: "NUMBER" },
+        limit_note: { type: "STRING", description: "Notice if fewer questions were generated due to document content limits" },
         questions: {
           type: "ARRAY",
           items: {
@@ -164,6 +166,8 @@ ${sourceText.slice(0, 12000)}`;
               explanation: { type: "STRING" },
               marks: { type: "NUMBER" },
               key_concepts: { type: "ARRAY", items: { type: "STRING" } },
+              source_chunk_id: { type: "STRING", description: "Traceable chunk ID or section reference" },
+              source_text: { type: "STRING", description: "Direct grounding excerpt from document text" },
             },
             required: ["question", "options", "correct_answer", "correct_index", "explanation", "marks"],
           },

@@ -10,9 +10,10 @@ import '../../data/models/reaction_models.dart';
 
 /// Step-through ChemDraw-style SVG viewer. Zoom/pan stay vector-sharp.
 class MechanismStepViewer extends StatefulWidget {
-  const MechanismStepViewer({super.key, required this.mechanism});
+  const MechanismStepViewer({super.key, required this.mechanism, this.onSwitchTo3D});
 
   final ReactionMechanism mechanism;
+  final VoidCallback? onSwitchTo3D;
 
   @override
   State<MechanismStepViewer> createState() => _MechanismStepViewerState();
@@ -219,6 +220,19 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
               icon: const Icon(Icons.center_focus_strong, size: 18),
               label: const Text('Reset view'),
             ),
+            if (widget.onSwitchTo3D != null)
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.accentCyan,
+                  side: BorderSide(color: AppColors.accentCyan.withValues(alpha: 0.5)),
+                ),
+                onPressed: () {
+                  AppHaptics.selection();
+                  widget.onSwitchTo3D!();
+                },
+                icon: const Icon(Icons.view_in_ar_rounded, size: 18),
+                label: const Text('Explore in 3D 🌐'),
+              ),
           ],
         ),
       ],

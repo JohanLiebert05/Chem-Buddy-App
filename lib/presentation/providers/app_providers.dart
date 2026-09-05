@@ -171,6 +171,14 @@ class AppController extends Notifier<AppState> {
     await reload();
   }
 
+  Future<void> markAllForDate({
+    required DateTime date,
+    required AttendanceStatus status,
+  }) async {
+    await _repo.markAllForDate(date: date, status: status);
+    await reload();
+  }
+
   Future<void> applyScannedTimetable(List<TimetableEntry> entries) async {
     await _repo.applyScannedTimetable(entries);
     await reload();

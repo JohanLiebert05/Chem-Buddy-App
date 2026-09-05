@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
+import '../../core/widgets/claude_loading_text.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/library_models.dart';
@@ -388,19 +389,21 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
           children: [
             if (_loading)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: AppColors.purple.withValues(alpha: 0.15),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purpleBright)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _progressStatus.isEmpty ? 'Analyzing document...' : _progressStatus,
-                        style: const TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF18122B).withValues(alpha: 0.92),
+                  border: const Border(
+                    bottom: BorderSide(color: AppColors.borderSubtle),
+                  ),
+                ),
+                child: ClaudeThinkingIndicator(
+                  thoughts: _progressStatus.isNotEmpty
+                      ? [_progressStatus, ...ClaudeThinkingMicrocopy.summary]
+                      : ClaudeThinkingMicrocopy.summary,
+                  isCard: false,
+                  showSparkle: true,
+                  fontSize: 12.5,
                 ),
               ),
 
@@ -648,12 +651,19 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
               ),
               const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: _loading ? null : _fetchSummary,
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.purple, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
-                icon: const Icon(Icons.auto_awesome),
-                label: const Text('Generate Summary with AI', style: TextStyle(fontWeight: FontWeight.w700)),
-              ),
+              if (_loading)
+                const ClaudeThinkingIndicator(
+                  thoughts: ClaudeThinkingMicrocopy.summary,
+                  isCard: true,
+                  thinkingHeader: 'Distilling Academic Summary',
+                )
+              else
+                ElevatedButton.icon(
+                  onPressed: _fetchSummary,
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.purple, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
+                  icon: const Icon(Icons.auto_awesome),
+                  label: const Text('Generate Summary with AI', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
             ],
           ),
         ),
@@ -770,17 +780,24 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                 }).toList(),
               ),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _loading ? null : _generateQuiz,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.purple,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              if (_loading)
+                const ClaudeThinkingIndicator(
+                  thoughts: ClaudeThinkingMicrocopy.quiz,
+                  isCard: true,
+                  thinkingHeader: 'Assembling Chemistry Quiz',
+                )
+              else
+                ElevatedButton.icon(
+                  onPressed: _generateQuiz,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.purple,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: Text('Generate & Start Quiz ($_quizCount Qs)', style: const TextStyle(fontWeight: FontWeight.w800)),
                 ),
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: Text('Generate & Start Quiz ($_quizCount Qs)', style: const TextStyle(fontWeight: FontWeight.w800)),
-              ),
             ],
           ),
         ),
@@ -857,17 +874,24 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                 }).toList(),
               ),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _loading ? null : _generateFlashcards,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.purple,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              if (_loading)
+                const ClaudeThinkingIndicator(
+                  thoughts: ClaudeThinkingMicrocopy.flashcards,
+                  isCard: true,
+                  thinkingHeader: 'Synthesizing Flashcards',
+                )
+              else
+                ElevatedButton.icon(
+                  onPressed: _generateFlashcards,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.purple,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.style),
+                  label: Text('Generate & Study Deck ($_flashcardCount Cards)', style: const TextStyle(fontWeight: FontWeight.w800)),
                 ),
-                icon: const Icon(Icons.style),
-                label: Text('Generate & Study Deck ($_flashcardCount Cards)', style: const TextStyle(fontWeight: FontWeight.w800)),
-              ),
             ],
           ),
         ),

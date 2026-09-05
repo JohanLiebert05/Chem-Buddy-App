@@ -25,9 +25,9 @@ class RagService {
       try {
         final response = await remote.invokeFunction('ask-chembuddy', {
           'question': question,
-          if (subject != null) 'subject': subject,
-          if (documentText != null) 'document_text': documentText,
-          if (documentName != null) 'document_name': documentName,
+          'subject': ?subject,
+          'document_text': ?documentText,
+          'document_name': ?documentName,
           if (history != null) 'history': history.map((e) => e.toJson()).toList(),
         });
         if (response is Map<String, dynamic> && response['answer'] != null) {
@@ -63,9 +63,9 @@ class RagService {
       await remote.invokeFunction('ingest-document', {
         'document_id': documentId,
         'text': text,
-        if (subject != null) 'subject': subject,
-        if (topic != null) 'topic': topic,
-        if (fileName != null) 'file_name': fileName,
+        'subject': ?subject,
+        'topic': ?topic,
+        'file_name': ?fileName,
       });
     } catch (e) {
       throw StateError('Failed to ingest document: $e');

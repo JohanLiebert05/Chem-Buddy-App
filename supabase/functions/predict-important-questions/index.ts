@@ -135,8 +135,10 @@ Your task:
 4. Provide structured model answer hints for each question to guide the student's preparation.
 
 CRITICAL RULES:
-- Base ALL predictions strictly on patterns identifiable in the provided question papers.
-- Do NOT invent fictional years or false statistical facts.
+- STRICT GROUNDING: Use ONLY the supplied question paper content as the source of patterns and questions.
+- NEVER fabricate probability values or claim "Asked 5 times in previous exams" unless directly verifiable in the uploaded papers.
+- Do NOT invent fictional years, question numbers, or false statistical facts.
+- If the question papers only support fewer questions than requested, return only the verified questions rather than hallucinating.
 - Importance rating: "very_high" (appeared repeatedly / core syllabus anchor), "high" (frequent), "medium" (periodic appearance).
 - Question types: "short" (2 marks), "medium" (5 marks), "long" (10 marks), "mechanism" (5 or 10 marks).
 - Format chemical reactions and equations using inline LaTeX ($...$).

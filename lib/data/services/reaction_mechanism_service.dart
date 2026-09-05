@@ -104,7 +104,7 @@ class ReactionMechanismService {
       verificationStatus: 'needs_review',
       isVerified: false,
       svgPath: 'assets/mechanisms/substitution/sn2/',
-      svgContent: null,
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('sn2'),
       keyApplications: [
         r'Stereospecific synthesis of chiral alcohols, amines, azides, and nitriles with inversion of stereocenters.',
         r'Williamson ether synthesis: $\text{R-O}^- + \text{R\x27-X} \rightarrow \text{R-O-R\x27} + \text{X}^-$.',
@@ -541,19 +541,487 @@ class ReactionMechanismService {
         ),
       ],
     ),
+
+    // 12. MICHAEL ADDITION
+    ReactionMechanism(
+      id: 'michael',
+      name: 'Michael Addition',
+      aliases: ['Conjugate 1,4-Addition', 'Michael Reaction', 'Enolate Conjugate Addition'],
+      category: ReactionCategory.namedReactions,
+      summary:
+          r'Thermodynamically controlled 1,4-conjugate addition of a resonance-stabilized carbon nucleophile (Michael donor, such as malonate or $\beta$-keto ester) to an $\alpha,\beta$-unsaturated carbonyl compound (Michael acceptor) yielding a 1,5-dicarbonyl compound.',
+      reactants: r'Michael Donor (Active methylene compound) + Michael Acceptor ($\alpha,\beta$-unsaturated enone/ester)',
+      reagentsAndConditions: r'Catalytic base ($\text{EtONa, KOH, or piperidine}$), $25\text{–}60^\circ\text{C}$',
+      products: r'1,5-Dicarbonyl derivative (Michael adduct)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('michael'),
+      isVerified: true,
+      keyApplications: [
+        r'Initial step in the Robinson annulation for steroid and polycyclic terpenoid synthesis.',
+        r'Carbon-carbon bond formation for synthesizing 1,5-difunctionalized intermediates.',
+      ],
+      limitations: [
+        r'Hard organolithium or Grignard reagents favor competing 1,2-direct addition over 1,4-conjugate addition (use organocuprates $\text{R}_2\text{CuLi}$ for 1,4).',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Donor Deprotonation & Enolate Formation',
+          description:
+              r'Base removes an acidic proton between two electron-withdrawing groups to generate a soft, resonance-stabilized enolate carbanion.',
+          curvedArrowNotes:
+              r'Base $:B^-$ abstracts central proton; C-H electrons delocalize across both carbonyl oxygens.',
+          intermediate: r'$[(\text{EtO}_2\text{C})_2\text{CH}^-]$ (Resonance-stabilized carbanion)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Conjugate 1,4-Nucleophilic Attack (C-C Bond Formation)',
+          description:
+              r'The soft enolate attacks the softer electrophilic $\beta$-carbon of the $\alpha,\beta$-unsaturated system. The $\pi$-electrons shift to form an extended enolate oxyanion.',
+          curvedArrowNotes:
+              r'Enolate carbanion attacks $\beta$-carbon; $C=C$ $\pi$-pair shifts to $\alpha$-carbon; $C=O$ $\pi$-pair opens onto oxygen.',
+          intermediate: r'$[(\text{EtO}_2\text{C})_2\text{CH-CH}_2\text{-CH=C(O}^-)\text{Me}]$ (Extended Enolate)',
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'Proton Transfer & Tautomerization',
+          description:
+              r'Protonation of the enolate at the $\alpha$-carbon produces the neutral, stable 1,5-dicarbonyl Michael adduct and regenerates the base catalyst.',
+          curvedArrowNotes:
+              r'Carbonyl $O^-$ collapses or $\alpha$-carbon attacks proton donor $BH^+$; yields neutral keto tautomer.',
+          intermediate: r'$(\text{EtO}_2\text{C})_2\text{CH-CH}_2\text{-CH}_2\text{-CO-Me}$ (1,5-Dicarbonyl Adduct)',
+        ),
+      ],
+    ),
+
+    // 13. CLAISEN CONDENSATION
+    ReactionMechanism(
+      id: 'claisen',
+      name: 'Claisen Ester Condensation',
+      aliases: ['Claisen Reaction', 'Ester Self-Condensation', 'Dieckmann Cyclization (intramolecular)'],
+      category: ReactionCategory.namedReactions,
+      summary:
+          r'Base-catalyzed condensation between two esters (or an ester and a ketone) containing $\alpha$-hydrogens, proceeding via nucleophilic acyl substitution to form a $\beta$-keto ester. Irreversible final deprotonation of the acidic methylene ($pK_a \approx 11$) drives the equilibrium to completion.',
+      reactants: r'2 Esters possessing $\alpha$-hydrogens (e.g. Ethyl acetate)',
+      reagentsAndConditions: r'Sodium ethoxide ($\text{NaOEt}$) matching ester alkoxy group in absolute ethanol, followed by aqueous acid workup ($\text{H}_3\text{O}^+$)',
+      products: r'$\beta$-Keto ester (Ethyl acetoacetate) + Ethanol',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('claisen'),
+      isVerified: true,
+      keyApplications: [
+        r'Synthesis of ethyl acetoacetate for acetoacetic ester syntheses of ketones.',
+        r'Dieckmann cyclization: intramolecular Claisen condensation to form 5- and 6-membered cyclic $\beta$-keto esters.',
+      ],
+      limitations: [
+        r'Substrates must possess at least two $\alpha$-hydrogens: one for enolization and the second for final deprotonation to drive equilibrium.',
+        r'Base must match the ester alkoxy group to avoid transesterification side-products.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Ester Enolization',
+          description:
+              r'Ethoxide base abstracts an $\alpha$-hydrogen from ethyl acetate to generate a resonance-stabilized ester enolate.',
+          curvedArrowNotes:
+              r'Ethoxide $:OEt^-$ abstracts $\alpha$-H; C-H bonding electrons delocalize into ester carbonyl.',
+          intermediate: r'$[\text{CH}_2=\text{C(OEt)O}^- \leftrightarrow ^-\text{CH}_2\text{COOEt}]$ (Ester Enolate)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Nucleophilic Acyl Addition & Alkoxide Elimination',
+          description:
+              r'The ester enolate attacks the carbonyl carbon of a second ethyl acetate molecule forming a tetrahedral intermediate, which expels ethoxide ion to give ethyl acetoacetate.',
+          curvedArrowNotes:
+              r'Enolate $C^-$ attacks second ester carbonyl; $C=O$ opens to $O^-$; tetrahedral collapse kicks off $:OEt^-$.',
+          intermediate: r'$[\text{CH}_3\text{-C(O}^-)(\text{OEt})-\text{CH}_2\text{COOEt}]$ (Tetrahedral Intermediate)',
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'Irreversible Acid-Base Deprotonation (Thermodynamic Driving Force)',
+          description:
+              r'The newly formed $\beta$-keto ester contains a very acidic methylene ($pK_a \approx 11$). Ethoxide deprotonates it irreversibly, forming a stable resonance-delocalized anion until acidified during workup.',
+          curvedArrowNotes:
+              r'Ethoxide abstracts doubly activated methylene proton; acidification with dilute $\text{HCl}$ protonates to give pure neutral $\beta$-keto ester.',
+          intermediate: r'$\text{CH}_3\text{-CO-CH}_2\text{-COOEt}$ (Ethyl acetoacetate)',
+        ),
+      ],
+    ),
+
+    // 14. BAEYER-VILLIGER OXIDATION
+    ReactionMechanism(
+      id: 'baeyer_villiger',
+      name: 'Baeyer-Villiger Oxidation',
+      aliases: ['Ketone to Ester Oxidation', 'Lactone Formation', 'Peracid Carbonyl Insertion'],
+      category: ReactionCategory.oxidationReduction,
+      summary:
+          r'Oxidation of ketones to esters (or cyclic ketones to lactones) using peroxy acids. The reaction proceeds via nucleophilic addition of the peroxy acid to form a tetrahedral Criegee intermediate, followed by concerted 1,2-migration with retention of configuration onto the peroxy oxygen with simultaneous cleavage of the weak O-O bond.',
+      reactants: r'Ketone ($\text{R-CO-R\x27}$) or Cyclic Ketone + Peroxy acid ($\text{mCPBA}, \text{CF}_3\text{COOOH}, \text{RCOOOH}$)',
+      reagentsAndConditions: r'$\text{mCPBA}$ in $\text{CH}_2\text{Cl}_2$ or Trifluoroacetic acid / $\text{H}_2\text{O}_2$, RT to $40^\circ\text{C}$',
+      products: r'Ester ($\text{R-COO-R\x27}$) or Lactone + Carboxylic acid ($\text{ArCOOH}$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('baeyer_villiger'),
+      isVerified: true,
+      keyApplications: [
+        r'Synthesis of $\varepsilon$-caprolactone from cyclohexanone (monomer for biodegradable polycaprolactone polymers).',
+        r'Stereospecific conversion of ketones to esters with 100% retention of stereochemistry at migrating chiral centers.',
+      ],
+      limitations: [
+        r'Aldehydes typically yield carboxylic acids via hydrogen migration rather than esters.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Peroxy Acid Nucleophilic Addition',
+          description:
+              r'Peracid oxygen attacks the carbonyl carbon of the ketone to establish the tetrahedral Criegee intermediate.',
+          curvedArrowNotes:
+              r'Peracid peroxy oxygen lone pair attacks carbonyl carbon; carbonyl $\pi$-electrons shift to oxygen.',
+          intermediate: r'$[\text{R(R\x27)C(OH)-O-O-COAr}]$ (Tetrahedral Criegee Intermediate)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Concerted 1,2-Alkyl Migration & O-O Cleavage (Rate-Determining Step)',
+          description:
+              r'Collapse of the alkoxide drives 1,2-migration of the group with higher migratory aptitude ($3^\circ > 2^\circ \approx \text{aryl} > 1^\circ > \text{methyl}$) to oxygen, concertedly expelling the carboxylate leaving group with complete stereochemical retention.',
+          curvedArrowNotes:
+              r'C-C bonding pair shifts to adjacent peroxy oxygen; O-O bond breaks onto carboxylate oxygen; $O-H$ proton departs.',
+          intermediate: r'$\text{R-CO-O-R\x27}$ (Ester) + $\text{Ar-COO}^-$ (Carboxylate)',
+        ),
+      ],
+    ),
+
+    // 15. FAVORSKII REARRANGEMENT
+    ReactionMechanism(
+      id: 'favorskii',
+      name: 'Favorskii Rearrangement',
+      aliases: ['Cyclopropanone Intermediate Rearrangement', 'Skeletal Ring Contraction'],
+      category: ReactionCategory.rearrangements,
+      summary:
+          r'Base-catalyzed rearrangement of $\alpha$-halo ketones containing an $\alpha\x27$-hydrogen to carboxylic acid derivatives. Deprotonation at $\alpha\x27$ followed by intramolecular displacement of the halide yields a strained cyclopropanone intermediate, which undergoes ring opening to relieve angle strain.',
+      reactants: r'$\alpha$-Halocyclohexanone or $\alpha$-halo acyclic ketone with accessible $\alpha\x27$-hydrogen',
+      reagentsAndConditions: r'Strong base ($\text{NaOMe, NaOEt, or NaOH}$) in alcoholic solvent, Heat',
+      products: r'Ring-contracted ester (e.g. Methyl cyclopentanecarboxylate) or rearranged carboxylic acid',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('favorskii'),
+      isVerified: true,
+      keyApplications: [
+        r'Efficient ring contraction of 6-membered to 5-membered cyclic carboxylic esters.',
+        r'Synthesis of cubane, steroids, and highly strained cage compounds.',
+      ],
+      limitations: [
+        r'Substrates lacking $\alpha\x27$-hydrogens proceed through the alternative "Quasi-Favorskii" semipinacolic pathway without cyclopropanones.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Enolate Generation & Intramolecular Halide Displacement',
+          description:
+              r'Base deprotonates the $\alpha\x27$-carbon opposite the halogen. The resulting carbanion performs an intramolecular $S_N2$ displacement of the halide, forming a strained 3-membered cyclopropanone intermediate.',
+          curvedArrowNotes:
+              r'Base abstracts $\alpha\x27$-H; carbanion lone pair attacks $\alpha$-carbon; C-X bond departs as halide $X^-$.',
+          intermediate: r'Bicyclo[3.1.0]hexan-2-one (Cyclopropanone Intermediate)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Alkoxide Addition & Strain-Relief Ring Cleavage',
+          description:
+              r'Methoxide nucleophile attacks the carbonyl carbon of the cyclopropanone. The tetrahedral intermediate collapses with regioselective cleavage of the C-C bond to yield the more stable carbanion, driving ring contraction.',
+          curvedArrowNotes:
+              r'Methoxide $:OMe^-$ attacks cyclopropanone $C=O$; $O^-$ collapses to re-form $C=O$, opening 3-membered ring to relieve 105 kJ/mol strain.',
+          intermediate: r'Methyl cyclopentanecarboxylate (Ring-Contracted Product)',
+        ),
+      ],
+    ),
+
+    // 16. MANNICH REACTION
+    ReactionMechanism(
+      id: 'mannich',
+      name: 'Mannich Reaction',
+      aliases: ['Three-Component Condensation', 'Mannich Base Synthesis', 'Aminoalkylation'],
+      category: ReactionCategory.namedReactions,
+      summary:
+          r'Three-component condensation involving an enolizable ketone (or aldehyde), a non-enolizable aldehyde (formaldehyde), and a primary or secondary amine to form a $\beta$-amino carbonyl compound (Mannich base). The key intermediate is a resonance-stabilized iminium ion.',
+      reactants: r'Formaldehyde ($\text{HCHO}$) + Secondary Amine ($\text{Me}_2\text{NH}\cdot\text{HCl}$) + Enolizable Ketone ($\text{Ph-CO-CH}_3$)',
+      reagentsAndConditions: r'Catalytic $\text{HCl}$ in ethanol or water, Reflux ($70\text{–}90^\circ\text{C}$)',
+      products: r'$\beta$-Amino carbonyl compound (Mannich Base: $\text{Ph-CO-CH}_2\text{-CH}_2\text{-NMe}_2$)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('mannich'),
+      isVerified: true,
+      keyApplications: [
+        r'Total synthesis of tropinone, atropine, and cocaine (Robinson classic synthesis).',
+        r'Preparation of $\alpha,\beta$-unsaturated ketones via thermal elimination of the amine hydrochloride.',
+      ],
+      limitations: [
+        r'Tertiary amines cannot participate; primary amines can undergo double Mannich condensations.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Iminium Ion Intermediate Generation',
+          description:
+              r'Secondary amine attacks formaldehyde under acid catalysis. Dehydration produces an exceptionally electrophilic iminium ion.',
+          curvedArrowNotes:
+              r'Amine nitrogen lone pair attacks protonated formaldehyde; loss of $\text{H}_2\text{O}$ yields $[\text{CH}_2=\text{N}^+\text{Me}_2]$.',
+          intermediate: r'$[\text{CH}_2=\text{N}^+\text{Me}_2 \leftrightarrow ^+\text{CH}_2\text{-NMe}_2]$ (Iminium Ion)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Ketone Enolization & Nucleophilic Addition',
+          description:
+              r'Acid catalyzes enolization of the ketone. The nucleophilic enol $\pi$-bond attacks the electrophilic iminium carbon, forming a C-C bond.',
+          curvedArrowNotes:
+              r'Ketone enol $C=C$ attacks iminium carbon; iminium $\pi$-electrons return to nitrogen.',
+          intermediate: r'$[\text{Ph-C(OH)=CH}_2 + \text{CH}_2=\text{N}^+\text{Me}_2]$',
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'Deprotonation to Neutral Mannich Base',
+          description:
+              r'Loss of the enol proton re-establishes the carbonyl group, yielding the stable $\beta$-amino ketone.',
+          curvedArrowNotes:
+              r'Water abstracts enol $O-H$ proton; electrons re-form $C=O$ double bond.',
+          intermediate: r'$\text{Ph-CO-CH}_2\text{-CH}_2\text{-NMe}_2$ (Mannich Base)',
+        ),
+      ],
+    ),
+
+    // 17. PINACOL-PINACOLONE REARRANGEMENT
+    ReactionMechanism(
+      id: 'pinacol',
+      name: 'Pinacol-Pinacolone Rearrangement',
+      aliases: ['1,2-Diol Rearrangement', 'Vicinal Diol Dehydration', 'Oxocarbenium Shift'],
+      category: ReactionCategory.rearrangements,
+      summary:
+          r'Acid-catalyzed dehydration of a 1,2-diol (pinacol) accompanied by 1,2-migration of an alkyl or aryl group to form a ketone (pinacolone). Driven by the formation of a resonance-stabilized oxocarbenium ion.',
+      reactants: r'1,2-Diol (Pinacol: 2,3-dimethylbutane-2,3-diol)',
+      reagentsAndConditions: r'Concentrated sulfuric acid ($\text{H}_2\text{SO}_4$) or phosphoric acid ($\text{H}_3\text{PO}_4$), Heat ($100^\circ\text{C}$)',
+      products: r'Ketone with rearranged skeleton (Pinacolone: 3,3-dimethylbutan-2-one) + $\text{H}_2\text{O}$',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('pinacol'),
+      isVerified: true,
+      keyApplications: [
+        r'Synthesis of hindered ketones and quaternary carbon centers.',
+        r'Semipinacol rearrangements in terpene and natural product synthesis.',
+      ],
+      limitations: [
+        r'Unsymmetrical diols can yield isomeric mixtures depending on carbocation stability and migratory aptitude (Aryl > Alkyl > H).',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Hydroxyl Protonation & Water Elimination',
+          description:
+              r'Acid protonates one of the tertiary hydroxyl groups. Departure of water produces a stable tertiary carbocation.',
+          curvedArrowNotes:
+              r'Acid protonates -OH to form $-\text{OH}_2^+$; C-O bond breaks onto departing $\text{H}_2\text{O}$.',
+          intermediate: r'$[(\text{CH}_3)_2\text{C(OH)-C}^+(\text{CH}_3)_2]$ (Tertiary Carbocation)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: '1,2-Alkyl Migration Driven by Oxygen Lone Pair Push',
+          description:
+              r'An adjacent methyl group migrates with its bonding pair to the cationic carbon, assisted synchronously by the push of the hydroxyl oxygen lone pair to form an oxocarbenium ion.',
+          curvedArrowNotes:
+              r'Adjacent methyl C-C pair shifts to $C^+$; oxygen lone pair forms $C=O^+$ double bond.',
+          intermediate: r'$[(\text{CH}_3)_3\text{C-C}^+(\text{OH})\text{CH}_3]$ (Protonated Oxocarbenium Ion)',
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'Deprotonation to Pinacolone',
+          description:
+              r'Loss of the proton from the oxocarbenium ion gives the neutral ketone with high thermodynamic stability.',
+          curvedArrowNotes:
+              r'Base abstracts proton from $C=O^+-H$, releasing neutral pinacolone.',
+          intermediate: r'$(\text{CH}_3)_3\text{C-CO-CH}_3$ (Pinacolone)',
+        ),
+      ],
+    ),
+
+    // 18. ROBINSON ANNULATION
+    ReactionMechanism(
+      id: 'robinson',
+      name: 'Robinson Annulation',
+      aliases: ['Tandem Michael-Aldol Annulation', 'Ring Construction', 'Octalone Synthesis'],
+      category: ReactionCategory.namedReactions,
+      summary:
+          r'Tandem reaction sequence combining a Michael addition of a cyclic ketone enolate to an $\alpha,\beta$-unsaturated ketone (methyl vinyl ketone) followed by an intramolecular Aldol condensation and dehydration to construct a fused 6-membered cyclohexenone ring.',
+      reactants: r'Cyclic ketone (Cyclohexanone) + Methyl vinyl ketone (MVK)',
+      reagentsAndConditions: r'Base ($\text{KOH, NaOMe}$, or pyrrolidine/acetic acid), Heat',
+      products: r'Bicyclic $\alpha,\beta$-unsaturated enone ($\Delta^{1,9}$-2-Octalone) + $\text{H}_2\text{O}$',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('robinson'),
+      isVerified: true,
+      keyApplications: [
+        r'Foundational method in steroid total synthesis (e.g. synthesis of the Wieland-Miescher ketone).',
+        r'Formation of decalin and polycyclic terpene skeletons.',
+      ],
+      limitations: [
+        r'Polymerization of methyl vinyl ketone can occur under harsh basic conditions; often generated in situ from Mannich salts.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Michael Addition (1,5-Diketone Formation)',
+          description:
+              r'Base generates the enolate of cyclohexanone, which undergoes conjugate 1,4-addition to methyl vinyl ketone yielding a 1,5-diketone.',
+          curvedArrowNotes:
+              r'Cyclohexanone enolate attacks terminal $\beta$-carbon of MVK; extended enolate protonates to give neutral 1,5-diketone.',
+          intermediate: r'2-(3-Oxobutyl)cyclohexan-1-one (1,5-Diketone Intermediate)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Intramolecular Aldol Cyclization',
+          description:
+              r'Base selectively removes a proton from the methyl group of the side chain. The resulting enolate attacks the ring carbonyl carbon, creating a fused 6-membered ring.',
+          curvedArrowNotes:
+              r'Base deprotonates methyl group; carbanion attacks cyclohexanone carbonyl to form bicyclic $\beta$-hydroxy ketone.',
+          intermediate: r'Bicyclic $\beta$-hydroxy ketone adduct',
+        ),
+        ReactionStep(
+          stepNumber: 3,
+          title: 'E1cB Dehydration (Aromatization / Conjugation Driving Force)',
+          description:
+              r'Base-catalyzed elimination of water via an E1cB mechanism generates the conjugated enone framework.',
+          curvedArrowNotes:
+              r'Base removes $\alpha$-proton forming enolate; collapse expels $OH^-$ to produce $\Delta^{1,9}$-2-octalone.',
+          intermediate: r'$\Delta^{1,9}$-2-Octalone (Fused Enone Product)',
+        ),
+      ],
+    ),
+
+    // 19. CURTIUS REARRANGEMENT
+    ReactionMechanism(
+      id: 'curtius',
+      name: 'Curtius Rearrangement',
+      aliases: ['Acyl Azide Rearrangement', 'Isocyanate Synthesis', 'Decarboxylative Amine Synthesis'],
+      category: ReactionCategory.rearrangements,
+      summary:
+          r'Thermal or photochemical decomposition of an acyl azide to an isocyanate via concerted loss of nitrogen gas ($N_2$) and 1,2-migration of the alkyl/aryl group with complete retention of configuration. Subsequent nucleophilic trapping with water or alcohol yields primary amines or carbamates.',
+      reactants: r'Acyl azide ($\text{R-CON}_3$)',
+      reagentsAndConditions: r'Thermal activation ($\Delta$, $60\text{–}100^\circ\text{C}$ in toluene/benzene) or UV photolysis; followed by aqueous or alcoholic workup',
+      products: r'Isocyanate ($\text{R-N=C=O}$) $\rightarrow$ Primary Amine ($\text{R-NH}_2$) + $\text{CO}_2$',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('curtius'),
+      isVerified: true,
+      keyApplications: [
+        r'Synthesis of sterically hindered primary amines and chiral amines without loss of enantiomeric purity.',
+        r'Preparation of protected urethanes/carbamates and ureas from carboxylic acid derivatives.',
+      ],
+      limitations: [
+        r'Acyl azides are potentially explosive and must be prepared safely (e.g. using diphenylphosphoryl azide DPPA).',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Concerted N₂ Extrusion & 1,2-Migration (Rate-Determining Step)',
+          description:
+              r'Upon heating, the acyl azide undergoes simultaneous loss of dinitrogen ($N_2$) and 1,2-shift of the migrating group with its electrons from carbonyl carbon to nitrogen, preserving configuration.',
+          curvedArrowNotes:
+              r'R-C bonding electrons shift to nitrogen; terminal $N-N_2$ bond breaks to release $:N\equiv N:$; $C=O$ electrons form $N=C=O$ double bond.',
+          intermediate: r'$\text{R-N=C=O}$ (Isocyanate Intermediate)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Aqueous Hydrolysis & Decarboxylation',
+          description:
+              r'Water adds to the electrophilic carbon of the isocyanate forming an unstable carbamic acid, which spontaneously decarboxylates to yield the pure primary amine.',
+          curvedArrowNotes:
+              r'Water oxygen attacks isocyanate carbon; proton transfer gives carbamic acid $\text{R-NH-COOH}$; spontaneous decarboxylation releases $\text{CO}_2$ and $\text{R-NH}_2$.',
+          intermediate: r'$\text{R-NH}_2$ (Primary Amine) + $\text{CO}_2$',
+        ),
+      ],
+    ),
+
+    // 20. [3,3]-COPE REARRANGEMENT
+    ReactionMechanism(
+      id: 'cope',
+      name: '[3,3]-Cope Rearrangement',
+      aliases: ['Cope Rearrangement', '1,5-Diene Isomerization', 'Oxy-Cope Variant'],
+      category: ReactionCategory.pericyclic,
+      summary:
+          r'Thermally allowed, concerted suprafacial-suprafacial $[3\sigma + 3\pi]$ sigmatropic rearrangement of 1,5-hexadienes. The reaction proceeds through a 6-electron aromatic chair-like transition state, breaking the C3-C4 $\sigma$-bond while synchronously forming a new C1-C6 $\sigma$-bond with complete chirality transfer.',
+      reactants: r'1,5-Hexadiene derivative',
+      reagentsAndConditions: r'Thermal activation ($\Delta$, $150\text{–}250^\circ\text{C}$) or Oxy-Cope with $\text{KH / 18-crown-6}$ at RT',
+      products: r'Isomeric 1,5-Hexadiene derivative',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('cope'),
+      isVerified: true,
+      keyApplications: [
+        r'Chirality transfer in complex organic synthesis and terpene ring modifications.',
+        r'Anionic Oxy-Cope acceleration by $10^{10}\text{–}10^{17}$ rate enhancement over neutral substrates.',
+      ],
+      limitations: [
+        r'High temperatures required for simple unsubstituted neutral dienes unless driving force (e.g. ring strain relief or enolization) is present.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Concerted Chair-Like Transition State Overlap',
+          description:
+              r'The 1,5-hexadiene adopts a preferred chair conformation. The 6-electron cyclic transition state features simultaneous homolytic/concerted cleavage of the central C3-C4 bond and formation of the terminal C1-C6 bond.',
+          curvedArrowNotes:
+              r'Three electron pairs move synchronously around the 6-membered cycle: C3-C4 $\sigma \rightarrow$ C2-C3 $\pi$, C1-C2 $\pi \rightarrow$ C1-C6 $\sigma$, C5-C6 $\pi \rightarrow$ C4-C5 $\pi$.',
+          intermediate: r'$[1,5\text{-Hexadiene}]^\ddagger$ (Chair-Like 6-Electron Aromatic TS)',
+        ),
+      ],
+    ),
+
+    // 21. [3,3]-CLAISEN SIGMATROPIC REARRANGEMENT
+    ReactionMechanism(
+      id: 'claisen_sigmatropic',
+      name: '[3,3]-Claisen Sigmatropic Rearrangement',
+      aliases: ['Claisen Rearrangement', 'Allyl Vinyl Ether Rearrangement', 'Allyl Phenyl Ether Shift'],
+      category: ReactionCategory.pericyclic,
+      summary:
+          r'Thermally allowed, concerted $[3,3]$-sigmatropic rearrangement of allyl vinyl ethers (or allyl aryl ethers) passing through a 6-membered chair-like transition state. In allyl aryl ethers, the initial cyclohexadienone rapidly tautomerizes to restore aromatic resonance, yielding ortho-allylphenols.',
+      reactants: r'Allyl phenyl ether or Allyl vinyl ether',
+      reagentsAndConditions: r'Thermal activation ($\Delta$, $180\text{–}210^\circ\text{C}$) without catalyst, or Lewis acid ($\text{AlCl}_3, \text{BCl}_3$) at RT',
+      products: r'ortho-Allylphenol (or $\gamma,\delta$-unsaturated aldehyde/ketone)',
+      svgContent: ReactionDiagramSvgCatalog.getSvgFor('claisen_sigmatropic'),
+      isVerified: true,
+      keyApplications: [
+        r'Stereoselective synthesis of ortho-substituted phenols and substituted allylic frameworks.',
+        r'Ireland-Claisen, Johnson-Claisen, and Eschenmoser variants in total synthesis.',
+      ],
+      limitations: [
+        r'If both ortho positions on the aromatic ring are blocked, a second [3,3]-shift occurs to yield the para-allylphenol.',
+      ],
+      steps: [
+        ReactionStep(
+          stepNumber: 1,
+          title: 'Concerted [3,3]-Sigmatropic Shift via Chair Transition State',
+          description:
+              r'Thermal excitation drives simultaneous cleavage of the C-O single bond and formation of a new C-C single bond at the ortho ring position via a chair-like transition state.',
+          curvedArrowNotes:
+              r'Allylic C-O $\sigma$-bond shifts to form $C=O$ double bond; aromatic $\pi$-pair shifts to form new ortho C-C $\sigma$-bond; vinyl $\pi$-pair shifts to terminal position.',
+          intermediate: r'6-Allylcyclohexa-2,4-dien-1-one (Cyclohexadienone Intermediate)',
+        ),
+        ReactionStep(
+          stepNumber: 2,
+          title: 'Rapid Keto-Enol Aromatization',
+          description:
+              r'The non-aromatic dienone intermediate spontaneously undergoes keto-enol tautomerization, driven by the substantial thermodynamic gain of aromatic stabilization energy ($\sim 150\text{ kJ/mol}$).',
+          curvedArrowNotes:
+              r'Deprotonation of ortho ring proton; electron pair restores benzene aromatic sextet; oxygen captures proton to reform phenolic -OH.',
+          intermediate: r'ortho-Allylphenol (Aromatic Product)',
+        ),
+      ],
+    ),
   ];
 
   /// Find mechanism by ID or keyword/alias.
   ReactionMechanism? find(String query) {
     final q = query.trim().toLowerCase();
+    // 1. Exact ID match takes highest precedence
     for (final m in curatedMechanisms) {
-      if (m.id.toLowerCase() == q || m.name.toLowerCase().contains(q)) {
-        return m;
-      }
+      if (m.id.toLowerCase() == q) return m;
+    }
+    // 2. Exact name or exact alias match
+    for (final m in curatedMechanisms) {
+      if (m.name.toLowerCase() == q) return m;
       for (final alias in m.aliases) {
-        if (alias.toLowerCase().contains(q)) {
-          return m;
-        }
+        if (alias.toLowerCase() == q) return m;
+      }
+    }
+    // 3. Name contains query
+    for (final m in curatedMechanisms) {
+      if (m.name.toLowerCase().contains(q)) return m;
+    }
+    // 4. Alias contains query
+    for (final m in curatedMechanisms) {
+      for (final alias in m.aliases) {
+        if (alias.toLowerCase().contains(q)) return m;
       }
     }
     return null;

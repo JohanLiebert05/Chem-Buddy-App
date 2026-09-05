@@ -193,12 +193,40 @@ class ChemRepository {
     }
   }
 
+  Future<void> markAllForDate({
+    required DateTime date,
+    required AttendanceStatus status,
+  }) async {
+    final slots = slotsFor(date);
+    for (final slot in slots) {
+      await markAttendance(
+        subjectId: slot.subjectId,
+        date: date,
+        status: status,
+        slotId: slot.id,
+      );
+    }
+  }
+
+  TimetableSlot? nextUpcomingSlot(DateTime now) {
+    final slots = slotsFor(now);
+    if (slots.isEmpty) return null;
+    final nowMinutes = now.hour * 60 + now.minute;
+    for (final slot in slots) {
+      if (slot.endMinutes > nowMinutes) {
+        return slot;
+      }
+    }
+    return null;
+  }
+
   SubjectAttendanceStats statsFor(String subjectId) {
     final rows = attendance().where((r) => r.subjectId == subjectId);
     return SubjectAttendanceStats(
       present: rows.where((r) => r.status == AttendanceStatus.present).length,
       absent: rows.where((r) => r.status == AttendanceStatus.absent).length,
       postponed: rows.where((r) => r.status == AttendanceStatus.postponed).length,
+      excused: rows.where((r) => r.status == AttendanceStatus.excused).length,
     );
   }
 
@@ -208,6 +236,7 @@ class ChemRepository {
       present: rows.where((r) => r.status == AttendanceStatus.present).length,
       absent: rows.where((r) => r.status == AttendanceStatus.absent).length,
       postponed: rows.where((r) => r.status == AttendanceStatus.postponed).length,
+      excused: rows.where((r) => r.status == AttendanceStatus.excused).length,
     );
   }
 

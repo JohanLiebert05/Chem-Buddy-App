@@ -133,12 +133,13 @@ Deno.serve(async (req) => {
 Target Subject/Document: ${topic}
 
 CRITICAL RULES:
-1. QUESTION FORMAT: Formulate standalone, high-yield conceptual interrogative questions (e.g., reaction mechanisms, stereochemistry, regioselectivity, rate laws, analytical parameters, instrumentation, and thermodynamic principles).
-2. FORBIDDEN: NEVER quote verbatim snippets with trailing ellipses (e.g., NEVER write 'Explain the following point: "..."' or 'What does the document state regarding "..."'). Every question must be a complete, standalone question.
-3. ANSWER FORMAT: Provide accurate, comprehensive explanations using clean chemical equations and inline LaTeX notation where applicable.
-4. KEY TERMS: For each card, provide 3 to 5 mandatory chemical concepts or keywords required for a complete answer.
-5. GROUNDING: You MUST generate all flashcards EXCLUSIVELY and STRICTLY from the provided Study Notes below. Do not pull in generic unrelated topics.
-6. Generate exactly ${count} distinct flashcards.
+1. STRICT PDF GROUNDING: Use ONLY the supplied document content as the source of factual information and question content. Do not introduce facts, reactions, examples, definitions, mechanisms, named reactions, or questions that are absent from the supplied document.
+2. QUESTION COUNT: If the requested number of questions (${count}) cannot be supported by the document, return fewer questions rather than hallucinating. For example, if the document only supports 7 questions, generate 7 high-quality questions and set "limit_note" to "Only 7 document-grounded questions were available from this material." NEVER invent unsupported questions.
+3. QUESTION FORMAT: Formulate standalone, high-yield conceptual interrogative questions (e.g., reaction mechanisms, stereochemistry, regioselectivity, rate laws, analytical parameters, instrumentation, and thermodynamic principles).
+4. FORBIDDEN: NEVER quote verbatim snippets with trailing ellipses (e.g., NEVER write 'Explain the following point: "..."' or 'What does the document state regarding "..."'). Every question must be a complete, standalone question.
+5. ANSWER FORMAT: Provide accurate, comprehensive explanations using clean chemical equations and inline LaTeX notation ($...$) where applicable.
+6. KEY TERMS: For each card, provide 3 to 5 mandatory chemical concepts or keywords required for a complete answer.
+7. CITATIONS: Whenever possible, link each card to its source paragraph/chunk/topic.
 
 Study Notes:
 ${clipped}`;
@@ -149,12 +150,13 @@ ${clipped}`;
     const requestPayload = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.3,
+        temperature: 0.2,
         maxOutputTokens: 8192,
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",
           properties: {
+            limit_note: { type: "STRING", description: "Note explaining if fewer cards were generated due to document content limits" },
             flashcards: {
               type: "ARRAY",
               items: {
@@ -168,7 +170,9 @@ ${clipped}`;
                     description: "3 to 5 mandatory chemical concepts/keywords required for a complete answer"
                   },
                   explanation: { type: "STRING", description: "Optional brief context or exam tip" },
-                  topic: { type: "STRING", description: "Chemistry sub-discipline or specific topic" }
+                  topic: { type: "STRING", description: "Chemistry sub-discipline or specific topic" },
+                  source_chunk_id: { type: "STRING", description: "Traceable source chunk ID or excerpt identifier" },
+                  source_page: { type: "NUMBER", description: "Estimated source page number if identifiable" }
                 },
                 required: ["question", "answer", "key_terms", "topic"]
               }

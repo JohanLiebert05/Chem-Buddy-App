@@ -3,31 +3,49 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import 'claude_loading_text.dart';
 
-/// Predefined MSc Chemistry loading status lines for generation states.
+/// Predefined MSc Chemistry loading status lines in the reflective, analytical voice of Claude.
 class ChemistryMicrocopy {
   ChemistryMicrocopy._();
 
   static const List<String> askAi = [
-    'Distilling your answer...',
-    'Calibrating the concept...',
-    'Titrating the right explanation...',
-    'Honing in on the mechanism...',
-    'Percolating through the theory...',
-    'Balancing the equation of ideas...',
-    'Cross-referencing orbital theory...',
-    'Formulating a precise answer...',
+    'Thinking...',
+    'Interpreting chemical principles...',
+    'Evaluating reaction pathways...',
+    'Analyzing orbital symmetry...',
+    'Cross-referencing verified literature...',
+    'Structuring step-by-step explanation...',
+    'Polishing chemical response...',
   ];
 
   static const List<String> flashcards = [
-    'Distilling notes into cards...',
-    'Crystallizing core ideas...',
-    'Curating your study deck...',
-    'Condensing chapters into concepts...',
-    'Sifting through the material...',
-    'Forging your revision deck...',
-    'Isolating essentials...',
-    'Refining questions & answers...',
+    'Thinking...',
+    'Scanning lecture material...',
+    'Distilling reaction mechanisms...',
+    'Structuring active-recall cards...',
+    'Tagging stereochemical nuances...',
+    'Calibrating spaced repetition intervals...',
+    'Assembling personalized revision deck...',
+  ];
+
+  static const List<String> quiz = [
+    'Thinking...',
+    'Reviewing syllabus scope...',
+    'Formulating diagnostic question stems...',
+    'Engineering plausible distractors...',
+    'Verifying stoichiometric balance...',
+    'Calibrating difficulty curve...',
+    'Assembling chemistry quiz deck...',
+  ];
+
+  static const List<String> predictQuestions = [
+    'Thinking...',
+    'Deconstructing university exam papers...',
+    'Mapping semester topic recurrence...',
+    'Detecting high-frequency questions...',
+    'Correlating named reaction derivations...',
+    'Compiling high-probability dossier...',
   ];
 
   static const List<String> timetable = [
@@ -39,10 +57,13 @@ class ChemistryMicrocopy {
   ];
 
   static const List<String> spectroscopy = [
-    'Analyzing chemical shifts...',
-    'Simulating spin-spin coupling...',
-    'Integrating proton peak areas...',
-    'Solving molecular framework...',
+    'Thinking...',
+    'Calculating degrees of unsaturation...',
+    'Correlating FT-IR frequencies...',
+    'Assigning ¹H NMR shifts...',
+    'Correlating ¹³C NMR multiplicities...',
+    'Evaluating mass spec fragmentation...',
+    'Deducing congruent molecular structure...',
   ];
 }
 
@@ -56,7 +77,7 @@ class BenzeneMoleculeLoader extends StatefulWidget {
     this.message,
     this.messages,
     this.color = AppColors.brandBright,
-    this.cycleInterval = const Duration(milliseconds: 1800),
+    this.cycleInterval = const Duration(milliseconds: 2400),
   });
 
   final double size;
@@ -88,6 +109,11 @@ class _BenzeneMoleculeLoaderState extends State<BenzeneMoleculeLoader> with Tick
       duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
 
+    _startCycleTimer();
+  }
+
+  void _startCycleTimer() {
+    _cycleTimer?.cancel();
     if (widget.messages != null && widget.messages!.length > 1) {
       _cycleTimer = Timer.periodic(widget.cycleInterval, (timer) {
         if (mounted) {
@@ -96,6 +122,15 @@ class _BenzeneMoleculeLoaderState extends State<BenzeneMoleculeLoader> with Tick
           });
         }
       });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant BenzeneMoleculeLoader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.messages != oldWidget.messages || widget.cycleInterval != oldWidget.cycleInterval) {
+      _currentMessageIndex = 0;
+      _startCycleTimer();
     }
   }
 
@@ -137,30 +172,43 @@ class _BenzeneMoleculeLoaderState extends State<BenzeneMoleculeLoader> with Tick
           },
         ),
         if (currentText != null && currentText.isNotEmpty) ...[
-          const SizedBox(height: 14),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.25),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 38,
+            child: Center(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 320),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  final inAnimation = Tween<Offset>(
+                    begin: const Offset(0.0, 0.30),
                     end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
+                  ).animate(CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ));
+                  return SlideTransition(
+                    position: inAnimation,
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
+                  );
+                },
+                child: ClaudeShimmerText(
+                  currentText,
+                  key: ValueKey<String>(currentText),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFFE2E8F0),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                  ),
                 ),
-              );
-            },
-            child: Text(
-              currentText,
-              key: ValueKey<String>(currentText),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.2,
               ),
             ),
           ),

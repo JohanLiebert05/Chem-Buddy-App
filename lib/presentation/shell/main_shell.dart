@@ -57,6 +57,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
+          bottom: false,
           child: PageView(
             controller: _pages,
             physics: const BouncingScrollPhysics(),
@@ -70,10 +71,12 @@ class _MainShellState extends ConsumerState<MainShell> {
           ),
         ),
         extendBody: true,
-        bottomNavigationBar: _ModernBottomNav(
-          selectedIndex: index,
-          onTabSelected: _goTo,
-        ),
+        bottomNavigationBar: (View.of(context).viewInsets.bottom > 0)
+            ? null
+            : _ModernBottomNav(
+                selectedIndex: index,
+                onTabSelected: _goTo,
+              ),
       ),
     );
   }

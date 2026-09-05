@@ -99,7 +99,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                 value: studentsAsync.when(
                   data: (data) => data.length.toString(),
                   loading: () => '...',
-                  error: (_, __) => '0',
+                  error: (_, _) => '0',
                 ),
                 icon: Icons.people,
                 color: AppColors.blue,
@@ -112,7 +112,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                 value: docsAsync.when(
                   data: (data) => data.length.toString(),
                   loading: () => '...',
-                  error: (_, __) => '0',
+                  error: (_, _) => '0',
                 ),
                 icon: Icons.description,
                 color: AppColors.purple,
@@ -129,7 +129,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                 value: announcementsAsync.when(
                   data: (data) => data.length.toString(),
                   loading: () => '...',
-                  error: (_, __) => '0',
+                  error: (_, _) => '0',
                 ),
                 icon: Icons.campaign,
                 color: AppColors.success,
@@ -142,7 +142,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                 value: aiUsageTodayAsync.when(
                   data: (count) => count.toString(),
                   loading: () => '...',
-                  error: (_, __) => '0',
+                  error: (_, _) => '0',
                 ),
                 icon: Icons.auto_awesome,
                 color: AppColors.warning,
@@ -190,7 +190,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                   );
                 },
                 loading: () => const Center(child: LinearProgressIndicator()),
-                error: (_, __) => const Text('Cache metrics unavailable', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                error: (_, _) => const Text('Cache metrics unavailable', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
               ),
             ],
           ),
@@ -285,7 +285,7 @@ class _AppConfigSheet extends ConsumerWidget {
                 }
                 return ListView.separated(
                   itemCount: configs.length,
-                  separatorBuilder: (_, __) => const Divider(color: AppColors.borderSubtle),
+                  separatorBuilder: (_, _) => const Divider(color: AppColors.borderSubtle),
                   itemBuilder: (ctx, idx) {
                     final item = configs[idx];
                     final key = item['key']?.toString() ?? '';

@@ -42,7 +42,7 @@ Selection rules state that Laporte forbidden transitions have lower extinction c
 
         // Must have key terms
         expect(card.keyTerms.isNotEmpty, true, reason: 'Card must have key terms: ${card.question}');
-        expect(card.keyTerms.length >= 1 && card.keyTerms.length <= 5, true);
+        expect(card.keyTerms.isNotEmpty && card.keyTerms.length <= 5, true);
       }
     });
 

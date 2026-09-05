@@ -58,7 +58,15 @@ class ChemistryTextFormatter {
   /// formatted Unicode mathematical representation with zero raw TeX commands.
   static String toUnicodeMath(String? expr) {
     if (expr == null || expr.isEmpty) return '';
-    return _cleanMathExpression(expr.trim());
+    var s = expr.trim();
+    if (s.startsWith(r'$$') && s.endsWith(r'$$') && s.length >= 4) {
+      s = s.substring(2, s.length - 2).trim();
+    } else if (s.startsWith(r'\[') && s.endsWith(r'\]') && s.length >= 4) {
+      s = s.substring(2, s.length - 2).trim();
+    } else if (s.startsWith(r'$') && s.endsWith(r'$') && s.length >= 2) {
+      s = s.substring(1, s.length - 1).trim();
+    }
+    return _cleanMathExpression(s);
   }
 
   /// Comprehensive chemistry-aware sanitization pipeline.
@@ -298,6 +306,11 @@ class ChemistryTextFormatter {
     s = s.replaceAllMapped(RegExp(r'\^\{([^}]+)\}'), (m) => _toSuperscript(m[1] ?? ''));
     s = s.replaceAllMapped(RegExp(r'_\{([^}]+)\}'), (m) => _toSubscript(m[1] ?? ''));
 
+    // Handle naked superscripts and subscripts (without curly braces: ^-, ^+, ^2-, ^3+, ^2, _2)
+    s = s.replaceAllMapped(RegExp(r'\^([0-9]*[-+−])'), (m) => _toSuperscript(m[1] ?? ''));
+    s = s.replaceAllMapped(RegExp(r'\^([0-9a-zA-Z]+)'), (m) => _toSuperscript(m[1] ?? ''));
+    s = s.replaceAllMapped(RegExp(r'_([0-9a-zA-Z]+)'), (m) => _toSubscript(m[1] ?? ''));
+
     // Remove only truly invalid/noise LaTeX commands (NOT valid KaTeX macros like \log, \ln, \sin, \left, \right)
     // Safe to strip: display-only structure wrappers that have no Unicode equivalent
     s = s.replaceAll(r'\displaystyle', '');
@@ -350,6 +363,7 @@ class ChemistryTextFormatter {
     s = s.replaceAll(RegExp(r'\\(?![$\\])([a-zA-Z]+)\{'), r'\{'); // \cmd{ → { for bracket preservation
     s = s.replaceAll(RegExp(r'\\(?![$\\])[a-zA-Z]+\b'), '');
     s = s.replaceAll(r'\', '');
+    s = s.replaceAll(r'$$', '').replaceAll(r'$', '');
 
     return s.trim();
   }

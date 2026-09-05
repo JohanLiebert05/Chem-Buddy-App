@@ -29,6 +29,32 @@ class ReactionDiagramSvgCatalog {
         return beckmannSvg;
       case 'benzoin':
         return benzoinSvg;
+      case 'michael':
+        return michaelSvg;
+      case 'claisen':
+        return claisenSvg;
+      case 'baeyer_villiger':
+      case 'baeyer-villiger':
+        return baeyerVilligerSvg;
+      case 'favorskii':
+        return favorskiiSvg;
+      case 'mannich':
+        return mannichSvg;
+      case 'pinacol':
+      case 'pinacol_pinacolone':
+      case 'pinacol-pinacolone':
+        return pinacolSvg;
+      case 'robinson':
+      case 'robinson_annulation':
+      case 'robinson-annulation':
+        return robinsonSvg;
+      case 'curtius':
+        return curtiusSvg;
+      case 'cope':
+        return copeSvg;
+      case 'claisen_sigmatropic':
+      case 'claisen-sigmatropic':
+        return claisenSigmatropicSvg;
       default:
         return defaultGenericSvg(mechanismId);
     }
@@ -400,7 +426,303 @@ class ReactionDiagramSvgCatalog {
   <text x="510" y="78" fill="#10B981" font-family="sans-serif" font-size="14" font-weight="bold">Ph-CH(OH)-CO-Ph (Benzoin)</text>
   <text x="510" y="105" fill="#E2E8F0" font-family="sans-serif" font-size="11.5">α-Hydroxy Ketone</text>
   <text x="510" y="125" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Reagent: NaCN / KCN in aq. EtOH</text>
-  <text x="510" y="145" fill="#94A3B8" font-family="sans-serif" font-size="10.5">CN⁻ is unique nucleophile & leaving group</text>
+  <text x="510" y="145" fill="#94A3B8" font-family="sans-serif" font-size="10.5">CN⁻ is unique nucleophile &amp; leaving group</text>
+</svg>
+""";
+
+  // 12. MICHAEL ADDITION SVG
+  static const String michaelSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="carr12" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+    <marker id="gold12" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#F59E0B" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Michael Addition: Conjugate 1,4-Addition of Enolate to α,β-Unsaturated Enone</text>
+  <text x="35" y="75" fill="#38BDF8" font-family="sans-serif" font-size="13" font-weight="bold">Michael Donor (Enolate)</text>
+  <text x="35" y="98" fill="#FFFFFF" font-family="sans-serif" font-size="12">CH(CO₂Et)₂⁻</text>
+  <text x="35" y="128" fill="#F59E0B" font-family="sans-serif" font-size="11.5">+ CH₂=CH-CO-Me (Acceptor)</text>
+  <path d="M 125 95 Q 165 65 190 90" fill="none" stroke="#F59E0B" stroke-width="2" marker-end="url(#gold12)"/>
+  <text x="135" y="60" fill="#F59E0B" font-family="sans-serif" font-size="10.5">1,4-attack on β-carbon</text>
+  <line x1="195" y1="100" x2="240" y2="100" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr12)"/>
+  <rect x="255" y="48" width="200" height="118" rx="10" fill="#1E1A38" stroke="#8B5CF6"/>
+  <text x="268" y="74" fill="#F59E0B" font-family="sans-serif" font-size="12" font-weight="bold">Extended Enolate Adduct</text>
+  <text x="268" y="98" fill="#38BDF8" font-family="sans-serif" font-size="11.5">(EtO₂C)₂CH-CH₂-CH=C(O⁻)Me</text>
+  <text x="268" y="122" fill="#E2E8F0" font-family="sans-serif" font-size="11">Thermodynamic 1,4-addition</text>
+  <text x="268" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Soft nucleophile / soft electrophile</text>
+  <line x1="470" y1="100" x2="520" y2="100" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr12)"/>
+  <text x="475" y="90" fill="#10B981" font-family="sans-serif" font-size="11">+ H⁺</text>
+  <rect x="535" y="48" width="200" height="118" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="548" y="76" fill="#10B981" font-family="sans-serif" font-size="13.5" font-weight="bold">1,5-Dicarbonyl Adduct</text>
+  <text x="548" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="11.5">(EtO₂C)₂CH-CH₂-CH₂-CO-Me</text>
+  <text x="548" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">Michael Adduct (Neutral)</text>
+  <text x="548" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Base: EtONa / KOH / piperidine</text>
+</svg>
+""";
+
+  // 13. CLAISEN ESTER CONDENSATION SVG
+  static const String claisenSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="carr13" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Claisen Ester Condensation: Base-Induced Self-Condensation of Esters</text>
+  <text x="35" y="75" fill="#38BDF8" font-family="sans-serif" font-size="13" font-weight="bold">2 CH₃COOEt + NaOEt</text>
+  <text x="35" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">1) Ester enolate: ⁻CH₂COOEt</text>
+  <text x="35" y="125" fill="#FFFFFF" font-family="sans-serif" font-size="12">2) Nucleophilic acyl addition</text>
+  <line x1="205" y1="95" x2="255" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr13)"/>
+  <rect x="270" y="48" width="195" height="118" rx="10" fill="#1E1A38" stroke="#F59E0B"/>
+  <text x="280" y="74" fill="#F59E0B" font-family="sans-serif" font-size="12" font-weight="bold">Tetrahedral Intermediate</text>
+  <text x="280" y="98" fill="#38BDF8" font-family="sans-serif" font-size="12">[CH₃-C(O⁻)(OEt)-CH₂COOEt]</text>
+  <text x="280" y="122" fill="#E2E8F0" font-family="sans-serif" font-size="11">Expulsion of EtO⁻ (Leaving group)</text>
+  <text x="280" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Forms acetoacetate enolate (pKa ≈ 11)</text>
+  <line x1="480" y1="95" x2="525" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr13)"/>
+  <text x="485" y="85" fill="#10B981" font-family="sans-serif" font-size="10.5">H₃O⁺ workup</text>
+  <rect x="540" y="48" width="195" height="118" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="552" y="76" fill="#10B981" font-family="sans-serif" font-size="13.5" font-weight="bold">Ethyl Acetoacetate</text>
+  <text x="552" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">CH₃-CO-CH₂-COOEt</text>
+  <text x="552" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">β-Keto Ester + EtOH</text>
+  <text x="552" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Irreversible deprotonation is driver</text>
+</svg>
+""";
+
+  // 14. BAEYER-VILLIGER OXIDATION SVG
+  static const String baeyerVilligerSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="carr14" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Baeyer-Villiger Oxidation: Peroxy Acid Insertion into Carbonyl Carbon</text>
+  <text x="35" y="75" fill="#38BDF8" font-family="sans-serif" font-size="13" font-weight="bold">Ketone: R-CO-R'</text>
+  <text x="35" y="98" fill="#FFFFFF" font-family="sans-serif" font-size="12">+ mCPBA (Ar-CO-O-OH)</text>
+  <text x="35" y="125" fill="#F59E0B" font-family="sans-serif" font-size="11">Nucleophilic peracid addition</text>
+  <line x1="205" y1="95" x2="250" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr14)"/>
+  <rect x="265" y="48" width="200" height="118" rx="10" fill="#1E1A38" stroke="#F59E0B"/>
+  <text x="276" y="74" fill="#F59E0B" font-family="sans-serif" font-size="12" font-weight="bold">Criegee Intermediate [‡]</text>
+  <text x="276" y="98" fill="#38BDF8" font-family="sans-serif" font-size="11.5">[R(R')C(OH)-O-O-COAr]</text>
+  <text x="276" y="122" fill="#E2E8F0" font-family="sans-serif" font-size="11">1,2-Migration with stereoretention</text>
+  <text x="276" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Migratory: 3° &gt; 2° ≈ Ph &gt; 1° &gt; Me</text>
+  <line x1="480" y1="95" x2="525" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr14)"/>
+  <text x="485" y="85" fill="#EF4444" font-family="sans-serif" font-size="10.5">- ArCOO⁻</text>
+  <rect x="540" y="48" width="195" height="118" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="552" y="76" fill="#10B981" font-family="sans-serif" font-size="13.5" font-weight="bold">Ester / Lactone</text>
+  <text x="552" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">R-CO-O-R' + ArCOOH</text>
+  <text x="552" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">Cyclic ketone → Lactone</text>
+  <text x="552" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">e.g. Cyclohexanone → ε-Caprolactone</text>
+</svg>
+""";
+
+  // 15. FAVORSKII REARRANGEMENT SVG
+  static const String favorskiiSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="carr15" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Favorskii Rearrangement: Base-Induced Ring Contraction via Cyclopropanone</text>
+  <text x="35" y="75" fill="#38BDF8" font-family="sans-serif" font-size="13" font-weight="bold">2-Halocyclohexanone</text>
+  <text x="35" y="98" fill="#FFFFFF" font-family="sans-serif" font-size="12">+ MeO⁻ Base</text>
+  <text x="35" y="125" fill="#F59E0B" font-family="sans-serif" font-size="11">Deprotonation at α'-carbon</text>
+  <line x1="195" y1="95" x2="245" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr15)"/>
+  <text x="202" y="85" fill="#EF4444" font-family="sans-serif" font-size="10.5">- Cl⁻ / Br⁻</text>
+  <rect x="260" y="48" width="205" height="118" rx="10" fill="#1E1A38" stroke="#F59E0B"/>
+  <text x="272" y="74" fill="#F59E0B" font-family="sans-serif" font-size="12" font-weight="bold">Cyclopropanone Intermediate</text>
+  <text x="272" y="98" fill="#38BDF8" font-family="sans-serif" font-size="11.5">Bicyclo[3.1.0]hexan-2-one</text>
+  <text x="272" y="122" fill="#E2E8F0" font-family="sans-serif" font-size="11">Strained 3-membered ring</text>
+  <text x="272" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10.5">MeO⁻ attacks C=O; ring cleaved</text>
+  <line x1="480" y1="95" x2="525" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr15)"/>
+  <text x="485" y="85" fill="#10B981" font-family="sans-serif" font-size="10.5">Ring opening</text>
+  <rect x="540" y="48" width="195" height="118" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="552" y="76" fill="#10B981" font-family="sans-serif" font-size="13.5" font-weight="bold">Ring-Contracted Ester</text>
+  <text x="552" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">Methyl Cyclopentanecarboxylate</text>
+  <text x="552" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">6-membered → 5-membered ring</text>
+  <text x="552" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Relief of ring strain drives cleavage</text>
+</svg>
+""";
+
+  // 16. MANNICH REACTION SVG
+  static const String mannichSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="carr16" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Mannich Reaction: Multi-Component Condensation via Iminium Intermediate</text>
+  <text x="35" y="75" fill="#38BDF8" font-family="sans-serif" font-size="13" font-weight="bold">HCHO + Me₂NH·HCl</text>
+  <text x="35" y="98" fill="#FFFFFF" font-family="sans-serif" font-size="12">+ Acetophenone (Ph-CO-CH₃)</text>
+  <text x="35" y="125" fill="#F59E0B" font-family="sans-serif" font-size="11">Condensation generates iminium</text>
+  <line x1="210" y1="95" x2="255" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr16)"/>
+  <rect x="270" y="48" width="195" height="118" rx="10" fill="#1E1A38" stroke="#8B5CF6"/>
+  <text x="282" y="74" fill="#F59E0B" font-family="sans-serif" font-size="12" font-weight="bold">Iminium Ion + Ketone Enol</text>
+  <text x="282" y="98" fill="#38BDF8" font-family="sans-serif" font-size="12">[CH₂=N⁺Me₂] + Ph-C(OH)=CH₂</text>
+  <text x="282" y="122" fill="#E2E8F0" font-family="sans-serif" font-size="11">Enol π-electrons attack iminium</text>
+  <text x="282" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10.5">High electrophilicity of C=N⁺</text>
+  <line x1="480" y1="95" x2="525" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr16)"/>
+  <text x="488" y="85" fill="#10B981" font-family="sans-serif" font-size="10.5">- H⁺</text>
+  <rect x="540" y="48" width="195" height="118" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="552" y="76" fill="#10B981" font-family="sans-serif" font-size="13.5" font-weight="bold">Mannich Base (β-Amino Ketone)</text>
+  <text x="552" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">Ph-CO-CH₂-CH₂-NMe₂</text>
+  <text x="552" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">Precursor to α,β-enones</text>
+  <text x="552" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Key in tropinone &amp; cocaine synthesis</text>
+</svg>
+""";
+
+  // 17. PINACOL-PINACOLONE REARRANGEMENT SVG
+  static const String pinacolSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="carr17" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Pinacol-Pinacolone Rearrangement: Acid-Induced 1,2-Alkyl Shift in 1,2-Diols</text>
+  <text x="35" y="75" fill="#38BDF8" font-family="sans-serif" font-size="13" font-weight="bold">Pinacol (1,2-Diol)</text>
+  <text x="35" y="98" fill="#FFFFFF" font-family="sans-serif" font-size="12">(CH₃)₂C(OH)-C(OH)(CH₃)₂</text>
+  <text x="35" y="125" fill="#F59E0B" font-family="sans-serif" font-size="11">+ H⁺; - H₂O (Loss of water)</text>
+  <line x1="205" y1="95" x2="250" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr17)"/>
+  <rect x="265" y="48" width="200" height="118" rx="10" fill="#1E1A38" stroke="#F59E0B"/>
+  <text x="276" y="74" fill="#F59E0B" font-family="sans-serif" font-size="12" font-weight="bold">3° Carbocation &amp; 1,2-Shift</text>
+  <text x="276" y="98" fill="#38BDF8" font-family="sans-serif" font-size="11.5">[(CH₃)₂C(OH)-C⁺(CH₃)₂]</text>
+  <text x="276" y="122" fill="#E2E8F0" font-family="sans-serif" font-size="11">Adjacent -OH lone pair drives</text>
+  <text x="276" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10.5">1,2-methyl shift → oxocarbenium</text>
+  <line x1="480" y1="95" x2="525" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr17)"/>
+  <text x="488" y="85" fill="#10B981" font-family="sans-serif" font-size="10.5">- H⁺</text>
+  <rect x="540" y="48" width="195" height="118" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="552" y="76" fill="#10B981" font-family="sans-serif" font-size="13.5" font-weight="bold">Pinacolone (Ketone)</text>
+  <text x="552" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">(CH₃)₃C-CO-CH₃</text>
+  <text x="552" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">3,3-Dimethylbutan-2-one</text>
+  <text x="552" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Thermodynamic driving: C=O bond</text>
+</svg>
+""";
+
+  // 18. ROBINSON ANNULATION SVG
+  static const String robinsonSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="carr18" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Robinson Annulation: Tandem Michael Addition &amp; Intramolecular Aldol Cyclization</text>
+  <text x="35" y="75" fill="#38BDF8" font-family="sans-serif" font-size="13" font-weight="bold">Cyclohexanone + MVK</text>
+  <text x="35" y="98" fill="#FFFFFF" font-family="sans-serif" font-size="12">Base (KOH / NaOEt)</text>
+  <text x="35" y="125" fill="#F59E0B" font-family="sans-serif" font-size="11">Step 1: Michael 1,4-Addition</text>
+  <line x1="195" y1="95" x2="245" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr18)"/>
+  <rect x="260" y="48" width="205" height="118" rx="10" fill="#1E1A38" stroke="#F59E0B"/>
+  <text x="272" y="74" fill="#F59E0B" font-family="sans-serif" font-size="12" font-weight="bold">1,5-Diketone Intermediate</text>
+  <text x="272" y="98" fill="#38BDF8" font-family="sans-serif" font-size="11.5">2-(3-oxobutyl)cyclohexanone</text>
+  <text x="272" y="122" fill="#E2E8F0" font-family="sans-serif" font-size="11">Step 2: Intramolecular Aldol</text>
+  <text x="272" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Forms 6-membered fused ring</text>
+  <line x1="480" y1="95" x2="525" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr18)"/>
+  <text x="485" y="85" fill="#10B981" font-family="sans-serif" font-size="10.5">Δ, - H₂O</text>
+  <rect x="540" y="48" width="195" height="118" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="552" y="76" fill="#10B981" font-family="sans-serif" font-size="13.5" font-weight="bold">Δ¹,⁹-2-Octalone (Fused Enone)</text>
+  <text x="552" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">Bicyclic α,β-Unsaturated Ketone</text>
+  <text x="552" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">Conjugated bicyclic system</text>
+  <text x="552" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Cornerstone of steroid synthesis</text>
+</svg>
+""";
+
+  // 19. CURTIUS REARRANGEMENT SVG
+  static const String curtiusSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="carr19" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Curtius Rearrangement: Thermal N₂ Extrusion &amp; Decarboxylative Amine Synthesis</text>
+  <text x="35" y="75" fill="#38BDF8" font-family="sans-serif" font-size="13" font-weight="bold">Acyl Azide: R-CO-N₃</text>
+  <text x="35" y="98" fill="#FFFFFF" font-family="sans-serif" font-size="12">Thermal activation (Δ)</text>
+  <text x="35" y="125" fill="#EF4444" font-family="sans-serif" font-size="11">Extrusion of :N≡N: (N₂)</text>
+  <line x1="195" y1="95" x2="245" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr19)"/>
+  <text x="202" y="85" fill="#EF4444" font-family="sans-serif" font-size="10.5">- N₂ (RDS)</text>
+  <rect x="260" y="48" width="200" height="118" rx="10" fill="#1E1A38" stroke="#F59E0B"/>
+  <text x="272" y="74" fill="#F59E0B" font-family="sans-serif" font-size="12" font-weight="bold">Isocyanate Intermediate</text>
+  <text x="272" y="98" fill="#38BDF8" font-family="sans-serif" font-size="12">R-N=C=O</text>
+  <text x="272" y="122" fill="#E2E8F0" font-family="sans-serif" font-size="11">100% Retention of configuration</text>
+  <text x="272" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10.5">+ H₂O → R-NH-COOH (Carbamic acid)</text>
+  <line x1="475" y1="95" x2="525" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr19)"/>
+  <text x="482" y="85" fill="#10B981" font-family="sans-serif" font-size="10.5">- CO₂</text>
+  <rect x="540" y="48" width="195" height="118" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="552" y="76" fill="#10B981" font-family="sans-serif" font-size="13.5" font-weight="bold">1° Amine (R-NH₂)</text>
+  <text x="552" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">Pure Primary Amine + CO₂</text>
+  <text x="552" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">Chirality transferred intact</text>
+  <text x="552" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Mild alternative to Hofmann / Schmidt</text>
+</svg>
+""";
+
+  // 20. [3,3]-COPE REARRANGEMENT SVG
+  static const String copeSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="carr20" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">[3,3]-Cope Rearrangement: Concerted Suprafacial Shift via Chair-Like Transition State</text>
+  <text x="35" y="75" fill="#38BDF8" font-family="sans-serif" font-size="13" font-weight="bold">1,5-Hexadiene Framework</text>
+  <text x="35" y="98" fill="#FFFFFF" font-family="sans-serif" font-size="12">C3-C4 σ-bond breaking</text>
+  <text x="35" y="125" fill="#F59E0B" font-family="sans-serif" font-size="11">Thermal activation (Δ 150-200°C)</text>
+  <line x1="205" y1="95" x2="250" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr20)"/>
+  <rect x="265" y="48" width="205" height="118" rx="10" fill="#1E1A38" stroke="#F59E0B"/>
+  <text x="276" y="74" fill="#F59E0B" font-family="sans-serif" font-size="12" font-weight="bold">Chair-Like TS [‡] (6π Electrons)</text>
+  <text x="276" y="98" fill="#38BDF8" font-family="sans-serif" font-size="11.5">[3s + 3s] Suprafacial overlap</text>
+  <text x="276" y="122" fill="#E2E8F0" font-family="sans-serif" font-size="11">Simultaneous C-C break &amp; make</text>
+  <text x="276" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Chair preferred over boat by &gt; 5 kcal/mol</text>
+  <line x1="485" y1="95" x2="525" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr20)"/>
+  <rect x="540" y="48" width="195" height="118" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="552" y="76" fill="#10B981" font-family="sans-serif" font-size="13.5" font-weight="bold">Rearranged 1,5-Hexadiene</text>
+  <text x="552" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">New C1-C6 σ-bond formed</text>
+  <text x="552" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">Complete chirality transfer</text>
+  <text x="552" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Oxy-Cope variant accelerated by 10¹²</text>
+</svg>
+""";
+
+  // 21. [3,3]-CLAISEN REARRANGEMENT SVG
+  static const String claisenSigmatropicSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
+  <defs>
+    <marker id="carr21" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#141224" rx="14" stroke="#2D284E" stroke-width="1.5"/>
+  <text x="30" y="32" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">[3,3]-Claisen Rearrangement: Thermal Shift of Allyl Vinyl / Aryl Ethers</text>
+  <text x="35" y="75" fill="#38BDF8" font-family="sans-serif" font-size="13" font-weight="bold">Allyl Phenyl Ether</text>
+  <text x="35" y="98" fill="#FFFFFF" font-family="sans-serif" font-size="12">Ph-O-CH₂-CH=CH₂</text>
+  <text x="35" y="125" fill="#F59E0B" font-family="sans-serif" font-size="11">Thermal activation (Δ 200°C)</text>
+  <line x1="195" y1="95" x2="245" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr21)"/>
+  <rect x="260" y="48" width="205" height="118" rx="10" fill="#1E1A38" stroke="#F59E0B"/>
+  <text x="272" y="74" fill="#F59E0B" font-family="sans-serif" font-size="12" font-weight="bold">Chair-Like Transition State</text>
+  <text x="272" y="98" fill="#38BDF8" font-family="sans-serif" font-size="11.5">Cleaves C-O; Forms C-C bond</text>
+  <text x="272" y="122" fill="#E2E8F0" font-family="sans-serif" font-size="11">Cyclohexadienone intermediate</text>
+  <text x="272" y="142" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Rapid keto-enol aromatization</text>
+  <line x1="480" y1="95" x2="525" y2="95" stroke="#38BDF8" stroke-width="2" marker-end="url(#carr21)"/>
+  <text x="488" y="85" fill="#10B981" font-family="sans-serif" font-size="10.5">Enolize</text>
+  <rect x="540" y="48" width="195" height="118" rx="10" fill="#064E3B" fill-opacity="0.3" stroke="#10B981" stroke-width="1.2"/>
+  <text x="552" y="76" fill="#10B981" font-family="sans-serif" font-size="13.5" font-weight="bold">ortho-Allylphenol</text>
+  <text x="552" y="100" fill="#FFFFFF" font-family="sans-serif" font-size="12">o-(CH₂=CH-CH₂)C₆H₄-OH</text>
+  <text x="552" y="124" fill="#E2E8F0" font-family="sans-serif" font-size="11">Restores aromatic resonance</text>
+  <text x="552" y="144" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Aliphatic: γ,δ-unsaturated carbonyl</text>
 </svg>
 """;
 

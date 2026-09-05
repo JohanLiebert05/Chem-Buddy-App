@@ -49,7 +49,7 @@ class ChemDrawLibrary {
       steps: steps,
       svgPath: folders[m.id],
       svgUrl: m.svgUrl,
-      svgContent: null,
+      svgContent: m.svgContent,
       keyApplications: m.keyApplications,
       limitations: m.limitations,
       isVerified: false,

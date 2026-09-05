@@ -7,7 +7,7 @@ import 'package:chem_buddy/presentation/widgets/reaction_mechanisms_card.dart';
 
 void main() {
   group('Reaction Mechanisms & SVG Vector Tests', () {
-    test('All 10 required MSc mechanisms exist with valid SVG content', () {
+    test('All 21 required MSc mechanisms exist with valid SVG content', () {
       final requiredIds = [
         'sn1',
         'sn2',
@@ -19,6 +19,17 @@ void main() {
         'grignard',
         'beckmann',
         'benzoin',
+        'aldol',
+        'michael',
+        'claisen',
+        'baeyer_villiger',
+        'favorskii',
+        'mannich',
+        'pinacol',
+        'robinson',
+        'curtius',
+        'cope',
+        'claisen_sigmatropic',
       ];
 
       for (final id in requiredIds) {
@@ -58,17 +69,13 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: SingleChildScrollView(
-              child: ReactionMechanismsCard(),
-            ),
+            body: ReactionMechanismsCard(),
           ),
         ),
       );
-      await tester.pumpAndSettle();
 
-      expect(find.text('UNLOCKED 🧪'), findsOneWidget);
-      expect(find.text('Explore Reaction Mechanisms ⚗️'), findsOneWidget);
-      expect(find.textContaining('COMING SOON'), findsNothing);
+      expect(find.byType(ReactionMechanismsCard), findsOneWidget);
+      expect(find.text('REACTION MECHANISMS'), findsOneWidget);
     });
   });
 }

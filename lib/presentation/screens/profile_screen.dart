@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +9,8 @@ import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
 import '../../data/remote/supabase_service.dart';
+import '../../data/services/export_service.dart';
+import '../../data/services/reaction_mechanism_service.dart';
 import '../providers/app_providers.dart';
 import 'app_guides_screen.dart';
 import 'beginner_tutorial_dialog.dart';
@@ -21,6 +25,8 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _testingConnection = false;
+  bool _isExporting = false;
+  String _selectedReactionForExport = 'all';
 
   Future<void> _testSync() async {
     setState(() => _testingConnection = true);
@@ -39,6 +45,98 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           duration: const Duration(seconds: 4),
         ),
       );
+    }
+  }
+
+  Future<void> _exportAttendance({required bool isPdf}) async {
+    setState(() => _isExporting = true);
+    try {
+      final state = ref.read(appControllerProvider);
+      final repo = ref.read(chemRepositoryProvider);
+      final file = isPdf
+          ? await ExportService.instance.generateAttendancePdf(profile: state.profile, repository: repo)
+          : await ExportService.instance.generateAttendanceCsv(profile: state.profile, repository: repo);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.success,
+          content: Text(
+            isPdf
+                ? '🟢 Attendance PDF Generated! Opening share sheet...'
+                : '🟢 Attendance Spreadsheet (CSV) Generated! Opening share sheet...',
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
+      await ExportService.instance.shareFile(
+        file,
+        subject: 'Chem Buddy Attendance Audit - ${state.profile.fullName}',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.danger,
+          content: Text('Failed to export attendance: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  Future<void> _exportReaction({required bool isPdf}) async {
+    setState(() => _isExporting = true);
+    try {
+      final mechanisms = ReactionMechanismService.instance.mechanisms;
+      File file;
+      if (isPdf) {
+        if (_selectedReactionForExport == 'all') {
+          file = await ExportService.instance.generateReactionPdf(reactions: mechanisms);
+        } else {
+          final rxn = ReactionMechanismService.instance.find(_selectedReactionForExport);
+          file = await ExportService.instance.generateReactionPdf(singleReaction: rxn);
+        }
+      } else {
+        if (_selectedReactionForExport == 'all') {
+          file = await ExportService.instance.generateReactionsCsv(mechanisms: mechanisms);
+        } else {
+          final rxn = ReactionMechanismService.instance.find(_selectedReactionForExport);
+          file = await ExportService.instance.generateReactionsCsv(mechanisms: rxn != null ? [rxn] : mechanisms);
+        }
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.success,
+          content: Text(
+            isPdf
+                ? '🟢 Reaction Dossier PDF Ready! Opening share sheet...'
+                : '🟢 Reaction Catalog Spreadsheet Ready! Opening share sheet...',
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
+      await ExportService.instance.shareFile(
+        file,
+        subject: _selectedReactionForExport == 'all'
+            ? 'Chem Buddy MSc Reactions Compendium'
+            : 'Chem Buddy - $_selectedReactionForExport Mechanism',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.danger,
+          content: Text('Failed to export reaction: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
     }
   }
 
@@ -101,10 +199,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _buildMetricTile(
-                      label: 'Questions Solved',
-                      value: '${analytics.totalQuestionsAnswered}',
+                      label: 'Flashcards Done',
+                      value: '${analytics.totalFlashcardsReviewed}',
                       color: AppColors.purpleBright,
-                      icon: Icons.quiz_outlined,
+                      icon: Icons.flip_to_front_outlined,
                     ),
                   ),
                 ],
@@ -114,117 +212,245 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   Expanded(
                     child: _buildMetricTile(
-                      label: 'Cards Mastered',
-                      value: '${analytics.flashcardsMatureCount}',
+                      label: 'AI Questions',
+                      value: '${analytics.totalChatMessages}',
                       color: AppColors.blue,
-                      icon: Icons.school_outlined,
+                      icon: Icons.psychology_outlined,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: _buildMetricTile(
                       label: 'Study Streak',
-                      value: '${analytics.studyStreakDays} Day${analytics.studyStreakDays == 1 ? "" : "s"} 🔥',
+                      value: '${analytics.streakDays}d 🔥',
                       color: AppColors.warning,
                       icon: Icons.local_fire_department_outlined,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-
-              // Weak Areas Section
-              const Text('Chemistry Topic Mastery Breakdown', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white)),
-              const SizedBox(height: 8),
-
-              if (analytics.weakTopics.isNotEmpty) ...[
-                ...analytics.weakTopics.map((w) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.danger.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Text('🔴', style: TextStyle(fontSize: 14)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(w.topic, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white)),
-                              Text(
-                                '${w.accuracy.toStringAsFixed(0)}% Accuracy · Needs Review',
-                                style: const TextStyle(color: AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            ref.read(shellTabProvider.notifier).state = 2; // Ask AI tab
-                          },
-                          style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
-
-                          child: const Text('Study →', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 12)),
-                        ),
-                      ],
-                    ),
-                  ),
-                )),
-              ] else ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceElevated,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Row(
+              if (analytics.strongestTopics.isNotEmpty || analytics.weakestTopics.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                const Divider(color: AppColors.borderSubtle, height: 1),
+                const SizedBox(height: 12),
+                if (analytics.strongestTopics.isNotEmpty) ...[
+                  Row(
                     children: [
-                      Icon(Icons.check_circle_outline, color: AppColors.success, size: 18),
-                      SizedBox(width: 8),
+                      const Icon(Icons.check_circle_outline, color: AppColors.success, size: 15),
+                      const SizedBox(width: 6),
+                      const Text('Mastered Topics: ', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
                       Expanded(
                         child: Text(
-                          'No weak topics identified yet. Complete quizzes to track your chemistry mastery!',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          analytics.strongestTopics.join(', '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                         ),
                       ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 4),
+                ],
+                if (analytics.weakestTopics.isNotEmpty)
+                  Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 15),
+                      const SizedBox(width: 6),
+                      const Text('Review Needed: ', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                      Expanded(
+                        child: Text(
+                          analytics.weakestTopics.join(', '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: AppColors.warning, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ],
           ),
         ),
-        const SizedBox(height: 12),
 
-        // 2. ACADEMIC COURSES
-        const SectionTitle('Academic Courses'),
-        if (state.subjects.isEmpty)
-          const GlowCard(
-            child: Text('No courses added yet. Tap Add Custom Subject to get started.', style: TextStyle(color: AppColors.textMuted)),
-          )
-        else
-          ...state.subjects.map(
-            (s) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: GlowCard(
-                onTap: () => _addSubject(context, ref, existing: s),
-                child: Row(
-                  children: [
-                    Container(width: 10, height: 10, decoration: BoxDecoration(color: Color(s.colorHex), shape: BoxShape.circle)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(s.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                          Text('${s.code}${s.teacher.isEmpty ? '' : ' · ${s.teacher}'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                        ],
+        // 2. DATA & REPORTS EXPORT (PDF & EXCEL / CSV)
+        const SectionTitle('Reports & Data Export (PDF / Excel / CSV) 📄📊'),
+        GlowCard(
+          padding: const EdgeInsets.all(16),
+          borderColor: AppColors.purple.withValues(alpha: 0.4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.purple.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.file_download_outlined, color: AppColors.purpleBright, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Academic & Reaction Exporter', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                        Text('Generate publication-grade PDFs or Excel / CSV spreadsheets', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                      ],
+                    ),
+                  ),
+                  if (_isExporting)
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purpleBright),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Divider(color: AppColors.borderSubtle, height: 1),
+              const SizedBox(height: 14),
+
+              // Attendance Subsection
+              const Text('1. Attendance & Coursework Audit', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white)),
+              const SizedBox(height: 4),
+              const Text('Official audit report with percentage, risk status, safe skips, and complete session history.', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.3)),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.purple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
+                      onPressed: _isExporting ? null : () => _exportAttendance(isPdf: true),
+                      icon: const Icon(Icons.picture_as_pdf_rounded, size: 16),
+                      label: const Text('Export PDF 📄', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.accentCyan),
+                        foregroundColor: AppColors.accentCyan,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: _isExporting ? null : () => _exportAttendance(isPdf: false),
+                      icon: const Icon(Icons.table_chart_outlined, size: 16),
+                      label: const Text('Excel / CSV 📊', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+              const Divider(color: AppColors.borderSubtle, height: 1),
+              const SizedBox(height: 14),
+
+              // Reaction Mechanism Subsection
+              const Text('2. MSc Reaction Mechanism Dossier', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white)),
+              const SizedBox(height: 4),
+              const Text('Export full 21-reaction compendium or choose any reaction monograph with step-by-step electron movement.', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.3)),
+              const SizedBox(height: 10),
+
+              // Dropdown Picker
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceElevated,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedReactionForExport,
+                    dropdownColor: AppColors.surfaceElevated,
+                    style: const TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600),
+                    items: [
+                      const DropdownMenuItem(
+                        value: 'all',
+                        child: Text('📚 Complete 21-Reaction Master Compendium'),
+                      ),
+                      ...ReactionMechanismService.instance.mechanisms.map(
+                        (m) => DropdownMenuItem(
+                          value: m.id,
+                          child: Text('⚗️ ${m.name}'),
+                        ),
+                      ),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedReactionForExport = val);
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.purple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: _isExporting ? null : () => _exportReaction(isPdf: true),
+                      icon: const Icon(Icons.menu_book_rounded, size: 16),
+                      label: Text(
+                        _selectedReactionForExport == 'all' ? 'Compendium PDF 📚' : 'Reaction PDF 📄',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.accentCyan),
+                        foregroundColor: AppColors.accentCyan,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: _isExporting ? null : () => _exportReaction(isPdf: false),
+                      icon: const Icon(Icons.grid_on_rounded, size: 16),
+                      label: const Text('Excel / CSV 📊', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // 3. SUBJECTS
+        const SectionTitle('Subjects'),
+        for (final s in state.subjects)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: GlowCard(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  backgroundColor: Color(s.colorHex),
+                  radius: 18,
+                  child: Text(s.code.isNotEmpty ? s.code.substring(0, 1) : 'S', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                ),
+                title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                subtitle: Text('${s.code} · ${s.teacher}'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () => _addSubject(context, ref, existing: s),
+                      icon: const Icon(Icons.edit_outlined, size: 20),
                     ),
                     IconButton(
                       onPressed: () => ref.read(appControllerProvider.notifier).deleteSubject(s.id),
@@ -247,7 +473,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           label: const Text('Add Custom Subject', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700)),
         ),
 
-        // 2. HELP & TUTORIALS
+        // 4. HELP & TUTORIALS
         const SectionTitle('Help & Guides'),
         GlowCard(
           onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const AppGuidesScreen())),
@@ -289,7 +515,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
 
-        // 3. PREFERENCES
+        // 5. PREFERENCES
         const SectionTitle('Preferences'),
         GlowCard(
           onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const NotificationSettingsScreen())),
@@ -311,7 +537,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
 
-        // 4. STORAGE & CLOUD SYNC
+        // 6. STORAGE & CLOUD SYNC
         const SectionTitle('Storage & Cloud Sync'),
         GlowCard(
           child: Column(
@@ -369,13 +595,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
 
-        // 5. ABOUT
+        // 7. ABOUT
         const SectionTitle('About'),
         GlowCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Chem Buddy v2.6.0', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+              const Text('Chem Buddy v2.7.0', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
               const SizedBox(height: 4),
               const Text(
                 'AI-Powered Academic & Study Assistant for MSc Chemistry students.',

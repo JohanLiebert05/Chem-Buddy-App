@@ -52,6 +52,12 @@ class StudyAnalyticsSummary {
     required this.strongTopics,
     required this.recentQuizResults,
   });
+
+  int get totalFlashcardsReviewed => flashcardsReviewedToday;
+  int get streakDays => studyStreakDays;
+  int get totalChatMessages => totalQuizzesTaken;
+  List<String> get strongestTopics => strongTopics.map((t) => t.topic).toList();
+  List<String> get weakestTopics => weakTopics.map((t) => t.topic).toList();
 }
 
 class StudyAnalyticsService {
