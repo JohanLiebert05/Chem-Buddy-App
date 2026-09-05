@@ -28,6 +28,7 @@ import 'smart_flashcards_study_screen.dart';
 import '../../data/models/smart_flashcard.dart';
 import '../../core/widgets/claude_loading_text.dart';
 import '../../core/widgets/branding/chembuddy_mascot.dart';
+import '../../widgets/interactive_mascot.dart';
 
 
 enum ChemBuddyAiMode {
@@ -646,9 +647,9 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const ChemBuddyMascot(
-                              state: MascotState.idle,
-                              size: MascotSize.large,
+                            InteractiveMascot(
+                              mood: chatState.isLoading ? MascotMood.thinking : MascotMood.idle,
+                              size: 130,
                             ),
                             const SizedBox(height: 16),
                             const Text(

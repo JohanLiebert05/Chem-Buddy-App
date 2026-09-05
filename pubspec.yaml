@@ -54,6 +54,9 @@ flutter:
   uses-material-design: true
   assets:
     - .env.example
+    - assets/images/
+    - assets/images/mascot_transparent.webp
+    - assets/images/mascot_transparent.png
     - assets/mechanisms/
     - assets/mechanisms/substitution/sn1/
     - assets/mechanisms/substitution/sn2/
