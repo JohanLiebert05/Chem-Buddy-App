@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/utils/chemistry_text_formatter.dart';
 import '../local/local_store.dart';
+import '../models/pdf_ocr_models.dart';
 import '../models/pdf_study_models.dart';
 import '../remote/supabase_service.dart';
 import 'pdf_text_extraction_service.dart';
@@ -33,19 +34,47 @@ class PdfAiStudyService {
   // ==========================================
   // 1. EXTRACT & PREPARE
   // ==========================================
-  Future<String> extractText(String filePath, {void Function(String status)? onProgress}) async {
+  Future<String> extractText(
+    String filePath, {
+    String docId = '',
+    String docTitle = '',
+    bool forceReprocess = false,
+    void Function(String status)? onProgress,
+    void Function(String status, double progress)? onDetailedProgress,
+  }) async {
     onProgress?.call('Reading document structure...');
-    final text = await PdfTextExtractionService.instance.extractFromPath(
+    final bundle = await PdfTextExtractionService.instance.extractBundleFromPath(
       filePath,
-      onProgress: onProgress,
+      docId: docId,
+      docTitle: docTitle,
+      forceReprocess: forceReprocess,
+      onProgress: onDetailedProgress ?? (status, _) => onProgress?.call(status),
     );
+    final text = bundle.fullText;
     final cleaned = cleanupExtractedText(text);
-    if (cleaned.length < 30 || looksLikeScannedPdf(cleaned)) {
+    if (cleaned.length < 20) {
       throw PdfExtractionException(
         'This PDF contains very little readable text or appears to be a low-quality scan. Please try a text-based PDF or run OCR.',
       );
     }
     return cleaned;
+  }
+
+  /// Returns the complete page-by-page OCR bundle for a document.
+  Future<DocumentOcrBundle> extractBundle(
+    String filePath, {
+    String docId = '',
+    String docTitle = '',
+    bool forceReprocess = false,
+    void Function(String status, double progress)? onProgress,
+  }) async {
+    return PdfTextExtractionService.instance.extractBundleFromPath(
+      filePath,
+      docId: docId,
+      docTitle: docTitle,
+      forceReprocess: forceReprocess,
+      onProgress: onProgress,
+    );
   }
 
   // ==========================================

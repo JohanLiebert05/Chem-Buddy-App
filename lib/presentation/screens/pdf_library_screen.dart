@@ -8,6 +8,7 @@ import '../../core/widgets/branding/chembuddy_mascot.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/library_models.dart';
 import '../../data/models/models.dart';
+import '../../data/models/pdf_ocr_models.dart';
 import '../../data/services/pdf_ai_study_service.dart';
 import '../../data/services/pdf_library_service.dart';
 import '../../data/services/pdf_text_extraction_service.dart';
@@ -116,6 +117,7 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
           final store = ref.watch(localStoreProvider);
           final docQuizzes = store.all(store.quizResults).where((j) => j['pdfDocId'] == d.id).length;
           final docFlashcards = store.all(store.smartSets).where((j) => j['sourceDocId'] == d.id).length;
+          final ocrBundle = store.getDocumentOcrBundle(d.id);
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -188,6 +190,22 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                           style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                       ),
+                      if (ocrBundle != null) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.purple.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            ocrBundle.overallQuality == PageQuality.digitalText
+                                ? '📄 Digital'
+                                : (ocrBundle.overallQuality == PageQuality.handwritten ? '📝 Handwritten' : '📷 Scanned'),
+                            style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
                       const Spacer(),
                       if (d.lastOpened != null)
                         Text(

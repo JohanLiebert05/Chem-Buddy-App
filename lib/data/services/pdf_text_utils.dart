@@ -1,3 +1,5 @@
+import '../models/pdf_ocr_models.dart';
+
 class PdfExtractionException implements Exception {
   PdfExtractionException(this.message);
   final String message;
@@ -30,27 +32,22 @@ String cleanupExtractedText(String raw) {
       .trim();
 }
 
-enum DocumentQuality {
-  digitalText,
-  scannedImage,
-  mixed,
-}
+typedef DocumentQuality = PageQuality;
 
 bool looksLikeScannedPdf(String text) {
   final letters = RegExp(r'[A-Za-z]').allMatches(text).length;
   return letters < 40;
 }
 
-DocumentQuality assessDocumentQuality(String text, {int pagesCount = 1}) {
+PageQuality assessDocumentQuality(String text, {int pagesCount = 1}) {
   final clean = text.trim();
   final letters = RegExp(r'[A-Za-z]').allMatches(clean).length;
   final avgLettersPerPage = pagesCount > 0 ? letters / pagesCount : letters;
 
   if (letters < 40 || avgLettersPerPage < 60) {
-    return DocumentQuality.scannedImage;
+    return PageQuality.scannedImage;
   } else if (avgLettersPerPage > 200) {
-    return DocumentQuality.digitalText;
+    return PageQuality.digitalText;
   }
-  return DocumentQuality.mixed;
+  return PageQuality.mixed;
 }
-

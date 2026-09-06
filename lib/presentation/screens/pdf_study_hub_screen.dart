@@ -8,6 +8,7 @@ import '../../core/widgets/claude_loading_text.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/library_models.dart';
+import '../../data/models/pdf_ocr_models.dart';
 import '../../data/models/pdf_study_models.dart';
 import '../../data/services/gemini_flashcard_service.dart';
 import '../../data/services/pdf_text_utils.dart';
@@ -37,9 +38,11 @@ class PdfStudyHubScreen extends ConsumerStatefulWidget {
 class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _extractedText;
+  DocumentOcrBundle? _ocrBundle;
   DocumentQuality _documentQuality = DocumentQuality.digitalText;
   bool _loading = false;
   String _progressStatus = '';
+  double _progressFraction = 0.0;
   String? _errorMessage;
 
   PdfSummary? _summary;
@@ -77,6 +80,13 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       _quiz = quizzes.first;
     }
 
+    final store = ref.read(localStoreProvider);
+    _ocrBundle = store.getDocumentOcrBundle(widget.doc.id);
+    if (_ocrBundle != null) {
+      _extractedText = _ocrBundle!.fullText;
+      _documentQuality = _ocrBundle!.overallQuality;
+    }
+
     if (_extractedText == null) {
       await _extractText();
     } else {
@@ -89,23 +99,34 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
     }
   }
 
-  Future<void> _extractText() async {
+  Future<void> _extractText({bool forceReprocess = false}) async {
     setState(() {
       _loading = true;
       _errorMessage = null;
       _progressStatus = 'Reading document structure...';
+      _progressFraction = 0.05;
     });
 
     try {
       final service = ref.read(pdfAiStudyServiceProvider);
-      final text = await service.extractText(
+      final bundle = await service.extractBundle(
         widget.doc.localPath,
-        onProgress: (status) {
-          if (mounted) setState(() => _progressStatus = status);
+        docId: widget.doc.id,
+        docTitle: widget.doc.displayName,
+        forceReprocess: forceReprocess,
+        onProgress: (status, frac) {
+          if (mounted) {
+            setState(() {
+              _progressStatus = status;
+              _progressFraction = frac;
+            });
+          }
         },
       );
-      _extractedText = text;
-      _documentQuality = assessDocumentQuality(text);
+
+      _ocrBundle = bundle;
+      _extractedText = bundle.fullText;
+      _documentQuality = bundle.overallQuality;
 
       if (widget.initialTab == 1 && _summary == null) {
         await _fetchSummary();
@@ -123,6 +144,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
         setState(() {
           _loading = false;
           _progressStatus = '';
+          _progressFraction = 0.0;
         });
       }
     }
@@ -398,13 +420,30 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                     bottom: BorderSide(color: AppColors.borderSubtle),
                   ),
                 ),
-                child: ClaudeThinkingIndicator(
-                  thoughts: _progressStatus.isNotEmpty
-                      ? [_progressStatus, ...ClaudeThinkingMicrocopy.summary]
-                      : ClaudeThinkingMicrocopy.summary,
-                  isCard: false,
-                  showSparkle: true,
-                  fontSize: 12.5,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClaudeThinkingIndicator(
+                      thoughts: _progressStatus.isNotEmpty
+                          ? [_progressStatus, ...ClaudeThinkingMicrocopy.summary]
+                          : ClaudeThinkingMicrocopy.summary,
+                      isCard: false,
+                      showSparkle: true,
+                      fontSize: 12.5,
+                    ),
+                    if (_progressFraction > 0.0 && _progressFraction < 1.0) ...[
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: _progressFraction,
+                          backgroundColor: AppColors.surfaceElevated,
+                          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.purpleBright),
+                          minHeight: 4,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
 
@@ -423,35 +462,14 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                     const SizedBox(width: 10),
                     Expanded(child: Text(_errorMessage!, style: const TextStyle(color: AppColors.danger, fontSize: 12.5))),
                     TextButton(
-                      onPressed: _extractText,
+                      onPressed: () => _extractText(forceReprocess: true),
                       child: const Text('Try Again', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)),
                     ),
                   ],
                 ),
               )
-            else if (_documentQuality == DocumentQuality.scannedImage)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                decoration: BoxDecoration(
-                  color: AppColors.purple.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.purple.withValues(alpha: 0.25)),
-                ),
-                child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('⚠️', style: TextStyle(fontSize: 15)),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'This document appears to be a scanned PDF. Chemistry structures, equations and symbols may not be extracted accurately. Some study-generation features may be limited.',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            else
+              _buildOcrStatusBanner(),
 
             Expanded(
               child: TabBarView(
@@ -468,6 +486,245 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildOcrStatusBanner() {
+    final pageCount = _ocrBundle?.pageCount ?? 1;
+    final formulaCount = _ocrBundle?.allDetectedFormulas.length ?? 0;
+
+    IconData icon;
+    Color color;
+    String title;
+    String subtitle;
+
+    switch (_documentQuality) {
+      case PageQuality.digitalText:
+        icon = Icons.text_snippet_outlined;
+        color = AppColors.accentCyan;
+        title = 'Digital Text PDF (Native Text)';
+        subtitle = '$pageCount Pages · High Accuracy · Instant Parsing';
+        break;
+      case PageQuality.scannedImage:
+        icon = Icons.document_scanner_outlined;
+        color = AppColors.purpleBright;
+        title = 'Scanned Document (OCR Processed)';
+        subtitle = '$pageCount Pages · Chemistry Normalized${formulaCount > 0 ? ' · $formulaCount Formulas Detected' : ''}';
+        break;
+      case PageQuality.handwritten:
+        icon = Icons.draw_outlined;
+        color = AppColors.purple;
+        title = 'Handwritten Notes (OCR Processed)';
+        subtitle = '$pageCount Pages · Chemistry Normalized${formulaCount > 0 ? ' · $formulaCount Formulas Detected' : ''}';
+        break;
+      case PageQuality.mixed:
+        icon = Icons.auto_stories_outlined;
+        color = AppColors.accentGold;
+        title = 'Mixed PDF (Native Text + OCR)';
+        subtitle = '$pageCount Pages · Multi-Engine Hybrid Processing';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 16),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 11.5),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5),
+                ),
+              ],
+            ),
+          ),
+          if (_ocrBundle != null && _ocrBundle!.pages.isNotEmpty)
+            TextButton.icon(
+              onPressed: _showExtractedPagesSheet,
+              icon: const Icon(Icons.visibility_outlined, size: 13, color: AppColors.blue),
+              label: const Text('Pages', style: TextStyle(fontSize: 11, color: AppColors.blue, fontWeight: FontWeight.w700)),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          IconButton(
+            onPressed: _loading ? null : () => _extractText(forceReprocess: true),
+            tooltip: 'Re-scan OCR',
+            icon: const Icon(Icons.refresh, size: 15, color: AppColors.textMuted),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExtractedPagesSheet() {
+    final pages = _ocrBundle?.pages ?? const [];
+    if (pages.isEmpty) return;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (_, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.borderSubtle,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Text('Extracted Document Pages', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white)),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.purple.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${pages.length} Pages',
+                          style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 11),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Page-by-page OCR text with chemistry formula normalization for ${widget.doc.displayName}',
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: pages.length,
+                      itemBuilder: (context, index) {
+                        final page = pages[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: GlowCard(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Page ${page.pageNumber}',
+                                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surfaceElevated,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '${page.quality.icon} ${page.quality.label}',
+                                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w700),
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    if (page.confidence < 1.0)
+                                      Text(
+                                        'OCR Confidence: ${(page.confidence * 100).toInt()}%',
+                                        style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5),
+                                      ),
+                                  ],
+                                ),
+                                if (page.detectedFormulas.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 4,
+                                    children: page.detectedFormulas.take(6).map((f) => Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.purple.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        f,
+                                        style: const TextStyle(color: AppColors.purpleBright, fontSize: 10.5, fontWeight: FontWeight.w700),
+                                      ),
+                                    )).toList(),
+                                  ),
+                                ],
+                                const SizedBox(height: 8),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: AppColors.borderSubtle),
+                                  ),
+                                  child: Text(
+                                    page.cleanedText.isNotEmpty ? page.cleanedText : '(No text extracted for this page)',
+                                    maxLines: 8,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

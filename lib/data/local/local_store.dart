@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import '../models/pdf_ocr_models.dart';
 
 class HiveBoxes {
   static const profile = 'profile';
@@ -25,6 +26,7 @@ class HiveBoxes {
   static const quizResults = 'quiz_results';
   static const appTutorialState = 'app_tutorial_state';
   static const pyqPredictions = 'pyq_predictions';
+  static const pdfOcrBundles = 'pdf_ocr_bundles';
 
   static Future<void> openAll() async {
     await Hive.initFlutter();
@@ -53,6 +55,7 @@ class HiveBoxes {
       Hive.openBox(quizResults),
       Hive.openBox(appTutorialState),
       Hive.openBox(pyqPredictions),
+      Hive.openBox(pdfOcrBundles),
     ]);
   }
 }
@@ -82,6 +85,7 @@ class LocalStore {
   Box get quizResults => Hive.box(HiveBoxes.quizResults);
   Box get appTutorialState => Hive.box(HiveBoxes.appTutorialState);
   Box get pyqPredictions => Hive.box(HiveBoxes.pyqPredictions);
+  Box get pdfOcrBundles => Hive.box(HiveBoxes.pdfOcrBundles);
 
   Map<String, dynamic>? getProfile() {
     final raw = _profile.get('current');
@@ -90,6 +94,19 @@ class LocalStore {
   }
 
   Future<void> saveProfile(Map<String, dynamic> json) => _profile.put('current', json);
+
+  DocumentOcrBundle? getDocumentOcrBundle(String docId) {
+    try {
+      final raw = pdfOcrBundles.get(docId);
+      if (raw is Map) return DocumentOcrBundle.fromJson(Map<String, dynamic>.from(raw));
+    } catch (_) {}
+    return null;
+  }
+
+  Future<void> saveDocumentOcrBundle(DocumentOcrBundle bundle) =>
+      pdfOcrBundles.put(bundle.docId, bundle.toJson());
+
+  Future<void> deleteDocumentOcrBundle(String docId) => pdfOcrBundles.delete(docId);
 
   Future<void> clearAll() async {
     await Future.wait([
@@ -117,6 +134,7 @@ class LocalStore {
       quizResults.clear(),
       appTutorialState.clear(),
       pyqPredictions.clear(),
+      pdfOcrBundles.clear(),
     ]);
   }
 
