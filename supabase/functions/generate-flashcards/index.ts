@@ -142,6 +142,9 @@ ${clipped}`;
         temperature: 0.2,
         maxOutputTokens: 8192,
         responseMimeType: "application/json",
+        thinkingConfig: {
+          thinkingLevel: "low",
+        },
         responseSchema: {
           type: "OBJECT",
           properties: {
@@ -364,7 +367,7 @@ async function fetchGeminiWithRotation(
         if (!settled) {
           dispatchKey(i);
         }
-      }, i * 1100);
+      }, i * 650);
       scheduledTimeouts.push(timer);
     }
   });

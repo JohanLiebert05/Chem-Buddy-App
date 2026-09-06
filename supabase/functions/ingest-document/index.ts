@@ -289,7 +289,7 @@ async function fetchGeminiWithRotation(
         if (!settled) {
           dispatchKey(i);
         }
-      }, i * 1100);
+      }, i * 650);
       scheduledTimeouts.push(timer);
     }
   });

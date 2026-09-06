@@ -264,8 +264,11 @@ ${context ? `AVAILABLE STUDY CONTEXT (use this as primary reference, supplement 
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents,
         generationConfig: {
-          temperature: 0.25,
-          maxOutputTokens: 2048,
+          temperature: 0.2,
+          maxOutputTokens: 1500,
+          thinkingConfig: {
+            thinkingLevel: "low",
+          },
         },
       }
     );
@@ -462,14 +465,14 @@ async function fetchGeminiWithRotation(
     // Launch initial key immediately
     dispatchKey(0);
 
-    // Speculative Hedging: If key 0 hasn't responded in 1100ms, start key 1 in parallel.
-    // If neither has answered in 2200ms, start key 2 in parallel.
+    // Speculative Hedging: If key 0 hasn't responded in 650ms, start key 1 in parallel.
+    // If neither has answered in 1300ms, start key 2 in parallel.
     for (let i = 1; i < orderedKeys.length; i++) {
       const timer = setTimeout(() => {
         if (!settled) {
           dispatchKey(i);
         }
-      }, i * 1100);
+      }, i * 650);
       scheduledTimeouts.push(timer);
     }
   });

@@ -178,6 +178,9 @@ ${sourceText.slice(0, 14000)}`;
           temperature: 0.25,
           maxOutputTokens: 8192,
           responseMimeType: "application/json",
+          thinkingConfig: {
+            thinkingLevel: "low",
+          },
           responseSchema,
         },
       }
@@ -373,7 +376,7 @@ async function fetchGeminiWithRotation(
         if (!settled) {
           dispatchKey(i);
         }
-      }, i * 1100);
+      }, i * 650);
       scheduledTimeouts.push(timer);
     }
   });
