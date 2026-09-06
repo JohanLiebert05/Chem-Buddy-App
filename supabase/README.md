@@ -56,7 +56,7 @@ supabase secrets set GEMINI_API_KEY=your_gemini_key
 
 Optional overrides:
 ```bash
-supabase secrets set GEMINI_MODEL=gemini-2.0-flash
+supabase secrets set GEMINI_MODEL=gemini-3.8-flash
 supabase secrets set GEMINI_EMBEDDING_MODEL=text-embedding-004
 ```
 

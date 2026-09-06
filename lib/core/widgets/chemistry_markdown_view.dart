@@ -113,7 +113,7 @@ class ChemistryMarkdownView extends StatelessWidget {
     bool selectable,
     bool hasTable,
   ) {
-    return MarkdownBody(
+    final markdownBody = MarkdownBody(
       data: content,
       selectable: selectable,
       styleSheet: _buildMarkdownStyleSheet(context, textStyle),
@@ -123,9 +123,23 @@ class ChemistryMarkdownView extends StatelessWidget {
       ],
       builders: {
         'latex-inline': _LatexInlineBuilder(textStyle: textStyle),
-        if (hasTable) 'table': _ScrollableTableBuilder(),
       },
     );
+
+    if (hasTable) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: MediaQuery.sizeOf(context).width - 64,
+          ),
+          child: markdownBody,
+        ),
+      );
+    }
+
+    return markdownBody;
   }
 
   static String _preprocessText(String input) {
@@ -290,34 +304,109 @@ class ChemistryMarkdownView extends StatelessWidget {
   }
 
   static MarkdownStyleSheet _buildMarkdownStyleSheet(BuildContext? context, TextStyle? overrideStyle) {
-    final base = overrideStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.45);
+    final base = overrideStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.55);
     return MarkdownStyleSheet(
       p: base,
-      strong: base.copyWith(fontWeight: FontWeight.bold, color: Colors.white),
-      em: base.copyWith(fontStyle: FontStyle.italic, color: AppColors.purpleBright),
-      h1: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800, height: 1.3),
-      h2: const TextStyle(color: Colors.white, fontSize: 17.5, fontWeight: FontWeight.w700, height: 1.3),
-      h3: const TextStyle(color: AppColors.purpleBright, fontSize: 15.5, fontWeight: FontWeight.w700, height: 1.3),
-      listBullet: const TextStyle(color: AppColors.purpleBright, fontSize: 14),
-      tableHead: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-      tableBorder: TableBorder.all(color: AppColors.border, width: 0.6),
-      tableBody: base,
+      strong: base.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
+      em: base.copyWith(fontStyle: FontStyle.italic, color: AppColors.brandBright),
+      h1: const TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+        height: 1.25,
+      ),
+      h2: const TextStyle(
+        color: Colors.white,
+        fontSize: 17.5,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
+        height: 1.3,
+      ),
+      h3: const TextStyle(
+        color: AppColors.brandBright,
+        fontSize: 15.5,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        height: 1.35,
+      ),
+      h4: const TextStyle(
+        color: AppColors.brandBright,
+        fontSize: 14.0,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.1,
+        height: 1.35,
+      ),
+      h5: const TextStyle(
+        color: Colors.white,
+        fontSize: 13.0,
+        fontWeight: FontWeight.w700,
+        height: 1.35,
+      ),
+      h6: const TextStyle(
+        color: AppColors.textSecondary,
+        fontSize: 12.0,
+        fontWeight: FontWeight.w600,
+        height: 1.35,
+      ),
+      h1Padding: const EdgeInsets.only(top: 14, bottom: 6),
+      h2Padding: const EdgeInsets.only(top: 12, bottom: 6),
+      h3Padding: const EdgeInsets.only(top: 10, bottom: 4),
+      h4Padding: const EdgeInsets.only(top: 8, bottom: 4),
+      pPadding: const EdgeInsets.only(bottom: 6),
+      listBullet: const TextStyle(
+        color: AppColors.brandBright,
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+      ),
+      listBulletPadding: const EdgeInsets.only(right: 6),
+      tableHead: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.w800,
+        fontSize: 12.5,
+        letterSpacing: 0.1,
+      ),
+      tableBody: base.copyWith(fontSize: 12.5, height: 1.4),
+      tableBorder: TableBorder.all(
+        color: AppColors.borderHighlight,
+        width: 0.8,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      tableCellsPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       tableColumnWidth: const FlexColumnWidth(),
       code: TextStyle(
-        color: AppColors.purpleBright,
-        backgroundColor: AppColors.surfaceElevated,
+        color: AppColors.brandBright,
+        backgroundColor: AppColors.bg2,
         fontFamily: 'monospace',
-        fontSize: (base.fontSize ?? 14) * 0.92,
+        fontSize: (base.fontSize ?? 14) * 0.9,
+        fontWeight: FontWeight.w600,
       ),
       codeblockDecoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        color: AppColors.bg0,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.borderSubtle, width: 0.8),
+      ),
+      blockquote: TextStyle(
+        color: AppColors.textSecondary,
+        fontSize: 13.5,
+        fontStyle: FontStyle.italic,
+        height: 1.45,
       ),
       blockquoteDecoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+        color: AppColors.bg2.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(10),
+        border: const Border(
+          left: BorderSide(color: AppColors.brandPrimary, width: 3.5),
+        ),
+      ),
+      blockquotePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      horizontalRuleDecoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: AppColors.borderSubtle,
+            width: 0.8,
+          ),
+        ),
       ),
     );
   }
@@ -366,12 +455,49 @@ class _LatexInlineBuilder extends MarkdownElementBuilder {
         sanitized,
         mathStyle: MathStyle.text,
         textStyle: style.copyWith(color: Colors.white),
-        onErrorFallback: (err) => Text(
-          ChemistryTextFormatter.toUnicodeMath(mathCode),
-          style: style.copyWith(color: AppColors.purpleBright, fontWeight: FontWeight.w600),
-        ),
+        onErrorFallback: (err) {
+          // Strip raw LaTeX commands so they never appear as ugly raw text
+          final cleaned = _cleanLatexFallback(mathCode);
+          return Text(
+            cleaned,
+            style: style.copyWith(
+              color: AppColors.purpleBright,
+              fontWeight: FontWeight.w600,
+            ),
+          );
+        },
       ),
     );
+  }
+
+  /// Converts a raw LaTeX string into readable plain text, stripping all command syntax.
+  static String _cleanLatexFallback(String raw) {
+    var s = raw.trim();
+    try {
+      final unicode = ChemistryTextFormatter.toUnicodeMath(s);
+      if (unicode.isNotEmpty && !unicode.contains(r'\')) return unicode;
+    } catch (_) {}
+    s = s.replaceAllMapped(RegExp(r'\\text\{([^}]*)\}'), (m) => m[1] ?? '');
+    s = s.replaceAllMapped(RegExp(r'\\mathrm\{([^}]*)\}'), (m) => m[1] ?? '');
+    s = s.replaceAllMapped(RegExp(r'\\mathbf\{([^}]*)\}'), (m) => m[1] ?? '');
+    s = s.replaceAllMapped(RegExp(r'\\frac\{([^}]*)\}\{([^}]*)\}'), (m) => '(${m[1]})/(${m[2]})');
+    s = s.replaceAllMapped(RegExp(r'\\sqrt\{([^}]*)\}'), (m) => '√(${m[1]})');
+    s = s.replaceAll(r'\rightarrow', '→').replaceAll(r'\leftarrow', '←')
+        .replaceAll(r'\rightleftharpoons', '⇌').replaceAll(r'\times', '×')
+        .replaceAll(r'\cdot', '·').replaceAll(r'\pm', '±')
+        .replaceAll(r'\Delta', 'Δ').replaceAll(r'\alpha', 'α')
+        .replaceAll(r'\beta', 'β').replaceAll(r'\gamma', 'γ')
+        .replaceAll(r'\lambda', 'λ').replaceAll(r'\mu', 'μ')
+        .replaceAll(r'\pi', 'π').replaceAll(r'\sigma', 'σ')
+        .replaceAll(r'\omega', 'ω').replaceAll(r'\infty', '∞')
+        .replaceAll(r'\log', 'log').replaceAll(r'\ln', 'ln')
+        .replaceAll(r'\leq', '≤').replaceAll(r'\geq', '≥')
+        .replaceAll(r'\neq', '≠').replaceAll(r'\approx', '≈')
+        .replaceAll(r'\circ', '°');
+    s = s.replaceAll(RegExp(r'\\[a-zA-Z]+'), '');
+    s = s.replaceAll('{', '').replaceAll('}', '');
+    s = s.replaceAll(RegExp(r'\s{2,}'), ' ').trim();
+    return s.isEmpty ? raw : s;
   }
 }
 
@@ -379,33 +505,4 @@ class _Block {
   const _Block({required this.text, required this.isDisplayMath});
   final String text;
   final bool isDisplayMath;
-}
-
-/// Custom markdown builder that wraps tables in a horizontal scroll container,
-/// preventing narrow-screen column collapse on devices < 420px wide.
-class _ScrollableTableBuilder extends MarkdownElementBuilder {
-  @override
-  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
-    if (element.tag != 'table') return null;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border, width: 0.6),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Scrollbar(
-        thumbVisibility: true,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 6),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 280),
-            child: const SizedBox(),
-          ),
-        ),
-      ),
-    );
-  }
 }

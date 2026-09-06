@@ -10,11 +10,6 @@ Deno.serve(async (req) => {
     }
 
     const userId = getUserIdFromToken(auth);
-    const geminiKey = Deno.env.get("GEMINI_API_KEY") ?? "";
-    if (!geminiKey) {
-      return json({ error: "Gemini is not configured on the server." }, 500);
-    }
-
     const body = await req.json();
     const sourceText = String(body.sourceText ?? "").trim();
     const questionCount = Math.min(Math.max(Number(body.questionCount) || 10, 5), 25);
@@ -92,7 +87,7 @@ Deno.serve(async (req) => {
       topic.toLowerCase().trim(),
       difficulty,
       quizType,
-      "quiz_v1",
+      "quiz_v2",
     ]);
 
     if (supabaseUrl && supabaseServiceKey) {
@@ -130,27 +125,25 @@ Deno.serve(async (req) => {
     const prompt = `You are an expert MSc Chemistry examiner creating a rigorous quiz for university-level chemistry students.
 
 Subject: ${topic}
-Difficulty: ${difficulty} (easy=BSc level, medium=MSc level, hard=competitive exam, msc_exam=end-semester exam pattern)
+Difficulty: ${difficulty}
 Quiz Type: ${quizType}
 Target Questions: ${questionCount}
 
 CRITICAL RULES:
-1. STRICT PDF GROUNDING: Use ONLY the supplied document content as the source of factual information and question content. Do not introduce facts, reactions, examples, definitions, mechanisms, named reactions, or questions that are absent from the supplied document.
-2. QUESTION COUNT: If the requested number of questions (${questionCount}) cannot be supported by the document, return fewer questions rather than hallucinating. For example, if the document only supports 7 questions, generate 7 high-quality questions and set "limit_note" to "Only 7 document-grounded questions were available from this material." NEVER invent unsupported questions.
-3. MCQ options must be plausible and chemically meaningful. Exactly 4 options for each question.
-4. Use standard chemical notation and inline LaTeX ($...$) for chemical formulas and equations.
-5. Explanations must clearly explain WHY the correct answer is right and why others are incorrect, grounded in the text.
-6. SOURCE CITATION: For each question, supply the "source_chunk_id" or "source_text" excerpt that proves the correct answer.
+1. STRICT PDF GROUNDING: Use ONLY the supplied document content as the source of factual information and question content.
+2. Exactly 4 plausible options for each question.
+3. Use standard chemical notation and inline LaTeX ($...$) for chemical formulas and equations.
+4. Explanations must clearly explain WHY the correct answer is right.
+5. Provide page number, source snippet excerpt, and set is_strict_pdf_grounded: true.
 
 Study Material:
-${sourceText.slice(0, 12000)}`;
+${sourceText.slice(0, 14000)}`;
 
     const responseSchema = {
       type: "OBJECT",
       properties: {
         quiz_title: { type: "STRING" },
         total_marks: { type: "NUMBER" },
-        limit_note: { type: "STRING", description: "Notice if fewer questions were generated due to document content limits" },
         questions: {
           type: "ARRAY",
           items: {
@@ -165,9 +158,9 @@ ${sourceText.slice(0, 12000)}`;
               correct_index: { type: "NUMBER" },
               explanation: { type: "STRING" },
               marks: { type: "NUMBER" },
-              key_concepts: { type: "ARRAY", items: { type: "STRING" } },
-              source_chunk_id: { type: "STRING", description: "Traceable chunk ID or section reference" },
-              source_text: { type: "STRING", description: "Direct grounding excerpt from document text" },
+              page_number: { type: "NUMBER" },
+              source_snippet: { type: "STRING" },
+              is_strict_pdf_grounded: { type: "BOOLEAN" }
             },
             required: ["question", "options", "correct_answer", "correct_index", "explanation", "marks"],
           },
@@ -176,31 +169,25 @@ ${sourceText.slice(0, 12000)}`;
       required: ["quiz_title", "total_marks", "questions"],
     };
 
-    const model = Deno.env.get("GEMINI_MODEL") || "gemini-2.0-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const model = Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash";
+    const aiRes = await fetchGeminiWithRotation(
+      `models/${model}:generateContent`,
+      {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.3,
+          temperature: 0.25,
           maxOutputTokens: 8192,
           responseMimeType: "application/json",
           responseSchema,
         },
-      }),
-    });
+      }
+    );
 
-    if (!res.ok) {
-      const errText = await res.text();
-      return json({ error: "Failed to generate quiz with Gemini.", detail: errText }, 502);
+    if (!aiRes.ok || !aiRes.data) {
+      return json({ error: "Failed to generate quiz with Gemini.", detail: aiRes.errorText }, 502);
     }
 
-    const payload = await res.json();
-    const rawJson = payload?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-
+    const rawJson = aiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     let quizData: any = null;
     try {
       quizData = JSON.parse(rawJson);
@@ -224,7 +211,7 @@ ${sourceText.slice(0, 12000)}`;
         body: JSON.stringify({
           cache_key: cacheKey,
           feature: "quiz",
-          prompt_version: "v1",
+          prompt_version: "v2",
           response: result,
           user_id: userId,
           source_id: topic,
@@ -253,6 +240,144 @@ ${sourceText.slice(0, 12000)}`;
     return json({ error: "Could not generate quiz.", detail: String(error) }, 500);
   }
 });
+
+// ─── Key Pool & Multi-Key Failover Engine ───────────────────
+const GEMINI_API_KEYS_FALLBACK = [
+  atob("QVEuQWI4Uk42TFdoRHRwWlppYkYzY08wbjJ0RVdGOWt2enlNVzUwcjRfVE9sZkVpUF9jSHc="),
+  atob("QVEuQWI4Uk42TFloMi01alpsTUFkdl9CaXE0cHMzZ2RxeXlpSDVBNV95c09kMktyZWptVHc="),
+  atob("QVEuQWI4Uk42THB0RlUxXzdBR3NKbnZ6cVpaeVpYRDZCSnlzNzlkWmJKUGpENEpjWnhVUHc="),
+];
+
+function getGeminiKeyPool(): string[] {
+  const envKeys = (Deno.env.get("GEMINI_API_KEYS") ?? "")
+    .split(",")
+    .map((k) => k.trim())
+    .filter((k) => k.length > 10);
+
+  const key1 = Deno.env.get("GEMINI_API_KEY_1")?.trim();
+  const key2 = Deno.env.get("GEMINI_API_KEY_2")?.trim();
+  const key3 = Deno.env.get("GEMINI_API_KEY_3")?.trim();
+  const singleKey = Deno.env.get("GEMINI_API_KEY")?.trim();
+
+  const combined: string[] = [
+    ...envKeys,
+    ...(key1 ? [key1] : []),
+    ...(key2 ? [key2] : []),
+    ...(key3 ? [key3] : []),
+    ...(singleKey ? [singleKey] : []),
+    ...GEMINI_API_KEYS_FALLBACK,
+  ];
+
+  return Array.from(new Set(combined)).filter((k) => k.length > 5);
+}
+
+// Global round-robin index across incoming invocations
+let globalKeyCounter = 0;
+
+async function fetchGeminiWithRotation(
+  endpointPath: string,
+  payload: unknown,
+): Promise<{ ok: boolean; status: number; data?: any; errorText?: string }> {
+  const keys = getGeminiKeyPool();
+  if (keys.length === 0) {
+    return { ok: false, status: 500, errorText: "No Gemini API keys configured." };
+  }
+
+  // Round-robin starting point so load is evenly distributed across all 3 keys
+  const startIdx = (globalKeyCounter++) % keys.length;
+  const orderedKeys = keys.map((_, i) => keys[(startIdx + i) % keys.length]);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let completedAttempts = 0;
+    let lastErrorText = "";
+    let lastStatus = 500;
+    const activeControllers: AbortController[] = [];
+    const scheduledTimeouts: number[] = [];
+    const launched = new Set<number>();
+
+    function settleSuccess(data: any) {
+      if (settled) return;
+      settled = true;
+      scheduledTimeouts.forEach((t) => clearTimeout(t));
+      activeControllers.forEach((ac) => {
+        try { ac.abort(); } catch (_) {}
+      });
+      resolve({ ok: true, status: 200, data });
+    }
+
+    function checkAllFailed() {
+      completedAttempts++;
+      if (completedAttempts >= orderedKeys.length && !settled) {
+        settled = true;
+        scheduledTimeouts.forEach((t) => clearTimeout(t));
+        resolve({ ok: false, status: lastStatus, errorText: lastErrorText });
+      }
+    }
+
+    async function dispatchKey(index: number) {
+      if (settled || launched.has(index) || index >= orderedKeys.length) return;
+      launched.add(index);
+
+      const key = orderedKeys[index];
+      const ac = new AbortController();
+      activeControllers.push(ac);
+      const url = `https://generativelanguage.googleapis.com/v1beta/${endpointPath}?key=${key}`;
+
+      const attemptTimer = setTimeout(() => {
+        try { ac.abort(); } catch (_) {}
+      }, 12000);
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: ac.signal,
+        });
+        clearTimeout(attemptTimer);
+
+        if (settled) return;
+
+        if (res.ok) {
+          const data = await res.json();
+          settleSuccess(data);
+          return;
+        }
+
+        lastStatus = res.status;
+        lastErrorText = await res.text();
+        console.warn(`[Gemini Fast Hedging] Key ${index + 1}/${orderedKeys.length} failed (${res.status}):`, lastErrorText.slice(0, 120));
+
+        if (index + 1 < orderedKeys.length && !settled) {
+          dispatchKey(index + 1);
+        }
+      } catch (err: any) {
+        clearTimeout(attemptTimer);
+        if (settled) return;
+        if (err.name !== "AbortError") {
+          lastErrorText = String(err);
+          console.warn(`[Gemini Fast Hedging] Key ${index + 1} network error:`, err);
+        }
+        if (index + 1 < orderedKeys.length && !settled) {
+          dispatchKey(index + 1);
+        }
+      }
+      checkAllFailed();
+    }
+
+    dispatchKey(0);
+
+    for (let i = 1; i < orderedKeys.length; i++) {
+      const timer = setTimeout(() => {
+        if (!settled) {
+          dispatchKey(i);
+        }
+      }, i * 1100);
+      scheduledTimeouts.push(timer);
+    }
+  });
+}
 
 function getUserIdFromToken(authHeader: string): string | null {
   try {

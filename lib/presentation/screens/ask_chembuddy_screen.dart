@@ -215,13 +215,14 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
 
   Widget _buildModeBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.5),
-        border: const Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
+        color: const Color(0xCC0D0B1A),
+        border: const Border(bottom: BorderSide(color: AppColors.borderSubtle, width: 0.8)),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
@@ -567,7 +568,8 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                     )
                   : ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
                       itemCount: chatState.messages.length,
                       itemBuilder: (context, index) {
                         final msg = chatState.messages[index];
@@ -576,128 +578,179 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                         return Align(
                           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                           child: Container(
-                            margin: const EdgeInsets.only(bottom: 14),
-                            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
-                            child: GlowCard(
-                              borderColor: isUser ? AppColors.purple.withValues(alpha: 0.6) : AppColors.border,
-                              padding: const EdgeInsets.all(14),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (isUser)
-                                    Text(
-                                      msg.content,
-                                      style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.3),
-                                    )
-                                  else ...[
-                                    if (msg.sources.isNotEmpty) ...[
-                                      Container(
-                                        margin: const EdgeInsets.only(bottom: 10),
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.purple.withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(Icons.menu_book, size: 13, color: AppColors.purpleBright),
-                                            const SizedBox(width: 6),
-                                            Flexible(
-                                              child: Text(
-                                                'Answering from: ${msg.sources.first.fileName ?? msg.sources.first.documentTitle ?? "Study Notes"}',
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(color: AppColors.purpleBright, fontSize: 11.5, fontWeight: FontWeight.w700),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.86),
+                            child: isUser
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
                                       ),
-                                    ],
-                                    if (msg.content.toLowerCase().contains('mechanism') ||
-                                        msg.content.toLowerCase().contains('sn1') ||
-                                        msg.content.toLowerCase().contains('sn2') ||
-                                        msg.content.toLowerCase().contains('aldol') ||
-                                        msg.content.toLowerCase().contains('wittig') ||
-                                        msg.content.toLowerCase().contains('diels-alder'))
-                                      const Padding(
-                                        padding: EdgeInsets.only(bottom: 12),
-                                        child: ReactionMechanismsCard(compact: true),
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(20),
+                                        topRight: Radius.circular(20),
+                                        bottomLeft: Radius.circular(20),
+                                        bottomRight: Radius.circular(4),
                                       ),
-                                    ChemistryMarkdownView(
-                                      text: msg.content,
-                                      textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 14, height: 1.45),
-                                      selectable: true,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.brandPrimary.withValues(alpha: 0.28),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
+                                      border: Border.all(
+                                        color: AppColors.brandBright.withValues(alpha: 0.35),
+                                        width: 0.8,
+                                      ),
                                     ),
-                                    _buildAutoFlashcardBanner(context, msg),
-                                    const SizedBox(height: 12),
-                                    SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        children: [
-                                          _ActionChip(
-                                            icon: Icons.style,
-                                            label: 'Flashcards',
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute<void>(
-                                                  builder: (_) => SmartFlashcardsGenerateScreen(
-                                                    prefilledTopic: 'Chat Topic',
-                                                    prefilledText: ChemistryTextFormatter.format(msg.content),
+                                    child: Text(
+                                      msg.content,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.4,
+                                        letterSpacing: -0.1,
+                                      ),
+                                    ),
+                                  )
+                                : Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.bg1,
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(20),
+                                        topRight: Radius.circular(20),
+                                        bottomLeft: Radius.circular(4),
+                                        bottomRight: Radius.circular(20),
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.3),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                      border: Border.all(
+                                        color: AppColors.borderHighlight,
+                                        width: 0.8,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        if (msg.sources.isNotEmpty) ...[
+                                          Container(
+                                            margin: const EdgeInsets.only(bottom: 12),
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.brandPrimary.withValues(alpha: 0.15),
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.3)),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(Icons.menu_book_rounded, size: 13, color: AppColors.brandBright),
+                                                const SizedBox(width: 6),
+                                                Flexible(
+                                                  child: Text(
+                                                    'Answering from: ${msg.sources.first.fileName ?? msg.sources.first.documentTitle ?? "Study Notes"}',
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(color: AppColors.brandBright, fontSize: 11.5, fontWeight: FontWeight.w700),
                                                   ),
                                                 ),
-                                              );
-                                            },
-                                          ),
-                                          const SizedBox(width: 8),
-                                          _ActionChip(
-                                            icon: Icons.quiz,
-                                            label: 'Quiz',
-                                            onTap: () => _startQuizForMessage(msg),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          _ActionChip(
-                                            icon: Icons.auto_awesome,
-                                            label: 'Simpler',
-                                            onTap: () {
-                                              ref.read(chatControllerProvider.notifier).sendMessage(
-                                                'Explain this more simply and concisely for an exam summary: ${msg.content.substring(0, min(400, msg.content.length))}',
-                                              );
-                                            },
-                                          ),
-                                          const SizedBox(width: 8),
-                                          _ActionChip(
-                                            icon: Icons.bookmark_add,
-                                            label: 'Save Note',
-                                            onTap: () {
-                                              final rawTitle = msg.content.split('\n').firstWhere(
-                                                (line) => line.trim().isNotEmpty,
-                                                orElse: () => 'Chemistry Note',
-                                              ).replaceAll(RegExp(r'^[#*\s]+'), '');
-                                              final title = ChemistryTextFormatter.format(rawTitle);
-
-                                              final note = NoteItem(
-                                                id: const Uuid().v4(),
-                                                title: title.isEmpty ? 'Chemistry Note' : (title.length > 50 ? title.substring(0, 50) : title),
-                                                body: ChemistryTextFormatter.format(msg.content),
-                                                updatedAt: DateTime.now(),
-                                              );
-                                              ref.read(appControllerProvider.notifier).saveNote(note);
-
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Saved to your Notes library!')),
-                                              );
-                                            },
+                                              ],
+                                            ),
                                           ),
                                         ],
-                                      ),
+                                        if (msg.content.toLowerCase().contains('mechanism') ||
+                                            msg.content.toLowerCase().contains('sn1') ||
+                                            msg.content.toLowerCase().contains('sn2') ||
+                                            msg.content.toLowerCase().contains('aldol') ||
+                                            msg.content.toLowerCase().contains('wittig') ||
+                                            msg.content.toLowerCase().contains('diels-alder'))
+                                          const Padding(
+                                            padding: EdgeInsets.only(bottom: 12),
+                                            child: ReactionMechanismsCard(compact: true),
+                                          ),
+                                        ChemistryMarkdownView(
+                                          text: msg.content,
+                                          textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.55),
+                                          selectable: true,
+                                        ),
+                                        _buildAutoFlashcardBanner(context, msg),
+                                        const SizedBox(height: 12),
+                                        SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          physics: const BouncingScrollPhysics(),
+                                          child: Row(
+                                            children: [
+                                              _ActionChip(
+                                                icon: Icons.style,
+                                                label: 'Flashcards',
+                                                onTap: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute<void>(
+                                                      builder: (_) => SmartFlashcardsGenerateScreen(
+                                                        prefilledTopic: 'Chat Topic',
+                                                        prefilledText: ChemistryTextFormatter.format(msg.content),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                              const SizedBox(width: 8),
+                                              _ActionChip(
+                                                icon: Icons.quiz,
+                                                label: 'Quiz',
+                                                onTap: () => _startQuizForMessage(msg),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              _ActionChip(
+                                                icon: Icons.auto_awesome,
+                                                label: 'Simpler',
+                                                onTap: () {
+                                                  ref.read(chatControllerProvider.notifier).sendMessage(
+                                                    'Explain this more simply and concisely for an exam summary: ${msg.content.substring(0, min(400, msg.content.length))}',
+                                                  );
+                                                },
+                                              ),
+                                              const SizedBox(width: 8),
+                                              _ActionChip(
+                                                icon: Icons.bookmark_add,
+                                                label: 'Save Note',
+                                                onTap: () {
+                                                  final rawTitle = msg.content.split('\n').firstWhere(
+                                                    (line) => line.trim().isNotEmpty,
+                                                    orElse: () => 'Chemistry Note',
+                                                  ).replaceAll(RegExp(r'^[#*\s]+'), '');
+                                                  final title = ChemistryTextFormatter.format(rawTitle);
+
+                                                  final note = NoteItem(
+                                                    id: const Uuid().v4(),
+                                                    title: title.isEmpty ? 'Chemistry Note' : (title.length > 50 ? title.substring(0, 50) : title),
+                                                    body: ChemistryTextFormatter.format(msg.content),
+                                                    updatedAt: DateTime.now(),
+                                                  );
+                                                  ref.read(appControllerProvider.notifier).saveNote(note);
+
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text('Saved to your Notes library!')),
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ],
-                              ),
-                            ),
+                                  ),
                           ),
                         );
                       },
@@ -838,17 +891,26 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                 final bottomPadding = isKeyboardOpen ? 6.0 : max(8.0, safeBottom);
 
                 return Container(
-                  padding: EdgeInsets.fromLTRB(14, 6, 14, bottomPadding),
+                  padding: EdgeInsets.fromLTRB(14, 8, 14, bottomPadding),
                   decoration: BoxDecoration(
-                    color: const Color(0xE8141620),
-                    border: Border(top: BorderSide(color: AppColors.border.withValues(alpha: 0.4))),
+                    color: const Color(0xF20A0914),
+                    border: const Border(
+                      top: BorderSide(color: AppColors.borderSubtle, width: 0.8),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: _controller,
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.4),
                           decoration: InputDecoration(
                             hintText: _isListening
                                 ? 'Listening to your voice...'
@@ -856,19 +918,34 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                                     ? 'Ask about ${chatState.activeDocumentName}...'
                                     : 'Ask any chemistry question...',
                             hintStyle: TextStyle(
-                              color: _isListening ? AppColors.danger : AppColors.textMuted,
-                              fontSize: 13,
+                              color: _isListening ? AppColors.statusDanger : AppColors.textMuted,
+                              fontSize: 13.5,
                               fontWeight: _isListening ? FontWeight.w600 : FontWeight.normal,
                             ),
                             filled: true,
-                            fillColor: AppColors.surfaceElevated,
+                            fillColor: AppColors.bg2,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
                               borderSide: BorderSide(
-                                color: _isListening ? AppColors.danger : AppColors.border,
+                                color: _isListening ? AppColors.statusDanger : AppColors.borderSubtle,
+                                width: 0.8,
                               ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(
+                                color: _isListening ? AppColors.statusDanger : AppColors.borderSubtle,
+                                width: 0.8,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(
+                                color: _isListening ? AppColors.statusDanger : AppColors.brandPrimary,
+                                width: 1.2,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                           ),
                           onSubmitted: (_) {
                             if (_isListening) _stopListening();
@@ -879,36 +956,56 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                       const SizedBox(width: 8),
                       Material(
                         color: _isListening
-                            ? AppColors.danger.withValues(alpha: 0.25)
-                            : AppColors.surfaceElevated,
+                            ? AppColors.statusDanger.withValues(alpha: 0.2)
+                            : AppColors.bg2,
                         shape: const CircleBorder(),
                         child: InkWell(
                           customBorder: const CircleBorder(),
                           onTap: _toggleListening,
                           child: Container(
-                            width: 42,
-                            height: 42,
+                            width: 44,
+                            height: 44,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: _isListening
-                                    ? AppColors.danger
-                                    : AppColors.border.withValues(alpha: 0.7),
-                                width: _isListening ? 1.6 : 1.0,
+                                    ? AppColors.statusDanger
+                                    : AppColors.borderSubtle,
+                                width: _isListening ? 1.5 : 0.8,
                               ),
                             ),
                             child: Icon(
                               _isListening ? Icons.mic : Icons.mic_none_rounded,
-                              color: _isListening ? AppColors.danger : AppColors.purpleBright,
+                              color: _isListening ? AppColors.statusDanger : AppColors.brandBright,
                               size: 20,
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      CircleAvatar(
-                        backgroundColor: chatState.isLoading ? AppColors.purple.withValues(alpha: 0.4) : AppColors.purple,
-                        radius: 21,
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: chatState.isLoading
+                              ? null
+                              : const LinearGradient(
+                                  colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                          color: chatState.isLoading ? AppColors.brandPrimary.withValues(alpha: 0.35) : null,
+                          shape: BoxShape.circle,
+                          boxShadow: chatState.isLoading
+                              ? null
+                              : [
+                                  BoxShadow(
+                                    color: AppColors.brandPrimary.withValues(alpha: 0.35),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                        ),
                         child: IconButton(
                           icon: chatState.isLoading
                               ? const SizedBox(
@@ -916,7 +1013,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                                   height: 16,
                                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                 )
-                              : const Icon(Icons.send, color: Colors.white, size: 18),
+                              : const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 20),
                           onPressed: chatState.isLoading
                               ? null
                               : () {
@@ -1172,14 +1269,31 @@ class _AiModeChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5.5),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? AppColors.purple.withValues(alpha: 0.3) : AppColors.surfaceElevated,
+          gradient: selected
+              ? const LinearGradient(
+                  colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: selected ? null : AppColors.bg2,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? AppColors.purpleBright : AppColors.border,
-            width: selected ? 1.2 : 0.8,
+            color: selected ? AppColors.brandBright : AppColors.borderSubtle,
+            width: selected ? 1.0 : 0.8,
           ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.brandPrimary.withValues(alpha: 0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1187,7 +1301,7 @@ class _AiModeChip extends StatelessWidget {
             Icon(
               icon,
               size: 13.5,
-              color: selected ? AppColors.purpleBright : AppColors.textMuted,
+              color: selected ? Colors.white : AppColors.textMuted,
             ),
             const SizedBox(width: 5),
             Text(
@@ -1195,6 +1309,7 @@ class _AiModeChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11.5,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                letterSpacing: 0.1,
                 color: selected ? Colors.white : AppColors.textSecondary,
               ),
             ),

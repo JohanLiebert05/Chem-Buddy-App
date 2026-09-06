@@ -682,7 +682,7 @@ Where:
 * $R = 8.314\text{ J}\cdot\text{mol}^{-1}\cdot\text{K}^{-1}$.''';
     }
 
-    if (q.contains('ph') || q.contains('poh') || q.contains('buffer') || q.contains('henderson')) {
+    if (q.contains(' ph ') || q.contains(' ph=') || q.contains('ph value') || q.contains('ph of') || q.contains('calculate ph') || q.contains('poh') || (q.contains('buffer') && (q.contains('solution') || q.contains('acidic') || q.contains('basic') || q.contains('henderson'))) || q.contains('henderson-hasselbalch') || q.contains('henderson hasselbalch')) {
       return r'''### **pH, pOH, and Buffer Solutions (Henderson-Hasselbalch)**
 
 #### **1. Definitions of $\text{pH}$ and $\text{pOH}$**
@@ -705,6 +705,104 @@ A buffer resists changes in $\text{pH}$ upon addition of small amounts of strong
 * **For Basic Buffers**:
   $$\mathbf{\text{pOH} = \text{p}K_b + \log_{10}\left(\frac{[\text{Conjugate Acid}]}{[\text{Weak Base}]}\right)}$$
 * **Maximum Buffer Capacity**: Occurs when $[\text{Salt}] = [\text{Acid}]$, i.e. $\text{pH} = \text{p}K_a$.''';
+    }
+
+    // Acid-Base Theory: Arrhenius, Bronsted-Lowry, Lewis
+    if ((q.contains('acid') && q.contains('base')) ||
+        q.contains('arrhenius theory') ||
+        q.contains('bronsted') ||
+        q.contains('lewis acid') ||
+        q.contains('lewis base') ||
+        q.contains('conjugate acid') ||
+        q.contains('conjugate base') ||
+        q.contains('neutralisation') ||
+        q.contains('neutralization') ||
+        (q.contains('difference') && (q.contains('acid') || q.contains('base'))) ||
+        (q.contains('compare') && (q.contains('acid') || q.contains('base')))) {
+      return r'''### **Acids and Bases: Arrhenius, Brønsted-Lowry & Lewis Theories**
+
+#### **1. Arrhenius Theory (1884)**
+* **Acid**: A substance that produces $\text{H}^+$ (proton / hydrogen ion) in aqueous solution.
+  * Example: $\text{HCl} \xrightarrow{\text{H}_2\text{O}} \text{H}^+ + \text{Cl}^-$
+* **Base**: A substance that produces $\text{OH}^-$ (hydroxide ion) in aqueous solution.
+  * Example: $\text{NaOH} \xrightarrow{\text{H}_2\text{O}} \text{Na}^+ + \text{OH}^-$
+* **Limitation**: Restricted to aqueous solutions only; cannot explain bases like $\text{NH}_3$ that have no $\text{OH}^-$.
+
+---
+
+#### **2. Brønsted-Lowry Theory (1923)**
+* **Acid**: A **proton donor** ($\text{H}^+$ donor).
+* **Base**: A **proton acceptor** ($\text{H}^+$ acceptor).
+* **Conjugate Acid-Base Pairs**: When an acid donates $\text{H}^+$, the species remaining is its conjugate base (and vice versa).
+$$\underbrace{\text{HCl}}_{\text{Acid (donor)}} + \underbrace{\text{H}_2\text{O}}_{\text{Base (acceptor)}} \rightleftharpoons \underbrace{\text{H}_3\text{O}^+}_{\text{Conj. Acid}} + \underbrace{\text{Cl}^-}_{\text{Conj. Base}}$$
+* **Advantage**: Applies to non-aqueous solvents too (e.g. liquid $\text{NH}_3$).
+* **Amphoteric species**: Water ($\text{H}_2\text{O}$) can act as both acid and base — it is **amphoteric**.
+
+---
+
+#### **3. Lewis Theory (1923) — Most General**
+* **Lewis Acid**: An **electron pair acceptor** (electrophile). Includes species with empty orbitals: $\text{BF}_3$, $\text{AlCl}_3$, $\text{Fe}^{3+}$.
+* **Lewis Base**: An **electron pair donor** (nucleophile). Includes species with lone pairs: $\text{NH}_3$, $\text{H}_2\text{O}$, $\text{F}^-$.
+$$\text{BF}_3 \text{ (Lewis acid)} + \text{:NH}_3 \text{ (Lewis base)} \rightarrow \text{F}_3\text{B} \leftarrow \text{NH}_3 \text{ (adduct)}$$
+* **Advantage**: Broadest definition — explains reactions without proton transfer (e.g. metal coordination complexes).
+
+---
+
+#### **4. Comparison Table**
+
+| Theory | Acid Definition | Base Definition | Medium |
+| :--- | :--- | :--- | :--- |
+| **Arrhenius** | Produces $\text{H}^+$ | Produces $\text{OH}^-$ | Aqueous only |
+| **Brønsted-Lowry** | Proton ($\text{H}^+$) donor | Proton ($\text{H}^+$) acceptor | Any solvent |
+| **Lewis** | Electron-pair acceptor | Electron-pair donor | Any medium |
+
+---
+
+#### **5. Key Exam Points**
+* Strong acids ($\text{HCl}$, $\text{H}_2\text{SO}_4$, $\text{HNO}_3$) fully dissociate; weak acids ($\text{CH}_3\text{COOH}$, $\text{H}_2\text{CO}_3$) partially dissociate.
+* Strong bases ($\text{NaOH}$, $\text{KOH}$) fully dissociate; weak bases ($\text{NH}_3$, amines) partially ionize.
+* Neutralization: $\text{Acid} + \text{Base} \rightarrow \text{Salt} + \text{H}_2\text{O}$, e.g. $\text{HCl} + \text{NaOH} \rightarrow \text{NaCl} + \text{H}_2\text{O}$.''';
+    }
+
+    // Oxidation & Reduction
+    if ((q.contains('oxidation') && q.contains('reduction')) ||
+        q.contains('redox') ||
+        q.contains('oxidising agent') ||
+        q.contains('oxidizing agent') ||
+        q.contains('reducing agent') ||
+        (q.contains('difference') && q.contains('oxidation'))) {
+      return r'''### **Oxidation and Reduction (Redox Chemistry)**
+
+#### **1. Classical Oxygen-Based Definitions**
+* **Oxidation**: Addition of oxygen or removal of hydrogen.
+  * $2\text{Mg} + \text{O}_2 \rightarrow 2\text{MgO}$ (Mg is oxidized)
+* **Reduction**: Removal of oxygen or addition of hydrogen.
+  * $\text{CuO} + \text{H}_2 \rightarrow \text{Cu} + \text{H}_2\text{O}$ (CuO is reduced)
+
+---
+
+#### **2. Electron Transfer Definitions (Modern)**
+* **Oxidation**: **Loss of electrons** (OIL — Oxidation Is Loss).
+  $$\text{Fe}^{2+} \rightarrow \text{Fe}^{3+} + e^-$$
+* **Reduction**: **Gain of electrons** (RIG — Reduction Is Gain).
+  $$\text{Cu}^{2+} + 2e^- \rightarrow \text{Cu}$$
+* **Mnemonic**: **OIL RIG** — Oxidation Is Loss, Reduction Is Gain.
+
+---
+
+#### **3. Oxidation State Rules**
+* Pure element: O.S. = 0 (e.g. $\text{O}_2$, $\text{Fe}$)
+* Monatomic ion: O.S. = ion charge (e.g. $\text{Na}^+$ = +1)
+* Oxygen in compounds: −2 (except peroxides: −1; $\text{OF}_2$: +2)
+* Hydrogen: +1 (with non-metals); −1 (metal hydrides like $\text{NaH}$)
+
+---
+
+#### **4. Oxidizing vs Reducing Agents**
+| Term | Role | Example |
+| :--- | :--- | :--- |
+| **Oxidizing Agent** | Gets reduced (gains $e^-$) | $\text{KMnO}_4$, $\text{Cl}_2$, $\text{O}_2$ |
+| **Reducing Agent** | Gets oxidized (loses $e^-$) | $\text{Fe}$, $\text{H}_2$, $\text{SO}_2$ |''';
     }
 
     // -------------------------------------------------------------
@@ -914,53 +1012,157 @@ Rearrangement of **Cyclohexanone oxime** with concentrated $\text{H}_2\text{SO}_
     bool is5M = false,
     bool is10M = false,
   }) {
-    final title = query.length > 60 ? '${query.substring(0, 57)}...' : query;
     final lower = query.toLowerCase();
 
-    // Determine category
-    final isCalculationOrUnit = lower.contains('calculate') || lower.contains('formula') || lower.contains('unit') || lower.contains('express');
-    final isMechanism = lower.contains('mechanism') || lower.contains('reaction') || lower.contains('synthesis') || lower.contains('reagent');
-    final isPhysicalOrThermo = lower.contains('energy') || lower.contains('law') || lower.contains('rate') || lower.contains('equilibrium');
-    final isAnalytical = lower.contains('spectr') || lower.contains('chromato') || lower.contains('titrat') || lower.contains('detect');
+    // ── Specific topic detectors ─────────────────────────────────────────────
 
-    final buffer = StringBuffer();
-    buffer.writeln('### **Academic Analysis: $title**');
-    buffer.writeln();
-    buffer.writeln('#### **1. Fundamental Principle & Scientific Definition**');
-    buffer.writeln('In scientific and chemical analysis, **$title** addresses key concepts in ${subject ?? "advanced chemistry"}, defining the relationship between molecular behavior, macroscopic properties, and experimental measurement.');
-    buffer.writeln();
+    // Ionic / covalent bonding
+    if (lower.contains('ionic') || lower.contains('covalent') || lower.contains('bonding') || lower.contains('electronegativity')) {
+      return r'''### **Chemical Bonding: Ionic vs Covalent**
 
-    if (isCalculationOrUnit) {
-      buffer.writeln(r'#### **2. Governing Equations & Units of Measurement**');
-      buffer.writeln(r'* **Mathematical Formulation**: Solved by applying standard mass-to-mole stoichiometry, volumetric relationships, or proportionality constants.');
-      buffer.writeln(r'* **Standard Units**: Quantified in SI units ($\text{mol}$, $\text{mol/L}$, $\text{g/cm}^3$, $\text{J/mol}$, or dimensionless ratios like $\text{ppm}$).');
-      buffer.writeln(r'* **Variables**: Always ensure volume is in liters ($\text{L}$) when calculating molar concentrations, or in kilograms ($\text{kg}$) when evaluating mass-based molalities.');
-    } else if (isMechanism) {
-      buffer.writeln(r'#### **2. Mechanistic Pathways & Reaction Coordinates**');
-      buffer.writeln(r'* **Stepwise Transformation**: Initiated by orbital overlap, electrophile-nucleophile pairing, or radical initiation.');
-      buffer.writeln(r'* **Transition State / Intermediates**: Governed by electronic stabilization (resonance, inductive effects) and steric hindrance.');
-      buffer.writeln(r'* **Driving Force**: Formation of thermodynamically stable products ($\Delta G < 0$) or irreversible loss of small stable molecules ($\text{H}_2\text{O}, \text{CO}_2, \text{N}_2$).');
-    } else if (isAnalytical) {
-      buffer.writeln(r'#### **2. Analytical & Instrumentation Context**');
-      buffer.writeln(r'* **Detection Principle**: Based on molecular transitions, absorption/emission spectra, or chromatographic retention factors.');
-      buffer.writeln(r'* **Quantitative Standard**: Obey Beer-Lambert law ($A = \epsilon b c$) or standard calibration curves.');
-    } else if (isPhysicalOrThermo) {
-      buffer.writeln(r'#### **2. Thermodynamic & Kinetic Framework**');
-      buffer.writeln(r'* **Energetics**: Controlled by energy conservation ($\Delta H$), entropy generation ($\Delta S$), and spontaneity conditions ($\Delta G = \Delta H - T\Delta S$).');
-      buffer.writeln(r'* **Equilibrium & Rates**: System parameters respond to temperature, pressure, and concentration according to Le Chatelier’s principle and Arrhenius kinetics ($k = A e^{-E_a/RT}$).');
-    } else {
-      buffer.writeln(r'#### **2. Scientific Framework & Core Postulates**');
-      buffer.writeln(r'* **Governing Principles**: Built upon foundational atomic theory, molecular orbital interactions, and quantitative stoichiometry.');
-      buffer.writeln(r'* **Experimental Observation**: Measured using spectroscopic absorption (UV-Vis, IR, NMR) or analytical chromatographic methods (HPLC, GC).');
+#### **1. Ionic Bonding**
+Formed by complete **transfer of electrons** from a metal to a non-metal, producing oppositely charged ions held by electrostatic attraction.
+* Example: $\text{Na} \rightarrow \text{Na}^+ + e^-$ and $\text{Cl} + e^- \rightarrow \text{Cl}^-$ → $\text{NaCl}$
+* Properties: High melting point, conducts electricity when molten/dissolved, crystalline structure.
+
+---
+
+#### **2. Covalent Bonding**
+Formed by **sharing of electron pairs** between non-metal atoms of similar electronegativity.
+* Example: $\text{H}_2\text{O}$ (2 O–H bonds), $\text{N}_2$ ($\equiv$ triple bond)
+* Properties: Low melting point (molecular), poor electrical conductors, can be polar or non-polar.
+
+---
+
+#### **3. Electronegativity & Bond Type**
+| $\Delta\chi$ (Electronegativity difference) | Bond Type |
+| :---: | :--- |
+| $> 1.7$ | Ionic |
+| $0.5 – 1.7$ | Polar Covalent |
+| $< 0.5$ | Non-polar Covalent |''';
     }
 
-    buffer.writeln();
-    buffer.writeln(r'#### **3. Academic & Examination Key Points**');
-    buffer.writeln(r'* Explicitly state all standard assumptions, temperature/pressure conditions, and units.');
-    buffer.writeln(r'* Include balanced chemical formulas and state symbols $(\text{aq}, \text{s}, \text{l}, \text{g})$ where applicable.');
-    buffer.writeln(r'* For quantitative problems, verify dimensional consistency before finalizing values.');
+    // Periodic table / periodic properties
+    if (lower.contains('periodic') || lower.contains('ionization energy') || lower.contains('ionisation energy') || lower.contains('electron affinity') || lower.contains('atomic radius')) {
+      return r'''### **Periodic Table & Periodic Properties**
 
-    return buffer.toString();
+#### **1. Ionization Energy ($IE$)**
+Energy required to remove the outermost electron from a gaseous atom in its ground state.
+$$\text{M}_{(g)} \rightarrow \text{M}^+_{(g)} + e^- \quad \Delta H = IE_1$$
+* **Trend**: Increases across a period (left → right) due to increasing nuclear charge; decreases down a group due to increased shielding.
+
+---
+
+#### **2. Electron Affinity ($EA$)**
+Energy change when a gaseous atom gains one electron.
+* Most negative EA: Chlorine ($\text{Cl}$) — gains electron to complete octet.
+* Trend: Generally increases (more negative) across a period.
+
+---
+
+#### **3. Atomic Radius**
+* **Increases down a group** (more electron shells).
+* **Decreases across a period** (increasing nuclear charge pulls electrons closer).''';
+    }
+
+    // Isomerism
+    if (lower.contains('isomer') || lower.contains('stereoisomer') || lower.contains('enantiomer') || lower.contains('diastereomer') || lower.contains('optical isomer')) {
+      return r'''### **Isomerism in Organic Chemistry**
+
+#### **1. Structural (Constitutional) Isomers**
+Same molecular formula, different connectivity of atoms.
+* Example: $\text{C}_4\text{H}_{10}$ → n-butane and isobutane (2-methylpropane)
+
+---
+
+#### **2. Stereoisomers** (same connectivity, different 3D arrangement)
+
+**a. Geometric (cis-trans) Isomers**
+Restricted rotation around C=C or ring systems.
+* *cis*: same groups on same side; *trans*: on opposite sides.
+
+**b. Optical Isomers (Enantiomers)**
+Non-superimposable mirror images; require a **chiral centre** (sp³ carbon with 4 different groups).
+* **Enantiomers**: rotate plane-polarized light equally but in opposite directions (+/−).
+* **Diastereomers**: stereoisomers that are NOT mirror images; have different physical properties.
+
+---
+
+#### **3. R/S Configuration (CIP Rules)**
+Assign priority by atomic number; if highest→lowest priority is clockwise: **R** (rectus); anticlockwise: **S** (sinister).''';
+    }
+
+    // Colligative properties
+    if (lower.contains('colligative') || lower.contains('boiling point elevation') || lower.contains('freezing point depression') || lower.contains('osmotic pressure') || lower.contains('van\'t hoff')) {
+      return r'''### **Colligative Properties of Solutions**
+
+Colligative properties depend only on the **number of solute particles**, not their identity.
+
+#### **1. Boiling Point Elevation ($\Delta T_b$)**
+$$\Delta T_b = i \cdot K_b \cdot m$$
+where $K_b$ = ebullioscopic constant, $m$ = molality, $i$ = van't Hoff factor.
+
+#### **2. Freezing Point Depression ($\Delta T_f$)**
+$$\Delta T_f = i \cdot K_f \cdot m$$
+Used to determine molar mass of unknown solutes.
+
+#### **3. Osmotic Pressure ($\pi$)**
+$$\pi = i \cdot M \cdot R \cdot T$$
+where $M$ = molarity, $R = 0.0821\text{ L·atm/mol·K}$, $T$ = temperature in K.
+
+#### **4. van't Hoff Factor ($i$)**
+* Non-electrolyte: $i = 1$
+* $\text{NaCl}$ (1:1 electrolyte): $i = 2$
+* $\text{CaCl}_2$: $i = 3$''';
+    }
+
+    // Coordination / complex chemistry (handled better here)
+    if (lower.contains('coordination number') || lower.contains('ligand') || lower.contains('complex compound') || lower.contains('iupac') || lower.contains('coordination compound')) {
+      return r'''### **Coordination Chemistry (Werner's Theory)**
+
+#### **1. Key Terminology**
+* **Central Metal Ion**: Transition metal accepting electron pairs.
+* **Ligands**: Lewis bases (electron pair donors) bonded to the central metal.
+  * Monodentate: $\text{NH}_3$, $\text{Cl}^-$, $\text{H}_2\text{O}$ (1 donor atom)
+  * Bidentate: ethylenediamine (en), oxalate $\text{C}_2\text{O}_4^{2-}$ (2 donor atoms)
+  * Polydentate: EDTA (6 donor atoms)
+* **Coordination Number (CN)**: Number of donor atoms directly bonded to the metal.
+
+---
+
+#### **2. IUPAC Nomenclature**
+1. Name cation before anion.
+2. Name ligands alphabetically (anionic ligands: -o suffix; neutral: as named, e.g. ammine, aqua).
+3. Name central metal with oxidation state in Roman numerals.
+* Example: $[\text{Co(NH}_3)_6]^{3+}$ → **hexaamminecobalt(III) ion**
+
+---
+
+#### **3. Effective Atomic Number (EAN) Rule**
+Total electrons on metal + electrons from ligands = EAN (noble gas configuration).''';
+    }
+
+    // Generic fallback — honest and helpful, not gibberish
+    final topicHint = subject != null ? ' in $subject' : '';
+    return '''### **$query**
+
+I don't have a pre-built answer for this specific topic$topicHint in my offline knowledge base.
+
+### How to Get the Full Answer
+
+**Option 1 — Ask Chem AI** (recommended):
+Tap the **Ask PDF AI** tab or use the **ChemBuddy AI** chat. Your question will be sent to Gemini AI which has comprehensive chemistry knowledge and will give you a detailed, accurate answer.
+
+**Option 2 — Upload Your Notes**:
+Upload your study PDF and ask this question — ChemBuddy will answer directly from your notes.
+
+**Option 3 — Try a More Specific Question**:
+Rephrase with specific terms like:
+- *"Explain the mechanism of ..."*
+- *"What is the difference between ... and ...?"*
+- *"State and explain the law of ..."*
+
+> **Note**: ChemBuddy AI (powered by Gemini) covers all MSc chemistry topics including thermodynamics, organic mechanisms, spectroscopy, coordination chemistry, quantum chemistry, and more.''';
   }
 
   // =========================================================================

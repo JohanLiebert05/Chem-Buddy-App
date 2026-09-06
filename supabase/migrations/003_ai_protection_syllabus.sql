@@ -134,8 +134,8 @@ create policy "admins write config" on public.app_config
 insert into public.app_config(key, value, description) values
   ('ai_daily_limit_student', '20',               'Max AI requests per student per day'),
   ('ai_daily_limit_admin',   '999',              'Max AI requests per admin per day'),
-  ('gemini_model_default',   'gemini-2.0-flash', 'Default Gemini model for all tasks'),
-  ('gemini_model_heavy',     'gemini-2.0-flash', 'Model for heavy reasoning tasks'),
+  ('gemini_model_default',   'gemini-3.8-flash', 'Default Gemini model for all tasks'),
+  ('gemini_model_heavy',     'gemini-3.8-flash', 'Model for heavy reasoning tasks'),
   ('ai_cache_ttl_hours',     '168',              'Cache TTL in hours (default 7 days)')
 on conflict(key) do nothing;
 

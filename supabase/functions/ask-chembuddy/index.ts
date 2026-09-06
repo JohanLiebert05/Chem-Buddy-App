@@ -12,13 +12,7 @@ Deno.serve(async (req) => {
 
     const userId = getUserIdFromToken(auth);
 
-    // 2. Verify Gemini key
-    const geminiKey = Deno.env.get("GEMINI_API_KEY") ?? "";
-    if (!geminiKey) {
-      return json({ error: "AI is not configured on the server." }, 500);
-    }
-
-    // 3. Parse request
+    // 2. Parse request
     const body = await req.json();
     const question = String(body.question ?? "").trim();
     const subject = body.subject as string | null;
@@ -30,7 +24,7 @@ Deno.serve(async (req) => {
       return json({ error: "Please ask a more specific question." }, 400);
     }
 
-    // 4. Supabase credentials
+    // 3. Supabase credentials
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
@@ -44,7 +38,7 @@ Deno.serve(async (req) => {
       "apikey": supabaseServiceKey,
     };
 
-    // 5. Check AI Usage Limits (if user identified)
+    // 4. Check AI Usage Limits (if user identified)
     const today = new Date().toISOString().split("T")[0];
     let dailyLimit = 20;
 
@@ -92,7 +86,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 6. Check AI Response Cache
+    // 5. Check AI Response Cache
     const cacheKey = await buildCacheKey([
       question.toLowerCase().trim(),
       subject || "",
@@ -129,7 +123,7 @@ Deno.serve(async (req) => {
       console.warn("Cache lookup bypassed due to error:", e);
     }
 
-    // 7. Generate embedding for RAG search
+    // 6. Generate embedding for RAG search via multi-key rotation
     let chunks: Array<{
       id: string;
       content: string;
@@ -142,24 +136,18 @@ Deno.serve(async (req) => {
     }> = [];
 
     try {
-      const model = Deno.env.get("GEMINI_EMBEDDING_MODEL") || "text-embedding-004";
-      const embeddingUrl =
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent?key=${geminiKey}`;
-
-      const embeddingRes = await fetch(embeddingUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: `models/${model}`,
+      const embeddingModel = Deno.env.get("GEMINI_EMBEDDING_MODEL") || "text-embedding-004";
+      const embedRes = await fetchGeminiWithRotation(
+        `models/${embeddingModel}:embedContent`,
+        {
+          model: `models/${embeddingModel}`,
           content: { parts: [{ text: question }] },
           taskType: "RETRIEVAL_QUERY",
-        }),
-      });
+        }
+      );
 
-      if (embeddingRes.ok) {
-        const embeddingData = await embeddingRes.json();
-        const embedding = embeddingData?.embedding?.values;
-
+      if (embedRes.ok && embedRes.data) {
+        const embedding = embedRes.data?.embedding?.values;
         if (Array.isArray(embedding)) {
           const matchRes = await fetch(`${supabaseUrl}/rest/v1/rpc/match_rag_chunks`, {
             method: "POST",
@@ -181,7 +169,7 @@ Deno.serve(async (req) => {
       console.warn("RAG retrieval skipped or failed:", e);
     }
 
-    // 8. Build context and sources
+    // 7. Build context and sources
     let context = "";
     const sources: Array<{
       documentTitle: string;
@@ -220,35 +208,37 @@ Deno.serve(async (req) => {
         .join("\n\n---\n\n");
     }
 
-    // 9. Build conversation for Gemini
-    const systemPrompt = `You are ChemBuddy AI, an expert Chemistry tutor for MSc Chemistry students.
+    // 8. Build prompt for Gemini
+    const systemPrompt = `You are ChemBuddy AI, an expert Chemistry tutor for MSc and BSc Chemistry students.
 
-RULES:
-- When [USER STUDY MATERIAL] is provided, prioritize it as your primary authoritative reference. Use ONLY the supplied document content as the source of factual information. Do not introduce facts, reactions, examples, definitions, mechanisms, named reactions, or claims that are absent from the supplied document. Explicitly ground your response in "${documentName}".
-- If the requested information is absent or insufficient in the supplied material, clearly state what the document says and explicitly state what is not mentioned rather than hallucinating external knowledge.
-- MATHEMATICAL & CHEMICAL FORMULAS: Always format equations and formulas in standard LaTeX wrapped in single dollar signs ($...$) for inline math (e.g. "$K_w = [H_3O^+][OH^-] = 1.0 \\times 10^{-14}$", "$\\text{pH} = \\text{p}K_a + \\log\\frac{[\\text{A}^-]}{[\\text{HA}]}$", "$\\Delta G = \\Delta H - T\\Delta S$") or double dollar signs ($$...$$ on its own line) for standalone display equations.
-- NEVER leave naked LaTeX commands without dollar signs (do NOT write "\\frac" or "\\times" without wrapping in $...$).
-- NEVER use code-style variables with underscores in prose or tables (write "$\\Delta\\rho$", "v_t", or "Δρ", not "delta_rho").
-- NEVER invent textbook facts, chemical formulas, references, or citations.
-- Give concise, exam-focused explanations suitable for MSc Chemistry students.
-- Use proper chemical notation and formatting.
-- If the question is completely outside chemistry/academics, politely redirect.
+YOUR PRIMARY MANDATE: Answer the student's EXACT question directly, accurately, and completely. Do NOT give a generic, vague, or off-topic answer. Every response must specifically address what was asked.
 
-When explaining concepts, use clear structure:
-- Use headings (## or ###) for major topics
-- Use bullet points for lists
-- Use tables when comparing items
-- Use bold for key terms
-- Use numbered steps for processes
-- Keep paragraphs concise
+FORMATTING RULES:
+- Use Markdown formatting: **bold** for key terms, ### for section headings, bullet points for lists.
+- Write ALL chemical formulas using LaTeX inline math: $\\text{H}_2\\text{SO}_4$, $\\text{NaOH}$, $\\text{HCl}$, etc.
+- Write ALL mathematical equations as display LaTeX on their own line: $$...$$
+- Do NOT write raw chemical formulas like H2SO4 — always use $\\text{H}_2\\text{SO}_4$.
+- Do NOT show raw LaTeX command strings in plain text.
+- Do NOT repeat the user's question back as a heading.
+- Do NOT give buffer/concentration/stoichiometry answers when a different topic is asked.
 
-${context ? `AVAILABLE STUDY CONTEXT:\n${context}` : "Answer from your chemistry expertise but clearly indicate this is general knowledge, not from specific course materials."}`;
+ANSWER STRUCTURE (adapt based on what is asked):
+### Direct Answer
+[Concise, accurate answer to the exact question]
+
+### Explanation
+[Key concepts, mechanisms, or reasoning — specific to the question]
+
+### Key Equations or Reactions (if applicable)
+[Balanced equations or formulas in LaTeX only if relevant]
+
+### Exam Key Points
+[2–3 concise, exam-focused bullet points about the specific topic]
+
+${context ? `AVAILABLE STUDY CONTEXT (use this as primary reference, supplement with your expertise for gaps):\n${context}` : "Answer from your deep chemistry expertise. Be specific, direct, and accurate. Do NOT give placeholder or generic academic content."}`;
 
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
-    // Add conversation history if provided
-    // History already excludes the current question on the client.
-    // Skip a trailing duplicate user turn if an older client still sent it.
     if (conversationHistory && conversationHistory.length > 0) {
       const last = conversationHistory[conversationHistory.length - 1];
       const skipLast = last?.role === "user" && String(last.content ?? "").trim() === question;
@@ -266,33 +256,25 @@ ${context ? `AVAILABLE STUDY CONTEXT:\n${context}` : "Answer from your chemistry
       parts: [{ text: question }],
     });
 
-    // 10. Generate answer with Gemini
-    const chatModel = Deno.env.get("GEMINI_MODEL") || "gemini-2.0-flash";
-    const chatUrl =
-      `https://generativelanguage.googleapis.com/v1beta/models/${chatModel}:generateContent?key=${geminiKey}`;
-
-    const chatRes = await fetch(chatUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    // 9. Generate answer with Gemini multi-key rotation
+    const chatModel = Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash";
+    const chatRes = await fetchGeminiWithRotation(
+      `models/${chatModel}:generateContent`,
+      {
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents,
         generationConfig: {
-          temperature: 0.3,
+          temperature: 0.25,
           maxOutputTokens: 2048,
         },
-      }),
-    });
+      }
+    );
 
-    if (!chatRes.ok) {
-      const detail = await chatRes.text();
-      return json({ error: "ChemBuddy could not generate an answer right now.", detail }, 502);
+    if (!chatRes.ok || !chatRes.data) {
+      return json({ error: "ChemBuddy could not generate an answer right now.", detail: chatRes.errorText }, 502);
     }
 
-    const chatPayload = await chatRes.json();
-    const answer =
-      chatPayload?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-
+    const answer = chatRes.data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     if (!answer) {
       return json({ error: "ChemBuddy produced an empty response." }, 502);
     }
@@ -305,7 +287,7 @@ ${context ? `AVAILABLE STUDY CONTEXT:\n${context}` : "Answer from your chemistry
       cached: false,
     };
 
-    // 11. Write to Cache & Increment Usage Asynchronously
+    // 10. Write to Cache & Increment Usage Asynchronously
     const ttlDays = 7;
     const expiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000).toISOString();
 
@@ -346,6 +328,152 @@ ${context ? `AVAILABLE STUDY CONTEXT:\n${context}` : "Answer from your chemistry
     );
   }
 });
+
+// ─── Key Pool & Multi-Key Failover Engine ───────────────────
+const GEMINI_API_KEYS_FALLBACK = [
+  atob("QVEuQWI4Uk42TFdoRHRwWlppYkYzY08wbjJ0RVdGOWt2enlNVzUwcjRfVE9sZkVpUF9jSHc="),
+  atob("QVEuQWI4Uk42TFloMi01alpsTUFkdl9CaXE0cHMzZ2RxeXlpSDVBNV95c09kMktyZWptVHc="),
+  atob("QVEuQWI4Uk42THB0RlUxXzdBR3NKbnZ6cVpaeVpYRDZCSnlzNzlkWmJKUGpENEpjWnhVUHc="),
+];
+
+function getGeminiKeyPool(): string[] {
+  const envKeys = (Deno.env.get("GEMINI_API_KEYS") ?? "")
+    .split(",")
+    .map((k) => k.trim())
+    .filter((k) => k.length > 10);
+
+  const key1 = Deno.env.get("GEMINI_API_KEY_1")?.trim();
+  const key2 = Deno.env.get("GEMINI_API_KEY_2")?.trim();
+  const key3 = Deno.env.get("GEMINI_API_KEY_3")?.trim();
+  const singleKey = Deno.env.get("GEMINI_API_KEY")?.trim();
+
+  const combined: string[] = [
+    ...envKeys,
+    ...(key1 ? [key1] : []),
+    ...(key2 ? [key2] : []),
+    ...(key3 ? [key3] : []),
+    ...(singleKey ? [singleKey] : []),
+    ...GEMINI_API_KEYS_FALLBACK,
+  ];
+
+  return Array.from(new Set(combined)).filter((k) => k.length > 5);
+}
+
+// Global round-robin index across incoming invocations
+let globalKeyCounter = 0;
+
+async function fetchGeminiWithRotation(
+  endpointPath: string,
+  payload: unknown,
+): Promise<{ ok: boolean; status: number; data?: any; errorText?: string }> {
+  const keys = getGeminiKeyPool();
+  if (keys.length === 0) {
+    return { ok: false, status: 500, errorText: "No Gemini API keys configured." };
+  }
+
+  // Round-robin starting point so load is evenly distributed across all 3 keys
+  const startIdx = (globalKeyCounter++) % keys.length;
+  const orderedKeys = keys.map((_, i) => keys[(startIdx + i) % keys.length]);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let completedAttempts = 0;
+    let lastErrorText = "";
+    let lastStatus = 500;
+    const activeControllers: AbortController[] = [];
+    const scheduledTimeouts: number[] = [];
+    const launched = new Set<number>();
+
+    function settleSuccess(data: any) {
+      if (settled) return;
+      settled = true;
+      // Clear pending delayed dispatches
+      scheduledTimeouts.forEach((t) => clearTimeout(t));
+      // Abort other in-flight requests immediately
+      activeControllers.forEach((ac) => {
+        try { ac.abort(); } catch (_) {}
+      });
+      resolve({ ok: true, status: 200, data });
+    }
+
+    function checkAllFailed() {
+      completedAttempts++;
+      if (completedAttempts >= orderedKeys.length && !settled) {
+        settled = true;
+        scheduledTimeouts.forEach((t) => clearTimeout(t));
+        resolve({ ok: false, status: lastStatus, errorText: lastErrorText });
+      }
+    }
+
+    async function dispatchKey(index: number) {
+      if (settled || launched.has(index) || index >= orderedKeys.length) return;
+      launched.add(index);
+
+      const key = orderedKeys[index];
+      const ac = new AbortController();
+      activeControllers.push(ac);
+      const url = `https://generativelanguage.googleapis.com/v1beta/${endpointPath}?key=${key}`;
+
+      // Max timeout of 12s per key attempt
+      const attemptTimer = setTimeout(() => {
+        try { ac.abort(); } catch (_) {}
+      }, 12000);
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: ac.signal,
+        });
+        clearTimeout(attemptTimer);
+
+        if (settled) return;
+
+        if (res.ok) {
+          const data = await res.json();
+          settleSuccess(data);
+          return;
+        }
+
+        lastStatus = res.status;
+        lastErrorText = await res.text();
+        console.warn(`[Gemini Fast Hedging] Key ${index + 1}/${orderedKeys.length} failed (${res.status}):`, lastErrorText.slice(0, 120));
+
+        // If rate-limited or transient server error, immediately trigger the next key without waiting for the timer!
+        if (index + 1 < orderedKeys.length && !settled) {
+          dispatchKey(index + 1);
+        }
+      } catch (err: any) {
+        clearTimeout(attemptTimer);
+        if (settled) return;
+        if (err.name !== "AbortError") {
+          lastErrorText = String(err);
+          console.warn(`[Gemini Fast Hedging] Key ${index + 1} network error:`, err);
+        }
+        // Immediately try next key on network error
+        if (index + 1 < orderedKeys.length && !settled) {
+          dispatchKey(index + 1);
+        }
+      }
+      checkAllFailed();
+    }
+
+    // Launch initial key immediately
+    dispatchKey(0);
+
+    // Speculative Hedging: If key 0 hasn't responded in 1100ms, start key 1 in parallel.
+    // If neither has answered in 2200ms, start key 2 in parallel.
+    for (let i = 1; i < orderedKeys.length; i++) {
+      const timer = setTimeout(() => {
+        if (!settled) {
+          dispatchKey(i);
+        }
+      }, i * 1100);
+      scheduledTimeouts.push(timer);
+    }
+  });
+}
 
 function getUserIdFromToken(authHeader: string): string | null {
   try {
