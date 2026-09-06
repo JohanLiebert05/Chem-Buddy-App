@@ -9,6 +9,8 @@ import '../../core/utils/haptics.dart';
 import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
+import '../../data/models/timetable_entry.dart';
+import '../../data/services/timetable_parser_service.dart';
 import '../providers/app_providers.dart';
 import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_hub.dart';
@@ -26,6 +28,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   late DateTime _selectedDate;
   double _targetPercent = 75.0;
   bool _showSimulator = false;
+  TimetablePreset _selectedPhotoPreset = TimetablePreset.organic;
 
   // Simulator state
   int _simAttend = 3;
@@ -42,6 +45,98 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  TimetablePreset _detectActivePreset(List<TimetableEntry> entries) {
+    final hasInorganic = entries.any((e) =>
+        e.subjectCode.toUpperCase().contains('ICH') ||
+        e.subject.toUpperCase().contains('INORGANIC'));
+    return hasInorganic ? TimetablePreset.inorganic : TimetablePreset.organic;
+  }
+
+  void _showTimetablePhotoDialog(BuildContext context, TimetablePreset preset) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: AppColors.surfaceElevated,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.table_chart_rounded, color: AppColors.purpleBright, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${preset.title} Timetable',
+                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                        Text('${preset.department} • ${preset.effectiveDate}',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: AppColors.border),
+            Flexible(
+              child: Container(
+                color: Colors.black,
+                constraints: const BoxConstraints(maxHeight: 480),
+                child: ClipRRect(
+                  child: InteractiveViewer(
+                    panEnabled: true,
+                    minScale: 0.8,
+                    maxScale: 5.0,
+                    child: Center(
+                      child: Image.asset(
+                        preset.imageAsset,
+                        fit: BoxFit.contain,
+                        errorBuilder: (ctx, err, stack) => const Center(
+                          child: Text('Timetable image loading...',
+                              style: TextStyle(color: AppColors.textMuted)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  const Icon(Icons.touch_app_rounded, size: 14, color: AppColors.brandBright),
+                  const SizedBox(width: 6),
+                  const Expanded(
+                    child: Text(
+                      'Pinch to zoom & drag to inspect slots & teacher names.',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Done',
+                        style: TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w700)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(appControllerProvider);
@@ -56,6 +151,12 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
     final isTodaySelected = _isSameDay(_selectedDate, todayNormalized);
     final nextSlot = repo.nextUpcomingSlot(today);
+    final activePreset = _detectActivePreset(state.entries);
+
+    // Unmarked slots for today (for quick check-in banner)
+    final unmarkedSlotsToday = isTodaySelected
+        ? slots.where((s) => repo.recordFor(slotId: s.id, date: todayNormalized) == null).toList()
+        : <TimetableSlot>[];
 
     // Subjects in danger below target
     final dangerSubjects = state.subjects.where((s) {
@@ -196,22 +297,32 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           ),
         ),
 
-        // 4. Academic Recovery / Danger Alert Banner
+        // 4. Timetable Photo Reference Banner with Preset Selector & Zoom Viewer
+        const SizedBox(height: 12),
+        _buildTimetablePhotoBanner(context, state.entries, activePreset),
+
+        // 5. Academic Recovery / Danger Alert Banner
         if (dangerSubjects.isNotEmpty) ...[
           const SizedBox(height: 12),
           _buildDangerBanner(context, dangerSubjects, repo),
         ],
 
-        // 5. Horizontal Date Ribbon / Carousel
+        // 6. Today's Timetable Check-In Banner (if today has unmarked slots)
+        if (isTodaySelected && slots.isNotEmpty && unmarkedSlotsToday.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _buildTodayCheckInBanner(context, slots, unmarkedSlotsToday, todayNormalized),
+        ],
+
+        // 7. Horizontal Date Ribbon / Carousel
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               isTodaySelected
-                  ? 'Schedule (Today)'
-                  : 'Schedule (${DateFormat('EEE, MMM d').format(_selectedDate)})',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  ? 'Schedule & Attendance (Today)'
+                  : 'Schedule & Attendance (${DateFormat('EEE, MMM d').format(_selectedDate)})',
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5),
             ),
             if (slots.isNotEmpty)
               TextButton.icon(
@@ -230,7 +341,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
         const SizedBox(height: 12),
 
-        // 6. Slots for Selected Date
+        // 8. Slots for Selected Date with Teacher Attribution & Interactive Attendance Prompts
         if (slots.isEmpty)
           GlowCard(
             child: Row(
@@ -247,7 +358,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       ),
                       const SizedBox(height: 2),
                       const Text(
-                        'Classes sync automatically from your timetable. You can add or edit schedule in the Classes tab.',
+                        'Classes sync automatically from your university timetable. Switch between Organic and Inorganic presets above anytime.',
                         style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                       ),
                     ],
@@ -261,20 +372,71 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           final subject = state.subjects.where((s) => s.id == slot.subjectId).firstOrNull;
           final entry = state.entries.where((e) => e.id == slot.id).firstOrNull;
           final current = repo.recordFor(slotId: slot.id, date: _selectedDate);
-          final title = subject?.name ?? (entry != null && entry.displayName.isNotEmpty ? entry.displayName : 'Class');
+
+          final teacher = (entry?.teacherName.isNotEmpty == true)
+              ? entry!.teacherName
+              : (slot.room.isNotEmpty && !slot.room.toLowerCase().startsWith('room') ? slot.room : '');
+          final code = (entry?.subjectCode.isNotEmpty == true) ? entry!.subjectCode : (subject?.code ?? '');
+          final title = (entry?.subject.isNotEmpty == true)
+              ? entry!.subject
+              : (subject?.name ?? (entry?.displayName.isNotEmpty == true ? entry!.displayName : 'Chemistry Class'));
           final timeStr = slot.timeLabel.isNotEmpty ? slot.timeLabel : (entry != null ? '${entry.startTime} – ${entry.endTime}' : '');
-          final roomStr = slot.room.isNotEmpty ? slot.room : (entry?.room ?? '');
+          final roomStr = (entry?.room.isNotEmpty == true) ? entry!.room : '';
+          final isUnmarked = current == null;
 
           return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.only(bottom: 12),
             child: GlowCard(
+              borderColor: isUnmarked
+                  ? AppColors.purpleBright.withValues(alpha: 0.45)
+                  : _statusColor(current.status).withValues(alpha: 0.3),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Top Title & Subject Code Row
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (code.isNotEmpty) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.purple.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
+                          ),
+                          child: Text(
+                            code,
+                            style: const TextStyle(
+                              color: AppColors.purpleBright,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       Expanded(
-                        child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                const Icon(Icons.schedule, size: 12, color: AppColors.textMuted),
+                                const SizedBox(width: 4),
+                                Text(
+                                  [timeStr, if (roomStr.isNotEmpty) 'Room: $roomStr'].where((s) => s.isNotEmpty).join(' • '),
+                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                       if (current != null)
                         Container(
@@ -282,24 +444,113 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                           decoration: BoxDecoration(
                             color: _statusColor(current.status).withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: _statusColor(current.status).withValues(alpha: 0.5)),
                           ),
                           child: Text(
-                            _statusLabelText(current.status),
+                            _statusBadgeText(current.status),
                             style: TextStyle(
                               color: _statusColor(current.status),
                               fontSize: 11,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    [timeStr, if (roomStr.isNotEmpty) 'Room: $roomStr'].where((s) => s.isNotEmpty).join(' • '),
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                  ),
-                  const SizedBox(height: 12),
+
+                  // Faculty Teacher Chip
+                  if (teacher.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.person_outline, size: 14, color: AppColors.brandBright),
+                          const SizedBox(width: 5),
+                          Flexible(
+                            child: Text(
+                              'Faculty: $teacher',
+                              style: const TextStyle(
+                                color: AppColors.brandBright,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // Interactive Attendance Question Prompt
+                  const SizedBox(height: 10),
+                  if (isUnmarked)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandPrimary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.help_outline_rounded, color: AppColors.brandBright, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Were you present or absent for ${teacher.isNotEmpty ? teacher : (code.isNotEmpty ? code : title)}\'s class?',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        color: _statusColor(current.status).withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            current.status == AttendanceStatus.present
+                                ? Icons.check_circle
+                                : (current.status == AttendanceStatus.absent ? Icons.cancel : Icons.info_outline),
+                            size: 14,
+                            color: _statusColor(current.status),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Recorded ${_statusLabelText(current.status)} for ${teacher.isNotEmpty ? teacher : title}${current.markedAt != null ? ' • ${DateFormat('h:mm a').format(current.markedAt!)}' : ''}',
+                              style: TextStyle(
+                                color: _statusColor(current.status),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // 4 Status Buttons
                   Row(
                     children: [
                       for (final status in AttendanceStatus.values)
@@ -320,20 +571,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                         ),
                     ],
                   ),
-                  if (current?.markedAt != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Marked at: ${DateFormat('h:mm a').format(current!.markedAt!)}',
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
-                    ),
-                  ],
                 ],
               ),
             ),
           );
         }),
 
-        // 7. Weekly Trend Chart
+        // 9. Weekly Trend Chart
         const SizedBox(height: 16),
         const SectionTitle('7-Day Trend'),
         GlowCard(
@@ -377,7 +621,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           ),
         ),
 
-        // 8. Subject Breakdown with Multi-Target Metrics
+        // 10. Subject Breakdown with Multi-Target Metrics & Assigned Faculty
         const SizedBox(height: 16),
         const SectionTitle('Subject Breakdown'),
         if (state.subjects.isEmpty)
@@ -398,6 +642,16 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           final skips = stats.canSkipForTarget(_targetPercent);
           final catchUp = stats.attendToReachTarget(_targetPercent);
           final isSafe = stats.percent >= _targetPercent;
+
+          // Find faculty members teaching this subject from timetable entries
+          final facultyList = state.entries
+              .where((e) =>
+                  (s.code.isNotEmpty && e.subjectCode.toUpperCase() == s.code.toUpperCase()) ||
+                  (s.name.isNotEmpty && e.subject.toUpperCase() == s.name.toUpperCase()))
+              .map((e) => e.teacherName.trim())
+              .where((t) => t.isNotEmpty)
+              .toSet()
+              .toList();
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
@@ -426,6 +680,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       ),
                     ],
                   ),
+                  if (facultyList.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '👨‍🏫 Faculty: ${facultyList.join(", ")}',
+                      style: const TextStyle(color: AppColors.brandBright, fontSize: 11.5, fontWeight: FontWeight.w600),
+                    ),
+                  ],
                   const SizedBox(height: 6),
                   Text(
                     isSafe
@@ -479,6 +740,261 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
   // --- SUB-WIDGETS & HELPERS ---
 
+  Widget _buildTimetablePhotoBanner(
+    BuildContext context,
+    List<TimetableEntry> entries,
+    TimetablePreset activePreset,
+  ) {
+    return GlowCard(
+      borderColor: AppColors.purpleBright.withValues(alpha: 0.4),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: AppColors.purple.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.table_chart_rounded, color: AppColors.purpleBright, size: 20),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'University Timetable Photo 📷',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5, color: Colors.white),
+                    ),
+                    Text(
+                      'Bengaluru City University • M.Sc. Chemistry Sem III',
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Preset Selection Chips
+          Row(
+            children: [
+              Expanded(
+                child: ChoiceChip(
+                  label: const Text('🧪 Organic Timetable'),
+                  selected: _selectedPhotoPreset == TimetablePreset.organic,
+                  labelStyle: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: _selectedPhotoPreset == TimetablePreset.organic ? FontWeight.w800 : FontWeight.w600,
+                    color: _selectedPhotoPreset == TimetablePreset.organic ? Colors.white : AppColors.textSecondary,
+                  ),
+                  selectedColor: AppColors.purpleDeep,
+                  backgroundColor: AppColors.surfaceElevated,
+                  side: BorderSide(
+                    color: _selectedPhotoPreset == TimetablePreset.organic ? AppColors.purpleBright : AppColors.border,
+                  ),
+                  onSelected: (_) {
+                    AppHaptics.tap();
+                    setState(() => _selectedPhotoPreset = TimetablePreset.organic);
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ChoiceChip(
+                  label: const Text('🧬 Inorganic Timetable'),
+                  selected: _selectedPhotoPreset == TimetablePreset.inorganic,
+                  labelStyle: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: _selectedPhotoPreset == TimetablePreset.inorganic ? FontWeight.w800 : FontWeight.w600,
+                    color: _selectedPhotoPreset == TimetablePreset.inorganic ? Colors.white : AppColors.textSecondary,
+                  ),
+                  selectedColor: AppColors.purpleDeep,
+                  backgroundColor: AppColors.surfaceElevated,
+                  side: BorderSide(
+                    color: _selectedPhotoPreset == TimetablePreset.inorganic ? AppColors.purpleBright : AppColors.border,
+                  ),
+                  onSelected: (_) {
+                    AppHaptics.tap();
+                    setState(() => _selectedPhotoPreset = TimetablePreset.inorganic);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Photo Preview Thumbnail & Zoom Prompt
+          InkWell(
+            onTap: () => _showTimetablePhotoDialog(context, _selectedPhotoPreset),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceElevated,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Image.asset(
+                          _selectedPhotoPreset.imageAsset,
+                          width: 80,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, err, stack) => Container(
+                            width: 80,
+                            height: 60,
+                            color: AppColors.background,
+                            child: const Icon(Icons.broken_image, size: 20, color: AppColors.textMuted),
+                          ),
+                        ),
+                        Container(
+                          width: 80,
+                          height: 60,
+                          color: Colors.black38,
+                          child: const Icon(Icons.zoom_in, color: Colors.white, size: 24),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              _selectedPhotoPreset.title,
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.purple.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text('Pinch to Zoom 🔍', style: TextStyle(color: AppColors.purpleBright, fontSize: 10, fontWeight: FontWeight.w700)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          _selectedPhotoPreset == TimetablePreset.organic
+                              ? 'Faculty: RK (Roopesh Kumar), HP (Hari Prasad), KSS (Shivashankar), MAA (Mary Anne)'
+                              : 'Faculty: VG (Gayathri), MP (Pandurangappa), HP (Hari Prasad), PRC (Chetana)',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          if (activePreset != _selectedPhotoPreset) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.brandBright,
+                  side: const BorderSide(color: AppColors.brandBright),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () {
+                  AppHaptics.confirm();
+                  ref.read(appControllerProvider.notifier).applyPresetTimetable(_selectedPhotoPreset);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Switched timetable to ${_selectedPhotoPreset.title}'),
+                      backgroundColor: AppColors.surfaceElevated,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.sync_alt, size: 16),
+                label: Text('Set ${_selectedPhotoPreset.title} as Active Schedule', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodayCheckInBanner(
+    BuildContext context,
+    List<TimetableSlot> slots,
+    List<TimetableSlot> unmarkedSlots,
+    DateTime today,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.brandPrimary.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.brandBright.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.fact_check_outlined, color: AppColors.brandBright, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Today\'s Timetable Check-In 📋',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${unmarkedSlots.length} of ${slots.length} classes pending attendance confirmation',
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.present,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: () => _handleMarkAllPresent(context, slots, today),
+            child: const Text('Mark All Present', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildNextClassSpotlight(
     BuildContext context,
     TimetableSlot nextSlot,
@@ -486,8 +1002,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     dynamic repo,
     DateTime today,
   ) {
+    final entry = state.entries.where((e) => e.id == nextSlot.id).firstOrNull;
     final subject = state.subjects.where((s) => s.id == nextSlot.subjectId).firstOrNull;
-    final title = subject?.name ?? 'Upcoming Lecture';
+    final title = (entry?.subject.isNotEmpty == true)
+        ? entry!.subject
+        : (subject?.name ?? (entry?.displayName.isNotEmpty == true ? entry!.displayName : 'Upcoming Lecture'));
+    final teacher = entry?.teacherName.isNotEmpty == true ? entry!.teacherName : '';
+    final code = entry?.subjectCode.isNotEmpty == true ? entry!.subjectCode : (subject?.code ?? '');
     final current = repo.recordFor(slotId: nextSlot.id, date: today);
     final isMarked = current != null;
 
@@ -515,13 +1036,22 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               children: [
                 Row(
                   children: [
-                    const Text('UPCOMING LECTURE', style: TextStyle(color: AppColors.brandBright, fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                    const Text('UPCOMING LECTURE',
+                        style: TextStyle(color: AppColors.brandBright, fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                     const SizedBox(width: 6),
                     Text('• ${nextSlot.timeLabel}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
                   ],
                 ),
-                Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                if (nextSlot.room.isNotEmpty)
+                Text(
+                  code.isNotEmpty ? '$code: $title' : title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                ),
+                if (teacher.isNotEmpty)
+                  Text('👨‍🏫 Faculty: $teacher',
+                      style: const TextStyle(color: AppColors.brandBright, fontSize: 11.5, fontWeight: FontWeight.w600))
+                else if (nextSlot.room.isNotEmpty)
                   Text('Room: ${nextSlot.room}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
               ],
             ),
@@ -834,12 +1364,21 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     };
   }
 
+  String _statusBadgeText(AttendanceStatus status) {
+    return switch (status) {
+      AttendanceStatus.present => '✓ Present',
+      AttendanceStatus.absent => '✗ Absent',
+      AttendanceStatus.postponed => '⏸ Postponed',
+      AttendanceStatus.excused => '📋 Excused',
+    };
+  }
+
   String _statusLabelText(AttendanceStatus status) {
     return switch (status) {
-      AttendanceStatus.present => '✓ Marked Present',
-      AttendanceStatus.absent => '✗ Marked Absent',
-      AttendanceStatus.postponed => '⏸ Postponed',
-      AttendanceStatus.excused => '📋 On-Duty / Excused',
+      AttendanceStatus.present => 'Present',
+      AttendanceStatus.absent => 'Absent',
+      AttendanceStatus.postponed => 'Postponed',
+      AttendanceStatus.excused => 'On-Duty / Excused',
     };
   }
 }

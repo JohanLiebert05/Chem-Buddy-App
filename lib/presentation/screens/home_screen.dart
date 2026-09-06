@@ -957,12 +957,12 @@ class _QuickTile extends StatelessWidget {
   }
 }
 
-class _NextClassCard extends StatelessWidget {
+class _NextClassCard extends ConsumerWidget {
   const _NextClassCard({required this.state});
   final AppState state;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
     final today = state.entries.where((e) => e.weekdayNumber == now.weekday).toList()
       ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
@@ -984,21 +984,27 @@ class _NextClassCard extends StatelessWidget {
     if (displayClass == null) {
       return GlowCard(
         padding: const EdgeInsets.all(12),
+        onTap: () => ref.read(shellTabProvider.notifier).state = 1,
         child: Row(
           children: const [
             Icon(Icons.bedtime_outlined, color: AppColors.textMuted, size: 20),
             SizedBox(width: 10),
             Expanded(child: Text('No classes scheduled for today.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))),
+            Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
           ],
         ),
       );
     }
 
     final isOngoing = displayClass == ongoing;
+    final repo = ref.watch(chemRepositoryProvider);
+    final todayNormalized = DateTime(now.year, now.month, now.day);
+    final record = repo.recordFor(slotId: displayClass.id, date: todayNormalized);
 
     return GlowCard(
       borderColor: isOngoing ? AppColors.success : AppColors.purple.withValues(alpha: 0.35),
       padding: const EdgeInsets.all(12),
+      onTap: () => ref.read(shellTabProvider.notifier).state = 1,
       child: Row(
         children: [
           Container(
@@ -1018,13 +1024,31 @@ class _NextClassCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  isOngoing ? 'Class in Progress' : 'Next Up Today',
-                  style: TextStyle(
-                    color: isOngoing ? AppColors.success : AppColors.purpleBright,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      isOngoing ? 'Class in Progress' : 'Next Up Today',
+                      style: TextStyle(
+                        color: isOngoing ? AppColors.success : AppColors.purpleBright,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                    if (record != null) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppColors.present.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          record.status == AttendanceStatus.present ? '✓ Marked Present' : record.status.name.toUpperCase(),
+                          style: const TextStyle(color: AppColors.present, fontSize: 9.5, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 Text(
                   displayClass.displayName,
@@ -1036,9 +1060,17 @@ class _NextClassCard extends StatelessWidget {
                   '${displayClass.startTime} – ${displayClass.endTime}${displayClass.room.isEmpty ? "" : " · ${displayClass.room}"}',
                   style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
                 ),
+                if (displayClass.teacherName.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '👨‍🏫 Faculty: ${displayClass.teacherName}',
+                    style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                ],
               ],
             ),
           ),
+          const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
         ],
       ),
     );

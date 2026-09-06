@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:chem_buddy/core/utils/attendance_math.dart';
 import 'package:chem_buddy/data/models/models.dart';
+import 'package:chem_buddy/data/services/timetable_parser_service.dart';
 
 void main() {
   group('Smart Attendance Math & Multi-Target Tests', () {
@@ -102,6 +103,30 @@ void main() {
       final fromJson = AttendanceRecord.fromJson(json);
       expect(fromJson.status, AttendanceStatus.excused);
       expect(fromJson.note, 'University Chemistry Symposium');
+    });
+
+    test('Timetable presets Organic and Inorganic contain full faculty mapping and assets', () {
+      final organic = TimetablePreset.organic;
+      final inorganic = TimetablePreset.inorganic;
+
+      expect(organic.imageAsset, 'assets/images/timetable_organic.jpg');
+      expect(inorganic.imageAsset, 'assets/images/timetable_inorganic.jpg');
+
+      final orgEntries = organic.entries;
+      final inorgEntries = inorganic.entries;
+
+      expect(orgEntries.isNotEmpty, isTrue);
+      expect(inorgEntries.isNotEmpty, isTrue);
+
+      // Verify Organic faculty
+      expect(orgEntries.any((e) => e.teacherName.contains('Roopesh Kumar')), isTrue);
+      expect(orgEntries.any((e) => e.teacherName.contains('Hari Prasad')), isTrue);
+      expect(orgEntries.any((e) => e.teacherName.contains('Shivashankar')), isTrue);
+
+      // Verify Inorganic faculty
+      expect(inorgEntries.any((e) => e.teacherName.contains('Gayathri')), isTrue);
+      expect(inorgEntries.any((e) => e.teacherName.contains('Pandurangappa')), isTrue);
+      expect(inorgEntries.any((e) => e.teacherName.contains('Chetana')), isTrue);
     });
   });
 }
