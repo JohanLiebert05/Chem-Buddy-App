@@ -11,8 +11,9 @@ import '../providers/app_providers.dart';
 import 'pdf_study_hub_screen.dart';
 
 class PdfReaderScreen extends ConsumerStatefulWidget {
-  const PdfReaderScreen({super.key, required this.doc});
+  const PdfReaderScreen({super.key, required this.doc, this.initialPage});
   final PdfDoc doc;
+  final int? initialPage;
 
   @override
   ConsumerState<PdfReaderScreen> createState() => _PdfReaderScreenState();
@@ -30,7 +31,9 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
   void initState() {
     super.initState();
     _doc = widget.doc;
-    _page = widget.doc.lastPage;
+    _page = widget.initialPage != null
+        ? (widget.initialPage! - 1).clamp(0, 9999)
+        : widget.doc.lastPage;
     if (!PdfLibraryService.instance.exists(_doc.localPath)) {
       _error = 'This PDF is missing from storage. It may have been moved or deleted.';
     }
@@ -204,7 +207,7 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
                 Expanded(
                   child: PDFView(
                     filePath: _doc.localPath,
-                    defaultPage: _doc.lastPage,
+                    defaultPage: _page,
                     swipeHorizontal: false,
                     nightMode: _night,
                     autoSpacing: true,

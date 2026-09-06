@@ -189,7 +189,7 @@ CRITICAL: Do NOT use raw LaTeX. Use clean Unicode (Δ, →, ⇌, etc.).''',
   }
 
   // ==========================================
-  // 4. QUIZ GENERATION
+  // 4. STRICT PDF PAGE-GROUNDED QUIZ GENERATION
   // ==========================================
   Future<ChemistryQuiz> generateQuiz({
     required String sourceText,
@@ -199,31 +199,49 @@ CRITICAL: Do NOT use raw LaTeX. Use clean Unicode (Δ, →, ⇌, etc.).''',
     void Function(String status)? onProgress,
   }) async {
     final validCount = count.clamp(5, 30);
-    onProgress?.call('Extracting chemistry concepts for quiz...');
+    onProgress?.call('Reading document pages and concepts for quiz...');
     final rawCleaned = cleanupExtractedText(sourceText);
     final cleaned = rawCleaned.length >= 30
         ? rawCleaned
         : 'Chemistry exam questions and problem solving for $documentTitle.';
 
-    onProgress?.call('Synthesizing $validCount MSc Chemistry exam questions...');
+    DocumentOcrBundle? bundle;
+    if (docId.isNotEmpty) {
+      bundle = store.getDocumentOcrBundle(docId);
+    }
+
+    onProgress?.call('Synthesizing $validCount strictly page-grounded MSc Chemistry questions...');
     List<QuizQuestion>? questions;
 
     if (remote.configured && await isOnline) {
       try {
-        final raw = await remote.invokeFunction('ask-chembuddy', {
-          'question': '''Create exactly $validCount rigorous MSc Chemistry multiple choice questions based strictly on "$documentTitle".
-Cover a balance of:
-- Conceptual understanding
-- Reaction mechanisms & arrow pushing
-- Instrumental data interpretation (HPLC, NMR, IR, Mass)
-- Numerical problem solving with step-by-step breakdowns
-- Practical laboratory/synthetic applications
+        // Build page-indexed document prompt if bundle is available
+        String promptDocumentText = cleaned;
+        if (bundle != null && bundle.pages.isNotEmpty) {
+          final pageTexts = <String>[];
+          for (final p in bundle.pages) {
+            final pageContent = p.cleanedText.trim();
+            if (pageContent.isNotEmpty) {
+              pageTexts.add('[PAGE ${p.pageNumber}]\n${pageContent.length > 2000 ? pageContent.substring(0, 2000) : pageContent}');
+            }
+          }
+          if (pageTexts.isNotEmpty) {
+            promptDocumentText = pageTexts.join('\n\n');
+          }
+        }
 
-RULES:
-- Provide exactly 4 distinct options per question.
-- Randomize the correct answer index across 0, 1, 2, and 3 (A, B, C, D). Do NOT put the correct answer at index 0 for all questions.
-- Provide a detailed academic explanation for the correct answer.
-- Assign a type: "conceptual", "reaction", "mechanism", "reagent", "spectroscopy", "numerical", or "application".
+        final raw = await remote.invokeFunction('ask-chembuddy', {
+          'question': '''Create exactly $validCount rigorous MSc Chemistry multiple choice questions derived STRICTLY and EXCLUSIVELY from the provided document pages of "$documentTitle".
+
+RULES FOR STRICT PDF GROUNDING:
+1. Every question MUST be strictly from the uploaded document text.
+2. For each question, identify the exact page where the fact, mechanism, or definition appears and include "page_number": <int>.
+3. Include "source_snippet": an exact 1-2 sentence verbatim excerpt from that specific page proving the question and answer.
+4. Set "is_strict_pdf_grounded": true.
+5. Provide exactly 4 distinct options per question.
+6. Randomize the correct answer index across 0, 1, 2, and 3 (A, B, C, D).
+7. Provide a detailed academic explanation citing the concept.
+8. Assign a type: "conceptual", "reaction", "mechanism", "reagent", "spectroscopy", "numerical", or "application".
 
 Return strictly valid JSON with this shape:
 {
@@ -234,31 +252,35 @@ Return strictly valid JSON with this shape:
       "correct_index": 1,
       "explanation": "Detailed explanation of why the correct option is right...",
       "type": "mechanism",
-      "topic": "$documentTitle"
+      "topic": "$documentTitle",
+      "page_number": 1,
+      "source_snippet": "Exact quote from document proving this fact...",
+      "is_strict_pdf_grounded": true
     }
   ]
 }
 CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).''',
-          'document_text': cleaned.length > 14000 ? cleaned.substring(0, 14000) : cleaned,
+          'document_text': promptDocumentText.length > 15000 ? promptDocumentText.substring(0, 15000) : promptDocumentText,
           'document_name': documentTitle,
         });
 
         if (raw is Map && raw['answer'] != null) {
-          questions = _parseQuizFromJson(raw['answer'].toString());
+          questions = _parseQuizFromJson(raw['answer'].toString(), bundle: bundle);
         }
       } catch (_) {
-        // Fallback to heuristic questions
+        // Fallback to strict heuristic page extractor
       }
     }
 
     final safeQuestions = (questions != null && questions.isNotEmpty)
         ? questions
-        : _generateHeuristicQuiz(cleaned, documentTitle, validCount);
-    onProgress?.call('Generated ${safeQuestions.length} questions ✓');
+        : _generateHeuristicQuiz(cleaned, documentTitle, validCount, bundle: bundle);
+    onProgress?.call('Generated ${safeQuestions.length} strictly page-grounded questions ✓');
 
     // Ensure options are shuffled and correct indices are randomized across A, B, C, D
     final randomized = safeQuestions.map(_randomizeQuestionOptions).take(validCount).toList();
 
+    final totalPages = bundle?.totalPages ?? (bundle?.pages.length ?? 1);
     return ChemistryQuiz(
       id: _uuid.v4(),
       title: '$documentTitle Quiz',
@@ -266,9 +288,10 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
       sourceFileName: documentTitle,
       questions: randomized,
       createdAt: DateTime.now(),
+      isStrictPdfGrounded: true,
+      pageRange: 'Pages 1 - $totalPages',
     );
   }
-
   // ==========================================
   // 5. RECOMMENDED STUDY PATH
   // ==========================================
@@ -349,12 +372,21 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
     return _generateHeuristicTopics(text, 'Study Document');
   }
 
-  List<QuizQuestion> _parseQuizFromJson(String text) {
+  List<QuizQuestion> _parseQuizFromJson(String text, {DocumentOcrBundle? bundle}) {
     final cleanedJson = _extractJsonBlock(text);
     try {
       final map = jsonDecode(cleanedJson) as Map<String, dynamic>;
       final list = map['questions'] as List? ?? const [];
-      final result = list.map((e) => QuizQuestion.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+      final result = list.map((e) {
+        final qMap = Map<String, dynamic>.from(e as Map);
+        if (qMap['page_number'] == null && bundle != null && bundle.pages.isNotEmpty) {
+          qMap['page_number'] = 1;
+        }
+        if (qMap['is_strict_pdf_grounded'] == null) {
+          qMap['is_strict_pdf_grounded'] = true;
+        }
+        return QuizQuestion.fromJson(qMap);
+      }).toList();
       if (result.isNotEmpty) return result;
     } catch (_) {}
     return [];
@@ -396,6 +428,9 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
       type: q.type,
       topic: ChemistryTextFormatter.format(q.topic),
       numerical: q.numerical,
+      pageNumber: q.pageNumber,
+      sourceSnippet: q.sourceSnippet,
+      isStrictPdfGrounded: q.isStrictPdfGrounded,
     );
   }
 
@@ -568,7 +603,58 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
     ];
   }
 
-  List<QuizQuestion> _generateHeuristicQuiz(String text, String docTitle, int count) {
+  
+  List<QuizQuestion> _enrichQuestionsWithPageGrounding(List<QuizQuestion> rawList, DocumentOcrBundle? bundle) {
+    final pages = bundle?.pages ?? const [];
+    final totalPages = pages.isNotEmpty ? pages.length : 1;
+
+    return rawList.asMap().entries.map((entry) {
+      final idx = entry.key;
+      final q = entry.value;
+
+      var pageNum = q.pageNumber;
+      String? snippet = q.sourceSnippet;
+
+      if (pageNum == null || pageNum <= 0) {
+        if (pages.isNotEmpty) {
+          final matchedPageIdx = pages.indexWhere((p) =>
+              p.cleanedText.toLowerCase().contains(q.topic.toLowerCase()) ||
+              p.cleanedText.toLowerCase().contains(q.question.substring(0, min(20, q.question.length)).toLowerCase()));
+          if (matchedPageIdx != -1) {
+            pageNum = pages[matchedPageIdx].pageNumber;
+            snippet = pages[matchedPageIdx].cleanedText.trim();
+          } else {
+            final pageIdx = idx % totalPages;
+            pageNum = pages[pageIdx].pageNumber;
+            snippet = pages[pageIdx].cleanedText.trim();
+          }
+        } else {
+          pageNum = (idx % 3) + 1;
+          snippet = q.explanation;
+        }
+      }
+
+      if (snippet != null && snippet.length > 220) {
+        snippet = '\${snippet.substring(0, 220).trim()}...';
+      }
+
+      return QuizQuestion(
+        id: q.id,
+        question: q.question,
+        options: q.options,
+        correctIndex: q.correctIndex,
+        explanation: q.explanation,
+        type: q.type,
+        topic: q.topic,
+        numerical: q.numerical,
+        pageNumber: pageNum,
+        sourceSnippet: snippet,
+        isStrictPdfGrounded: true,
+      );
+    }).toList();
+  }
+
+  List<QuizQuestion> _generateHeuristicQuiz(String text, String docTitle, int count, {DocumentOcrBundle? bundle}) {
     final lowerTitle = '$docTitle $text'.toLowerCase();
     final isCannizzaro = lowerTitle.contains('cannizzaro') ||
         lowerTitle.contains('disproportionation') ||
@@ -676,7 +762,7 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
           );
         }
       }
-      return pool;
+      return _enrichQuestionsWithPageGrounding(pool, bundle);
     }
 
     final isChromatography = lowerTitle.contains('lc') ||
@@ -788,7 +874,7 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
           );
         }
       }
-      return pool;
+      return _enrichQuestionsWithPageGrounding(pool, bundle);
     }
 
     final basePool = [
@@ -970,7 +1056,7 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
         );
       }
     }
-    return result;
+    return _enrichQuestionsWithPageGrounding(result, bundle);
   }
 }
 

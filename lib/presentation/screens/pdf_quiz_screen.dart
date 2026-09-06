@@ -9,13 +9,16 @@ import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../providers/app_providers.dart';
+import '../../data/models/library_models.dart';
 import '../../data/models/pdf_study_models.dart';
+import 'pdf_reader_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
 
 class PdfQuizScreen extends ConsumerStatefulWidget {
-  const PdfQuizScreen({super.key, required this.quiz, this.docName});
+  const PdfQuizScreen({super.key, required this.quiz, this.docName, this.doc});
   final ChemistryQuiz quiz;
   final String? docName;
+  final PdfDoc? doc;
 
   @override
   ConsumerState<PdfQuizScreen> createState() => _PdfQuizScreenState();
@@ -216,18 +219,83 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (q.topic.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        q.topic,
-                        style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 12),
-                      ),
-                    ),
+                  Row(
+                    children: [
+                      if (q.topic.isNotEmpty)
+                        Expanded(
+                          child: Text(
+                            q.topic,
+                            style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      if (q.pageNumber != null) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: AppColors.brandPrimary.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.4)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.menu_book_rounded, size: 12, color: AppColors.brandBright),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Page ${q.pageNumber}',
+                                style: const TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w800, fontSize: 10.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   ChemistryMarkdownView(
                     text: q.question,
                     textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, height: 1.35, color: Colors.white),
                   ),
+                  if (widget.doc != null && q.pageNumber != null) ...[
+                    const SizedBox(height: 10),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => PdfReaderScreen(
+                              doc: widget.doc!,
+                              initialPage: q.pageNumber!,
+                            ),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceElevated.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.find_in_page_outlined, size: 14, color: AppColors.purpleBright),
+                            const SizedBox(width: 6),
+                            Text(
+                              'View on Page ${q.pageNumber} in PDF',
+                              style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 11.5),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: AppColors.purpleBright),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -353,6 +421,58 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                       text: q.explanation,
                       textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
                     ),
+                    if (q.sourceSnippet != null && q.sourceSnippet!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(9),
+                        decoration: BoxDecoration(
+                          color: AppColors.brandPrimary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.25)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.format_quote_rounded, size: 13, color: AppColors.brandBright),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'PDF Source Excerpt (Page ${q.pageNumber ?? 1})',
+                                  style: const TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w800, fontSize: 10.5),
+                                ),
+                                const Spacer(),
+                                if (widget.doc != null && q.pageNumber != null)
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => PdfReaderScreen(
+                                            doc: widget.doc!,
+                                            initialPage: q.pageNumber!,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: const Row(
+                                      children: [
+                                        Text('Jump to Page', style: TextStyle(color: AppColors.purpleBright, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                                        Icon(Icons.arrow_forward_rounded, size: 11, color: AppColors.purpleBright),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '"${q.sourceSnippet}"',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontStyle: FontStyle.italic, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     if (q.numerical != null) ...[
                       const SizedBox(height: 8),
                       Container(
@@ -557,9 +677,52 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                             color: AppColors.surfaceElevated,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: ChemistryMarkdownView(
-                            text: q.explanation,
-                            textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.3),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ChemistryMarkdownView(
+                                text: q.explanation,
+                                textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.3),
+                              ),
+                              if (q.pageNumber != null) ...[
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.brandPrimary.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '📖 Page ${q.pageNumber}',
+                                        style: const TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w700, fontSize: 10),
+                                      ),
+                                    ),
+                                    if (widget.doc != null) ...[
+                                      const Spacer(),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute<void>(
+                                              builder: (_) => PdfReaderScreen(
+                                                doc: widget.doc!,
+                                                initialPage: q.pageNumber!,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: const Text(
+                                          'Open Page in PDF →',
+                                          style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 11),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ],

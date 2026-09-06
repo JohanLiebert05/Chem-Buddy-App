@@ -13,6 +13,8 @@ class ImportantTopic {
     required this.explanation,
     this.keyFormulas = const [],
     this.tags = const [],
+    this.pageNumber,
+    this.sourceSnippet,
   });
 
   final String id;
@@ -21,6 +23,8 @@ class ImportantTopic {
   final String explanation;
   final List<String> keyFormulas;
   final List<String> tags;
+  final int? pageNumber;
+  final String? sourceSnippet;
 
   String get priorityLabel {
     switch (priority) {
@@ -51,6 +55,8 @@ class ImportantTopic {
         'explanation': explanation,
         'key_formulas': keyFormulas,
         'tags': tags,
+        if (pageNumber != null) 'page_number': pageNumber,
+        if (sourceSnippet != null) 'source_snippet': sourceSnippet,
       };
 
   factory ImportantTopic.fromJson(Map<String, dynamic> json) {
@@ -66,6 +72,8 @@ class ImportantTopic {
       explanation: json['explanation'] as String? ?? '',
       keyFormulas: List<String>.from(json['key_formulas'] as List? ?? const []),
       tags: List<String>.from(json['tags'] as List? ?? const []),
+      pageNumber: json['page_number'] as int?,
+      sourceSnippet: json['source_snippet'] as String?,
     );
   }
 }
@@ -184,6 +192,9 @@ class QuizQuestion {
     required this.type,
     this.topic = 'General Chemistry',
     this.numerical,
+    this.pageNumber,
+    this.sourceSnippet,
+    this.isStrictPdfGrounded = false,
   });
 
   final String id;
@@ -194,6 +205,9 @@ class QuizQuestion {
   final QuizQuestionType type;
   final String topic;
   final NumericalBreakdown? numerical;
+  final int? pageNumber;
+  final String? sourceSnippet;
+  final bool isStrictPdfGrounded;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -204,6 +218,9 @@ class QuizQuestion {
         'type': type.name,
         'topic': topic,
         if (numerical != null) 'numerical': numerical!.toJson(),
+        if (pageNumber != null) 'page_number': pageNumber,
+        if (sourceSnippet != null) 'source_snippet': sourceSnippet,
+        'is_strict_pdf_grounded': isStrictPdfGrounded,
       };
 
   factory QuizQuestion.fromJson(Map<String, dynamic> json) {
@@ -265,6 +282,9 @@ class QuizQuestion {
       numerical: json['numerical'] != null
           ? NumericalBreakdown.fromJson(Map<String, dynamic>.from(json['numerical'] as Map))
           : null,
+      pageNumber: json['page_number'] as int?,
+      sourceSnippet: json['source_snippet'] as String?,
+      isStrictPdfGrounded: json['is_strict_pdf_grounded'] as bool? ?? false,
     );
   }
 }
@@ -277,6 +297,8 @@ class ChemistryQuiz {
     required this.sourceFileName,
     required this.questions,
     required this.createdAt,
+    this.isStrictPdfGrounded = false,
+    this.pageRange,
   });
 
   final String id;
@@ -285,6 +307,8 @@ class ChemistryQuiz {
   final String sourceFileName;
   final List<QuizQuestion> questions;
   final DateTime createdAt;
+  final bool isStrictPdfGrounded;
+  final String? pageRange;
 
   int get questionCount => questions.length;
 
@@ -295,6 +319,8 @@ class ChemistryQuiz {
         'source_file_name': sourceFileName,
         'questions': questions.map((q) => q.toJson()).toList(),
         'created_at': createdAt.toIso8601String(),
+        'is_strict_pdf_grounded': isStrictPdfGrounded,
+        if (pageRange != null) 'page_range': pageRange,
       };
 
   factory ChemistryQuiz.fromJson(Map<String, dynamic> json) {
@@ -306,6 +332,8 @@ class ChemistryQuiz {
       sourceFileName: json['source_file_name'] as String? ?? '',
       questions: rawList.map((e) => QuizQuestion.fromJson(Map<String, dynamic>.from(e as Map))).toList(),
       createdAt: DateTime.tryParse('${json['created_at'] ?? ''}') ?? DateTime.now(),
+      isStrictPdfGrounded: json['is_strict_pdf_grounded'] as bool? ?? false,
+      pageRange: json['page_range'] as String?,
     );
   }
 }

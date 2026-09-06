@@ -9,6 +9,7 @@ import '../../core/utils/attendance_math.dart';
 import '../models/models.dart';
 import '../models/reaction_models.dart';
 import '../repositories/chem_repository.dart';
+import 'study_analytics_service.dart';
 
 /// Professional export service for generating academic PDF reports and
 /// Excel-compatible CSV spreadsheets for Attendance and Reaction Mechanisms.
@@ -337,7 +338,310 @@ class ExportService {
   }
 
   // ===========================================================================
-  // 2. REACTION MECHANISMS EXPORTS (PDF & CSV / EXCEL)
+  // 2. COURSEWORK & MASTERY EXPORTS (PDF & CSV / EXCEL)
+  // ===========================================================================
+
+  /// Generates an official academic PDF report for coursework and study mastery.
+  Future<File> generateCourseworkAuditPdf({
+    required UserProfile profile,
+    required StudyAnalyticsSummary analytics,
+    Directory? outputDirectory,
+  }) async {
+    final doc = PdfDocument();
+    doc.pageSettings.margins.all = 36;
+
+    final page = doc.pages.add();
+    final pageSize = page.getClientSize();
+
+    final titleFont = PdfStandardFont(PdfFontFamily.helvetica, 18, style: PdfFontStyle.bold);
+    final sectionFont = PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.bold);
+    final subFont = PdfStandardFont(PdfFontFamily.helvetica, 10, style: PdfFontStyle.regular);
+    final boldSubFont = PdfStandardFont(PdfFontFamily.helvetica, 10, style: PdfFontStyle.bold);
+    final footerFont = PdfStandardFont(PdfFontFamily.helvetica, 8, style: PdfFontStyle.italic);
+
+    final primaryColor = PdfColor(76, 29, 149);
+    final primaryBrush = PdfSolidBrush(primaryColor);
+    final darkBrush = PdfSolidBrush(PdfColor(30, 27, 75));
+    final mutedBrush = PdfSolidBrush(PdfColor(100, 116, 139));
+    final borderPen = PdfPen(PdfColor(226, 232, 240), width: 1);
+
+    double y = 0;
+
+    // Header Accent Bar
+    page.graphics.drawRectangle(
+      brush: primaryBrush,
+      bounds: Rect.fromLTWH(0, y, pageSize.width, 6),
+    );
+    y += 14;
+
+    // Title
+    page.graphics.drawString(
+      _cleanForPdf('CHEM BUDDY - MSc CHEMISTRY COURSEWORK AUDIT'),
+      subFont,
+      brush: primaryBrush,
+      bounds: Rect.fromLTWH(0, y, pageSize.width, 14),
+    );
+    y += 16;
+
+    page.graphics.drawString(
+      _cleanForPdf('Official Academic Progress & Topic Mastery Dossier'),
+      titleFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(0, y, pageSize.width, 24),
+    );
+    y += 28;
+
+    // Student Info Card
+    final studentCardHeight = 52.0;
+    page.graphics.drawRectangle(
+      brush: PdfSolidBrush(PdfColor(248, 250, 252)),
+      pen: borderPen,
+      bounds: Rect.fromLTWH(0, y, pageSize.width, studentCardHeight),
+    );
+
+    final leftColX = 12.0;
+    final rightColX = pageSize.width / 2 + 10;
+    final infoY1 = y + 8;
+    final infoY2 = y + 28;
+
+    final studentName = profile.fullName.trim().isEmpty ? 'MSc Chemistry Scholar' : profile.fullName;
+    final regNo = profile.registerNumber.trim().isEmpty ? 'N/A' : profile.registerNumber;
+    final uni = profile.university.trim().isEmpty ? 'Autonomous University' : profile.university;
+
+    page.graphics.drawString('Student Name: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX, infoY1, 100, 16));
+    page.graphics.drawString(_cleanForPdf(studentName), subFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX + 90, infoY1, 200, 16));
+
+    page.graphics.drawString('Reg. Number: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX, infoY2, 100, 16));
+    page.graphics.drawString(_cleanForPdf(regNo), subFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX + 90, infoY2, 200, 16));
+
+    page.graphics.drawString('University: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX, infoY1, 80, 16));
+    page.graphics.drawString(_cleanForPdf(uni), subFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX + 75, infoY1, 180, 16));
+
+    page.graphics.drawString('Audit Date: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX, infoY2, 80, 16));
+    page.graphics.drawString(DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now()), subFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX + 75, infoY2, 180, 16));
+
+    y += studentCardHeight + 16;
+
+    // 4 KPI Cards
+    final kpiBoxWidth = (pageSize.width - (3 * 10)) / 4;
+    final kpiBoxHeight = 58.0;
+
+    _drawKpiCard(
+      page.graphics,
+      x: 0,
+      y: y,
+      width: kpiBoxWidth,
+      height: kpiBoxHeight,
+      label: 'Quiz Accuracy',
+      value: '${analytics.overallQuizAccuracy.toStringAsFixed(1)}%',
+      valueFont: PdfStandardFont(PdfFontFamily.helvetica, 15, style: PdfFontStyle.bold),
+      labelFont: subFont,
+      borderPen: borderPen,
+      valueColor: analytics.overallQuizAccuracy >= 70 ? PdfColor(16, 185, 129) : PdfColor(245, 158, 11),
+      subtitle: '${analytics.totalCorrectAnswers}/${analytics.totalQuestionsAnswered} correct',
+    );
+
+    _drawKpiCard(
+      page.graphics,
+      x: kpiBoxWidth + 10,
+      y: y,
+      width: kpiBoxWidth,
+      height: kpiBoxHeight,
+      label: 'Quizzes Taken',
+      value: '${analytics.totalQuizzesTaken}',
+      valueFont: PdfStandardFont(PdfFontFamily.helvetica, 15, style: PdfFontStyle.bold),
+      labelFont: subFont,
+      borderPen: borderPen,
+      valueColor: PdfColor(76, 29, 149),
+      subtitle: 'Verified sessions',
+    );
+
+    _drawKpiCard(
+      page.graphics,
+      x: (kpiBoxWidth + 10) * 2,
+      y: y,
+      width: kpiBoxWidth,
+      height: kpiBoxHeight,
+      label: 'Flashcards Mastered',
+      value: '${analytics.flashcardsMatureCount}',
+      valueFont: PdfStandardFont(PdfFontFamily.helvetica, 15, style: PdfFontStyle.bold),
+      labelFont: subFont,
+      borderPen: borderPen,
+      valueColor: PdfColor(56, 189, 248),
+      subtitle: 'of ${analytics.totalFlashcards} total cards',
+    );
+
+    _drawKpiCard(
+      page.graphics,
+      x: (kpiBoxWidth + 10) * 3,
+      y: y,
+      width: kpiBoxWidth,
+      height: kpiBoxHeight,
+      label: 'Active Streak',
+      value: '${analytics.studyStreakDays} Days',
+      valueFont: PdfStandardFont(PdfFontFamily.helvetica, 15, style: PdfFontStyle.bold),
+      labelFont: subFont,
+      borderPen: borderPen,
+      valueColor: PdfColor(234, 88, 12),
+      subtitle: 'Consistent learning',
+    );
+
+    y += kpiBoxHeight + 20;
+
+    // Topic Mastery Table
+    page.graphics.drawString(_cleanForPdf('Topic Mastery & Subject Competency'), sectionFont, brush: darkBrush, bounds: Rect.fromLTWH(0, y, pageSize.width, 18));
+    y += 22;
+
+    final allTopics = [...analytics.strongTopics, ...analytics.moderateTopics, ...analytics.weakTopics];
+
+    if (allTopics.isNotEmpty) {
+      final topicGrid = PdfGrid();
+      topicGrid.columns.add(count: 4);
+      topicGrid.columns[0].width = 180;
+      topicGrid.columns[1].width = 90;
+      topicGrid.columns[2].width = 90;
+      topicGrid.columns[3].width = pageSize.width - (180 + 90 + 90);
+
+      topicGrid.headers.add(1);
+      final tHeader = topicGrid.headers[0];
+      tHeader.style.backgroundBrush = primaryBrush;
+      tHeader.style.textBrush = PdfSolidBrush(PdfColor(255, 255, 255));
+      tHeader.style.font = boldSubFont;
+      tHeader.cells[0].value = 'Topic / Domain';
+      tHeader.cells[1].value = 'Questions';
+      tHeader.cells[2].value = 'Accuracy %';
+      tHeader.cells[3].value = 'Competency Level';
+
+      for (final t in allTopics) {
+        final row = topicGrid.rows.add();
+        row.style.font = subFont;
+        row.cells[0].value = _cleanForPdf(t.topic);
+        row.cells[1].value = '${t.correctQuestions}/${t.totalQuestions}';
+        row.cells[2].value = '${t.accuracy.toStringAsFixed(1)}%';
+        if (t.isStrong) {
+          row.cells[3].value = 'Mastered (Strong)';
+        } else if (t.isModerate) {
+          row.cells[3].value = 'Proficient (Moderate)';
+        } else {
+          row.cells[3].value = 'Action Required (Weak)';
+        }
+      }
+
+      final topicResult = topicGrid.draw(page: page, bounds: Rect.fromLTWH(0, y, pageSize.width, 0));
+      y = topicResult!.bounds.bottom + 16;
+    }
+
+    // Recent Quiz History Table
+    if (analytics.recentQuizResults.isNotEmpty && y < pageSize.height - 120) {
+      page.graphics.drawString(_cleanForPdf('Recent Quiz Evaluations'), sectionFont, brush: darkBrush, bounds: Rect.fromLTWH(0, y, pageSize.width, 18));
+      y += 22;
+
+      final quizGrid = PdfGrid();
+      quizGrid.columns.add(count: 4);
+      quizGrid.columns[0].width = 180;
+      quizGrid.columns[1].width = 100;
+      quizGrid.columns[2].width = 80;
+      quizGrid.columns[3].width = pageSize.width - (180 + 100 + 80);
+
+      quizGrid.headers.add(1);
+      final qHeader = quizGrid.headers[0];
+      qHeader.style.backgroundBrush = primaryBrush;
+      qHeader.style.textBrush = PdfSolidBrush(PdfColor(255, 255, 255));
+      qHeader.style.font = boldSubFont;
+      qHeader.cells[0].value = 'Quiz Title';
+      qHeader.cells[1].value = 'Date';
+      qHeader.cells[2].value = 'Score';
+      qHeader.cells[3].value = 'Accuracy %';
+
+      for (final q in analytics.recentQuizResults.take(6)) {
+        final row = quizGrid.rows.add();
+        row.style.font = subFont;
+        row.cells[0].value = _cleanForPdf(q.quizTitle);
+        row.cells[1].value = DateFormat('dd MMM yyyy').format(q.completedAt);
+        row.cells[2].value = '${q.score}/${q.totalQuestions}';
+        row.cells[3].value = '${q.accuracy.toStringAsFixed(1)}%';
+      }
+
+      final qResult = quizGrid.draw(page: page, bounds: Rect.fromLTWH(0, y, pageSize.width, 0));
+      y = qResult!.bounds.bottom + 14;
+    }
+
+    // Footer on all pages
+    for (int i = 0; i < doc.pages.count; i++) {
+      final p = doc.pages[i];
+      final pSize = p.getClientSize();
+      p.graphics.drawLine(borderPen, Offset(0, pSize.height - 18), Offset(pSize.width, pSize.height - 18));
+      p.graphics.drawString(
+        _cleanForPdf('Chem Buddy by Prajwal A Kambar - MSc Chemistry Academic Audit - Page ${i + 1} of ${doc.pages.count}'),
+        footerFont,
+        brush: mutedBrush,
+        bounds: Rect.fromLTWH(0, pSize.height - 14, pSize.width, 14),
+      );
+    }
+
+    final bytes = await doc.save();
+    doc.dispose();
+
+    final targetDir = outputDirectory ?? await getTemporaryDirectory();
+    final fileName = 'ChemBuddy_Coursework_Audit_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
+    final file = File('${targetDir.path}/$fileName');
+    await file.writeAsBytes(bytes, flush: true);
+    return file;
+  }
+
+  /// Generates an Excel-compatible CSV spreadsheet for coursework and mastery.
+  Future<File> generateCourseworkAuditCsv({
+    required UserProfile profile,
+    required StudyAnalyticsSummary analytics,
+    Directory? outputDirectory,
+  }) async {
+    final buffer = StringBuffer();
+    buffer.write('\uFEFF'); // UTF-8 BOM
+
+    buffer.writeln('"CHEM BUDDY - MSC CHEMISTRY COURSEWORK AUDIT"');
+    buffer.writeln('"Student Name","${_escapeCsv(profile.fullName)}"');
+    buffer.writeln('"Register Number","${_escapeCsv(profile.registerNumber)}"');
+    buffer.writeln('"University","${_escapeCsv(profile.university)}"');
+    buffer.writeln('"Generated At","${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}"');
+    buffer.writeln();
+
+    buffer.writeln('"=== OVERALL STUDY & MASTERY METRICS ==="');
+    buffer.writeln('"Overall Quiz Accuracy %","${analytics.overallQuizAccuracy.toStringAsFixed(1)}"');
+    buffer.writeln('"Total Questions Answered","${analytics.totalQuestionsAnswered}"');
+    buffer.writeln('"Total Correct Answers","${analytics.totalCorrectAnswers}"');
+    buffer.writeln('"Total Quizzes Attempted","${analytics.totalQuizzesTaken}"');
+    buffer.writeln('"Flashcards Mastered (Mature)","${analytics.flashcardsMatureCount}"');
+    buffer.writeln('"Total Flashcards","${analytics.totalFlashcards}"');
+    buffer.writeln('"Study Streak (Days)","${analytics.studyStreakDays}"');
+    buffer.writeln();
+
+    buffer.writeln('"=== TOPIC MASTERY BREAKDOWN ==="');
+    buffer.writeln('"Topic","Correct Answers","Total Questions","Accuracy %","Status"');
+    final allTopics = [...analytics.strongTopics, ...analytics.moderateTopics, ...analytics.weakTopics];
+    for (final t in allTopics) {
+      buffer.writeln(
+        '"${_escapeCsv(t.topic)}",${t.correctQuestions},${t.totalQuestions},"${t.accuracy.toStringAsFixed(1)}%","${t.isStrong ? 'Mastered' : (t.isModerate ? 'Moderate' : 'Needs Review')}"',
+      );
+    }
+    buffer.writeln();
+
+    buffer.writeln('"=== RECENT QUIZ EVALUATION LOG ==="');
+    buffer.writeln('"Quiz Title","Completed Date","Score","Total Questions","Accuracy %"');
+    for (final q in analytics.recentQuizResults) {
+      buffer.writeln(
+        '"${_escapeCsv(q.quizTitle)}","${DateFormat('yyyy-MM-dd HH:mm').format(q.completedAt)}",${q.score},${q.totalQuestions},"${q.accuracy.toStringAsFixed(1)}%"',
+      );
+    }
+
+    final targetDir = outputDirectory ?? await getTemporaryDirectory();
+    final fileName = 'ChemBuddy_Coursework_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.csv';
+    final file = File('${targetDir.path}/$fileName');
+    await file.writeAsString(buffer.toString(), flush: true);
+    return file;
+  }
+
+  // ===========================================================================
+  // 3. REACTION MECHANISMS EXPORTS (PDF & CSV / EXCEL)
   // ===========================================================================
 
   /// Generates an elegant PDF dossier for a single reaction mechanism or the entire MSc Compendium.

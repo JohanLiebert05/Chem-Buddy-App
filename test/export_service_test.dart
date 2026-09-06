@@ -5,6 +5,7 @@ import 'package:chem_buddy/data/models/models.dart';
 import 'package:chem_buddy/data/repositories/chem_repository.dart';
 import 'package:chem_buddy/data/services/export_service.dart';
 import 'package:chem_buddy/data/services/reaction_mechanism_service.dart';
+import 'package:chem_buddy/data/services/study_analytics_service.dart';
 
 // Simple mock repository for testing export generation without Hive dependencies
 class MockChemRepository implements ChemRepository {
@@ -86,6 +87,33 @@ void main() {
     email: 'prajwal@chembuddy.edu',
   );
 
+  const mockAnalytics = StudyAnalyticsSummary(
+    totalQuestionsAnswered: 100,
+    totalCorrectAnswers: 88,
+    overallQuizAccuracy: 88.0,
+    totalQuizzesTaken: 12,
+    flashcardsDueToday: 10,
+    flashcardsReviewedToday: 40,
+    flashcardsMatureCount: 84,
+    flashcardsLearningCount: 26,
+    totalFlashcards: 120,
+    studyStreakDays: 7,
+    weakTopics: [
+      TopicMastery(topic: 'Curtius Rearrangement', totalQuestions: 10, correctQuestions: 4, accuracy: 40.0),
+      TopicMastery(topic: 'Coordination CFT', totalQuestions: 8, correctQuestions: 3, accuracy: 37.5),
+    ],
+    moderateTopics: [
+      TopicMastery(topic: 'HPLC Retention', totalQuestions: 12, correctQuestions: 8, accuracy: 66.7),
+      TopicMastery(topic: 'Beckmann Rearrangement', totalQuestions: 10, correctQuestions: 7, accuracy: 70.0),
+    ],
+    strongTopics: [
+      TopicMastery(topic: 'SN1 Mechanisms', totalQuestions: 15, correctQuestions: 14, accuracy: 93.3),
+      TopicMastery(topic: 'NMR Spectroscopy', totalQuestions: 20, correctQuestions: 19, accuracy: 95.0),
+      TopicMastery(topic: 'Diels-Alder Cycloaddition', totalQuestions: 12, correctQuestions: 11, accuracy: 91.7),
+    ],
+    recentQuizResults: [],
+  );
+
   final mockRepo = MockChemRepository();
   late Directory testDir;
 
@@ -152,7 +180,7 @@ void main() {
       expect(bytes[0], 0x25); // %PDF-
     });
 
-    test('generateReactionPdf produces master compendium for all 21 reactions', () async {
+    test('generateReactionPdf produces master compendium for all reactions', () async {
       final allMechanisms = ReactionMechanismService.instance.mechanisms;
       expect(allMechanisms.length, greaterThanOrEqualTo(21));
 
@@ -166,7 +194,7 @@ void main() {
       expect(bytes.length, greaterThan(10000));
     });
 
-    test('generateReactionsCsv produces tabular spreadsheet containing all 21 reactions', () async {
+    test('generateReactionsCsv produces tabular spreadsheet containing all reactions', () async {
       final allMechanisms = ReactionMechanismService.instance.mechanisms;
       final file = await ExportService.instance.generateReactionsCsv(
         mechanisms: allMechanisms,
@@ -191,6 +219,40 @@ void main() {
       expect(content.contains('Curtius Rearrangement'), isTrue);
       expect(content.contains('[3,3]-Cope Rearrangement'), isTrue);
       expect(content.contains('[3,3]-Claisen Sigmatropic Rearrangement'), isTrue);
+    });
+
+    test('generateCourseworkAuditCsv produces comprehensive student mastery CSV', () async {
+      final file = await ExportService.instance.generateCourseworkAuditCsv(
+        profile: mockProfile,
+        analytics: mockAnalytics,
+        outputDirectory: testDir,
+      );
+
+      expect(file.existsSync(), isTrue);
+      final rawBytes = await file.readAsBytes();
+      expect(rawBytes[0], 0xEF);
+      expect(rawBytes[1], 0xBB);
+      expect(rawBytes[2], 0xBF);
+
+      final csvText = await file.readAsString();
+      expect(csvText.contains('CHEM BUDDY - MSC CHEMISTRY COURSEWORK AUDIT'), isTrue);
+      expect(csvText.contains('Prajwal A Kambar'), isTrue);
+      expect(csvText.contains('SN1 Mechanisms'), isTrue);
+      expect(csvText.contains('Curtius Rearrangement'), isTrue);
+      expect(csvText.contains('88.0'), isTrue);
+    });
+
+    test('generateCourseworkAuditPdf produces official academic coursework dossier', () async {
+      final file = await ExportService.instance.generateCourseworkAuditPdf(
+        profile: mockProfile,
+        analytics: mockAnalytics,
+        outputDirectory: testDir,
+      );
+
+      expect(file.existsSync(), isTrue);
+      final bytes = await file.readAsBytes();
+      expect(bytes.length, greaterThan(1500));
+      expect(bytes[0], 0x25); // %PDF-
     });
   });
 }

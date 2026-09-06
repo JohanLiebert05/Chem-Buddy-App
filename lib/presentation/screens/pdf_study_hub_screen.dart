@@ -242,7 +242,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
         Navigator.push(
           context,
           MaterialPageRoute<void>(
-            builder: (_) => PdfQuizScreen(quiz: quiz, docName: widget.doc.displayName),
+            builder: (_) => PdfQuizScreen(quiz: quiz, docName: widget.doc.displayName, doc: widget.doc),
           ),
         );
       }
@@ -842,21 +842,58 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                       ),
                     ],
                     const SizedBox(height: 10),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showStudyOptionsForTopic(topic),
-                        icon: const Icon(Icons.school_outlined, size: 15),
-                        label: const Text('Study Topic', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.purple.withValues(alpha: 0.2),
-                          foregroundColor: AppColors.purpleBright,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    Row(
+                      children: [
+                        if (topic.pageNumber != null) ...[
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (_) => PdfReaderScreen(
+                                    doc: widget.doc,
+                                    initialPage: topic.pageNumber!,
+                                  ),
+                                ),
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppColors.brandPrimary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.find_in_page_outlined, size: 12, color: AppColors.brandBright),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Page ${topic.pageNumber}',
+                                    style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontWeight: FontWeight.w700),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                        const Spacer(),
+                        ElevatedButton.icon(
+                          onPressed: () => _showStudyOptionsForTopic(topic),
+                          icon: const Icon(Icons.school_outlined, size: 15),
+                          label: const Text('Study Topic', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.purple.withValues(alpha: 0.2),
+                            foregroundColor: AppColors.purpleBright,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
@@ -1046,7 +1083,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                     Navigator.push(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (_) => PdfQuizScreen(quiz: _quiz!, docName: widget.doc.displayName),
+                        builder: (_) => PdfQuizScreen(quiz: _quiz!, docName: widget.doc.displayName, doc: widget.doc),
                       ),
                     );
                   },
