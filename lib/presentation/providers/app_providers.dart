@@ -15,6 +15,7 @@ import '../../data/services/pdf_ai_study_service.dart';
 import '../../data/services/pdf_library_service.dart';
 import '../../data/services/study_analytics_service.dart';
 import '../../data/services/study_session_service.dart';
+import '../../data/services/timetable_parser_service.dart';
 
 final localStoreProvider = Provider<LocalStore>((ref) => LocalStore());
 
@@ -181,6 +182,11 @@ class AppController extends Notifier<AppState> {
 
   Future<void> applyScannedTimetable(List<TimetableEntry> entries) async {
     await _repo.applyScannedTimetable(entries);
+    await reload();
+  }
+
+  Future<void> applyPresetTimetable(TimetablePreset preset) async {
+    await _repo.applyPresetTimetable(preset);
     await reload();
   }
 

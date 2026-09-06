@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/timetable_entry.dart';
+import '../../data/services/timetable_parser_service.dart';
 import '../providers/app_providers.dart';
 import '../screens/attendance_screen.dart';
 import '../screens/calendar_screen.dart';
@@ -32,6 +33,89 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
     mainTab = widget.initialTab;
   }
 
+  void _showTimetablePhotoDialog(BuildContext context, TimetablePreset preset) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: AppColors.bg1,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${preset.title} Timetable',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${preset.department} • ${preset.semester}',
+                          style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: const Icon(Icons.close_rounded, color: AppColors.textMuted, size: 20),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: AppColors.borderSubtle),
+            Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.60,
+              ),
+              color: Colors.black,
+              child: InteractiveViewer(
+                minScale: 0.8,
+                maxScale: 4.0,
+                child: Center(
+                  child: Image.asset(
+                    preset.imageAsset,
+                    fit: BoxFit.contain,
+                    errorBuilder: (ctx, err, st) => const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Text('Timetable image not found', style: TextStyle(color: AppColors.textMuted)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  const Icon(Icons.touch_app_rounded, size: 14, color: AppColors.brandBright),
+                  const SizedBox(width: 6),
+                  const Expanded(
+                    child: Text(
+                      'Pinch or drag to inspect faculty & slot codes.',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Close', style: TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w700)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,10 +235,174 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                       ? ListView(padding: const EdgeInsets.fromLTRB(20, 0, 20, 100), children: const [TimetableScannerCard()])
                       : ListView(
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                          children: _list(entries, todayOnly: timetableTab == 0),
+                          children: [
+                            _buildPresetSelector(entries),
+                            ..._list(entries, todayOnly: timetableTab == 0),
+                          ],
                         ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPresetSelector(List<TimetableEntry> entries) {
+    final isInorganic = entries.any((e) => e.id.startsWith('inorg_') || e.subjectCode.toUpperCase().contains('ICH') || e.subject.toLowerCase().contains('inorganic'));
+    final isOrganic = entries.any((e) => e.id.startsWith('org_') || e.subjectCode.toUpperCase().contains('OCH') || e.subject.toLowerCase().contains('organic'));
+    final isOrgActive = !isInorganic || isOrganic;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.bg1,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.account_balance_rounded, size: 14, color: AppColors.brandBright),
+              const SizedBox(width: 6),
+              const Expanded(
+                child: Text(
+                  'BCU Central College • Sem III (2026-27)',
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+                ),
+              ),
+              InkWell(
+                onTap: () => _showTimetablePhotoDialog(
+                  context,
+                  isInorganic && !isOrganic ? TimetablePreset.inorganic : TimetablePreset.organic,
+                ),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.bg2,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.borderHighlight, width: 0.8),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.photo_library_outlined, size: 12, color: AppColors.brandBright),
+                      SizedBox(width: 4),
+                      Text('View Photo', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.brandBright)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _buildPresetCard(
+                  preset: TimetablePreset.organic,
+                  isActive: isOrgActive,
+                  icon: '⚗️',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildPresetCard(
+                  preset: TimetablePreset.inorganic,
+                  isActive: isInorganic && !isOrganic,
+                  icon: '🧪',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPresetCard({
+    required TimetablePreset preset,
+    required bool isActive,
+    required String icon,
+  }) {
+    return InkWell(
+      onTap: () async {
+        AppHaptics.selection();
+        if (!isActive) {
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: AppColors.bg1,
+              title: Text('Switch to ${preset.title}?', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              content: Text(
+                'This will set your active attendance & timetable schedule to ${preset.title} (BCU Central College Sem III w.e.f. 24-08-2026).',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandPrimary),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Apply Timetable', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+          if (confirm == true) {
+            await ref.read(appControllerProvider.notifier).applyPresetTimetable(preset);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('✓ ${preset.title} timetable activated as default schedule!')),
+              );
+            }
+          }
+        }
+      },
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.brandPrimary.withValues(alpha: 0.25) : AppColors.bg2,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isActive ? AppColors.brandBright : AppColors.borderSubtle,
+            width: isActive ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    preset.title,
+                    style: TextStyle(
+                      color: isActive ? Colors.white : AppColors.textSecondary,
+                      fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                      fontSize: 11.5,
+                    ),
+                  ),
+                  Text(
+                    isActive ? '✓ Default Active' : 'Tap to switch',
+                    style: TextStyle(
+                      color: isActive ? AppColors.brandBright : AppColors.textMuted,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -210,7 +458,6 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
   }
 
   List<Widget> _list(List<TimetableEntry> all, {required bool todayOnly}) {
-
     final filtered = todayOnly ? all.where((e) => e.weekdayNumber == DateTime.now().weekday).toList() : all;
     if (filtered.isEmpty) {
       return [
@@ -254,3 +501,4 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
     ];
   }
 }
+

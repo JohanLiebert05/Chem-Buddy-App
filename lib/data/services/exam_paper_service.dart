@@ -52,6 +52,10 @@ class ExamQuestionItem {
   final String question;
   final String modelAnswer;
   final List<String> markingRubric;
+  final String topic;
+  final String difficulty;
+  final String frequency;
+  final String examTips;
 
   const ExamQuestionItem({
     required this.section,
@@ -59,6 +63,10 @@ class ExamQuestionItem {
     required this.question,
     required this.modelAnswer,
     required this.markingRubric,
+    this.topic = 'Core MSc Chemistry',
+    this.difficulty = 'Moderate',
+    this.frequency = '🔥 High Probability Exam Question',
+    this.examTips = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -67,6 +75,10 @@ class ExamQuestionItem {
     'question': question,
     'modelAnswer': modelAnswer,
     'markingRubric': markingRubric,
+    'topic': topic,
+    'difficulty': difficulty,
+    'frequency': frequency,
+    'examTips': examTips,
   };
 
   factory ExamQuestionItem.fromJson(Map<String, dynamic> json) => ExamQuestionItem(
@@ -75,6 +87,10 @@ class ExamQuestionItem {
     question: json['question'] as String? ?? '',
     modelAnswer: json['modelAnswer'] as String? ?? '',
     markingRubric: (json['markingRubric'] as List? ?? []).map((e) => e.toString()).toList(),
+    topic: json['topic'] as String? ?? 'Core MSc Chemistry',
+    difficulty: json['difficulty'] as String? ?? 'Moderate',
+    frequency: json['frequency'] as String? ?? '🔥 High Probability Exam Question',
+    examTips: json['examTips'] as String? ?? '',
   );
 }
 

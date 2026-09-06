@@ -10,6 +10,7 @@ import '../models/pdf_study_models.dart';
 import '../models/timetable_entry.dart';
 import '../remote/notification_service.dart';
 import '../remote/supabase_service.dart';
+import '../services/timetable_parser_service.dart';
 
 class ChemRepository {
   ChemRepository({
@@ -348,8 +349,40 @@ class ChemRepository {
     }
   }
 
+  Future<void> applyPresetTimetable(TimetablePreset preset) async {
+    await applyScannedTimetable(preset.entries);
+  }
+
   List<TimetableEntry> timetableEntries() {
-    final list = store.all(store.timetableEntries).map(TimetableEntry.fromJson).toList();
+    var list = store.all(store.timetableEntries).map(TimetableEntry.fromJson).toList();
+    if (list.isEmpty) {
+      final defaultEntries = TimetableParserService.getOrganicPresetEntries();
+      for (final entry in defaultEntries) {
+        store.put(store.timetableEntries, entry.id, entry.toJson());
+        final code = entry.subjectCode.trim().toUpperCase();
+        var subject = subjects().where((s) => s.code.toUpperCase() == code).firstOrNull;
+        if (subject == null) {
+          subject = Subject(
+            id: _uuid.v4(),
+            name: entry.subject.trim().isNotEmpty ? entry.subject.trim() : (code.isEmpty ? 'Class' : code),
+            code: code.isEmpty ? 'SCAN' : code,
+            teacher: entry.teacherName,
+            colorHex: AppColors.subjectPalette[subjects().length % AppColors.subjectPalette.length].toARGB32(),
+          );
+          store.put(store.subjects, subject.id, subject.toJson());
+        }
+        final slot = TimetableSlot(
+          id: entry.id,
+          subjectId: subject.id,
+          weekday: entry.weekdayNumber,
+          startMinutes: entry.startMinutes,
+          endMinutes: entry.endMinutes <= entry.startMinutes ? entry.startMinutes + 60 : entry.endMinutes,
+          room: entry.room.isNotEmpty ? entry.room : entry.teacherName,
+        );
+        store.put(store.timetable, slot.id, slot.toJson());
+      }
+      list = store.all(store.timetableEntries).map(TimetableEntry.fromJson).toList();
+    }
     list.sort((a, b) {
       final d = a.weekdayNumber.compareTo(b.weekdayNumber);
       if (d != 0) return d;

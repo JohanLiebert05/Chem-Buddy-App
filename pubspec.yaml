@@ -57,6 +57,8 @@ flutter:
     - assets/images/
     - assets/images/app_logo.png
     - assets/images/app_logo_full.png
+    - assets/images/timetable_organic.jpg
+    - assets/images/timetable_inorganic.jpg
     - assets/images/mascot_transparent.webp
     - assets/images/mascot_transparent.png
     - assets/mechanisms/

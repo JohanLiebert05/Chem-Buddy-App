@@ -305,7 +305,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
           ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
 
         // 5. QUICK ACTIONS
         const SectionTitle('Quick Actions ⚡'),
@@ -359,68 +359,65 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
 
         // MSc Specialization & Advanced Tools
         const SectionTitle('MSc Chemistry Hub 🎓'),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildMscToolCard(
-                title: 'Chemistry Toolkit',
-                subtitle: '5 Postgrad Calculators',
-                icon: Icons.calculate_rounded,
-                color: AppColors.purpleBright,
-                onTap: () {
-                  AppHaptics.selection();
-                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ChemistryToolkitScreen()));
-                },
-              ),
-              const SizedBox(width: 10),
-              _buildMscToolCard(
-                title: 'Spectroscopy Hub',
-                subtitle: '¹H/¹³C NMR, FT-IR & MS',
-                icon: Icons.graphic_eq_rounded,
-                color: AppColors.brandBright,
-                onTap: () {
-                  AppHaptics.selection();
-                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SpectroscopyHubScreen()));
-                },
-              ),
-              const SizedBox(width: 10),
-              _buildMscToolCard(
-                title: 'Pericyclic Rules',
-                subtitle: 'Woodward-Hoffmann & FMO',
-                icon: Icons.all_inclusive_rounded,
-                color: AppColors.accentCyan,
-                onTap: () {
-                  AppHaptics.selection();
-                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PericyclicHubScreen()));
-                },
-              ),
-              const SizedBox(width: 10),
-              _buildMscToolCard(
-                title: 'University Exams',
-                subtitle: '2M, 5M & 10M Rubrics',
-                icon: Icons.school_rounded,
-                color: AppColors.accentGold,
-                onTap: () {
-                  AppHaptics.selection();
-                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ExamPatternQuizScreen()));
-                },
-              ),
-            ],
-          ),
+        Column(
+          children: [
+            _buildMscToolCard(
+              title: 'Chemistry Toolkit',
+              subtitle: '16 Postgrad Calculators & Solutions',
+              icon: Icons.calculate_rounded,
+              color: AppColors.purpleBright,
+              onTap: () {
+                AppHaptics.selection();
+                Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ChemistryToolkitScreen()));
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildMscToolCard(
+              title: 'Spectroscopy Hub',
+              subtitle: '¹H/¹³C NMR, FT-IR & Mass Spec Database',
+              icon: Icons.graphic_eq_rounded,
+              color: AppColors.brandBright,
+              onTap: () {
+                AppHaptics.selection();
+                Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SpectroscopyHubScreen()));
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildMscToolCard(
+              title: 'Pericyclic Rules & FMO',
+              subtitle: 'Woodward-Hoffmann, Electrocyclic & Cycloadditions',
+              icon: Icons.all_inclusive_rounded,
+              color: AppColors.accentCyan,
+              onTap: () {
+                AppHaptics.selection();
+                Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PericyclicHubScreen()));
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildMscToolCard(
+              title: 'University Exams & Rubrics',
+              subtitle: 'Smart BCU Blueprint, 2M/5M/10M Rubrics & AI Tutor',
+              icon: Icons.school_rounded,
+              color: AppColors.accentGold,
+              onTap: () {
+                AppHaptics.selection();
+                Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ExamPatternQuizScreen()));
+              },
+            ),
+          ],
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
 
         // 6. Next class or schedule status
         const SectionTitle('Schedule & Classes 🏫'),
 
         _NextClassCard(state: state),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
 
         // 7. Attendance health status
         GlowCard(
@@ -730,36 +727,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        width: 175,
-        padding: const EdgeInsets.all(14),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color.withValues(alpha: 0.35), width: 1.0),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
-            ),
+            Icon(Icons.chevron_right_rounded, color: color.withValues(alpha: 0.7), size: 20),
           ],
         ),
       ),

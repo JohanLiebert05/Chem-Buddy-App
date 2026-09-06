@@ -99,5 +99,47 @@ SMR – Dr. S. M. Roopa
       );
       expect(fridayAfternoon.subject, contains('Seminar'));
     });
+
+    test('Dr. Manmohan Singh BCU Organic Timetable preset has complete weekly slots & faculty', () {
+      final organicEntries = TimetablePreset.organic.entries;
+      expect(organicEntries.length, greaterThanOrEqualTo(16));
+      expect(TimetablePreset.organic.institution, contains('Bengaluru City University'));
+      expect(TimetablePreset.organic.effectiveDate, equals('w.e.f. 24-08-2026'));
+
+      // Check specific faculty and classes
+      final mondayLab = organicEntries.firstWhere((e) => e.dayOfWeek == 'Monday' && e.type == 'lab');
+      expect(mondayLab.teacherName, contains('Prof. Dr. K. Shivashankar'));
+      expect(mondayLab.teacherName, contains('Dr. Roopesh Kumar L'));
+      expect(mondayLab.startTime, equals('01:30 PM'));
+      expect(mondayLab.endTime, equals('05:30 PM'));
+
+      final tuesday303 = organicEntries.firstWhere((e) => e.dayOfWeek == 'Tuesday' && e.startTime == '10:00 AM');
+      expect(tuesday303.subjectCode, equals('OCH 303'));
+      expect(tuesday303.teacherName, contains('Prof. Dr. Hari Prasad S'));
+
+      final saturdayOE = organicEntries.firstWhere((e) => e.dayOfWeek == 'Saturday');
+      expect(saturdayOE.subjectCode, equals('CH-304 OE'));
+    });
+
+    test('Dr. Manmohan Singh BCU Inorganic Timetable preset has complete weekly slots & faculty', () {
+      final inorganicEntries = TimetablePreset.inorganic.entries;
+      expect(inorganicEntries.length, greaterThanOrEqualTo(16));
+      expect(TimetablePreset.inorganic.institution, contains('Bengaluru City University'));
+      expect(TimetablePreset.inorganic.effectiveDate, equals('w.e.f. 24-08-2026'));
+
+      // Check specific faculty and classes
+      final mondayLab = inorganicEntries.firstWhere((e) => e.dayOfWeek == 'Monday' && e.type == 'lab');
+      expect(mondayLab.teacherName, contains('Prof. Dr. P. R. Chetana'));
+      expect(mondayLab.teacherName, contains('Dr. Mary Anne Anitha'));
+
+      final monday302 = inorganicEntries.firstWhere((e) => e.dayOfWeek == 'Monday' && e.startTime == '11:00 AM');
+      expect(monday302.subjectCode, equals('ICH 302'));
+      expect(monday302.teacherName, contains('Prof. M Pandurangappa'));
+
+      final fridaySeminar = inorganicEntries.firstWhere((e) => e.dayOfWeek == 'Friday' && e.startTime == '01:30 PM');
+      expect(fridaySeminar.subjectCode, equals('SEMINAR'));
+      expect(fridaySeminar.subject, contains('Seminar'));
+    });
   });
 }
+

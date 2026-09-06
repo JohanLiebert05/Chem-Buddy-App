@@ -151,36 +151,14 @@ class ReactionMechanismsCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'REACTION MECHANISMS',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 13,
-                            letterSpacing: 0.8,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
-                          decoration: BoxDecoration(
-                            color: AppColors.success.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.success.withValues(alpha: 0.5)),
-                          ),
-                          child: const Text(
-                            'UNLOCKED 🧪',
-                            style: TextStyle(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 9.5,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                        ),
-                      ],
+                    const Text(
+                      'REACTION MECHANISMS',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        letterSpacing: 0.8,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     const Text(
