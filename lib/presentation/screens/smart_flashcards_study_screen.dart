@@ -186,9 +186,9 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (card.topic.isNotEmpty) ...[
-                    Row(
-                      children: [
+                  Row(
+                    children: [
+                      if (card.topic.isNotEmpty) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
@@ -200,10 +200,44 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                             style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w800),
                           ),
                         ),
+                        const SizedBox(width: 8),
                       ],
-                    ),
-                    const SizedBox(height: 12),
-                  ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _typeColor(card.cardType).withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: _typeColor(card.cardType).withValues(alpha: 0.4), width: 0.8),
+                        ),
+                        child: Text(
+                          _typeLabel(card.cardType),
+                          style: TextStyle(color: _typeColor(card.cardType), fontSize: 10, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      const Spacer(),
+                      if (card.pageNumber != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceElevated,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.borderSubtle),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.menu_book_rounded, size: 11, color: AppColors.textMuted),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Page ${card.pageNumber}',
+                                style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w700),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   ChemistryMarkdownView(
                     text: card.question,
                     textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.4, color: Colors.white),
@@ -256,6 +290,25 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                           style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w800),
                         ),
                       ),
+                      if (card.isStrictPdfGrounded) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: AppColors.brandPrimary.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.35)),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.verified_rounded, size: 11, color: AppColors.brandBright),
+                              SizedBox(width: 3),
+                              Text('PDF Grounded', style: TextStyle(color: AppColors.brandBright, fontSize: 10, fontWeight: FontWeight.w700)),
+                            ],
+                          ),
+                        ),
+                      ],
                       const Spacer(),
                       const Text(
                         'Tap to flip back ↻',
@@ -285,6 +338,38 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                           style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
                         ),
                       )).toList(),
+                    ),
+                  ],
+                  if (card.sourceSnippet.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.borderSubtle),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.format_quote_rounded, size: 13, color: AppColors.purpleBright),
+                              const SizedBox(width: 4),
+                              Text(
+                                card.pageNumber != null ? 'Source Quote (Page ${card.pageNumber})' : 'Source Document Quote',
+                                style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w700),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            card.sourceSnippet,
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, fontStyle: FontStyle.italic, height: 1.35),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                   if (card.sourceBacklink.isNotEmpty) ...[
@@ -912,6 +997,40 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
         ),
       ),
     );
+  }
+
+  Color _typeColor(FlashcardType type) {
+    switch (type) {
+      case FlashcardType.recall:
+        return AppColors.blue;
+      case FlashcardType.understanding:
+        return AppColors.purpleBright;
+      case FlashcardType.application:
+        return AppColors.accentCyan;
+      case FlashcardType.comparison:
+        return AppColors.accentGold;
+      case FlashcardType.mechanism:
+        return AppColors.success;
+      case FlashcardType.examQuestion:
+        return AppColors.danger;
+    }
+  }
+
+  String _typeLabel(FlashcardType type) {
+    switch (type) {
+      case FlashcardType.recall:
+        return 'RECALL';
+      case FlashcardType.understanding:
+        return 'CONCEPT';
+      case FlashcardType.application:
+        return 'APPLICATION';
+      case FlashcardType.comparison:
+        return 'COMPARISON';
+      case FlashcardType.mechanism:
+        return 'MECHANISM';
+      case FlashcardType.examQuestion:
+        return 'EXAM QUESTION';
+    }
   }
 }
 

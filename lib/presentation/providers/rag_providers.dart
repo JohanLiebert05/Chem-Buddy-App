@@ -14,6 +14,9 @@ class ChatState {
   final String? activeDocumentPath;
   final int? activeDocumentSize;
   final int? activeDocumentPages;
+  final String? lastQuestion;
+  final String? lastSubject;
+  final String? lastModelPrompt;
 
   const ChatState({
     this.messages = const [],
@@ -24,6 +27,9 @@ class ChatState {
     this.activeDocumentPath,
     this.activeDocumentSize,
     this.activeDocumentPages,
+    this.lastQuestion,
+    this.lastSubject,
+    this.lastModelPrompt,
   });
 
   bool get hasActiveDocument => activeDocumentText != null && activeDocumentText!.isNotEmpty;
@@ -39,6 +45,9 @@ class ChatState {
     int? activeDocumentSize,
     int? activeDocumentPages,
     bool clearDocument = false,
+    String? lastQuestion,
+    String? lastSubject,
+    String? lastModelPrompt,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
@@ -49,6 +58,9 @@ class ChatState {
       activeDocumentPath: clearDocument ? null : (activeDocumentPath ?? this.activeDocumentPath),
       activeDocumentSize: clearDocument ? null : (activeDocumentSize ?? this.activeDocumentSize),
       activeDocumentPages: clearDocument ? null : (activeDocumentPages ?? this.activeDocumentPages),
+      lastQuestion: lastQuestion ?? this.lastQuestion,
+      lastSubject: lastSubject ?? this.lastSubject,
+      lastModelPrompt: lastModelPrompt ?? this.lastModelPrompt,
     );
   }
 }
@@ -100,6 +112,12 @@ class ChatController extends Notifier<ChatState> {
   }
 
   Future<void> sendMessage(String question, {String? subject, String? modelPrompt}) async {
+    // Prevent duplicate requests while an answer is currently being computed
+    if (state.isLoading) return;
+
+    final trimmed = question.trim();
+    if (trimmed.isEmpty) return;
+
     final ragService = ref.read(ragServiceProvider);
     final userId = SupabaseService.instance.userId ?? 'anonymous';
     final tempId = const Uuid().v4();
@@ -110,7 +128,7 @@ class ChatController extends Notifier<ChatState> {
       conversationId: 'temp_conv',
       userId: userId,
       role: 'user',
-      content: question,
+      content: trimmed,
       createdAt: DateTime.now(),
     );
 
@@ -118,12 +136,15 @@ class ChatController extends Notifier<ChatState> {
       messages: [...prior, userMessage],
       isLoading: true,
       clearError: true,
+      lastQuestion: trimmed,
+      lastSubject: subject,
+      lastModelPrompt: modelPrompt,
     );
 
     try {
       final history = prior.length > 4 ? prior.sublist(prior.length - 4) : prior;
       final response = await ragService.ask(
-        question: modelPrompt ?? question,
+        question: modelPrompt ?? trimmed,
         subject: subject,
         documentText: state.activeDocumentText,
         documentName: state.activeDocumentName,
@@ -143,18 +164,31 @@ class ChatController extends Notifier<ChatState> {
       state = state.copyWith(
         messages: [...state.messages, assistantMessage],
         isLoading: false,
+        clearError: true,
       );
     } catch (e) {
-      String cleanMsg = e.toString();
-      if (cleanMsg.contains('Bad state:')) {
-        cleanMsg = cleanMsg.replaceAll('Bad state:', '').trim();
+      String cleanMsg = "Chem Buddy AI couldn't complete that request. Please try again.";
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('socket') || errStr.contains('network') || errStr.contains('offline')) {
+        cleanMsg = 'Network connection issue. Please check your internet and retry.';
+      } else if (errStr.contains('timeout')) {
+        cleanMsg = 'The request timed out. Please tap retry to try again.';
       }
-      if (cleanMsg.isEmpty) {
-        cleanMsg = 'Could not get an answer. Please check your internet connection and try again.';
-      }
+
       state = state.copyWith(
         isLoading: false,
         error: cleanMsg,
+      );
+    }
+  }
+
+  Future<void> retryLastMessage() async {
+    if (state.lastQuestion != null && state.lastQuestion!.isNotEmpty) {
+      // Remove last failed user message if needed or just re-dispatch
+      await sendMessage(
+        state.lastQuestion!,
+        subject: state.lastSubject,
+        modelPrompt: state.lastModelPrompt,
       );
     }
   }

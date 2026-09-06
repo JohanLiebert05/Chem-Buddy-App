@@ -391,13 +391,6 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
     }
   }
 
-  String _formatSize(int? bytes) {
-    if (bytes == null || bytes <= 0) return '';
-    if (bytes < 1024 * 1024) {
-      return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    }
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -455,48 +448,56 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                 ),
               ),
 
-            // Attached PDF Badge (Clean RAG document attachment with NO flashcards/summary chips)
+            // Attached PDF Badge (Strict PDF Grounding Active)
             if (chatState.hasActiveDocument && !_extracting)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 child: GlowCard(
-                  borderColor: AppColors.purpleBright.withValues(alpha: 0.4),
+                  borderColor: AppColors.purpleBright.withValues(alpha: 0.5),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.purple.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppColors.purple.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.purpleBright, size: 20),
+                        child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.purpleBright, size: 22),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.purple.withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.5), width: 0.6),
+                                  ),
+                                  child: const Text('🔒 Strict PDF Mode', style: TextStyle(color: AppColors.purpleBright, fontSize: 10, fontWeight: FontWeight.w800)),
+                                ),
+                                const SizedBox(width: 6),
+                                const Text('Grounded 🟢', style: TextStyle(color: AppColors.success, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
                             Text(
-                              chatState.activeDocumentName ?? "Attached Study Material",
+                              chatState.activeDocumentName ?? 'Attached PDF Material',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white),
-                            ),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                const Text('Ready for Questions 🟢', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
-                                if (chatState.activeDocumentSize != null)
-                                  Text(' · ${_formatSize(chatState.activeDocumentSize)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                              ],
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
-                        tooltip: 'Detach PDF',
+                        icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.textMuted),
+                        tooltip: 'Detach PDF (Switch to General Chemistry AI)',
                         onPressed: () => ref.read(chatControllerProvider.notifier).detachDocument(),
                       ),
                     ],

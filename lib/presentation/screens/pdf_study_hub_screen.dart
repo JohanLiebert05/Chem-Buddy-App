@@ -272,6 +272,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
         sourceText: text,
         count: _flashcardCount,
         topic: widget.doc.displayName,
+        bundle: _ocrBundle,
       );
 
       final set = await flashcardService.saveGeneratedSet(
@@ -468,8 +469,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                   ],
                 ),
               )
-            else
+            else ...[
               _buildOcrStatusBanner(),
+              _buildQuickActionMenu(),
+            ],
 
             Expanded(
               child: TabBarView(
@@ -580,6 +583,77 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
             constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionMenu() {
+    final actions = [
+      (
+        icon: Icons.chat_bubble_outline_rounded,
+        label: 'Ask PDF',
+        color: AppColors.purpleBright,
+        onTap: () => _tabController.animateTo(4),
+      ),
+      (
+        icon: Icons.style_outlined,
+        label: 'Flashcards',
+        color: AppColors.accentCyan,
+        onTap: () => _tabController.animateTo(3),
+      ),
+      (
+        icon: Icons.quiz_outlined,
+        label: 'Exam Quiz',
+        color: AppColors.accentGold,
+        onTap: () => _tabController.animateTo(2),
+      ),
+      (
+        icon: Icons.auto_awesome_rounded,
+        label: 'Summary',
+        color: AppColors.blue,
+        onTap: () => _tabController.animateTo(1),
+      ),
+      (
+        icon: Icons.local_fire_department_outlined,
+        label: 'Key Topics',
+        color: AppColors.danger,
+        onTap: () => _tabController.animateTo(0),
+      ),
+    ];
+
+    return Container(
+      height: 38,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: actions.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final a = actions[index];
+          return InkWell(
+            onTap: a.onTap,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: a.color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: a.color.withValues(alpha: 0.3), width: 0.9),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(a.icon, size: 14, color: a.color),
+                  const SizedBox(width: 6),
+                  Text(
+                    a.label,
+                    style: TextStyle(color: a.color, fontSize: 11.5, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

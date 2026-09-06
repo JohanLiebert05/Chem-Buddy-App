@@ -73,6 +73,15 @@ class SmartFlashcardSet {
       );
 }
 
+enum FlashcardType {
+  recall,
+  understanding,
+  application,
+  comparison,
+  mechanism,
+  examQuestion,
+}
+
 class SmartFlashcard {
   const SmartFlashcard({
     required this.id,
@@ -92,6 +101,10 @@ class SmartFlashcard {
     this.lapseCount = 0,
     this.lastReviewedAt,
     this.sourceBacklink = '',
+    this.pageNumber,
+    this.sourceSnippet = '',
+    this.cardType = FlashcardType.understanding,
+    this.isStrictPdfGrounded = false,
   });
 
   final String id;
@@ -111,6 +124,10 @@ class SmartFlashcard {
   final int lapseCount;
   final DateTime? lastReviewedAt;
   final String sourceBacklink;
+  final int? pageNumber;
+  final String sourceSnippet;
+  final FlashcardType cardType;
+  final bool isStrictPdfGrounded;
 
 
   bool get isNew => srState == FlashcardSrState.newCard && repetitionCount == 0 && lastReviewedAt == null;
@@ -134,6 +151,10 @@ class SmartFlashcard {
     int? lapseCount,
     DateTime? lastReviewedAt,
     String? sourceBacklink,
+    int? pageNumber,
+    String? sourceSnippet,
+    FlashcardType? cardType,
+    bool? isStrictPdfGrounded,
   }) {
     return SmartFlashcard(
       id: id,
@@ -153,6 +174,10 @@ class SmartFlashcard {
       lapseCount: lapseCount ?? this.lapseCount,
       lastReviewedAt: lastReviewedAt ?? this.lastReviewedAt,
       sourceBacklink: sourceBacklink ?? this.sourceBacklink,
+      pageNumber: pageNumber ?? this.pageNumber,
+      sourceSnippet: sourceSnippet ?? this.sourceSnippet,
+      cardType: cardType ?? this.cardType,
+      isStrictPdfGrounded: isStrictPdfGrounded ?? this.isStrictPdfGrounded,
     );
   }
 
@@ -175,6 +200,10 @@ class SmartFlashcard {
         'lapse_count': lapseCount,
         'last_reviewed_at': lastReviewedAt?.toIso8601String(),
         'source_backlink': sourceBacklink,
+        'page_number': pageNumber,
+        'source_snippet': sourceSnippet,
+        'card_type': cardType.name,
+        'is_strict_pdf_grounded': isStrictPdfGrounded,
       };
 
   factory SmartFlashcard.fromJson(Map<String, dynamic> json) {
@@ -208,6 +237,12 @@ class SmartFlashcard {
       keyTerms = rawKeyTerms.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList();
     }
 
+    final rawType = '${json['card_type'] ?? json['cardType'] ?? 'understanding'}';
+    final cardType = FlashcardType.values.firstWhere(
+      (e) => e.name == rawType,
+      orElse: () => FlashcardType.understanding,
+    );
+
     return SmartFlashcard(
       id: json['id'] as String,
       setId: json['set_id'] as String? ?? json['setId'] as String? ?? '',
@@ -226,6 +261,10 @@ class SmartFlashcard {
       lapseCount: json['lapse_count'] as int? ?? 0,
       lastReviewedAt: json['last_reviewed_at'] != null ? DateTime.tryParse('${json['last_reviewed_at']}') : null,
       sourceBacklink: json['source_backlink'] as String? ?? json['sourceBacklink'] as String? ?? '',
+      pageNumber: json['page_number'] as int? ?? json['pageNumber'] as int?,
+      sourceSnippet: (json['source_snippet'] ?? json['sourceSnippet'] ?? '') as String,
+      cardType: cardType,
+      isStrictPdfGrounded: (json['is_strict_pdf_grounded'] ?? json['isStrictPdfGrounded']) as bool? ?? false,
     );
   }
 
@@ -332,10 +371,18 @@ class GeneratedCard {
     required this.answer,
     required this.topic,
     this.keyTerms = const [],
+    this.pageNumber,
+    this.sourceSnippet = '',
+    this.cardType = FlashcardType.understanding,
+    this.isStrictPdfGrounded = false,
   });
 
   final String question;
   final String answer;
   final String topic;
   final List<String> keyTerms;
+  final int? pageNumber;
+  final String sourceSnippet;
+  final FlashcardType cardType;
+  final bool isStrictPdfGrounded;
 }

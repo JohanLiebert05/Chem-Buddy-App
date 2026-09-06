@@ -107,15 +107,20 @@ class FlashcardService {
     );
     await store.put(store.smartSets, set.id, set.toJson());
     for (var i = 0; i < generated.length; i++) {
+      final gen = generated[i];
       final card = SmartFlashcard(
         id: _uuid.v4(),
         setId: set.id,
-        question: generated[i].question,
-        answer: generated[i].answer,
-        topic: generated[i].topic,
-        keyTerms: generated[i].keyTerms,
+        question: gen.question,
+        answer: gen.answer,
+        topic: gen.topic,
+        keyTerms: gen.keyTerms,
         position: i,
         srState: FlashcardSrState.newCard,
+        pageNumber: gen.pageNumber,
+        sourceSnippet: gen.sourceSnippet,
+        cardType: gen.cardType,
+        isStrictPdfGrounded: gen.isStrictPdfGrounded,
       );
       await store.put(store.smartCards, card.id, card.toJson());
     }

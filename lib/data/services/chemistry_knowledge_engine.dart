@@ -1,5 +1,4 @@
 import 'reaction_predictor_engine.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../core/utils/chemistry_text_formatter.dart';
 import '../models/rag_models.dart';
@@ -13,6 +12,18 @@ import '../models/rag_models.dart';
 class ChemistryKnowledgeEngine {
   ChemistryKnowledgeEngine._();
 
+  /// In-memory LRU query cache for fast, instant response lookups
+  static final Map<String, RagResponse> _responseCache = {};
+  static const int _maxCacheSize = 120;
+
+  static String _buildCacheKey(String question, String? subject, String? documentText, String? documentName) {
+    final docPart = documentText != null ? '${documentName ?? "doc"}_${documentText.length}' : 'none';
+    return '${question.trim().toLowerCase()}|${subject ?? "none"}|$docPart';
+  }
+
+  /// Clears the query cache (e.g. on new session)
+  static void clearCache() => _responseCache.clear();
+
   /// Resolves any chemistry or science question into an authoritative academic response.
   static RagResponse generateAcademicResponse({
     required String question,
@@ -24,12 +35,44 @@ class ChemistryKnowledgeEngine {
     final cleanQ = question.trim();
     final lowerQ = cleanQ.toLowerCase();
 
-    // 1. If document context is provided, perform contextual RAG extraction
+    // 0. Check in-memory query cache for instant response
+    final cacheKey = _buildCacheKey(cleanQ, subject, documentText, documentName);
+    final cached = _responseCache[cacheKey];
+    if (cached != null) {
+      return cached;
+    }
+
+    // 1. STRICT PDF-GROUNDED MODE: If document context is attached, PDF is the single source of truth
     if (documentText != null && documentText.trim().length > 30) {
-      final docAnswer = _extractFromDocument(cleanQ, documentText, documentName ?? 'Uploaded Notes');
-      if (docAnswer != null) {
-        return RagResponse(
-          answer: ChemistryTextFormatter.format(docAnswer),
+      final extraction = _extractFromDocumentDetailed(cleanQ, documentText, documentName ?? 'Uploaded PDF');
+      RagResponse docResponse;
+      if (extraction.found) {
+        docResponse = RagResponse(
+          answer: ChemistryTextFormatter.format(extraction.content),
+          sources: [
+            RagSource(
+              documentTitle: documentName ?? 'Uploaded PDF',
+              fileName: documentName ?? 'Notes.pdf',
+              pageNumber: extraction.pageNumber,
+              subject: subject ?? 'Chemistry Notes',
+              topic: cleanQ,
+              similarity: extraction.similarity,
+            ),
+          ],
+        );
+      } else {
+        // STRICT REFUSAL: Do not invent outside facts or silently fall through to generic knowledge
+        final notFoundText = '''### **From Your Uploaded Notes: ${documentName ?? "Uploaded PDF"}**
+
+I couldn't find that information in the uploaded PDF (**${documentName ?? "Uploaded Notes"}**).
+
+> [!NOTE]
+> Under strict PDF-grounded mode, ChemBuddy only answers questions directly supported by your uploaded document.
+>
+> *Tip: To answer this using general MSc Chemistry knowledge instead, ask your question without the PDF attached or tap 'General AI'.*''';
+
+        docResponse = RagResponse(
+          answer: ChemistryTextFormatter.format(notFoundText),
           sources: [
             RagSource(
               documentTitle: documentName ?? 'Uploaded PDF',
@@ -37,11 +80,17 @@ class ChemistryKnowledgeEngine {
               pageNumber: 1,
               subject: subject ?? 'Chemistry Notes',
               topic: cleanQ,
-              similarity: 0.92,
+              similarity: 0.0,
             ),
           ],
         );
       }
+
+      if (_responseCache.length >= _maxCacheSize) {
+        _responseCache.remove(_responseCache.keys.first);
+      }
+      _responseCache[cacheKey] = docResponse;
+      return docResponse;
     }
 
     // 2. Check for exam-mark formatting requests (2M, 5M, 10M)
@@ -53,7 +102,7 @@ class ChemistryKnowledgeEngine {
     final reactionPrediction = ReactionPredictorEngine.predict(cleanQ);
     if (reactionPrediction != null) {
       final formattedRxn = _applyExamMarkFormatting(cleanQ, reactionPrediction.toAcademicMarkdown(), is2M, is5M, is10M);
-      return RagResponse(
+      final rxnResponse = RagResponse(
         answer: ChemistryTextFormatter.format(formattedRxn),
         sources: [
           RagSource(
@@ -66,13 +115,16 @@ class ChemistryKnowledgeEngine {
           ),
         ],
       );
+      if (_responseCache.length >= _maxCacheSize) _responseCache.remove(_responseCache.keys.first);
+      _responseCache[cacheKey] = rxnResponse;
+      return rxnResponse;
     }
 
     // 3. Multi-term Compound Query Resolution (e.g. "what is ppm and mole and Normality")
     final multiTermAnswer = _matchMultiTermConcentrationOrConcepts(lowerQ, cleanQ);
     if (multiTermAnswer != null) {
       final formatted = _applyExamMarkFormatting(cleanQ, multiTermAnswer, is2M, is5M, is10M);
-      return RagResponse(
+      final multiResponse = RagResponse(
         answer: ChemistryTextFormatter.format(formatted),
         sources: [
           RagSource(
@@ -85,13 +137,16 @@ class ChemistryKnowledgeEngine {
           ),
         ],
       );
+      if (_responseCache.length >= _maxCacheSize) _responseCache.remove(_responseCache.keys.first);
+      _responseCache[cacheKey] = multiResponse;
+      return multiResponse;
     }
 
     // 4. Match against curated domain modules (Analytical, Physical, Inorganic, Organic, Spectroscopy, Quantum)
     final curated = _matchCuratedChemistry(lowerQ, cleanQ);
     if (curated != null) {
       final formattedAnswer = _applyExamMarkFormatting(cleanQ, curated, is2M, is5M, is10M);
-      return RagResponse(
+      final curatedResponse = RagResponse(
         answer: ChemistryTextFormatter.format(formattedAnswer),
         sources: [
           RagSource(
@@ -104,11 +159,14 @@ class ChemistryKnowledgeEngine {
           ),
         ],
       );
+      if (_responseCache.length >= _maxCacheSize) _responseCache.remove(_responseCache.keys.first);
+      _responseCache[cacheKey] = curatedResponse;
+      return curatedResponse;
     }
 
     // 5. Intelligent Context-Aware Academic Synthesis (General Science & Chemistry Solver)
     final dynamicAnswer = _generateIntelligentAnswer(cleanQ, subject: subject, is2M: is2M, is5M: is5M, is10M: is10M);
-    return RagResponse(
+    final dynResponse = RagResponse(
       answer: ChemistryTextFormatter.format(dynamicAnswer),
       sources: [
         RagSource(
@@ -121,6 +179,9 @@ class ChemistryKnowledgeEngine {
         ),
       ],
     );
+    if (_responseCache.length >= _maxCacheSize) _responseCache.remove(_responseCache.keys.first);
+    _responseCache[cacheKey] = dynResponse;
+    return dynResponse;
   }
 
   static String _applyExamMarkFormatting(String q, String content, bool is2M, bool is5M, bool is10M) {
@@ -951,8 +1012,11 @@ $content
   // DOCUMENT RAG CONTEXT EXTRACTION
   // =========================================================================
 
-  static String? _extractFromDocument(String question, String text, String docName) {
-    // Extract meaningful query terms (filter stopwords + very short tokens)
+  static ({bool found, String content, int pageNumber, double similarity}) _extractFromDocumentDetailed(
+    String question,
+    String text,
+    String docName,
+  ) {
     final stopwords = {
       'what', 'explain', 'give', 'notes', 'from', 'about', 'this', 'that',
       'how', 'does', 'with', 'and', 'the', 'for', 'are', 'why',
@@ -968,13 +1032,8 @@ $content
         .toSet()
         .toList();
 
-    // Debug log: raw query and search terms
-    debugPrint('[RAG Debug] Raw Query: "$question"');
-    debugPrint('[RAG Debug] Search Terms (${qTerms.length}): ${qTerms.join(', ')}');
-
     if (qTerms.isEmpty) {
-      debugPrint('[RAG Debug] No meaningful terms extracted — skipping document extraction.');
-      return null;
+      return (found: false, content: '', pageNumber: 1, similarity: 0.0);
     }
 
     // Split document into paragraphs
@@ -989,55 +1048,48 @@ $content
         if (pLower.contains(term)) matchCount++;
       }
       if (matchCount > 0) {
-        // Normalized score = fraction of query terms matched in this paragraph
         final score = matchCount / qTerms.length;
         scored.add(MapEntry(p, score));
       }
     }
 
     if (scored.isEmpty) {
-      debugPrint('[RAG Debug] No paragraph matches in "$docName" — document does not cover this topic.');
-      return null;
+      return (found: false, content: '', pageNumber: 1, similarity: 0.0);
     }
 
     scored.sort((a, b) => b.value.compareTo(a.value));
-
-    // Log top-3 retrieved chunks with similarity scores
-    debugPrint('[RAG Debug] Top-K Chunks from "$docName":');
-    for (var i = 0; i < scored.length && i < 3; i++) {
-      final excerpt = scored[i].key.trim().replaceAll('\n', ' ');
-      final preview = excerpt.length > 120 ? '${excerpt.substring(0, 120)}...' : excerpt;
-      debugPrint('[RAG Debug]   [${i + 1}] Similarity: ${(scored[i].value * 100).toStringAsFixed(1)}% | "$preview"');
-    }
-
-    // STRICT RELEVANCE THRESHOLD: require at least 35% of query terms to match.
-    // This prevents unrelated document content (e.g. pH buffer notes) from being
-    // returned when the query is about a completely different chemistry topic.
     final topScore = scored.first.value;
     const relevanceThreshold = 0.35;
 
     if (topScore < relevanceThreshold) {
-      debugPrint('[RAG Debug] Top similarity ${(topScore * 100).toStringAsFixed(1)}% < ${(relevanceThreshold * 100).toStringAsFixed(0)}% threshold. '
-          'Document "$docName" does not sufficiently cover this topic — falling through to knowledge engine.');
-      return null;
+      return (found: false, content: '', pageNumber: 1, similarity: topScore);
     }
 
-    // Only use paragraphs with score ≥ 50% of the best score (quality filter)
+    final bestEntry = scored.first.key;
+    int pageNum = 1;
+    final pageMatch = RegExp(r'\[PAGE\s*(\d+)\]', caseSensitive: false).firstMatch(bestEntry);
+    if (pageMatch != null) {
+      pageNum = int.tryParse(pageMatch.group(1) ?? '1') ?? 1;
+    }
+
     final qualityFloor = topScore * 0.5;
     final bestParagraphs = scored
         .where((e) => e.value >= qualityFloor)
         .take(3)
-        .map((e) => e.key.trim())
+        .map((e) => e.key.replaceAll(RegExp(r'\[PAGE\s*\d+\]\s*'), '').trim())
         .join('\n\n');
 
-    debugPrint('[RAG Debug] ✓ Returning grounded answer from "$docName" (top similarity: ${(topScore * 100).toStringAsFixed(1)}%)');
+    final formatted = '''### **From Your Uploaded Notes: $docName**
 
-    return '''### **From Your Uploaded Notes: $docName**
+**📖 Source: Page $pageNum**
 
+#### **Direct Answer & Key Explanation**
 $bestParagraphs
 
 ---
-*Extracted from $docName based on your query.*''';
+*Verified and grounded strictly from $docName.*''';
+
+    return (found: true, content: formatted, pageNumber: pageNum, similarity: topScore);
   }
 
   /// Generates a comprehensive, highly intelligent executive summary of an uploaded PDF study document.

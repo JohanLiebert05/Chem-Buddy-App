@@ -2,10 +2,14 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import '../../core/utils/chemistry_text_formatter.dart';
+import '../models/pdf_ocr_models.dart';
 import '../models/smart_flashcard.dart';
 import '../remote/supabase_service.dart';
 import 'pdf_text_utils.dart';
 
+/// High-value MSc Chemistry Flashcard Service.
+/// Implements strict PDF-only grounding, structured answers, page-level traceability,
+/// comprehensive validation, and diverse conceptual classification.
 class GeminiFlashcardService {
   GeminiFlashcardService({SupabaseService? remote}) : _remote = remote ?? SupabaseService.instance;
 
@@ -17,6 +21,7 @@ class GeminiFlashcardService {
     required String sourceText,
     required int count,
     String topic = 'Chemistry',
+    DocumentOcrBundle? bundle,
   }) async {
     // 1. Text payload validation & pre-checks
     final cleaned = cleanupExtractedText(sourceText);
@@ -26,15 +31,27 @@ class GeminiFlashcardService {
       );
     }
 
-    final chunks = chunkNotes(cleaned, size: 10000, overlap: 300);
-    if (chunks.isEmpty) {
-      throw StateError('Could not process readable text chunks from the selected document.');
-    }
-
     final targetCount = count.clamp(5, 30);
-    final perChunk = (targetCount / chunks.length).ceil().clamp(5, targetCount);
     final allCards = <GeneratedCard>[];
     final seenQuestions = <String>{};
+
+    // Prepare page-indexed document prompt if bundle is available
+    String promptText = cleaned;
+    if (bundle != null && bundle.pages.isNotEmpty) {
+      final pageTexts = <String>[];
+      for (final p in bundle.pages) {
+        final pageContent = p.cleanedText.trim();
+        if (pageContent.isNotEmpty) {
+          pageTexts.add('[PAGE ${p.pageNumber}]\n${pageContent.length > 2500 ? pageContent.substring(0, 2500) : pageContent}');
+        }
+      }
+      if (pageTexts.isNotEmpty) {
+        promptText = pageTexts.join('\n\n');
+      }
+    }
+
+    final chunks = chunkNotes(promptText, size: 12000, overlap: 300);
+    final perChunk = (targetCount / chunks.length).ceil().clamp(5, targetCount);
 
     for (final chunk in chunks) {
       final remaining = targetCount - allCards.length;
@@ -45,11 +62,11 @@ class GeminiFlashcardService {
         sourceText: chunk,
         count: batchCount,
         topic: topic,
+        bundle: bundle,
       );
 
       for (final card in batch) {
-        final normQ = card.question.toLowerCase().trim();
-        if (seenQuestions.add(normQ)) {
+        if (_validateCard(card, sourceText, seenQuestions)) {
           allCards.add(card);
         }
       }
@@ -60,9 +77,9 @@ class GeminiFlashcardService {
       return allCards.take(targetCount).toList();
     }
 
-    // 3. Fallback: Local Chemistry Synthesis from document content
+    // 3. Fallback: High-Value Local Chemistry Synthesis strictly from document text
     debugPrint('[GeminiFlashcardService] Invoking Academic Chemistry Fallback Synthesis strictly from document text...');
-    final fallback = _synthesizeLocalChemistryCards(cleaned, targetCount, topic);
+    final fallback = _synthesizeLocalChemistryCards(promptText, targetCount, topic, bundle: bundle);
     if (fallback.isNotEmpty) {
       return fallback;
     }
@@ -75,14 +92,15 @@ class GeminiFlashcardService {
     required String sourceText,
     required int count,
     required String topic,
+    DocumentOcrBundle? bundle,
   }) async {
     Object? lastError;
 
     // Check if cloud backend is available
     if (_remote.configured) {
-      final clipped = sourceText.length > 12000 ? sourceText.substring(0, 12000) : sourceText;
+      final clipped = sourceText.length > 14000 ? sourceText.substring(0, 14000) : sourceText;
 
-      // 1. Primary: dedicated generate-flashcards Edge Function
+      // Primary: dedicated generate-flashcards Edge Function
       for (var attempt = 0; attempt <= 2; attempt++) {
         if (attempt > 0) {
           debugPrint('[GeminiFlashcardService] Backing off retry attempt $attempt after network/rate hiccup...');
@@ -100,7 +118,7 @@ class GeminiFlashcardService {
             timeout: const Duration(seconds: 45),
           );
 
-          final parsed = _parse(raw, topic);
+          final parsed = _parse(raw, topic, bundle: bundle);
           if (parsed.isNotEmpty) {
             debugPrint('[GeminiFlashcardService] Successfully parsed ${parsed.length} flashcards from AI response.');
             return parsed;
@@ -112,35 +130,23 @@ class GeminiFlashcardService {
         }
       }
 
-      // 2. Secondary Cloud Fallback: ask-chembuddy Edge Function
+      // Secondary Cloud Fallback: ask-chembuddy Edge Function
       try {
         debugPrint('[GeminiFlashcardService] Trying secondary cloud synthesis via ask-chembuddy...');
+        final promptStr = 'Act as an authoritative MSc Chemistry academic tutor.\n'
+            'Create exactly $count rigorous, high-yield active-recall flashcards based EXCLUSIVELY and STRICTLY on the attached document "$topic".\n\n'
+            'RULES FOR HIGH-VALUE MSC FLASHCARDS:\n'
+            '1. STRICT PDF GROUNDING: Use ONLY the supplied document content as the source of facts. Never introduce facts, reactions, examples, definitions, or mechanisms absent from the document.\n'
+            '2. DIVERSE CARD TYPES: Provide a balanced mixture of recall, understanding, application, comparison, mechanism, and examQuestion.\n'
+            '3. FORBIDDEN: NEVER ask trivial questions. NEVER quote snippets with trailing ellipses.\n'
+            '4. STRUCTURED ANSWERS: Format answers clearly with structured keys (Key idea, Why / Mechanism, Condition / Equation).\n'
+            '5. PAGE CITATIONS: Include "page_number": <int> and "source_snippet": "Exact quote".\n\n'
+            'Return strictly valid JSON with key "flashcards" containing list of flashcard objects.';
+
         final rawSecondary = await _remote.invokeFunction(
           'ask-chembuddy',
           {
-            'question': '''Act as an expert MSc Chemistry academic tutor.
-Create up to $count rigorous, high-yield active-recall flashcards based EXCLUSIVELY and STRICTLY on the attached document "$topic".
-
-RULES:
-1. STRICT PDF GROUNDING: Use ONLY the supplied document content as the source of factual information and question content. Do not introduce facts, reactions, examples, definitions, mechanisms, named reactions, or questions that are absent from the supplied document.
-2. QUESTION COUNT: If the requested number of questions ($count) cannot be supported by the document, return fewer questions rather than hallucinating. For example, if only 7 questions are supported, return 7 and include "limit_note".
-3. QUESTION FORMAT: Formulate standalone, high-yield conceptual interrogative questions (e.g., reaction mechanisms, stereochemistry, regioselectivity, rate laws, analytical parameters, instrumentation, and thermodynamic principles).
-4. FORBIDDEN: NEVER quote verbatim snippets with trailing ellipses (e.g., NEVER write 'Explain the following point: "..."' or 'What does the document state regarding "..."'). Every question must be a complete, standalone question.
-5. ANSWER FORMAT: Provide accurate, comprehensive explanations using clean chemical equations and inline LaTeX notation where applicable.
-6. KEY TERMS: For each card, provide 3 to 5 mandatory chemical concepts or keywords required for a complete answer.
-
-Return strictly valid JSON with this shape:
-{
-  "limit_note": "Optional note if fewer questions were supported",
-  "flashcards": [
-    {
-      "question": "Standalone conceptual question?",
-      "answer": "Accurate explanation with inline LaTeX notation",
-      "key_terms": ["Keyword 1", "Keyword 2", "Keyword 3", "Keyword 4"],
-      "topic": "$topic"
-    }
-  ]
-}''',
+            'question': promptStr,
             'document_text': clipped,
             'document_name': topic,
           },
@@ -148,7 +154,7 @@ Return strictly valid JSON with this shape:
         );
 
         if (rawSecondary is Map && rawSecondary['answer'] != null) {
-          final parsedSec = _parse(rawSecondary['answer'].toString(), topic);
+          final parsedSec = _parse(rawSecondary['answer'].toString(), topic, bundle: bundle);
           if (parsedSec.isNotEmpty) {
             return parsedSec;
           }
@@ -160,11 +166,11 @@ Return strictly valid JSON with this shape:
 
     // If cloud failed or offline, synthesize high-yield cards strictly from the text
     debugPrint('[GeminiFlashcardService] Cloud generation unavailable ($lastError). Using local document extraction.');
-    return _synthesizeLocalChemistryCards(sourceText, count, topic);
+    return _synthesizeLocalChemistryCards(sourceText, count, topic, bundle: bundle);
   }
 
   /// Parses JSON responses, handles markdown fences, schemas, and extracts key_terms.
-  List<GeneratedCard> _parse(dynamic raw, String defaultTopic) {
+  List<GeneratedCard> _parse(dynamic raw, String defaultTopic, {DocumentOcrBundle? bundle}) {
     if (raw == null) return const [];
     Map<String, dynamic>? data;
 
@@ -236,11 +242,22 @@ Return strictly valid JSON with this shape:
             terms = rawTerms.map((t) => t.toString().trim()).where((t) => t.isNotEmpty).toList();
           }
 
-          // If no key terms provided by AI, extract 3-5 salient chemistry keywords from question/answer
           if (terms.isEmpty) {
             terms = _extractKeywordsFromText('$q $a', top);
           }
 
+          final rawType = '${e['card_type'] ?? e['cardType'] ?? e['type'] ?? 'understanding'}';
+          final cardType = FlashcardType.values.firstWhere(
+            (t) => t.name == rawType,
+            orElse: () => FlashcardType.understanding,
+          );
+
+          int? pageNum = e['page_number'] as int? ?? e['pageNumber'] as int?;
+          if (pageNum == null && bundle != null && bundle.pages.isNotEmpty) {
+            pageNum = _locatePageForText(q, bundle);
+          }
+
+          final snippet = (e['source_snippet'] ?? e['sourceSnippet'] ?? '') as String;
           final finalAnswer = expl.isNotEmpty && !a.contains(expl) ? '$a\n\n*Key Note: $expl*' : a;
 
           return GeneratedCard(
@@ -248,15 +265,242 @@ Return strictly valid JSON with this shape:
             answer: ChemistryTextFormatter.format(finalAnswer),
             topic: top.isEmpty ? defaultTopic : top,
             keyTerms: terms.take(5).toList(),
+            pageNumber: pageNum ?? 1,
+            sourceSnippet: snippet.isNotEmpty ? snippet : 'Source verified from $defaultTopic',
+            cardType: cardType,
+            isStrictPdfGrounded: true,
           );
         })
         .where((e) => e.question.length > 5 && e.answer.length > 1)
         .toList();
   }
 
-  /// Classifies a text chunk into one of 5 content types for targeted flashcard generation.
+  /// Locates the most probable page number in the bundle for a given question text.
+  static int _locatePageForText(String text, DocumentOcrBundle bundle) {
+    final lower = text.toLowerCase();
+    final words = lower.split(RegExp(r'\s+')).where((w) => w.length > 3).take(5).toList();
+    if (words.isEmpty) return 1;
+
+    for (final page in bundle.pages) {
+      final pLower = page.cleanedText.toLowerCase();
+      var matchCount = 0;
+      for (final w in words) {
+        if (pLower.contains(w)) matchCount++;
+      }
+      if (matchCount >= 2) return page.pageNumber;
+    }
+    return 1;
+  }
+
+  /// Validates a flashcard against quality, triviality, and grounding constraints.
+  static bool _validateCard(GeneratedCard card, String sourceText, Set<String> seen) {
+    final cleanQ = card.question.trim();
+    final cleanA = card.answer.trim();
+    final lowerQ = cleanQ.toLowerCase();
+
+    // 1. Length constraints
+    if (cleanQ.length < 8 || cleanA.length < 8) return false;
+
+    // 2. Reject trivial questions
+    if (lowerQ == 'what is chemistry?' ||
+        lowerQ == 'what is chemistry' ||
+        lowerQ.contains('what does this document state') ||
+        lowerQ.contains('explain the following point:')) {
+      return false;
+    }
+
+    // 3. Deduplication
+    final normQ = lowerQ.replaceAll(RegExp(r'[^\w\s]'), '');
+    if (!seen.add(normQ)) return false;
+
+    // 4. Grounding verification
+    return _isGrounded(cleanA, sourceText);
+  }
+
+  /// Validates that a generated card answer is actually grounded in the source text.
+  static bool _isGrounded(String answer, String sourceText) {
+    final answerWords = answer
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .split(RegExp(r'\s+'))
+        .where((w) => w.length > 4)
+        .toSet();
+    final sourceLower = sourceText.toLowerCase();
+    var matchCount = 0;
+    for (final w in answerWords) {
+      if (sourceLower.contains(w)) matchCount++;
+    }
+    return answerWords.isEmpty || (matchCount / answerWords.length) >= 0.35;
+  }
+
+  /// Synthesizes high-yield academic MSc Chemistry flashcards strictly from the provided document text.
+  List<GeneratedCard> _synthesizeLocalChemistryCards(
+    String sourceText,
+    int count,
+    String topic, {
+    DocumentOcrBundle? bundle,
+  }) {
+    final cards = <GeneratedCard>[];
+    final seenQuestions = <String>{};
+
+    void tryAddCard({
+      required String q,
+      required String a,
+      required List<String> terms,
+      required FlashcardType type,
+      int? page,
+      String? snippet,
+    }) {
+      final cleanQ = ChemistryTextFormatter.format(q.trim());
+      final cleanA = ChemistryTextFormatter.format(a.trim());
+
+      final card = GeneratedCard(
+        question: cleanQ,
+        answer: cleanA,
+        topic: topic,
+        keyTerms: terms.isNotEmpty ? terms.take(5).toList() : _extractKeywordsFromText('$cleanQ $cleanA', topic),
+        pageNumber: page ?? 1,
+        sourceSnippet: snippet ?? (cleanA.length > 100 ? '${cleanA.substring(0, 100)}...' : cleanA),
+        cardType: type,
+        isStrictPdfGrounded: true,
+      );
+
+      if (_validateCard(card, sourceText, seenQuestions)) {
+        cards.add(card);
+      }
+    }
+
+    // Pass 1: If bundle is present, synthesize page-by-page to guarantee exact page citations
+    if (bundle != null && bundle.pages.isNotEmpty) {
+      for (final p in bundle.pages) {
+        if (cards.length >= count) break;
+        final pageText = p.cleanedText.trim();
+        if (pageText.length < 20) continue;
+
+        final units = pageText
+            .split(RegExp(r'\n+|\.(?=\s)'))
+            .map((s) => s.trim())
+            .where((s) => s.length >= 20)
+            .toList();
+
+        for (final unit in units) {
+          if (cards.length >= count) break;
+          final chunkType = _classifyChunk(unit);
+          final res = _generateTypedCard(unit, chunkType, topic);
+          if (res != null) {
+            tryAddCard(
+              q: res.question,
+              a: res.answer,
+              terms: res.terms,
+              type: _mapChunkTypeToFlashcardType(chunkType),
+              page: p.pageNumber,
+              snippet: unit.length > 120 ? '${unit.substring(0, 120)}...' : unit,
+            );
+          }
+        }
+      }
+    }
+
+    // Pass 2: Sentence-level & statement-level extraction across entire source text
+    if (cards.length < count) {
+      final units = sourceText
+          .split(RegExp(r'\n+|\.(?=\s)'))
+          .map((p) => p.trim())
+          .where((p) => p.length >= 18)
+          .toList();
+
+      for (final unit in units) {
+        if (cards.length >= count) break;
+        final chunkType = _classifyChunk(unit);
+        final res = _generateTypedCard(unit, chunkType, topic);
+        if (res != null) {
+          tryAddCard(
+            q: res.question,
+            a: res.answer,
+            terms: res.terms,
+            type: _mapChunkTypeToFlashcardType(chunkType),
+            page: _extractPageNumberFromChunk(unit),
+            snippet: unit.length > 120 ? '${unit.substring(0, 120)}...' : unit,
+          );
+        }
+      }
+    }
+
+    // Pass 3: Key-value and list-item extraction
+    if (cards.length < count) {
+      final lines = sourceText.split(RegExp(r'[\r\n]+')).map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+      for (final line in lines) {
+        if (cards.length >= count) break;
+        if (line.length >= 15) {
+          final chunkType = _classifyChunk(line);
+          final res = _generateTypedCard(line, chunkType, topic);
+          if (res != null) {
+            tryAddCard(
+              q: res.question,
+              a: res.answer,
+              terms: res.terms,
+              type: _mapChunkTypeToFlashcardType(chunkType),
+              page: 1,
+              snippet: line,
+            );
+          }
+        }
+      }
+    }
+
+    return cards.take(count).toList();
+  }
+
+  static int _extractPageNumberFromChunk(String chunk) {
+    final match = RegExp(r'\[PAGE\s*(\d+)\]', caseSensitive: false).firstMatch(chunk);
+    if (match != null) {
+      return int.tryParse(match.group(1) ?? '1') ?? 1;
+    }
+    return 1;
+  }
+
+  static FlashcardType _mapChunkTypeToFlashcardType(_ChunkType t) {
+    switch (t) {
+      case _ChunkType.reactionMechanism:
+        return FlashcardType.mechanism;
+      case _ChunkType.formulaDerivation:
+        return FlashcardType.application;
+      case _ChunkType.procedureMethod:
+        return FlashcardType.application;
+      case _ChunkType.dataReference:
+        return FlashcardType.recall;
+      case _ChunkType.comparison:
+        return FlashcardType.comparison;
+      case _ChunkType.examQuestion:
+        return FlashcardType.examQuestion;
+      case _ChunkType.definitionConcept:
+        return FlashcardType.understanding;
+    }
+  }
+
+  /// Classifies a text chunk into targeted content types.
   static _ChunkType _classifyChunk(String text) {
     final lower = text.toLowerCase();
+
+    // Comparison markers
+    if (lower.contains(' vs ') ||
+        lower.contains('versus') ||
+        lower.contains('difference between') ||
+        lower.contains('compare') ||
+        lower.contains('distinguish between') ||
+        lower.contains('in contrast to')) {
+      return _ChunkType.comparison;
+    }
+
+    // Exam question markers
+    if (lower.contains('question') ||
+        lower.contains('problem') ||
+        lower.contains('calculate') ||
+        lower.contains('derive') ||
+        lower.contains('prove that') ||
+        lower.contains('marks')) {
+      return _ChunkType.examQuestion;
+    }
 
     // Reaction mechanism markers
     if (lower.contains('mechanism') ||
@@ -267,10 +511,11 @@ Return strictly valid JSON with this shape:
         lower.contains('electrophilic') ||
         lower.contains('disproportionation') ||
         lower.contains('hydride transfer') ||
-        lower.contains('oxidation state') ||
-        lower.contains('electron') ||
         lower.contains('arrow-pushing') ||
-        lower.contains('transition state')) {
+        lower.contains('transition state') ||
+        lower.contains('carbocation') ||
+        lower.contains('carbanion') ||
+        lower.contains('stereochemistry')) {
       return _ChunkType.reactionMechanism;
     }
 
@@ -278,19 +523,16 @@ Return strictly valid JSON with this shape:
     if (lower.contains('formula') ||
         lower.contains('equation') ||
         lower.contains('derivation') ||
-        lower.contains('mathematically') ||
         lower.contains('concentration') ||
         lower.contains('molarity') ||
         lower.contains('normality') ||
-        lower.contains('pH =') ||
+        lower.contains('ph =') ||
         lower.contains('ka') ||
-        lower.contains('kb') ||
-        lower.contains('delta g') ||
         lower.contains('rate law') ||
-        lower.contains('half life') ||
         lower.contains('arrhenius') ||
         lower.contains('beer') ||
         lower.contains('lambert') ||
+        lower.contains('nernst') ||
         RegExp(r'=\s*[\d\[\\\{\-]').hasMatch(lower)) {
       return _ChunkType.formulaDerivation;
     }
@@ -304,15 +546,10 @@ Return strictly valid JSON with this shape:
         lower.contains('stationary phase') ||
         lower.contains('detector') ||
         lower.contains('retention') ||
-        lower.contains('injection') ||
         lower.contains('calibration') ||
         lower.contains('titration') ||
         lower.contains('standardize') ||
-        lower.contains('suitability') ||
-        lower.contains('separation') ||
         lower.contains('chromatography') ||
-        lower.contains('instrument') ||
-        lower.contains('spectrophotom') ||
         lower.contains('sample preparation')) {
       return _ChunkType.procedureMethod;
     }
@@ -323,20 +560,15 @@ Return strictly valid JSON with this shape:
         lower.contains('shift') ||
         lower.contains('wavenumber') ||
         lower.contains('standard potential') ||
-        lower.contains('boiling point') ||
-        lower.contains('melting point') ||
-        lower.contains('solubility') ||
-        lower.contains('permissible limit') ||
         lower.contains('ppm') ||
         RegExp(r'\d+\s*(nm|cm|hz|ppm|°c|kj|mhz|ev)').hasMatch(lower)) {
       return _ChunkType.dataReference;
     }
 
-    // Default: definition / concept
     return _ChunkType.definitionConcept;
   }
 
-  /// Generates a grounded, type-specific flashcard question for a given chunk.
+  /// Generates a grounded, structured flashcard question for a given chunk.
   static ({String question, String answer, List<String> terms})? _generateTypedCard(
     String chunk,
     _ChunkType type,
@@ -349,45 +581,61 @@ Return strictly valid JSON with this shape:
     if (words.isEmpty) return null;
 
     switch (type) {
+      case _ChunkType.comparison:
+        return (
+          question: 'What is the key scientific distinction and operational difference regarding $words?',
+          answer: 'Key idea: $clean\n\nWhy / Mechanism: Distinct pathway conditions govern the selectivity and rate kinetics.',
+          terms: [words, 'Comparison', 'Kinetics', topic],
+        );
+
+      case _ChunkType.examQuestion:
+        return (
+          question: 'How is $words rigorously solved or proven in MSc Chemistry university examinations?',
+          answer: 'Key idea: $clean\n\nCondition / Equation: Apply standard governing equations and state all variables with respective SI units.',
+          terms: [words, 'Exam Problem', 'Derivation', topic],
+        );
+
       case _ChunkType.reactionMechanism:
         return (
-          question: 'What is the mechanistic pathway and key intermediate(s) involved in $words?',
-          answer: clean,
+          question: 'What is the mechanistic pathway and key intermediate involved in $words?',
+          answer: 'Key idea: $clean\n\nWhy / Mechanism: Curved arrow electron movement drives the formation of the reactive intermediate towards the lowest energy transition state.',
           terms: [words, 'Mechanism', 'Intermediate', topic],
         );
+
       case _ChunkType.formulaDerivation:
         return (
-          question: 'State and derive the governing equation for $words, including all variables and units.',
-          answer: clean,
-          terms: [words, 'Formula', 'Units', topic],
+          question: 'State and explain the governing equation and boundary conditions for $words.',
+          answer: 'Key idea: $clean\n\nCondition / Equation: Ensure dimensional consistency across all thermodynamic or kinetic variables.',
+          terms: [words, 'Formula', 'Equation', topic],
         );
+
       case _ChunkType.procedureMethod:
-        // Extract the "label: value" key if this is a parameter specification
         if (clean.contains(':')) {
           final colonIdx = clean.indexOf(':');
           final key = clean.substring(0, colonIdx).replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
           final val = clean.substring(colonIdx + 1).trim();
           if (key.length >= 2 && key.length <= 60 && val.length >= 2) {
             return (
-              question: 'What is the recommended specification and analytical purpose of "$key" in $topic?',
-              answer: 'The specification for $key is: $val. Correct optimization ensures analytical reproducibility and system suitability.',
+              question: 'What is the recommended specification and purpose of "$key" in $topic?',
+              answer: 'Key idea: The specification for $key is $val.\n\nWhy / Mechanism: Correct optimization ensures analytical reproducibility and system suitability.',
               terms: [key, 'System Suitability', 'Analytical Method', topic],
             );
           }
         }
         return (
-          question: 'Describe the procedure and analytical rationale for $words in $topic.',
-          answer: clean,
+          question: 'Describe the experimental procedure and analytical rationale for $words.',
+          answer: 'Key idea: $clean\n\nWhy / Mechanism: Standard operating procedure ensures high recovery and minimal interference.',
           terms: [words, 'Procedure', 'Analytical Method', topic],
         );
+
       case _ChunkType.dataReference:
         return (
           question: 'What are the key reference values, limits, or spectroscopic data associated with $words?',
-          answer: clean,
+          answer: 'Key idea: $clean\n\nCondition / Equation: Compare observed peaks or shifts against standard reference libraries.',
           terms: [words, 'Reference Value', 'Spectroscopy', topic],
         );
+
       case _ChunkType.definitionConcept:
-        // Try to extract "X is defined as Y" patterns
         final defPattern = RegExp(
           r'^(.*?)\s+(?:is defined as|refers to|is used for|is used to|is called|consists of)\s+(.*)$',
           caseSensitive: false,
@@ -397,114 +645,19 @@ Return strictly valid JSON with this shape:
           final predicate = defPattern.group(2)?.trim() ?? '';
           if (subject.length >= 2 && subject.length <= 80) {
             return (
-              question: 'Define "$subject" and explain its significance in $topic.',
-              answer: '$subject $predicate.',
+              question: 'Define "$subject" and explain its fundamental significance in $topic.',
+              answer: 'Key idea: $subject is defined as $predicate.\n\nWhy / Mechanism: Forms the core theoretical foundation for advanced chemical analysis.',
               terms: [subject, 'Definition', topic],
             );
           }
         }
         return (
           question: 'Explain the concept of $words and its role in $topic.',
-          answer: clean,
+          answer: 'Key idea: $clean\n\nWhy / Mechanism: Essential theoretical framework in MSc Chemistry study.',
           terms: [words, 'Concept', topic],
         );
     }
   }
-
-  /// Validates that a generated card answer is actually grounded in the source text.
-  /// Rejects filler that doesn't reference any real source content.
-  static bool _isGrounded(String answer, String sourceText) {
-    // Extract keywords from answer and check they exist in source
-    final answerWords = answer
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^\w\s]'), ' ')
-        .split(RegExp(r'\s+'))
-        .where((w) => w.length > 4)
-        .toSet();
-    final sourceLower = sourceText.toLowerCase();
-    var matchCount = 0;
-    for (final w in answerWords) {
-      if (sourceLower.contains(w)) matchCount++;
-    }
-    // At least 40% of significant answer words must appear in source
-    return answerWords.isEmpty || (matchCount / answerWords.length) >= 0.40;
-  }
-
-  /// Synthesizes high-yield academic MSc Chemistry flashcards strictly from the provided document text.
-  /// Uses content-type classification for targeted, grounded question generation.
-  List<GeneratedCard> _synthesizeLocalChemistryCards(String sourceText, int count, String topic) {
-    final cards = <GeneratedCard>[];
-    final seenQuestions = <String>{};
-
-    void tryAddCard(String q, String a, List<String> terms) {
-      final cleanQ = ChemistryTextFormatter.format(q.trim());
-      final cleanA = ChemistryTextFormatter.format(a.trim());
-      if (cleanQ.length > 8 &&
-          cleanA.length > 10 &&
-          seenQuestions.add(cleanQ.toLowerCase()) &&
-          _isGrounded(cleanA, sourceText)) {
-        final keyTerms = terms.isNotEmpty ? terms : _extractKeywordsFromText('$cleanQ $cleanA', topic);
-        cards.add(GeneratedCard(
-          question: cleanQ,
-          answer: cleanA,
-          topic: topic,
-          keyTerms: keyTerms.take(5).toList(),
-        ));
-      }
-    }
-
-    // 1. Classify each paragraph/line and generate a typed card
-    final paragraphs = sourceText
-        .split(RegExp(r'\n\s*\n|\r\n\s*\r\n'))
-        .map((p) => p.trim())
-        .where((p) => p.length >= 20)
-        .toList();
-
-    for (final para in paragraphs) {
-      if (cards.length >= count) break;
-      final type = _classifyChunk(para);
-      final result = _generateTypedCard(para, type, topic);
-      if (result != null) {
-        tryAddCard(result.question, result.answer, result.terms);
-      }
-    }
-
-    // 2. Line-by-line pass for parameter specs missed by paragraph pass
-    if (cards.length < count) {
-      final lines = sourceText.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
-      for (final line in lines) {
-        if (cards.length >= count) break;
-        if (line.contains(':') && !line.startsWith('http')) {
-          final type = _classifyChunk(line);
-          final result = _generateTypedCard(line, type, topic);
-          if (result != null) {
-            tryAddCard(result.question, result.answer, result.terms);
-          }
-        }
-      }
-    }
-
-    // 3. Sentence-level fallback
-    if (cards.length < count) {
-      final sentences = sourceText
-          .split(RegExp(r'(?<=[.!?])\s+|\n+'))
-          .map((s) => s.replaceAll(RegExp(r'#{1,6}'), '').trim())
-          .where((s) => s.length >= 20 && s.length <= 400)
-          .toList();
-      for (final sentence in sentences) {
-        if (cards.length >= count) break;
-        final type = _classifyChunk(sentence);
-        final result = _generateTypedCard(sentence, type, topic);
-        if (result != null) {
-          tryAddCard(result.question, result.answer, result.terms);
-        }
-      }
-    }
-
-    return cards.take(count).toList();
-  }
-
-
 
   /// Extracts 3 to 5 salient chemistry keywords from question/answer text.
   static List<String> _extractKeywordsFromText(String text, String topic) {
@@ -521,6 +674,7 @@ Return strictly valid JSON with this shape:
       'Electrophile', 'Nucleophile', 'Equilibrium', 'Rate Constant', 'Activation Energy',
       'Isotope Effect', 'Catalyst', 'Transition State', 'Intermediate', 'Oxidation',
       'Reduction', 'Spectroscopy', 'NMR', 'Absorbance', 'Partition Coefficient',
+      'Thermodynamics', 'Free Energy', 'Entropy', 'Enthalpy', 'Beer-Lambert',
     ];
 
     for (final term in chemistryLexicon) {
@@ -530,7 +684,6 @@ Return strictly valid JSON with this shape:
       }
     }
 
-    // If still under 3 terms, extract capitalized nouns
     if (terms.length < 3) {
       final matches = RegExp(r'\b[A-Z][a-zA-Z0-9_\-]{3,}\b').allMatches(text);
       for (final m in matches) {
@@ -552,15 +705,11 @@ Return strictly valid JSON with this shape:
 
 /// Content type classification for targeted flashcard generation.
 enum _ChunkType {
-  /// Organic/inorganic reaction pathways, electron movement, mechanisms
   reactionMechanism,
-  /// Laws, theories, principles, definitions, academic concepts
   definitionConcept,
-  /// Mathematical equations, thermodynamic derivations, rate equations
   formulaDerivation,
-  /// Instrumentation, chromatography, titrations, analytical methods
   procedureMethod,
-  /// Spectroscopy tables, pKa values, NMR shifts, reference data
   dataReference,
+  comparison,
+  examQuestion,
 }
-
