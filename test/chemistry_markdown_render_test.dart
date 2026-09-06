@@ -97,5 +97,42 @@ The spin multiplicity is given by \$2S + 1 = 3\$ (triplet ground state, \$^3\\Si
       expect(res3.contains(r'\Delta'), isFalse);
       expect(res3.contains('ΔG'), isTrue);
     });
+
+    testWidgets('Renders broken Cannizzaro mechanism without raw \\text, \\to, or stray \$\$', (tester) async {
+      const rawCannizzaro = r'''
+R-CHO + OH^- \rightleftharpoons R-CH(O^-
+\text${}(OH)}
+
+2. **Step 2: Hydride Ion Transfer**
+
+\text{R-CH(O)^-}(OH) + R-CHO \to {slow (RDS)} R-COOH + R-CH_2
+\text{O}^-
+
+3. **Step 3: Rapid Proton Transfer**
+
+\text{R-COOH} + R-CH_2\text{O}^-
+\to{fast} R-COO^- + R-CH_2
+\text{OH}$$
+''';
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ChemistryMarkdownView(text: rawCannizzaro),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Ensure NO raw LaTeX commands bleed into the UI
+      expect(find.textContaining(r'\text'), findsNothing);
+      expect(find.textContaining(r'\to'), findsNothing);
+      expect(find.textContaining(r'$$'), findsNothing);
+      expect(find.textContaining(r'\rightleftharpoons'), findsNothing);
+      expect(find.textContaining('Step 2: Hydride Ion Transfer'), findsOneWidget);
+      expect(find.textContaining('Step 3: Rapid Proton Transfer'), findsOneWidget);
+    });
   });
 }

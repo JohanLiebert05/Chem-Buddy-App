@@ -145,6 +145,11 @@ class ChemistryMarkdownView extends StatelessWidget {
   static String _preprocessText(String input) {
     var s = input;
 
+    // 0. Clean corrupted \text${} or \text$ or stray $$ remnants
+    s = s.replaceAll(r'\text${}', '');
+    s = s.replaceAllMapped(RegExp(r'\\text\$\{([^}]*)\}'), (m) => m[1] ?? '');
+    s = s.replaceAll(r'\text$', '');
+
     // 1. Normalize markdown headings: ensure any heading (#, ##, ###) has a leading blank line so it never bleeds into paragraphs
     s = s.replaceAllMapped(RegExp(r'([^\n])\n(#{1,6}\s+.+)'), (m) {
       return '${m[1]}\n\n${m[2]}';
@@ -162,93 +167,77 @@ class ChemistryMarkdownView extends StatelessWidget {
       return '\$$inner\$';
     });
 
-    // 4. Wrap naked multi-line or standalone equations if the whole line is an equation with LaTeX commands
-    final lines = s.split('\n');
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].trim();
-      final dollarCount = RegExp(r'(?<!\\)\$').allMatches(line).length;
+    // 4. Convert pseudo-LaTeX arrows with conditions like \to {slow (RDS)} or \to{fast} into clean Unicode text
+    s = s.replaceAllMapped(RegExp(r'\\to\s*\{([^}]*)\}'), (m) => '→ (${m[1]}) ');
+    s = s.replaceAllMapped(RegExp(r'\\xrightarrow\s*\{([^}]*)\}'), (m) => '→ (${m[1]}) ');
+    s = s.replaceAllMapped(RegExp(r'\\rightleftharpoons\s*\{([^}]*)\}'), (m) => '⇌ (${m[1]}) ');
 
-      if (dollarCount == 0 && _containsLatexCommand(line)) {
-        if (!line.startsWith('#') && !line.startsWith('>')) {
-          lines[i] = '\$$line\$';
-          continue;
-        }
-      }
-
-      // Auto-balance single unclosed dollar signs in a line
-      if (dollarCount % 2 != 0 && (line.contains(r'\') || line.contains('=') || line.contains('^') || line.contains('_'))) {
-        lines[i] = '$line\$';
-      }
-    }
-    s = lines.join('\n');
-
-    // 5. Wrap inline naked LaTeX fragments that appear within regular text without $...$
-    s = _wrapInlineNakedLatex(s);
-
-    // 6. Wrap naked scientific notation (e.g. 1.0 \times 10^{-14}) if not enclosed in $
-    s = s.replaceAllMapped(RegExp(r'(?<!\$|\w)(\b[A-Za-z0-9_+\-()\[\]\s=]+?\\times\s*10\^?\{?-?\d+\}?)(?!\$)'), (m) {
-      final expr = m[1]?.trim() ?? '';
-      return '\$$expr\$';
+    // 5. Preserve genuine display math blocks ($$...$$) while sanitizing narrative text
+    final displayMathPlaceholders = <String>[];
+    s = s.replaceAllMapped(RegExp(r'\$\$(.*?)\$\$', dotAll: true), (m) {
+      displayMathPlaceholders.add(m[0]!);
+      return '___DISPLAY_MATH_${displayMathPlaceholders.length - 1}___';
     });
 
+    // In narrative text, unwrap \text{...}, \mathrm{...}, \mathbf{...} so it never renders as literal "\text{...}"
+    for (var pass = 0; pass < 3; pass++) {
+      s = s.replaceAllMapped(RegExp(r'\\text\{([^{}]*)\}'), (m) => m[1] ?? '');
+      s = s.replaceAllMapped(RegExp(r'\\mathrm\{([^{}]*)\}'), (m) => m[1] ?? '');
+      s = s.replaceAllMapped(RegExp(r'\\mathbf\{([^{}]*)\}'), (m) => m[1] ?? '');
+    }
+
+    // Convert naked LaTeX commands in narrative text to clean Unicode
+    s = s.replaceAll(r'\rightleftharpoons', '⇌')
+        .replaceAll(r'\rightarrow', '→')
+        .replaceAll(r'\leftarrow', '←')
+        .replaceAll(RegExp(r'\\to\b'), '→')
+        .replaceAll(r'\times', '×')
+        .replaceAll(r'\cdot', '·')
+        .replaceAll(r'\pm', '±')
+        .replaceAll(r'\mp', '∓')
+        .replaceAll(r'\degree', '°')
+        .replaceAll(r'^\circ', '°')
+        .replaceAll(r'\circ', '°')
+        .replaceAll(r'\Delta', 'Δ')
+        .replaceAll(r'\alpha', 'α')
+        .replaceAll(r'\beta', 'β')
+        .replaceAll(r'\gamma', 'γ')
+        .replaceAll(r'\lambda', 'λ')
+        .replaceAll(r'\mu', 'μ')
+        .replaceAll(r'\pi', 'π')
+        .replaceAll(r'\sigma', 'σ')
+        .replaceAll(r'\omega', 'ω')
+        .replaceAll(r'\infty', '∞')
+        .replaceAll(r'\approx', '≈')
+        .replaceAll(r'\neq', '≠')
+        .replaceAll(r'\leq', '≤')
+        .replaceAll(r'\geq', '≥')
+        .replaceAll(r'\uparrow', '↑')
+        .replaceAll(r'\downarrow', '↓');
+
+    // Clean chemistry superscripts/subscripts in narrative text:
+    // e.g. ^- -> ⁻, ^+ -> ⁺, ^2+ -> ²⁺, _2 -> ₂
+    s = s.replaceAllMapped(RegExp(r'\^-\b'), (m) => '⁻');
+    s = s.replaceAllMapped(RegExp(r'\^([0-9]*[-+])'), (m) {
+      const map = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻'};
+      return m[1]!.split('').map((c) => map[c] ?? c).join();
+    });
+    s = s.replaceAllMapped(RegExp(r'(?<=[a-zA-Z\)])_([0-9]+)'), (m) {
+      const map = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
+      return m[1]!.split('').map((c) => map[c] ?? c).join();
+    });
+
+    // Remove unmatched or trailing $$ at line ends in narrative text
+    s = s.replaceAll(RegExp(r'(?<!\$)\$\$(?!\$)\s*$', multiLine: true), '');
+    // Clean leftover empty braces
+    s = s.replaceAll('{}', '');
+
+    // Restore preserved display math blocks
+    for (var i = 0; i < displayMathPlaceholders.length; i++) {
+      s = s.replaceFirst('___DISPLAY_MATH_${i}___', displayMathPlaceholders[i]);
+    }
+
     return s;
-  }
-
-  static bool _containsLatexCommand(String text) {
-    if (text.isEmpty) return false;
-    return text.contains(r'\frac') ||
-        text.contains(r'\text') ||
-        text.contains(r'\sqrt') ||
-        text.contains(r'\Delta') ||
-        text.contains(r'\Phi') ||
-        text.contains(r'\alpha') ||
-        text.contains(r'\beta') ||
-        text.contains(r'\gamma') ||
-        text.contains(r'\theta') ||
-        text.contains(r'\lambda') ||
-        text.contains(r'\mu') ||
-        text.contains(r'\nu') ||
-        text.contains(r'\pi') ||
-        text.contains(r'\sigma') ||
-        text.contains(r'\omega') ||
-        text.contains(r'\Omega') ||
-        text.contains(r'\Psi') ||
-        text.contains(r'\psi') ||
-        text.contains(r'\times') ||
-        text.contains(r'\cdot') ||
-        text.contains(r'\pm') ||
-        text.contains(r'\mp') ||
-        text.contains(r'\degree') ||
-        text.contains(r'^\circ') ||
-        text.contains(r'\circ') ||
-        text.contains(r'\log') ||
-        text.contains(r'\ln') ||
-        text.contains(r'\exp') ||
-        text.contains(r'\quad') ||
-        text.contains(r'\qquad') ||
-        text.contains(r'\rightarrow') ||
-        text.contains(r'\to') ||
-        text.contains(r'\rightleftharpoons') ||
-        text.contains(r'\sum') ||
-        text.contains(r'\int') ||
-        text.contains(r'\partial') ||
-        text.contains(r'\varepsilon') ||
-        text.contains(r'\approx') ||
-        text.contains(r'\neq') ||
-        text.contains(r'\leq') ||
-        text.contains(r'\geq') ||
-        text.contains(r'\infty');
-  }
-
-  static String _wrapInlineNakedLatex(String input) {
-    return input.replaceAllMapped(
-      RegExp(r'(?<!\$|\w)(\\[a-zA-Z]+(?:\{[^{}]*\}|[a-zA-Z0-9_\^\+\-\(\)\[\]·=])+(?:[\s\-_+\/*=]+\\[a-zA-Z]+(?:\{[^{}]*\}|[a-zA-Z0-9_\^\+\-\(\)\[\]·=])*)*)(?!\$)'),
-      (match) {
-        final raw = match[1]?.trim() ?? '';
-        if (raw.isEmpty || raw.startsWith('#')) return raw;
-        return '\$$raw\$';
-      },
-    );
   }
 
   static String _sanitizeLatex(String input) {
@@ -482,9 +471,10 @@ class _LatexInlineBuilder extends MarkdownElementBuilder {
     s = s.replaceAllMapped(RegExp(r'\\mathbf\{([^}]*)\}'), (m) => m[1] ?? '');
     s = s.replaceAllMapped(RegExp(r'\\frac\{([^}]*)\}\{([^}]*)\}'), (m) => '(${m[1]})/(${m[2]})');
     s = s.replaceAllMapped(RegExp(r'\\sqrt\{([^}]*)\}'), (m) => '√(${m[1]})');
-    s = s.replaceAll(r'\rightarrow', '→').replaceAll(r'\leftarrow', '←')
-        .replaceAll(r'\rightleftharpoons', '⇌').replaceAll(r'\times', '×')
-        .replaceAll(r'\cdot', '·').replaceAll(r'\pm', '±')
+    s = s.replaceAll(r'\rightleftharpoons', '⇌').replaceAll(r'\rightarrow', '→')
+        .replaceAll(r'\leftarrow', '←').replaceAll(RegExp(r'\\to\b'), '→')
+        .replaceAll(r'\times', '×').replaceAll(r'\cdot', '·').replaceAll(r'\pm', '±')
+        .replaceAll(r'\uparrow', '↑').replaceAll(r'\downarrow', '↓')
         .replaceAll(r'\Delta', 'Δ').replaceAll(r'\alpha', 'α')
         .replaceAll(r'\beta', 'β').replaceAll(r'\gamma', 'γ')
         .replaceAll(r'\lambda', 'λ').replaceAll(r'\mu', 'μ')
@@ -493,9 +483,15 @@ class _LatexInlineBuilder extends MarkdownElementBuilder {
         .replaceAll(r'\log', 'log').replaceAll(r'\ln', 'ln')
         .replaceAll(r'\leq', '≤').replaceAll(r'\geq', '≥')
         .replaceAll(r'\neq', '≠').replaceAll(r'\approx', '≈')
-        .replaceAll(r'\circ', '°');
+        .replaceAll(r'\degree', '°').replaceAll(r'^\circ', '°').replaceAll(r'\circ', '°');
+    s = s.replaceAllMapped(RegExp(r'\^-\b'), (m) => '⁻');
+    s = s.replaceAllMapped(RegExp(r'\^([0-9]*[-+])'), (m) {
+      const map = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻'};
+      return m[1]!.split('').map((c) => map[c] ?? c).join();
+    });
     s = s.replaceAll(RegExp(r'\\[a-zA-Z]+'), '');
     s = s.replaceAll('{', '').replaceAll('}', '');
+    s = s.replaceAll(r'$', '');
     s = s.replaceAll(RegExp(r'\s{2,}'), ' ').trim();
     return s.isEmpty ? raw : s;
   }

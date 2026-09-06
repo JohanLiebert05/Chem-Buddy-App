@@ -19,8 +19,8 @@ class AppTheme {
 
     // Primary modern geometric sans for display, headlines, and titles
     final display = GoogleFonts.plusJakartaSansTextTheme(base.textTheme);
-    // Highly legible humanist sans for continuous reading, body, and labels
-    final body = GoogleFonts.interTextTheme(base.textTheme);
+    // Authentic neo-grotesque sans-serif (DM Sans) for continuous reading, body, and labels as in earlier versions
+    final body = GoogleFonts.dmSansTextTheme(base.textTheme);
 
     final textTheme = TextTheme(
       // Display

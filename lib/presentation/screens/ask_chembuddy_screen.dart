@@ -28,10 +28,11 @@ import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_study_screen.dart';
 
 enum ChemBuddyAiMode {
-  concept,
+  normal,
   exam2M,
   exam5M,
   exam10M,
+  mscConcept,
   mechanisms,
 }
 
@@ -48,7 +49,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
   final SpeechToText _speech = SpeechToText();
   late final AnimationController _micPulseController;
 
-  ChemBuddyAiMode _currentMode = ChemBuddyAiMode.concept;
+  ChemBuddyAiMode _currentMode = ChemBuddyAiMode.normal;
   bool _speechEnabled = false;
   bool _isListening = false;
   bool _extracting = false;
@@ -186,14 +187,17 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
     }
 
     String? modelPrompt;
-    if (_currentMode == ChemBuddyAiMode.concept) {
-      modelPrompt = '[Explain in Academic Concept Mode: Focus on deep understanding, physical/chemical intuition, orbital or thermodynamic principles, and clear chemical notation]: $rawText';
+    if (_currentMode == ChemBuddyAiMode.normal) {
+      // Default Normal Mode: send user question directly for a crisp, correct, unbloated answer
+      modelPrompt = null;
     } else if (_currentMode == ChemBuddyAiMode.exam2M) {
       modelPrompt = '[Format as a concise 2-Mark University Exam Answer: Provide 1) Definition (1-2 sentences), 2) Balanced Reaction or Equation, 3) Key Condition/Nuance. DO NOT over-explain]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.exam5M) {
       modelPrompt = '[Format as a structured 5-Mark MSc Chemistry University Rubric: 1) Principle & Definition, 2) Balanced Reaction, 3) Step-by-Step Mechanism/Intermediates, 4) Applications & Synthetic Scope, 5) Summary]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.exam10M) {
       modelPrompt = '[Format as a comprehensive 10-Mark MSc Chemistry Exam Answer with detailed headings, mechanisms with curved arrow electron pushing notes, transition states, stereochemistry, and laboratory synthesis applications]: $rawText';
+    } else if (_currentMode == ChemBuddyAiMode.mscConcept) {
+      modelPrompt = '[Explain in Academic MSc Concept Mode: Focus on deep understanding, physical/chemical intuition, orbital or thermodynamic principles, and clear chemical notation]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.mechanisms) {
       modelPrompt = 'Explain the full stepwise reaction mechanism, curved arrow electron displacement, intermediates, and driving force for: $rawText';
     }
@@ -227,10 +231,10 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
         child: Row(
           children: [
             _AiModeChip(
-              icon: Icons.lightbulb_outline,
-              label: 'Concept',
-              selected: _currentMode == ChemBuddyAiMode.concept,
-              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.concept),
+              icon: Icons.bolt_rounded,
+              label: 'Quick Answer',
+              selected: _currentMode == ChemBuddyAiMode.normal,
+              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.normal),
             ),
             const SizedBox(width: 8),
             _AiModeChip(
@@ -252,6 +256,13 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
               label: '10M Answer',
               selected: _currentMode == ChemBuddyAiMode.exam10M,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.exam10M),
+            ),
+            const SizedBox(width: 8),
+            _AiModeChip(
+              icon: Icons.school_outlined,
+              label: 'MSc In-Depth',
+              selected: _currentMode == ChemBuddyAiMode.mscConcept,
+              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.mscConcept),
             ),
             const SizedBox(width: 8),
             _AiModeChip(
