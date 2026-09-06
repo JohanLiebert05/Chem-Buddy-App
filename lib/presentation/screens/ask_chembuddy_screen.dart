@@ -155,8 +155,10 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
   }
 
   void _sendMessage([String? textOverride]) {
+    if (ref.read(chatControllerProvider).isLoading) return;
     final rawText = textOverride ?? _controller.text.trim();
     if (rawText.isEmpty) return;
+    AppHaptics.confirm();
 
     if (_currentMode == ChemBuddyAiMode.mechanisms) {
       final hit = ReactionMechanismService.instance.find(rawText);
@@ -984,14 +986,22 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                       ),
                       const SizedBox(width: 8),
                       CircleAvatar(
-                        backgroundColor: AppColors.purple,
+                        backgroundColor: chatState.isLoading ? AppColors.purple.withValues(alpha: 0.4) : AppColors.purple,
                         radius: 22,
                         child: IconButton(
-                          icon: const Icon(Icons.send, color: Colors.white, size: 18),
-                          onPressed: () {
-                            if (_isListening) _stopListening();
-                            _sendMessage();
-                          },
+                          icon: chatState.isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Icon(Icons.send, color: Colors.white, size: 18),
+                          onPressed: chatState.isLoading
+                              ? null
+                              : () {
+                                  if (_isListening) _stopListening();
+                                  _sendMessage();
+                                },
                         ),
                       ),
                     ],

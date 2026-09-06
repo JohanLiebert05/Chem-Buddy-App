@@ -6,12 +6,24 @@ class AppHaptics {
     await HapticFeedback.selectionClick();
   }
 
+  static Future<void> lightTap() async {
+    await HapticFeedback.selectionClick();
+  }
+
   static Future<void> tap() async {
     await HapticFeedback.lightImpact();
   }
 
   static Future<void> confirm() async {
     await HapticFeedback.mediumImpact();
+  }
+
+  static Future<void> success() async {
+    await HapticFeedback.mediumImpact();
+  }
+
+  static Future<void> error() async {
+    await HapticFeedback.heavyImpact();
   }
 
   static Future<void> warn() async {

@@ -63,83 +63,97 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
-        body: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-          children: [
-            // Search Input
-            TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                hintText: 'Search named reactions, reagents, or products...',
-                hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                prefixIcon: const Icon(Icons.search, color: AppColors.purpleBright),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {});
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: AppColors.surfaceElevated,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Category Filter Chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildCategoryChip(null, 'All Mechanisms 🧪'),
-                  ...ReactionCategory.values.map(
-                    (cat) => _buildCategoryChip(cat, '${cat.emoji} ${cat.displayName}'),
+        body: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // Search Input
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      hintText: 'Search named reactions, reagents, or products...',
+                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      prefixIcon: const Icon(Icons.search, color: AppColors.purpleBright),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {});
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: AppColors.surfaceElevated,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                    ),
                   ),
-                ],
+                  const SizedBox(height: 12),
+
+                  // Category Filter Chips
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildCategoryChip(null, 'All Mechanisms 🧪'),
+                        ...ReactionCategory.values.map(
+                          (cat) => _buildCategoryChip(cat, '${cat.emoji} ${cat.displayName}'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Count Indicator
+                  Text(
+                    '${list.length} Verified MSc Mechanisms',
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 10),
+                ]),
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Count Indicator
-            Text(
-              '${list.length} Verified MSc Mechanisms',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 10),
-
-            // Mechanism List
             if (list.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Column(
-                    children: [
-                      const Icon(Icons.science_outlined, size: 48, color: AppColors.textMuted),
-                      const SizedBox(height: 12),
-                      Text(
-                        _selectedCategory != null
-                            ? 'No ${_selectedCategory!.displayName} matches'
-                            : 'No mechanisms found',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        _selectedCategory == ReactionCategory.heterocyclic
-                            ? 'Heterocyclic mechanisms & advanced ring syntheses are actively curated.'
-                            : 'Try searching for "Fischer Indole", "Aldol", "Cannizzaro", or "Diels-Alder"',
-                        style: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.8), fontSize: 13),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                sliver: SliverToBoxAdapter(
+                  child: Center(
+                    child: Column(
+                      children: [
+                        const Icon(Icons.science_outlined, size: 48, color: AppColors.textMuted),
+                        const SizedBox(height: 12),
+                        Text(
+                          _selectedCategory != null
+                              ? 'No ${_selectedCategory!.displayName} matches'
+                              : 'No mechanisms found',
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _selectedCategory == ReactionCategory.heterocyclic
+                              ? 'Heterocyclic mechanisms & advanced ring syntheses are actively curated.'
+                              : 'Try searching for "Fischer Indole", "Aldol", "Cannizzaro", or "Diels-Alder"',
+                          style: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.8), fontSize: 13),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               )
             else
-              ...list.map((m) => _buildMechanismCard(m)),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _buildMechanismCard(list[index]),
+                    childCount: list.length,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

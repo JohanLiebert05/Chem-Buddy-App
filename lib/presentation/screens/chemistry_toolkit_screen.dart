@@ -150,6 +150,12 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
     _calculate();
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   void _calculate() {
     final query = _controller.text.trim();
     if (query.isEmpty) {
@@ -207,6 +213,9 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                   decoration: const InputDecoration(
                     hintText: 'Enter formula or chemical name',
                   ),
+                  onChanged: (_) {
+                    if (_error != null) setState(() => _error = null);
+                  },
                   onSubmitted: (_) => _calculate(),
                 ),
               ),
@@ -464,25 +473,75 @@ class _MolarityCalculatorState extends State<_MolarityCalculator> {
 
   double? _molarity = 0.2;
   double? _normality = 0.2;
+  String? _error;
+
+  @override
+  void dispose() {
+    _mass.dispose();
+    _molarMass.dispose();
+    _volume.dispose();
+    _nFactor.dispose();
+    super.dispose();
+  }
 
   void _calculate() {
-    final m = double.tryParse(_mass.text);
-    final mm = double.tryParse(_molarMass.text);
-    final vMl = double.tryParse(_volume.text);
-    final nf = double.tryParse(_nFactor.text) ?? 1.0;
+    final m = double.tryParse(_mass.text.trim());
+    final mm = double.tryParse(_molarMass.text.trim());
+    final vMl = double.tryParse(_volume.text.trim());
+    final nf = double.tryParse(_nFactor.text.trim()) ?? 1.0;
 
-    if (m != null && mm != null && mm > 0 && vMl != null && vMl > 0) {
-      final vL = vMl / 1000.0;
-      final moles = m / mm;
-      final molarity = moles / vL;
-      final normality = molarity * nf;
-
+    if (m == null || m < 0) {
       setState(() {
-        _molarity = molarity;
-        _normality = normality;
+        _error = 'Please enter a valid non-negative mass (g).';
+        _molarity = null;
+        _normality = null;
       });
-      AppHaptics.confirm();
+      AppHaptics.error();
+      return;
     }
+    if (mm == null || mm <= 0) {
+      setState(() {
+        _error = 'Molar mass must be strictly greater than 0 g/mol.';
+        _molarity = null;
+        _normality = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+    if (vMl == null || vMl <= 0) {
+      setState(() {
+        _error = 'Volume must be strictly positive (> 0 mL).';
+        _molarity = null;
+        _normality = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+    if (nf <= 0) {
+      setState(() {
+        _error = 'n-Factor must be strictly greater than 0.';
+        _molarity = null;
+        _normality = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+
+    final vL = vMl / 1000.0;
+    final moles = m / mm;
+    final molarity = moles / vL;
+    final normality = molarity * nf;
+
+    setState(() {
+      _molarity = molarity;
+      _normality = normality;
+      _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  void _onFieldChanged() {
+    if (_error != null) setState(() => _error = null);
   }
 
   @override
@@ -495,21 +554,25 @@ class _MolarityCalculatorState extends State<_MolarityCalculator> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _mass, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Mass (g)'))),
+              Expanded(child: TextField(controller: _mass, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Mass (g)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _molarMass, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Molar Mass (g/mol)'))),
+              Expanded(child: TextField(controller: _molarMass, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Molar Mass (g/mol)'), onChanged: (_) => _onFieldChanged())),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: TextField(controller: _volume, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Volume (mL)'))),
+              Expanded(child: TextField(controller: _volume, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Volume (mL)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _nFactor, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'n-Factor (Acidity/Basicity)'))),
+              Expanded(child: TextField(controller: _nFactor, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'n-Factor (Acidity/Basicity)'), onChanged: (_) => _onFieldChanged())),
             ],
           ),
           const SizedBox(height: 12),
           ElevatedButton(onPressed: _calculate, child: const Text('Compute M & N')),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
           if (_molarity != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -555,16 +618,55 @@ class _DilutionCalculatorState extends State<_DilutionCalculator> {
   final _v1 = TextEditingController(text: '10.0');
   final _v2 = TextEditingController(text: '100.0');
   double? _c2 = 1.2;
+  String? _error;
+
+  @override
+  void dispose() {
+    _c1.dispose();
+    _v1.dispose();
+    _v2.dispose();
+    super.dispose();
+  }
 
   void _calculate() {
-    final c1 = double.tryParse(_c1.text);
-    final v1 = double.tryParse(_v1.text);
-    final v2 = double.tryParse(_v2.text);
+    final c1 = double.tryParse(_c1.text.trim());
+    final v1 = double.tryParse(_v1.text.trim());
+    final v2 = double.tryParse(_v2.text.trim());
 
-    if (c1 != null && v1 != null && v2 != null && v2 > 0) {
-      setState(() => _c2 = (c1 * v1) / v2);
-      AppHaptics.confirm();
+    if (c1 == null || c1 < 0) {
+      setState(() {
+        _error = 'Initial concentration C₁ must be non-negative.';
+        _c2 = null;
+      });
+      AppHaptics.error();
+      return;
     }
+    if (v1 == null || v1 <= 0) {
+      setState(() {
+        _error = 'Initial volume V₁ must be strictly positive (> 0 mL).';
+        _c2 = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+    if (v2 == null || v2 <= 0) {
+      setState(() {
+        _error = 'Final volume V₂ must be strictly positive (> 0 mL).';
+        _c2 = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+
+    setState(() {
+      _c2 = (c1 * v1) / v2;
+      _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  void _onFieldChanged() {
+    if (_error != null) setState(() => _error = null);
   }
 
   @override
@@ -577,15 +679,19 @@ class _DilutionCalculatorState extends State<_DilutionCalculator> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _c1, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Initial C1 (M)'))),
+              Expanded(child: TextField(controller: _c1, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Initial C1 (M)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _v1, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Initial V1 (mL)'))),
+              Expanded(child: TextField(controller: _v1, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Initial V1 (mL)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _v2, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Final V2 (mL)'))),
+              Expanded(child: TextField(controller: _v2, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Final V2 (mL)'), onChanged: (_) => _onFieldChanged())),
             ],
           ),
           const SizedBox(height: 12),
           ElevatedButton(onPressed: _calculate, child: const Text('Calculate Final Conc C2')),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
           if (_c2 != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -614,18 +720,33 @@ class _PhCalculatorState extends State<_PhCalculator> {
   final _hConc = TextEditingController(text: '0.001');
   double? _ph = 3.0;
   double? _poh = 11.0;
+  String? _error;
+
+  @override
+  void dispose() {
+    _hConc.dispose();
+    super.dispose();
+  }
 
   void _calculate() {
-    final h = double.tryParse(_hConc.text);
-    if (h != null && h > 0) {
-      final ph = -log(h) / ln10;
-      final poh = 14.0 - ph;
+    final h = double.tryParse(_hConc.text.trim());
+    if (h == null || h <= 0) {
       setState(() {
-        _ph = ph;
-        _poh = poh;
+        _error = '[H⁺] ion concentration must be strictly positive (> 0 mol/L).';
+        _ph = null;
+        _poh = null;
       });
-      AppHaptics.confirm();
+      AppHaptics.error();
+      return;
     }
+    final ph = -log(h) / ln10;
+    final poh = 14.0 - ph;
+    setState(() {
+      _ph = ph;
+      _poh = poh;
+      _error = null;
+    });
+    AppHaptics.confirm();
   }
 
   @override
@@ -642,9 +763,20 @@ class _PhCalculatorState extends State<_PhCalculator> {
             selectable: false,
           ),
           const SizedBox(height: 12),
-          TextField(controller: _hConc, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '[H+] Ion Concentration (mol/L)')),
+          TextField(
+            controller: _hConc,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(labelText: '[H+] Ion Concentration (mol/L)'),
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+          ),
           const SizedBox(height: 12),
           ElevatedButton(onPressed: _calculate, child: const Text('Calculate pH')),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
           if (_ph != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -680,17 +812,56 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
   final _salt = TextEditingController(text: '0.1'); // [A-]
   final _acid = TextEditingController(text: '0.1'); // [HA]
   double? _ph = 4.76;
+  String? _error;
+
+  @override
+  void dispose() {
+    _pKa.dispose();
+    _salt.dispose();
+    _acid.dispose();
+    super.dispose();
+  }
 
   void _calculate() {
-    final pka = double.tryParse(_pKa.text);
-    final a = double.tryParse(_salt.text);
-    final ha = double.tryParse(_acid.text);
+    final pka = double.tryParse(_pKa.text.trim());
+    final a = double.tryParse(_salt.text.trim());
+    final ha = double.tryParse(_acid.text.trim());
 
-    if (pka != null && a != null && ha != null && ha > 0 && a > 0) {
-      final ph = pka + (log(a / ha) / ln10);
-      setState(() => _ph = ph);
-      AppHaptics.confirm();
+    if (pka == null) {
+      setState(() {
+        _error = 'Please enter a valid pKa value.';
+        _ph = null;
+      });
+      AppHaptics.error();
+      return;
     }
+    if (a == null || a <= 0) {
+      setState(() {
+        _error = 'Conjugate base concentration [A⁻] must be strictly positive (> 0).';
+        _ph = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+    if (ha == null || ha <= 0) {
+      setState(() {
+        _error = 'Weak acid concentration [HA] must be strictly positive (> 0).';
+        _ph = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+
+    final ph = pka + (log(a / ha) / ln10);
+    setState(() {
+      _ph = ph;
+      _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  void _onFieldChanged() {
+    if (_error != null) setState(() => _error = null);
   }
 
   @override
@@ -709,15 +880,19 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _pKa, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'pKa'))),
+              Expanded(child: TextField(controller: _pKa, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'pKa'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _salt, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '[Conjugate Base]'))),
+              Expanded(child: TextField(controller: _salt, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: '[Conjugate Base]'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _acid, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '[Weak Acid]'))),
+              Expanded(child: TextField(controller: _acid, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: '[Weak Acid]'), onChanged: (_) => _onFieldChanged())),
             ],
           ),
           const SizedBox(height: 12),
           ElevatedButton(onPressed: _calculate, child: const Text('Compute Buffer pH')),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
           if (_ph != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -747,17 +922,56 @@ class _GibbsFreeEnergyCalculatorState extends State<_GibbsFreeEnergyCalculator> 
   final _temp = TextEditingController(text: '298.15'); // K
   final _deltaS = TextEditingController(text: '-242.0'); // J/mol·K
   double? _deltaG = -817.85;
+  String? _error;
+
+  @override
+  void dispose() {
+    _deltaH.dispose();
+    _temp.dispose();
+    _deltaS.dispose();
+    super.dispose();
+  }
 
   void _calculate() {
-    final dh = double.tryParse(_deltaH.text);
-    final t = double.tryParse(_temp.text);
-    final ds = double.tryParse(_deltaS.text);
+    final dh = double.tryParse(_deltaH.text.trim());
+    final t = double.tryParse(_temp.text.trim());
+    final ds = double.tryParse(_deltaS.text.trim());
 
-    if (dh != null && t != null && ds != null) {
-      final dg = dh - (t * (ds / 1000.0));
-      setState(() => _deltaG = dg);
-      AppHaptics.confirm();
+    if (dh == null) {
+      setState(() {
+        _error = 'Please enter a valid ΔH value (kJ/mol).';
+        _deltaG = null;
+      });
+      AppHaptics.error();
+      return;
     }
+    if (t == null || t < 0) {
+      setState(() {
+        _error = 'Absolute temperature T must be non-negative (≥ 0 K).';
+        _deltaG = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+    if (ds == null) {
+      setState(() {
+        _error = 'Please enter a valid ΔS value (J/mol·K).';
+        _deltaG = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+
+    final dg = dh - (t * (ds / 1000.0));
+    setState(() {
+      _deltaG = dg;
+      _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  void _onFieldChanged() {
+    if (_error != null) setState(() => _error = null);
   }
 
   @override
@@ -776,15 +990,19 @@ class _GibbsFreeEnergyCalculatorState extends State<_GibbsFreeEnergyCalculator> 
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _deltaH, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ΔH (kJ/mol)'))),
+              Expanded(child: TextField(controller: _deltaH, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: const InputDecoration(labelText: 'ΔH (kJ/mol)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _temp, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Temp T (K)'))),
+              Expanded(child: TextField(controller: _temp, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Temp T (K)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _deltaS, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ΔS (J/mol·K)'))),
+              Expanded(child: TextField(controller: _deltaS, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: const InputDecoration(labelText: 'ΔS (J/mol·K)'), onChanged: (_) => _onFieldChanged())),
             ],
           ),
           const SizedBox(height: 12),
           ElevatedButton(onPressed: _calculate, child: const Text('Calculate ΔG')),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
           if (_deltaG != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -821,19 +1039,58 @@ class _ArrheniusCalculatorState extends State<_ArrheniusCalculator> {
   final _ea = TextEditingController(text: '75.0'); // kJ/mol
   final _temp = TextEditingController(text: '298.15'); // K
   double? _k;
+  String? _error;
+
+  @override
+  void dispose() {
+    _aFactor.dispose();
+    _ea.dispose();
+    _temp.dispose();
+    super.dispose();
+  }
 
   void _calculate() {
-    final a = double.tryParse(_aFactor.text);
-    final ea = double.tryParse(_ea.text);
-    final t = double.tryParse(_temp.text);
+    final a = double.tryParse(_aFactor.text.trim());
+    final ea = double.tryParse(_ea.text.trim());
+    final t = double.tryParse(_temp.text.trim());
 
-    if (a != null && ea != null && t != null && t > 0) {
-      const r = 8.314; // J/mol·K
-      final eaJoules = ea * 1000.0;
-      final k = a * exp(-eaJoules / (r * t));
-      setState(() => _k = k);
-      AppHaptics.confirm();
+    if (a == null || a <= 0) {
+      setState(() {
+        _error = 'Pre-exponential factor A must be strictly positive (> 0).';
+        _k = null;
+      });
+      AppHaptics.error();
+      return;
     }
+    if (ea == null || ea < 0) {
+      setState(() {
+        _error = 'Activation energy Eₐ cannot be negative.';
+        _k = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+    if (t == null || t <= 0) {
+      setState(() {
+        _error = 'Absolute temperature T must be strictly positive (> 0 K).';
+        _k = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+
+    const r = 8.314; // J/mol·K
+    final eaJoules = ea * 1000.0;
+    final k = a * exp(-eaJoules / (r * t));
+    setState(() {
+      _k = k;
+      _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  void _onFieldChanged() {
+    if (_error != null) setState(() => _error = null);
   }
 
   @override
@@ -852,15 +1109,19 @@ class _ArrheniusCalculatorState extends State<_ArrheniusCalculator> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _aFactor, decoration: const InputDecoration(labelText: 'A (Frequency Factor)'))),
+              Expanded(child: TextField(controller: _aFactor, decoration: const InputDecoration(labelText: 'A (Frequency Factor)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _ea, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Ea (kJ/mol)'))),
+              Expanded(child: TextField(controller: _ea, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Ea (kJ/mol)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _temp, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Temp (K)'))),
+              Expanded(child: TextField(controller: _temp, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Temp (K)'), onChanged: (_) => _onFieldChanged())),
             ],
           ),
           const SizedBox(height: 12),
           ElevatedButton(onPressed: _calculate, child: const Text('Compute Rate Constant k')),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
           if (_k != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -891,21 +1152,61 @@ class _BeerLambertCalculatorState extends State<_BeerLambertCalculator> {
   final _conc = TextEditingController(text: '1.5e-4'); // M
   double? _absorbance = 1.26;
   double? _transmittance = 5.50;
+  String? _error;
+
+  @override
+  void dispose() {
+    _molarAbs.dispose();
+    _pathLength.dispose();
+    _conc.dispose();
+    super.dispose();
+  }
 
   void _calculate() {
-    final e = double.tryParse(_molarAbs.text);
-    final l = double.tryParse(_pathLength.text);
-    final c = double.tryParse(_conc.text);
+    final e = double.tryParse(_molarAbs.text.trim());
+    final l = double.tryParse(_pathLength.text.trim());
+    final c = double.tryParse(_conc.text.trim());
 
-    if (e != null && l != null && c != null) {
-      final a = e * c * l;
-      final t = pow(10, -a) * 100.0;
+    if (e == null || e < 0) {
       setState(() {
-        _absorbance = a;
-        _transmittance = t.toDouble();
+        _error = 'Molar absorptivity ε must be non-negative.';
+        _absorbance = null;
+        _transmittance = null;
       });
-      AppHaptics.confirm();
+      AppHaptics.error();
+      return;
     }
+    if (l == null || l <= 0) {
+      setState(() {
+        _error = 'Path length l must be strictly positive (> 0 cm).';
+        _absorbance = null;
+        _transmittance = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+    if (c == null || c < 0) {
+      setState(() {
+        _error = 'Concentration c must be non-negative.';
+        _absorbance = null;
+        _transmittance = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+
+    final a = e * c * l;
+    final t = pow(10, -a) * 100.0;
+    setState(() {
+      _absorbance = a;
+      _transmittance = t.toDouble();
+      _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  void _onFieldChanged() {
+    if (_error != null) setState(() => _error = null);
   }
 
   @override
@@ -924,15 +1225,19 @@ class _BeerLambertCalculatorState extends State<_BeerLambertCalculator> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _molarAbs, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ε (M⁻¹cm⁻¹)'))),
+              Expanded(child: TextField(controller: _molarAbs, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'ε (M⁻¹cm⁻¹)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _pathLength, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Path l (cm)'))),
+              Expanded(child: TextField(controller: _pathLength, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Path l (cm)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _conc, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Conc c (mol/L)'))),
+              Expanded(child: TextField(controller: _conc, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Conc c (mol/L)'), onChanged: (_) => _onFieldChanged())),
             ],
           ),
           const SizedBox(height: 12),
           ElevatedButton(onPressed: _calculate, child: const Text('Compute Absorbance A')),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
           if (_absorbance != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -969,26 +1274,43 @@ class _PhotonEnergyCalculatorState extends State<_PhotonEnergyCalculator> {
   double? _joules;
   double? _ev;
   double? _frequency;
+  String? _error;
+
+  @override
+  void dispose() {
+    _wavelength.dispose();
+    super.dispose();
+  }
 
   void _calculate() {
-    final wlNm = double.tryParse(_wavelength.text);
-    if (wlNm != null && wlNm > 0) {
-      final wlM = wlNm * 1e-9;
-      const c = 2.99792458e8; // m/s
-      const h = 6.62607015e-34; // J·s
-      const evJ = 1.602176634e-19; // J per eV
-
-      final freq = c / wlM;
-      final eJ = h * freq;
-      final eEv = eJ / evJ;
-
+    final wlNm = double.tryParse(_wavelength.text.trim());
+    if (wlNm == null || wlNm <= 0) {
       setState(() {
-        _frequency = freq;
-        _joules = eJ;
-        _ev = eEv;
+        _error = 'Wavelength λ must be strictly positive (> 0 nm).';
+        _frequency = null;
+        _joules = null;
+        _ev = null;
       });
-      AppHaptics.confirm();
+      AppHaptics.error();
+      return;
     }
+
+    final wlM = wlNm * 1e-9;
+    const c = 2.99792458e8; // m/s
+    const h = 6.62607015e-34; // J·s
+    const evJ = 1.602176634e-19; // J per eV
+
+    final freq = c / wlM;
+    final eJ = h * freq;
+    final eEv = eJ / evJ;
+
+    setState(() {
+      _frequency = freq;
+      _joules = eJ;
+      _ev = eEv;
+      _error = null;
+    });
+    AppHaptics.confirm();
   }
 
   @override
@@ -1005,9 +1327,20 @@ class _PhotonEnergyCalculatorState extends State<_PhotonEnergyCalculator> {
             selectable: false,
           ),
           const SizedBox(height: 12),
-          TextField(controller: _wavelength, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Wavelength λ (nm)')),
+          TextField(
+            controller: _wavelength,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(labelText: 'Wavelength λ (nm)'),
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+          ),
           const SizedBox(height: 12),
           ElevatedButton(onPressed: _calculate, child: const Text('Convert to Energy & Frequency')),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
           if (_ev != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -1049,18 +1382,57 @@ class _NernstCalculatorState extends State<_NernstCalculator> {
   final _nElectrons = TextEditingController(text: '2');
   final _qRatio = TextEditingController(text: '0.01'); // [Zn2+]/[Cu2+]
   double? _eCell;
+  String? _error;
+
+  @override
+  void dispose() {
+    _eStd.dispose();
+    _nElectrons.dispose();
+    _qRatio.dispose();
+    super.dispose();
+  }
 
   void _calculate() {
-    final e0 = double.tryParse(_eStd.text);
-    final n = double.tryParse(_nElectrons.text);
-    final q = double.tryParse(_qRatio.text);
+    final e0 = double.tryParse(_eStd.text.trim());
+    final n = double.tryParse(_nElectrons.text.trim());
+    final q = double.tryParse(_qRatio.text.trim());
 
-    if (e0 != null && n != null && n > 0 && q != null && q > 0) {
-      // E = E0 - (0.0592 / n) * log10(Q)
-      final e = e0 - (0.0592 / n) * (log(q) / ln10);
-      setState(() => _eCell = e);
-      AppHaptics.confirm();
+    if (e0 == null) {
+      setState(() {
+        _error = 'Please enter a valid standard potential E°cell (V).';
+        _eCell = null;
+      });
+      AppHaptics.error();
+      return;
     }
+    if (n == null || n <= 0) {
+      setState(() {
+        _error = 'Number of transferred electrons n must be strictly positive (≥ 1).';
+        _eCell = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+    if (q == null || q <= 0) {
+      setState(() {
+        _error = 'Reaction quotient Q must be strictly positive (> 0).';
+        _eCell = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+
+    // E = E0 - (0.0592 / n) * log10(Q)
+    final e = e0 - (0.0592 / n) * (log(q) / ln10);
+    setState(() {
+      _eCell = e;
+      _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  void _onFieldChanged() {
+    if (_error != null) setState(() => _error = null);
   }
 
   @override
@@ -1079,15 +1451,19 @@ class _NernstCalculatorState extends State<_NernstCalculator> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _eStd, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'E°cell (V)'))),
+              Expanded(child: TextField(controller: _eStd, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: const InputDecoration(labelText: 'E°cell (V)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _nElectrons, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'n (electrons)'))),
+              Expanded(child: TextField(controller: _nElectrons, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'n (electrons)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _qRatio, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Quotient Q'))),
+              Expanded(child: TextField(controller: _qRatio, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Quotient Q'), onChanged: (_) => _onFieldChanged())),
             ],
           ),
           const SizedBox(height: 12),
           ElevatedButton(onPressed: _calculate, child: const Text('Calculate Non-Standard E_cell')),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
           if (_eCell != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -1118,24 +1494,55 @@ class _CellPotentialCalculatorState extends State<_CellPotentialCalculator> {
   final _nElectrons = TextEditingController(text: '2');
   double? _eCell = 1.10;
   double? _deltaGZero;
+  String? _error;
+
+  @override
+  void dispose() {
+    _eCathode.dispose();
+    _eAnode.dispose();
+    _nElectrons.dispose();
+    super.dispose();
+  }
 
   void _calculate() {
-    final ec = double.tryParse(_eCathode.text);
-    final ea = double.tryParse(_eAnode.text);
-    final n = double.tryParse(_nElectrons.text) ?? 2.0;
+    final ec = double.tryParse(_eCathode.text.trim());
+    final ea = double.tryParse(_eAnode.text.trim());
+    final n = double.tryParse(_nElectrons.text.trim()) ?? 2.0;
 
-    if (ec != null && ea != null) {
-      final eCell = ec - ea;
-      const f = 96485.33; // C/mol
-      final dgJ = -n * f * eCell;
-      final dgKj = dgJ / 1000.0;
-
+    if (ec == null || ea == null) {
       setState(() {
-        _eCell = eCell;
-        _deltaGZero = dgKj;
+        _error = 'Please enter valid standard electrode potentials (V).';
+        _eCell = null;
+        _deltaGZero = null;
       });
-      AppHaptics.confirm();
+      AppHaptics.error();
+      return;
     }
+    if (n <= 0) {
+      setState(() {
+        _error = 'Number of transferred electrons n must be strictly positive (≥ 1).';
+        _eCell = null;
+        _deltaGZero = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+
+    final eCell = ec - ea;
+    const f = 96485.33; // C/mol
+    final dgJ = -n * f * eCell;
+    final dgKj = dgJ / 1000.0;
+
+    setState(() {
+      _eCell = eCell;
+      _deltaGZero = dgKj;
+      _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  void _onFieldChanged() {
+    if (_error != null) setState(() => _error = null);
   }
 
   @override
@@ -1154,15 +1561,19 @@ class _CellPotentialCalculatorState extends State<_CellPotentialCalculator> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _eCathode, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'E°cathode (V)'))),
+              Expanded(child: TextField(controller: _eCathode, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: const InputDecoration(labelText: 'E°cathode (V)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _eAnode, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'E°anode (V)'))),
+              Expanded(child: TextField(controller: _eAnode, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: const InputDecoration(labelText: 'E°anode (V)'), onChanged: (_) => _onFieldChanged())),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _nElectrons, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'n (e-)'))),
+              Expanded(child: TextField(controller: _nElectrons, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'n (e-)'), onChanged: (_) => _onFieldChanged())),
             ],
           ),
           const SizedBox(height: 12),
           ElevatedButton(onPressed: _calculate, child: const Text('Calculate E°cell & ΔG°')),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
           if (_eCell != null) ...[
             const SizedBox(height: 12),
             Container(
