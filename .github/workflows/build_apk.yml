@@ -48,14 +48,14 @@ jobs:
 
       - name: Copy Named APK
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v2.8.0-Release.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v2.8.1-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-v2.8.0-apk
-          path: ChemBuddy-v2.8.0-Release.apk
+          name: chem-buddy-v2.8.1-apk
+          path: ChemBuddy-v2.8.1-Release.apk
           retention-days: 30
 
       - name: Create GitHub Release (Tags only)
@@ -63,22 +63,22 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ChemBuddy-v2.8.0-Release.apk
+            ChemBuddy-v2.8.1-Release.apk
             Chem-Buddy-MSc-Release.apk
           name: ChemBuddy Release ${{ github.ref_name }}
           body: |
-            ## ChemBuddy Release ${{ github.ref_name }} (Version 2.8.0)
+            ## ChemBuddy Release ${{ github.ref_name }} (Version 2.8.1)
             
-            ### ✨ What's New in v2.8.0:
-            - **Kannada Scholar Bunny Mascot**:
-              - New character with transparent WebP asset, Kannada ("ಕನ್ನಡಿಗ") hat insignia, safety goggles, and bubbling flask.
-              - `InteractiveMascot` widget with vertical floating, head tilt, squash-and-stretch bounce, dynamic neon back-glow (Cyan, Green, Purple), and tap-to-reveal study quips.
-            - **Unified LaTeX & Mathematical Rendering**:
-              - Consolidated `ChemistryMarkdownView` engine with automatic naked LaTeX macro wrapping and ATX markdown header normalization.
-              - Standardized across all 16 MSc Chemistry Toolkit calculators, PDF Study Hub, Viva Practice, and Predicted Exam Questions.
-            - **Polymer & Biomolecule Molar Mass Architecture**:
-              - Curated database of 28 key polymers and biomolecules with repeating unit formulas, repeat unit molar masses, and variable chain length notices.
-              - Word-boundary regex matching preventing substring false collisions.
-            - **Quality & Verification**:
-              - 100% test pass rate across 166 automated unit & widget tests.
+            ### ✨ What's New in v2.8.1:
+            - **Official ChemBuddy App Logo & Launcher Icons**:
+              - New high-resolution ChemBuddy scholar mascot medallion logo with safety goggles, lab coat, bubbling flask, and atomic elements badge.
+              - Full Android adaptive & mipmap launcher icons (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`) and iOS app icon sets.
+              - In-app animated branding with dynamic neon pulsing and fallback vector painting.
+            - **Handwritten & Scanned PDF OCR Learning Upgrade**:
+              - Multi-engine document processing for digital PDFs, scanned notes, and handwritten MSc Chemistry notes.
+              - Chemistry-specific OCR normalization: $O \leftrightarrow 0$ corrections, elemental formula subscripting, valence charge superscripts (`Fe³⁺`, `SO₄²⁻`), and reaction arrows (`→`, `⇌`, `Δ`, `hν`).
+              - Strict source-grounding prompt architecture ensuring all generated flashcards, quizzes, and AI answers derive strictly from uploaded documents without hallucination.
+              - Per-page extraction inspector sheet and document quality indicators.
+            - **Quality & Performance**:
+              - 100% automated test suite passing (185+ unit & integration tests).
               - Zero static analysis warnings (`flutter analyze`).

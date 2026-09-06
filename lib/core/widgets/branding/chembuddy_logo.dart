@@ -83,10 +83,20 @@ class _ChemBuddyLogoState extends State<ChemBuddyLogo> with TickerProviderStateM
                     ),
                   )
                 : null,
-            child: CustomPaint(
-              painter: _ChemBuddyLogoPainter(
-                spin: _spinController.value * 2 * math.pi,
-                pulse: _pulseController.value,
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/app_logo.png',
+                width: widget.size,
+                height: widget.size,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return CustomPaint(
+                    painter: _ChemBuddyLogoPainter(
+                      spin: _spinController.value * 2 * math.pi,
+                      pulse: _pulseController.value,
+                    ),
+                  );
+                },
               ),
             ),
           ),
