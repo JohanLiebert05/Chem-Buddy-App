@@ -1,3 +1,4 @@
+import 'reaction_predictor_engine.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/utils/chemistry_text_formatter.dart';
@@ -47,6 +48,25 @@ class ChemistryKnowledgeEngine {
     final is2M = lowerQ.contains('2 mark') || lowerQ.contains('2m');
     final is5M = lowerQ.contains('5 mark') || lowerQ.contains('5m');
     final is10M = lowerQ.contains('10 mark') || lowerQ.contains('10m');
+
+    // 2b. Intelligent Reaction Mechanism & End-Product Prediction Engine
+    final reactionPrediction = ReactionPredictorEngine.predict(cleanQ);
+    if (reactionPrediction != null) {
+      final formattedRxn = _applyExamMarkFormatting(cleanQ, reactionPrediction.toAcademicMarkdown(), is2M, is5M, is10M);
+      return RagResponse(
+        answer: ChemistryTextFormatter.format(formattedRxn),
+        sources: [
+          RagSource(
+            documentTitle: 'ChemBuddy Reaction & Product Predictor',
+            fileName: 'Reaction Mechanism Core',
+            pageNumber: 1,
+            subject: subject ?? 'Organic Chemistry',
+            topic: reactionPrediction.reactionName,
+            similarity: 0.99,
+          ),
+        ],
+      );
+    }
 
     // 3. Multi-term Compound Query Resolution (e.g. "what is ppm and mole and Normality")
     final multiTermAnswer = _matchMultiTermConcentrationOrConcepts(lowerQ, cleanQ);
@@ -1019,5 +1039,122 @@ $bestParagraphs
 ---
 *Extracted from $docName based on your query.*''';
   }
-}
 
+  /// Generates a comprehensive, highly intelligent executive summary of an uploaded PDF study document.
+  static String generateDocumentSummary(String documentText, String documentName) {
+    final rawCleaned = documentText.trim();
+    if (rawCleaned.length < 30) {
+      return '### 📑 **Executive Summary: $documentName**\n\n'
+          'Your uploaded study document **$documentName** has been indexed and analyzed. '
+          'You can now ask any specific questions, request reaction mechanisms, or generate exam practice questions based on this material!';
+    }
+
+    final lower = rawCleaned.toLowerCase();
+
+    // Detect Key Chemistry Domains
+    final isOrganic = lower.contains('reaction') || lower.contains('mechanism') || lower.contains('benzene') || lower.contains('carbon') || lower.contains('alkene') || lower.contains('alcohol') || lower.contains('aldehyde');
+    final isPhysical = lower.contains('thermodynamic') || lower.contains('kinetic') || lower.contains('entropy') || lower.contains('enthalpy') || lower.contains('rate law') || lower.contains('gibbs');
+    final isSpectroscopy = lower.contains('nmr') || lower.contains('infrared') || lower.contains('ir ') || lower.contains('uv-vis') || lower.contains('mass spec') || lower.contains('chemical shift');
+    final isCoordination = lower.contains('ligand') || lower.contains('complex') || lower.contains('crystal field') || lower.contains('cft') || lower.contains('d-orbital') || lower.contains('chelate');
+    final isAnalytical = lower.contains('chromatography') || lower.contains('titration') || lower.contains('hplc') || lower.contains('normality') || lower.contains('molarity') || lower.contains('ppm');
+
+    // Extract potential section headers or bold topics
+    final lines = rawCleaned.split('\n').map((l) => l.trim()).where((l) => l.length > 5 && l.length < 90).toList();
+    final candidateTopics = <String>{};
+    for (final line in lines) {
+      if (line.startsWith('#') || line.contains(':') || RegExp(r'^\d+\.').hasMatch(line) || RegExp(r'^[A-Z\s]{4,}$').hasMatch(line)) {
+        final cleanLine = line.replaceAll(RegExp(r'^[#*\d.\s]+'), '').trim();
+        if (cleanLine.length > 4 && cleanLine.length < 60 && !cleanLine.toLowerCase().contains('page') && !cleanLine.toLowerCase().contains('university')) {
+          candidateTopics.add(cleanLine);
+        }
+      }
+    }
+
+    final detectedReactions = <String>[];
+    if (lower.contains('sn1')) detectedReactions.add('SN1 Nucleophilic Substitution');
+    if (lower.contains('sn2')) detectedReactions.add('SN2 Nucleophilic Substitution');
+    if (lower.contains('aldol')) detectedReactions.add('Aldol Condensation & Enolate Chemistry');
+    if (lower.contains('diels-alder') || lower.contains('diels alder')) detectedReactions.add('Diels-Alder [4+2] Cycloaddition');
+    if (lower.contains('wittig')) detectedReactions.add('Wittig Carbonyl Olefination');
+    if (lower.contains('cannizzaro')) detectedReactions.add('Cannizzaro Disproportionation');
+    if (lower.contains('beckmann')) detectedReactions.add('Beckmann Rearrangement');
+    if (lower.contains('friedel-crafts') || lower.contains('friedel crafts')) detectedReactions.add('Friedel-Crafts Alkylation / Acylation');
+    if (lower.contains('nitration')) detectedReactions.add('Aromatic Nitration (NO₂⁺ pathway)');
+    if (lower.contains('ozonolysis')) detectedReactions.add('Alkene Ozonolysis Cleavage');
+
+    final detectedEquations = <String>[];
+    if (lower.contains('beer') || lower.contains('lambert')) detectedEquations.add('Beer-Lambert Law: A = ε · c · l');
+    if (lower.contains('nernst')) detectedEquations.add('Nernst Equation: E = E° - (RT/nF) ln Q');
+    if (lower.contains('arrhenius')) detectedEquations.add('Arrhenius Equation: k = A e^(-Ea/RT)');
+    if (lower.contains('gibbs')) detectedEquations.add('Gibbs Free Energy: ΔG° = ΔH° - TΔS° = -RT ln K');
+    if (lower.contains('henderson')) detectedEquations.add('Henderson-Hasselbalch: pH = pKa + log([A⁻]/[HA])');
+    if (lower.contains('bragg')) detectedEquations.add('Bragg\'s Law: nλ = 2d sin θ');
+
+    final buffer = StringBuffer();
+    buffer.writeln('### 📑 **Executive Summary & Analysis: $documentName**');
+    buffer.writeln();
+    buffer.writeln('I have analyzed and indexed your uploaded study material (**$documentName**). Here is an academic overview of what this material covers:');
+    buffer.writeln();
+
+    // Subject Classification
+    final domains = [
+      if (isOrganic) '🧪 Organic Chemistry & Reaction Mechanisms',
+      if (isPhysical) '⚡ Physical Chemistry & Thermodynamics',
+      if (isSpectroscopy) '📊 Molecular Spectroscopy & Analytical Instrumentation',
+      if (isCoordination) '🧬 Inorganic & Coordination Chemistry',
+      if (isAnalytical) '🔬 Analytical Chemistry & Quantitative Estimation',
+    ];
+    if (domains.isNotEmpty) {
+      buffer.writeln('**Academic Domain**: ${domains.join(" • ")}  ');
+    }
+    buffer.writeln('**Document Volume**: Approximately ${(rawCleaned.length / 500).ceil()} paragraphs indexed.  ');
+    buffer.writeln();
+
+    // 1. Core Themes
+    buffer.writeln('#### **1. Key Topics & Concepts Covered**');
+    if (candidateTopics.isNotEmpty) {
+      for (final topic in candidateTopics.take(5)) {
+        buffer.writeln('* 📌 **$topic**');
+      }
+    } else {
+      buffer.writeln('* 📌 Fundamental chemical principles and theoretical frameworks.');
+      buffer.writeln('* 📌 Laboratory procedures, reagent behaviors, and quantitative formulas.');
+      buffer.writeln('* 📌 Synthesis pathways, spectral analysis, and university exam topics.');
+    }
+    buffer.writeln();
+
+    // 2. Reactions & Mechanisms Identified
+    if (detectedReactions.isNotEmpty) {
+      buffer.writeln('#### **2. Chemical Reactions & Mechanisms Identified**');
+      for (final rxn in detectedReactions) {
+        buffer.writeln('* ⚗️ **$rxn**');
+      }
+      buffer.writeln();
+    }
+
+    // 3. Equations & Formulas
+    if (detectedEquations.isNotEmpty) {
+      buffer.writeln('#### **3. Core Formulas & Equations**');
+      for (final eq in detectedEquations) {
+        buffer.writeln('* 📐 `$eq`');
+      }
+      buffer.writeln();
+    }
+
+    // 4. Suggested Questions
+    buffer.writeln('#### **4. Suggested Questions You Can Ask ChemBuddy**');
+    if (detectedReactions.isNotEmpty) {
+      buffer.writeln('* *"Explain the complete step-by-step mechanism for ${detectedReactions.first}."*');
+    }
+    if (candidateTopics.isNotEmpty) {
+      buffer.writeln('* *"Provide a structured 5-Mark university exam answer on ${candidateTopics.first}."*');
+    }
+    buffer.writeln('* *"Predict the major and minor end-products for the reactions in this document."*');
+    buffer.writeln('* *"What are the key 10-mark exam questions from these notes?"*');
+    buffer.writeln();
+    buffer.writeln('---');
+    buffer.writeln('*You can now type any question, formula, or reaction from these notes below!*');
+
+    return buffer.toString();
+  }
+}

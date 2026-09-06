@@ -1,3 +1,4 @@
+import '../../data/services/chemistry_knowledge_engine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/rag_models.dart';
@@ -63,12 +64,33 @@ class ChatController extends Notifier<ChatState> {
     int? size,
     int? pages,
   }) {
+    final summaryContent = ChemistryKnowledgeEngine.generateDocumentSummary(text, name);
+    final summaryMessage = AiMessage(
+      id: const Uuid().v4(),
+      conversationId: 'temp_conv',
+      userId: SupabaseService.instance.userId ?? 'anonymous',
+      role: 'assistant',
+      content: summaryContent,
+      sources: [
+        RagSource(
+          documentTitle: name,
+          fileName: name,
+          pageNumber: 1,
+          subject: 'Attached Study Material',
+          topic: 'Document Executive Summary',
+          similarity: 1.0,
+        ),
+      ],
+      createdAt: DateTime.now(),
+    );
+
     state = state.copyWith(
       activeDocumentName: name,
       activeDocumentText: text,
       activeDocumentPath: path,
       activeDocumentSize: size,
       activeDocumentPages: pages,
+      messages: [...state.messages, summaryMessage],
       clearError: true,
     );
   }
