@@ -4,32 +4,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:uuid/uuid.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/chemistry_text_formatter.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/benzene_loading_indicator.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
+import '../../core/widgets/claude_loading_text.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/models.dart';
-import '../../data/models/library_models.dart';
 import '../../data/models/rag_models.dart';
+import '../../data/models/smart_flashcard.dart';
 import '../../data/services/pdf_text_extraction_service.dart';
-import '../../data/services/pdf_text_utils.dart';
 import '../../data/services/reaction_mechanism_service.dart';
 import '../providers/app_providers.dart';
 import '../providers/rag_providers.dart';
 import '../widgets/reaction_mechanisms_card.dart';
 import '../widgets/viva_practice_dialog.dart';
 import 'pdf_quiz_screen.dart';
-import 'pdf_study_hub_screen.dart';
 import 'reaction_mechanism_screen.dart';
 import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_study_screen.dart';
-import '../../data/models/smart_flashcard.dart';
-import '../../core/widgets/claude_loading_text.dart';
-import '../../core/widgets/branding/chembuddy_mascot.dart';
-import '../../widgets/interactive_mascot.dart';
-
 
 enum ChemBuddyAiMode {
   concept,
@@ -46,10 +42,12 @@ class AskChemBuddyScreen extends ConsumerStatefulWidget {
   ConsumerState<AskChemBuddyScreen> createState() => _AskChemBuddyScreenState();
 }
 
-class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
+class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final SpeechToText _speech = SpeechToText();
+  late final AnimationController _micPulseController;
+
   ChemBuddyAiMode _currentMode = ChemBuddyAiMode.concept;
   bool _speechEnabled = false;
   bool _isListening = false;
@@ -57,15 +55,27 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
   String _extractingStatus = 'Reading document...';
   String? _lastSentQuestion;
 
+  static const List<String> _voiceShortcuts = [
+    'SN1 vs SN2 mechanism',
+    'Hückel 4n+2 rule',
+    'Diels-Alder reaction',
+    '¹H NMR splitting',
+    'Thermodynamic vs kinetic control',
+  ];
 
   @override
   void initState() {
     super.initState();
+    _micPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
     _initSpeech();
   }
 
   @override
   void dispose() {
+    _micPulseController.dispose();
     _speech.stop();
     _controller.dispose();
     _scrollController.dispose();
@@ -122,8 +132,9 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
     await _speech.listen(
       onResult: (result) {
         if (mounted) {
+          final normalized = ChemistryTextFormatter.normalizeSpeechQuery(result.recognizedWords);
           setState(() {
-            _controller.text = result.recognizedWords;
+            _controller.text = normalized;
             _controller.selection = TextSelection.fromPosition(
               TextPosition(offset: _controller.text.length),
             );
@@ -180,25 +191,9 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
     } else if (_currentMode == ChemBuddyAiMode.exam2M) {
       modelPrompt = '[Format as a concise 2-Mark University Exam Answer: Provide 1) Definition (1-2 sentences), 2) Balanced Reaction or Equation, 3) Key Condition/Nuance. DO NOT over-explain]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.exam5M) {
-      modelPrompt = '''[Format as a structured 5-Mark MSc Chemistry University Rubric:
-- Definition & Statement of Principle
-- Main Explanation & Driving Force
-- Balanced Chemical Reaction / Equation
-- Step-by-Step Mechanism / Intermediates
-- Important Points & Synthetic Applications
-- Concise Conclusion]: $rawText''';
+      modelPrompt = '[Format as a structured 5-Mark MSc Chemistry University Rubric: 1) Principle & Definition, 2) Balanced Reaction, 3) Step-by-Step Mechanism/Intermediates, 4) Applications & Synthetic Scope, 5) Summary]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.exam10M) {
-      modelPrompt = '''[Format as a comprehensive 10-Mark MSc Chemistry Exam Answer:
-1. Definition & Core Concept
-2. Chemical Principle & Thermodynamics
-3. Reaction Equation & Conditions
-4. Step-by-Step Reaction Mechanism with Curved Arrow Notes
-5. Transition States & Intermediate Stability
-6. Concrete Laboratory Examples
-7. Regio- & Stereoselectivity
-8. Synthetic & Industrial Applications
-9. Limitations & Side Reactions
-10. Academic Conclusion]: $rawText''';
+      modelPrompt = '[Format as a comprehensive 10-Mark MSc Chemistry Exam Answer with detailed headings, mechanisms with curved arrow electron pushing notes, transition states, stereochemistry, and laboratory synthesis applications]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.mechanisms) {
       modelPrompt = 'Explain the full stepwise reaction mechanism, curved arrow electron displacement, intermediates, and driving force for: $rawText';
     }
@@ -206,7 +201,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
     _lastSentQuestion = rawText;
     ref.read(chatControllerProvider.notifier).sendMessage(rawText, modelPrompt: modelPrompt);
     if (textOverride == null) _controller.clear();
-    
+
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -312,7 +307,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
       );
 
       if (mounted) {
-        Navigator.pop(context); // close loading dialog
+        Navigator.pop(context);
         Navigator.push(
           context,
           MaterialPageRoute<void>(
@@ -387,7 +382,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: AppColors.danger,
-            content: Text(e is PdfExtractionException ? e.message : 'Could not read PDF text. Make sure it contains readable text.'),
+            content: Text(e.toString().contains('Exception:') ? e.toString().replaceFirst('Exception: ', '') : 'Could not read PDF text. Make sure it contains readable text.'),
           ),
         );
       }
@@ -439,201 +434,70 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
           children: [
             _buildModeBar(),
 
-            // Extracting banner
+            // Extracting banner with Benzene indicator
             if (_extracting)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: ClaudeThinkingIndicator(
-                  thoughts: [
-                    _extractingStatus.isNotEmpty ? _extractingStatus : 'Parsing PDF study notes...',
-                    'Extracting chemical formulas & syllabus chapters...',
-                    'Cataloging reaction mechanisms & key definitions...',
-                  ],
-                  isCard: true,
-                  thinkingHeader: 'Reading Notes',
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: GlowCard(
+                  borderColor: AppColors.purpleBright.withValues(alpha: 0.5),
+                  child: Row(
+                    children: [
+                      const BenzeneLoadingIndicator(size: 32, showMicrocopy: false),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _extractingStatus.isNotEmpty ? _extractingStatus : 'Parsing PDF study notes...',
+                          style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
-            // Active Attached PDF Banner & Quick Actions
+            // Attached PDF Badge (Clean RAG document attachment with NO flashcards/summary chips)
             if (chatState.hasActiveDocument && !_extracting)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 child: GlowCard(
                   borderColor: AppColors.purpleBright.withValues(alpha: 0.4),
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppColors.purple.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.purpleBright, size: 20),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Based on: ${chatState.activeDocumentName ?? "Study Material"}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white),
-                                  ),
-                                  Row(
-                                    children: [
-                                      const Text('Ready 🟢', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
-                                      if (chatState.activeDocumentSize != null)
-                                        Text(' · ${_formatSize(chatState.activeDocumentSize)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          if (chatState.activeDocumentPath != null)
-                            IconButton(
-                              icon: const Icon(Icons.school, size: 18, color: AppColors.purpleBright),
-                              tooltip: 'Open Study Hub',
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => PdfStudyHubScreen(
-                                      doc: PdfDoc(
-                                        id: const Uuid().v4(),
-                                        filename: chatState.activeDocumentName ?? 'document.pdf',
-                                        displayName: chatState.activeDocumentName ?? 'Study Material',
-                                        subjectId: '',
-                                        localPath: chatState.activeDocumentPath!,
-                                        dateAdded: DateTime.now(),
-                                        fileSize: chatState.activeDocumentSize ?? 0,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          IconButton(
-                            icon: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
-                            tooltip: 'Remove Attached PDF',
-                            onPressed: () => ref.read(chatControllerProvider.notifier).detachDocument(),
-                          ),
-                        ],
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.purple.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.purpleBright, size: 20),
                       ),
-                      const SizedBox(height: 10),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _ActionChip(
-                              icon: Icons.local_fire_department_outlined,
-                              label: 'Important Topics',
-                              onTap: () {
-                                if (chatState.activeDocumentPath != null) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                      builder: (_) => PdfStudyHubScreen(
-                                        doc: PdfDoc(
-                                          id: const Uuid().v4(),
-                                          filename: chatState.activeDocumentName ?? 'document.pdf',
-                                          displayName: chatState.activeDocumentName ?? 'Study Material',
-                                          subjectId: '',
-                                          localPath: chatState.activeDocumentPath!,
-                                          dateAdded: DateTime.now(),
-                                          fileSize: chatState.activeDocumentSize ?? 0,
-                                        ),
-                                        initialTab: 0,
-                                        initialExtractedText: chatState.activeDocumentText,
-                                      ),
-                                    ),
-                                  );
-                                } else {
-                                  _sendMessage('Extract and rank the most important topics from this study material with explanations.');
-                                }
-                              },
+                            Text(
+                              chatState.activeDocumentName ?? "Attached Study Material",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white),
                             ),
-                            const SizedBox(width: 8),
-                            _ActionChip(
-                              icon: Icons.summarize_outlined,
-                              label: 'Summarize',
-                              onTap: () {
-                                if (chatState.activeDocumentPath != null) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                      builder: (_) => PdfStudyHubScreen(
-                                        doc: PdfDoc(
-                                          id: const Uuid().v4(),
-                                          filename: chatState.activeDocumentName ?? 'document.pdf',
-                                          displayName: chatState.activeDocumentName ?? 'Study Material',
-                                          subjectId: '',
-                                          localPath: chatState.activeDocumentPath!,
-                                          dateAdded: DateTime.now(),
-                                          fileSize: chatState.activeDocumentSize ?? 0,
-                                        ),
-                                        initialTab: 1,
-                                        initialExtractedText: chatState.activeDocumentText,
-                                      ),
-                                    ),
-                                  );
-                                } else {
-                                  _sendMessage('Please give me a clear, structured summary of this study material with major topics, definitions, and reaction mechanisms.');
-                                }
-                              },
-                            ),
-                            const SizedBox(width: 8),
-                            _ActionChip(
-                              icon: Icons.quiz_outlined,
-                              label: 'Quiz',
-                              onTap: () {
-                                if (chatState.activeDocumentPath != null) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                      builder: (_) => PdfStudyHubScreen(
-                                        doc: PdfDoc(
-                                          id: const Uuid().v4(),
-                                          filename: chatState.activeDocumentName ?? 'document.pdf',
-                                          displayName: chatState.activeDocumentName ?? 'Study Material',
-                                          subjectId: '',
-                                          localPath: chatState.activeDocumentPath!,
-                                          dateAdded: DateTime.now(),
-                                          fileSize: chatState.activeDocumentSize ?? 0,
-                                        ),
-                                        initialTab: 2,
-                                        initialExtractedText: chatState.activeDocumentText,
-                                      ),
-                                    ),
-                                  );
-                                } else {
-                                  _sendMessage('Generate 5 MSc-level exam practice questions with model answers based on this study material.');
-                                }
-                              },
-                            ),
-                            const SizedBox(width: 8),
-                            _ActionChip(
-                              icon: Icons.style,
-                              label: 'Flashcards',
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => SmartFlashcardsGenerateScreen(
-                                      prefilledTopic: chatState.activeDocumentName,
-                                      prefilledText: chatState.activeDocumentText,
-                                    ),
-                                  ),
-                                );
-                              },
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                const Text('Ready for Questions 🟢', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
+                                if (chatState.activeDocumentSize != null)
+                                  Text(' · ${_formatSize(chatState.activeDocumentSize)}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                              ],
                             ),
                           ],
                         ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
+                        tooltip: 'Detach PDF',
+                        onPressed: () => ref.read(chatControllerProvider.notifier).detachDocument(),
                       ),
                     ],
                   ),
@@ -649,9 +513,10 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            InteractiveMascot(
-                              mood: chatState.isLoading ? MascotMood.thinking : MascotMood.idle,
-                              size: 130,
+                            // Dynamic Benzene Bond Formation Animation (No mascot)
+                            const BenzeneLoadingIndicator(
+                              size: 110,
+                              showMicrocopy: false,
                             ),
                             const SizedBox(height: 16),
                             const Text(
@@ -664,7 +529,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(color: AppColors.textSecondary, fontSize: 13.5, height: 1.4),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 18),
                             OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
                                 side: BorderSide(color: AppColors.purple.withValues(alpha: 0.5)),
@@ -675,7 +540,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                               icon: const Icon(Icons.upload_file, color: AppColors.purpleBright, size: 18),
                               label: const Text('Attach PDF Study Material', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700)),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 22),
                             const Align(
                               alignment: Alignment.centerLeft,
                               child: Text('Suggested Topics:', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
@@ -687,8 +552,8 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                             ),
                             const SizedBox(height: 6),
                             _SuggestionTile(
-                              text: 'How does Huckel\'s rule (4n+2) determine aromaticity?',
-                              onTap: () => _sendMessage('How does Huckel\'s rule (4n+2) determine aromaticity?'),
+                              text: 'How does Hückel\'s rule (4n+2) determine aromaticity?',
+                              onTap: () => _sendMessage('How does Hückel\'s rule (4n+2) determine aromaticity?'),
                             ),
                             const SizedBox(height: 6),
                             _SuggestionTile(
@@ -706,7 +571,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                       itemBuilder: (context, index) {
                         final msg = chatState.messages[index];
                         final isUser = msg.role == 'user';
-                        
+
                         return Align(
                           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                           child: Container(
@@ -811,7 +676,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                                 orElse: () => 'Chemistry Note',
                                               ).replaceAll(RegExp(r'^[#*\s]+'), '');
                                               final title = ChemistryTextFormatter.format(rawTitle);
-                                              
+
                                               final note = NoteItem(
                                                 id: const Uuid().v4(),
                                                 title: title.isEmpty ? 'Chemistry Note' : (title.length > 50 ? title.substring(0, 50) : title),
@@ -819,7 +684,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                                 updatedAt: DateTime.now(),
                                               );
                                               ref.read(appControllerProvider.notifier).saveNote(note);
-                                              
+
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 const SnackBar(content: Text('Saved to your Notes library!')),
                                               );
@@ -838,16 +703,16 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                     ),
             ),
 
+            // Benzene Bond Loading Indicator while AI is formulating response
             if (chatState.isLoading)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ClaudeThinkingBubble(
+                child: BenzeneThinkingBubble(
                   thoughts: ClaudeThinkingMicrocopy.askAi,
                 ),
               ),
 
-
-    if (chatState.error != null)
+            if (chatState.error != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: GlowCard(
@@ -869,55 +734,110 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                 ),
               ),
 
+            // Smart Voice Recognition Assistant Panel
             if (_isListening)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: GlowCard(
-                  borderColor: AppColors.danger.withValues(alpha: 0.6),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppColors.danger.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.mic, color: AppColors.danger, size: 18),
+              AnimatedBuilder(
+                animation: _micPulseController,
+                builder: (context, child) {
+                  return Container(
+                    margin: const EdgeInsets.fromLTRB(14, 0, 14, 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceElevated,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.danger.withValues(alpha: 0.5 + 0.4 * _micPulseController.value),
+                        width: 1.2,
                       ),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: Text(
-                          'Listening... Speak your question',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.danger.withValues(alpha: 0.15 * _micPulseController.value),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppColors.danger.withValues(alpha: 0.2 + 0.15 * _micPulseController.value),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.mic, color: AppColors.danger, size: 18),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Smart Mic Active • Speak formula or query',
+                                    style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w700),
+                                  ),
+                                  Text(
+                                    _controller.text.isEmpty ? 'Say e.g. "H2SO4" or "SN1 mechanism"' : _controller.text,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: _controller.text.isEmpty ? AppColors.textMuted : AppColors.brandBright,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _stopListening,
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.danger,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                              ),
+                              child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w800)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: _voiceShortcuts.map((shortcut) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 6),
+                                child: ActionChip(
+                                  backgroundColor: AppColors.surface,
+                                  side: BorderSide(color: AppColors.border.withValues(alpha: 0.7)),
+                                  label: Text(shortcut, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                  onPressed: () {
+                                    _controller.text = shortcut;
+                                    _stopListening();
+                                  },
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: _stopListening,
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.danger,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                        child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w800)),
-                      ),
-                    ],
-                  ),
-                ),
+                      ],
+                    ),
+                  );
+                },
               ),
 
-            // Input Bar with responsive spacing above bottom navigation bar
+            // Input Bar snugly seated directly next to the bottom navigation bar
             Builder(
               builder: (context) {
                 final isKeyboardOpen = View.of(context).viewInsets.bottom > 0;
                 final safeBottom = MediaQuery.paddingOf(context).bottom;
-                final bottomPadding = isKeyboardOpen ? 8.0 : (64.0 + safeBottom);
+                final bottomPadding = isKeyboardOpen ? 6.0 : max(8.0, safeBottom);
 
                 return Container(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
+                  padding: EdgeInsets.fromLTRB(14, 6, 14, bottomPadding),
                   decoration: BoxDecoration(
                     color: const Color(0xE8141620),
                     border: Border(top: BorderSide(color: AppColors.border.withValues(alpha: 0.4))),
@@ -947,7 +867,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                                 color: _isListening ? AppColors.danger : AppColors.border,
                               ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                           ),
                           onSubmitted: (_) {
                             if (_isListening) _stopListening();
@@ -965,8 +885,8 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                           customBorder: const CircleBorder(),
                           onTap: _toggleListening,
                           child: Container(
-                            width: 44,
-                            height: 44,
+                            width: 42,
+                            height: 42,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
@@ -987,7 +907,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> {
                       const SizedBox(width: 8),
                       CircleAvatar(
                         backgroundColor: chatState.isLoading ? AppColors.purple.withValues(alpha: 0.4) : AppColors.purple,
-                        radius: 22,
+                        radius: 21,
                         child: IconButton(
                           icon: chatState.isLoading
                               ? const SizedBox(
@@ -1198,8 +1118,6 @@ class _SuggestionTile extends StatelessWidget {
   }
 }
 
-
-
 class _ActionChip extends StatelessWidget {
   const _ActionChip({required this.icon, required this.label, required this.onTap});
   final IconData icon;
@@ -1285,4 +1203,3 @@ class _AiModeChip extends StatelessWidget {
     );
   }
 }
-

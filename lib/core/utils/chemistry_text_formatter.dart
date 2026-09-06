@@ -580,4 +580,44 @@ class ChemistryTextFormatter {
   static String _toSuperscript(String s) {
     return s.split('').map((c) => _superscripts[c] ?? c).join();
   }
+
+  /// Normalizes spoken chemistry input from speech recognition into clean chemical formulas and terms.
+  static String normalizeSpeechQuery(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return '';
+    var text = raw.trim();
+
+    // 1. Spoken reaction names and mechanisms
+    text = text.replaceAll(RegExp(r'\b(?:s\s*n\s*1|sn\s*1)\b', caseSensitive: false), 'SN1 mechanism');
+    text = text.replaceAll(RegExp(r'\b(?:s\s*n\s*2|sn\s*2)\b', caseSensitive: false), 'SN2 mechanism');
+    text = text.replaceAll(RegExp(r'\b(?:e\s*1)\b', caseSensitive: false), 'E1 elimination');
+    text = text.replaceAll(RegExp(r'\b(?:e\s*2)\b', caseSensitive: false), 'E2 elimination');
+    text = text.replaceAll(RegExp(r'\b(?:diels\s+alder)\b', caseSensitive: false), 'Diels-Alder cycloaddition');
+    text = text.replaceAll(RegExp(r'\b(?:woodward\s+hoffman|woodward\s+hoffmann)\b', caseSensitive: false), 'Woodward-Hoffmann rules');
+    text = text.replaceAll(RegExp(r'\b(?:huckel|huckels|hueckel)\s*(?:rule|s\s*rule)?\b', caseSensitive: false), "Hückel's 4n+2 rule");
+    text = text.replaceAll(RegExp(r'\b(?:aldol)\b', caseSensitive: false), 'Aldol condensation');
+    text = text.replaceAll(RegExp(r'\b(?:wittig)\b', caseSensitive: false), 'Wittig reaction');
+    text = text.replaceAll(RegExp(r'\b(?:grignard)\b', caseSensitive: false), 'Grignard reagent');
+    text = text.replaceAll(RegExp(r'\b(?:friedel\s+crafts?)\b', caseSensitive: false), 'Friedel-Crafts reaction');
+
+    // 2. Spectroscopy and physical terms
+    text = text.replaceAll(RegExp(r'\b(?:1\s*h\s*nmr|proton\s*nmr)\b', caseSensitive: false), '¹H NMR');
+    text = text.replaceAll(RegExp(r'\b(?:13\s*c\s*nmr|carbon\s*nmr)\b', caseSensitive: false), '¹³C NMR');
+    text = text.replaceAll(RegExp(r'\b(?:nmr)\b', caseSensitive: false), 'NMR spectroscopy');
+    text = text.replaceAll(RegExp(r'\b(?:ir|ftir|ft\s*ir)\s*(?:spec|spectrum|spectroscopy)?\b', caseSensitive: false), 'FT-IR spectroscopy');
+    text = text.replaceAll(RegExp(r'\b(?:mass\s*spec|mass\s*spectroscopy|ms)\b', caseSensitive: false), 'Mass spectrometry');
+    text = text.replaceAll(RegExp(r'\b(?:pka)\b', caseSensitive: false), 'pKa');
+    text = text.replaceAll(RegExp(r'\b(?:ph)\b', caseSensitive: false), 'pH');
+
+    // 3. Common Spoken Chemical Formulas
+    text = text.replaceAll(RegExp(r'\b(?:h\s*2\s*s\s*o\s*4|h2so4)\b', caseSensitive: false), 'H₂SO₄');
+    text = text.replaceAll(RegExp(r'\b(?:h\s*n\s*o\s*3|hno3)\b', caseSensitive: false), 'HNO₃');
+    text = text.replaceAll(RegExp(r'\b(?:h\s*c\s*l|hcl)\b', caseSensitive: false), 'HCl');
+    text = text.replaceAll(RegExp(r'\b(?:h\s*2\s*o|h2o)\b', caseSensitive: false), 'H₂O');
+    text = text.replaceAll(RegExp(r'\b(?:c\s*6\s*h\s*6|c6h6|benzene)\b', caseSensitive: false), 'C₆H₆ (Benzene)');
+    text = text.replaceAll(RegExp(r'\b(?:c\s*o\s*2|co2)\b', caseSensitive: false), 'CO₂');
+    text = text.replaceAll(RegExp(r'\b(?:k\s*m\s*n\s*o\s*4|kmno4)\b', caseSensitive: false), 'KMnO₄');
+    text = text.replaceAll(RegExp(r'\b(?:n\s*a\s*o\s*h|naoh)\b', caseSensitive: false), 'NaOH');
+
+    return text.replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
 }

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../benzene_loading_indicator.dart';
 import '../claude_loading_text.dart';
 
 export '../../../widgets/interactive_mascot.dart';
@@ -325,9 +326,9 @@ class MascotThinking extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ChemBuddyMascot(
-          state: MascotState.thinking,
-          size: size,
+        BenzeneLoadingIndicator(
+          size: size.dimension,
+          showMicrocopy: false,
         ),
         const SizedBox(height: 12),
         Text(
@@ -369,9 +370,9 @@ class MascotLoading extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ChemBuddyMascot(
-          state: MascotState.loading,
-          size: size,
+        BenzeneLoadingIndicator(
+          size: size.dimension,
+          showMicrocopy: false,
         ),
         const SizedBox(height: 12),
         Text(

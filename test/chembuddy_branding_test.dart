@@ -4,6 +4,8 @@ import 'package:chem_buddy/core/widgets/branding/chembuddy_mascot.dart';
 import 'package:chem_buddy/core/widgets/branding/chembuddy_logo.dart';
 import 'package:chem_buddy/core/widgets/branding/chembuddy_wordmark.dart';
 
+import 'package:chem_buddy/core/widgets/benzene_loading_indicator.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -42,7 +44,7 @@ void main() {
       }
     });
 
-    testWidgets('MascotThinking renders title and thinking microcopy', (tester) async {
+    testWidgets('MascotThinking renders title and benzene loading indicator', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -54,10 +56,10 @@ void main() {
         ),
       );
       expect(find.text('Synthesizing reaction'), findsOneWidget);
-      expect(find.byType(ChemBuddyMascot), findsOneWidget);
+      expect(find.byType(BenzeneLoadingIndicator), findsOneWidget);
     });
 
-    testWidgets('MascotLoading renders title and subtitle', (tester) async {
+    testWidgets('MascotLoading renders title, subtitle, and benzene loading indicator', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -70,7 +72,7 @@ void main() {
       );
       expect(find.text('Generating Chemistry Quiz'), findsOneWidget);
       expect(find.text('Extracting 10 questions'), findsOneWidget);
-      expect(find.byType(ChemBuddyMascot), findsOneWidget);
+      expect(find.byType(BenzeneLoadingIndicator), findsOneWidget);
     });
 
     testWidgets('MascotEmptyState renders title, description, and handles CTA tap', (tester) async {
