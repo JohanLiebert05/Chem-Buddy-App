@@ -43,19 +43,15 @@ class ChemistryRichText extends StatelessWidget {
         spans.add(
           WidgetSpan(
             alignment: PlaceholderAlignment.middle,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Math.tex(
-                _cleanLatex(seg.content),
-                mathStyle: MathStyle.text,
-                textStyle: defaultStyle.copyWith(color: Colors.white),
-                onErrorFallback: (err) => Text(
-                  ChemistryTextFormatter.toUnicodeMath(seg.content),
-                  style: defaultStyle.copyWith(
-                    color: AppColors.purpleBright,
-                    fontWeight: FontWeight.w600,
-                  ),
+            child: Math.tex(
+              _cleanLatex(seg.content),
+              mathStyle: MathStyle.text,
+              textStyle: defaultStyle.copyWith(color: Colors.white),
+              onErrorFallback: (err) => Text(
+                ChemistryTextFormatter.toUnicodeMath(seg.content),
+                style: defaultStyle.copyWith(
+                  color: AppColors.purpleBright,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

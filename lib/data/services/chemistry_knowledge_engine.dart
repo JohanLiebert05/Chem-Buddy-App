@@ -31,12 +31,13 @@ class ChemistryKnowledgeEngine {
     String? documentText,
     String? documentName,
     List<AiMessage>? history,
+    String? mode,
   }) {
     final cleanQ = question.trim();
     final lowerQ = cleanQ.toLowerCase();
 
     // 0. Check in-memory query cache for instant response
-    final cacheKey = _buildCacheKey(cleanQ, subject, documentText, documentName);
+    final cacheKey = _buildCacheKey('$cleanQ|mode:${mode ?? "quick"}', subject, documentText, documentName);
     final cached = _responseCache[cacheKey];
     if (cached != null) {
       return cached;
@@ -94,9 +95,9 @@ I couldn't find that information in the uploaded PDF (**${documentName ?? "Uploa
     }
 
     // 2. Check for exam-mark formatting requests (2M, 5M, 10M)
-    final is2M = lowerQ.contains('2 mark') || lowerQ.contains('2m');
-    final is5M = lowerQ.contains('5 mark') || lowerQ.contains('5m');
-    final is10M = lowerQ.contains('10 mark') || lowerQ.contains('10m');
+    final is2M = mode == '2m' || lowerQ.contains('2 mark') || lowerQ.contains('2m answer') || lowerQ.contains('2-mark');
+    final is5M = mode == '5m' || lowerQ.contains('5 mark') || lowerQ.contains('5m answer') || lowerQ.contains('5-mark');
+    final is10M = mode == '10m' || lowerQ.contains('10 mark') || lowerQ.contains('10m answer') || lowerQ.contains('10-mark');
 
     // 2b. Intelligent Reaction Mechanism & End-Product Prediction Engine
     final reactionPrediction = ReactionPredictorEngine.predict(cleanQ);

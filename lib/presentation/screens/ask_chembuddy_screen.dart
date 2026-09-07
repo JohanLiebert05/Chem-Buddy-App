@@ -187,23 +187,34 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
     }
 
     String? modelPrompt;
+    String modeString = 'quick';
     if (_currentMode == ChemBuddyAiMode.normal) {
-      // Default Normal Mode: send user question directly for a crisp, correct, unbloated answer
+      modeString = 'quick';
+      // Default Quick Answer Mode: concise, direct, intelligent response
       modelPrompt = null;
     } else if (_currentMode == ChemBuddyAiMode.exam2M) {
-      modelPrompt = '[Format as a concise 2-Mark University Exam Answer: Provide 1) Definition (1-2 sentences), 2) Balanced Reaction or Equation, 3) Key Condition/Nuance. DO NOT over-explain]: $rawText';
+      modeString = '2m';
+      modelPrompt = '[Format as a concise 2-Mark University Exam Answer: Provide 1) Definition / Direct Statement (1-2 sentences), 2) Core Essential Points, 3) Balanced Reaction or Key Formula if applicable. DO NOT over-explain]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.exam5M) {
+      modeString = '5m';
       modelPrompt = '[Format as a structured 5-Mark MSc Chemistry University Rubric: 1) Principle & Definition, 2) Balanced Reaction, 3) Step-by-Step Mechanism/Intermediates, 4) Applications & Synthetic Scope, 5) Summary]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.exam10M) {
+      modeString = '10m';
       modelPrompt = '[Format as a comprehensive 10-Mark MSc Chemistry Exam Answer with detailed headings, mechanisms with curved arrow electron pushing notes, transition states, stereochemistry, and laboratory synthesis applications]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.mscConcept) {
+      modeString = 'mscConcept';
       modelPrompt = '[Explain in Academic MSc Concept Mode: Focus on deep understanding, physical/chemical intuition, orbital or thermodynamic principles, and clear chemical notation]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.mechanisms) {
+      modeString = 'mechanisms';
       modelPrompt = 'Explain the full stepwise reaction mechanism, curved arrow electron displacement, intermediates, and driving force for: $rawText';
     }
 
     _lastSentQuestion = rawText;
-    ref.read(chatControllerProvider.notifier).sendMessage(rawText, modelPrompt: modelPrompt);
+    ref.read(chatControllerProvider.notifier).sendMessage(
+      rawText,
+      modelPrompt: modelPrompt,
+      mode: modeString,
+    );
     if (textOverride == null) _controller.clear();
 
     Future.delayed(const Duration(milliseconds: 100), () {
@@ -232,21 +243,21 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
           children: [
             _AiModeChip(
               icon: Icons.bolt_rounded,
-              label: 'Quick Answer',
+              label: '⚡ Quick Answer',
               selected: _currentMode == ChemBuddyAiMode.normal,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.normal),
             ),
             const SizedBox(width: 8),
             _AiModeChip(
-              icon: Icons.edit_note,
-              label: '2M Answer',
+              icon: Icons.view_headline_rounded,
+              label: '≡ 2M Answer',
               selected: _currentMode == ChemBuddyAiMode.exam2M,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.exam2M),
             ),
             const SizedBox(width: 8),
             _AiModeChip(
-              icon: Icons.edit_note,
-              label: '5M Answer',
+              icon: Icons.format_list_bulleted_rounded,
+              label: '≡ 5M Answer',
               selected: _currentMode == ChemBuddyAiMode.exam5M,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.exam5M),
             ),
@@ -586,11 +597,14 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                         final msg = chatState.messages[index];
                         final isUser = msg.role == 'user';
 
+                        final maxBubbleWidth = MediaQuery.sizeOf(context).width * 0.88;
+
                         return Align(
                           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 16),
-                            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.86),
+                            constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+                            width: isUser ? null : double.infinity,
                             child: isUser
                                 ? Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

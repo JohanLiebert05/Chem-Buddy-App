@@ -95,15 +95,21 @@ class ChemistryMarkdownView extends StatelessWidget {
     }
 
     final column = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: widgetList,
     );
 
     if (selectable) {
-      return SelectionArea(child: column);
+      return SizedBox(
+        width: double.infinity,
+        child: SelectionArea(child: column),
+      );
     }
-    return column;
+    return SizedBox(
+      width: double.infinity,
+      child: column,
+    );
   }
 
   static Widget _buildMarkdownBlock(
@@ -116,6 +122,7 @@ class ChemistryMarkdownView extends StatelessWidget {
     final markdownBody = MarkdownBody(
       data: content,
       selectable: selectable,
+      fitContent: false,
       styleSheet: _buildMarkdownStyleSheet(context, textStyle),
       extensionSet: md.ExtensionSet.gitHubFlavored,
       inlineSyntaxes: [
@@ -139,11 +146,18 @@ class ChemistryMarkdownView extends StatelessWidget {
       );
     }
 
-    return markdownBody;
+    return SizedBox(
+      width: double.infinity,
+      child: markdownBody,
+    );
   }
 
   static String _preprocessText(String input) {
     var s = input;
+
+    // Failsafe 0: Purge any raw placeholder strings that may exist in AI response or cache
+    s = s.replaceAll(RegExp(r'___?DISPLAY_MATH[0-9₀-₉_]*___?'), '');
+    s = s.replaceAll(RegExp(r'DISPLAY_MATH[0-9₀-₉_]+'), '');
 
     // 0. Clean corrupted \text${} or \text$ or stray $$ remnants
     s = s.replaceAll(r'\text${}', '');
@@ -173,10 +187,11 @@ class ChemistryMarkdownView extends StatelessWidget {
     s = s.replaceAllMapped(RegExp(r'\\rightleftharpoons\s*\{([^}]*)\}'), (m) => '⇌ (${m[1]}) ');
 
     // 5. Preserve genuine display math blocks ($$...$$) while sanitizing narrative text
+    // Use collision-proof Unicode Private Use Area tokens without underscores or ASCII letters
     final displayMathPlaceholders = <String>[];
     s = s.replaceAllMapped(RegExp(r'\$\$(.*?)\$\$', dotAll: true), (m) {
       displayMathPlaceholders.add(m[0]!);
-      return '___DISPLAY_MATH_${displayMathPlaceholders.length - 1}___';
+      return '\uE000${displayMathPlaceholders.length - 1}\uE001';
     });
 
     // In narrative text, unwrap \text{...}, \mathrm{...}, \mathbf{...} so it never renders as literal "\text{...}"
@@ -234,8 +249,13 @@ class ChemistryMarkdownView extends StatelessWidget {
 
     // Restore preserved display math blocks
     for (var i = 0; i < displayMathPlaceholders.length; i++) {
-      s = s.replaceFirst('___DISPLAY_MATH_${i}___', displayMathPlaceholders[i]);
+      s = s.replaceFirst('\uE000$i\uE001', displayMathPlaceholders[i]);
     }
+
+    // Failsafe purge: ensure no leftover placeholders, PUA tokens or DISPLAY_MATH ever escape
+    s = s.replaceAll(RegExp(r'___?DISPLAY_MATH[0-9₀-₉_]*___?'), '');
+    s = s.replaceAll(RegExp(r'DISPLAY_MATH[0-9₀-₉_]+'), '');
+    s = s.replaceAll(RegExp(r'[\uE000\uE001]'), '');
 
     return s;
   }
@@ -437,25 +457,21 @@ class _LatexInlineBuilder extends MarkdownElementBuilder {
     final style = preferredStyle ?? parentStyle ?? textStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5);
     final sanitized = ChemistryMarkdownView._sanitizeLatex(mathCode);
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Math.tex(
-        sanitized,
-        mathStyle: MathStyle.text,
-        textStyle: style.copyWith(color: Colors.white),
-        onErrorFallback: (err) {
-          // Strip raw LaTeX commands so they never appear as ugly raw text
-          final cleaned = _cleanLatexFallback(mathCode);
-          return Text(
-            cleaned,
-            style: style.copyWith(
-              color: AppColors.purpleBright,
-              fontWeight: FontWeight.w600,
-            ),
-          );
-        },
-      ),
+    return Math.tex(
+      sanitized,
+      mathStyle: MathStyle.text,
+      textStyle: style.copyWith(color: Colors.white),
+      onErrorFallback: (err) {
+        // Strip raw LaTeX commands so they never appear as ugly raw text
+        final cleaned = _cleanLatexFallback(mathCode);
+        return Text(
+          cleaned,
+          style: style.copyWith(
+            color: AppColors.purpleBright,
+            fontWeight: FontWeight.w600,
+          ),
+        );
+      },
     );
   }
 

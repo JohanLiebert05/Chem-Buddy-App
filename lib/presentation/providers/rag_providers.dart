@@ -17,6 +17,7 @@ class ChatState {
   final String? lastQuestion;
   final String? lastSubject;
   final String? lastModelPrompt;
+  final String? lastMode;
 
   const ChatState({
     this.messages = const [],
@@ -30,6 +31,7 @@ class ChatState {
     this.lastQuestion,
     this.lastSubject,
     this.lastModelPrompt,
+    this.lastMode,
   });
 
   bool get hasActiveDocument => activeDocumentText != null && activeDocumentText!.isNotEmpty;
@@ -48,6 +50,7 @@ class ChatState {
     String? lastQuestion,
     String? lastSubject,
     String? lastModelPrompt,
+    String? lastMode,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
@@ -61,6 +64,7 @@ class ChatState {
       lastQuestion: lastQuestion ?? this.lastQuestion,
       lastSubject: lastSubject ?? this.lastSubject,
       lastModelPrompt: lastModelPrompt ?? this.lastModelPrompt,
+      lastMode: lastMode ?? this.lastMode,
     );
   }
 }
@@ -111,7 +115,7 @@ class ChatController extends Notifier<ChatState> {
     state = state.copyWith(clearDocument: true);
   }
 
-  Future<void> sendMessage(String question, {String? subject, String? modelPrompt}) async {
+  Future<void> sendMessage(String question, {String? subject, String? modelPrompt, String? mode}) async {
     // Prevent duplicate requests while an answer is currently being computed
     if (state.isLoading) return;
 
@@ -139,6 +143,7 @@ class ChatController extends Notifier<ChatState> {
       lastQuestion: trimmed,
       lastSubject: subject,
       lastModelPrompt: modelPrompt,
+      lastMode: mode,
     );
 
     try {
@@ -149,6 +154,7 @@ class ChatController extends Notifier<ChatState> {
         documentText: state.activeDocumentText,
         documentName: state.activeDocumentName,
         history: history,
+        mode: mode,
       );
 
       final assistantMessage = AiMessage(
@@ -189,6 +195,7 @@ class ChatController extends Notifier<ChatState> {
         state.lastQuestion!,
         subject: state.lastSubject,
         modelPrompt: state.lastModelPrompt,
+        mode: state.lastMode,
       );
     }
   }

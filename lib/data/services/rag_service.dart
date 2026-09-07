@@ -16,8 +16,9 @@ class RagService {
     String? documentText,
     String? documentName,
     List<AiMessage>? history,
+    String? mode,
   }) async {
-    debugPrint('[RAG] Incoming question: "$question" | subject: ${subject ?? "none"} | doc: ${documentName ?? "none"} | history: ${history?.length ?? 0} msgs');
+    debugPrint('[RAG] Incoming question: "$question" | mode: ${mode ?? "quick"} | subject: ${subject ?? "none"} | doc: ${documentName ?? "none"} | history: ${history?.length ?? 0} msgs');
 
     // 1. Try remote cloud first if configured
 
@@ -28,6 +29,7 @@ class RagService {
           'subject': ?subject,
           'document_text': ?documentText,
           'document_name': ?documentName,
+          'mode': ?mode,
           if (history != null) 'history': history.map((e) => e.toJson()).toList(),
         });
         if (response is Map<String, dynamic> && response['answer'] != null) {
@@ -49,6 +51,7 @@ class RagService {
       documentText: documentText,
       documentName: documentName,
       history: history,
+      mode: mode,
     );
   }
 

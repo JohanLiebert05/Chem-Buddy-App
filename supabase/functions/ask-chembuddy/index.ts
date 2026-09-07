@@ -15,6 +15,7 @@ Deno.serve(async (req) => {
     // 2. Parse request
     const body = await req.json();
     const question = String(body.question ?? "").trim();
+    const mode = String(body.mode ?? "").trim().toLowerCase() || "quick";
     const subject = body.subject as string | null;
     const documentText = body.document_text as string | null;
     const documentName = (body.document_name as string | null) || "Uploaded PDF";
@@ -89,6 +90,7 @@ Deno.serve(async (req) => {
     // 5. Check AI Response Cache
     const cacheKey = await buildCacheKey([
       question.toLowerCase().trim(),
+      mode,
       subject || "",
       documentName || "",
       String(conversationHistory?.length ?? 0),
@@ -209,23 +211,98 @@ Deno.serve(async (req) => {
     }
 
     // 8. Build adaptive prompt for Gemini
-    const isExamMode = question.includes("[Format as a concise 2-Mark") ||
-                       question.includes("[Format as a structured 5-Mark") ||
-                       question.includes("[Format as a comprehensive 10-Mark") ||
-                       question.includes("[Explain in Academic MSc Concept Mode") ||
-                       question.includes("Explain the full stepwise reaction mechanism");
+    const lowerQ = question.toLowerCase();
+    const isOrganic = /organic|reaction|mechanism|sn1|sn2|e1|e2|aldol|wittig|diels|electrophil|nucleophil|carbocation|carbanion|stereochem|aromatic|benzene|reagent|synthesis|aspirin|ester/i.test(lowerQ);
+    const isPhysical = /physical|thermodynamic|enthalpy|entropy|gibbs|free energy|kinetics|rate law|arrhenius|activation energy|electrochem|nernst|cell potential|quantum|schrodinger|phase rule|equilibrium|clapeyron/i.test(lowerQ);
+    const isInorganic = /inorganic|coordination|ligand|crystal field|cft|mot|backbonding|chelate|lanthanide|actinide|metallurgy|organometallic|18 electron|spin state|isomorphism/i.test(lowerQ);
+    const isAnalytical = /analytical|titration|buffer|henderson|normality|molarity|molality|ppm|ppb|gravimetr|indicator|chromatography|standard solution/i.test(lowerQ);
+    const isSpectroscopy = /spectroscop|nmr|pmr|chemical shift|coupling constant|infrared|ir stretch|uv-vis|beer|lambert|mass spec|fragmentation|spin-spin/i.test(lowerQ);
+
+    let modeInstructions = "";
+
+    if (mode === "2m" || question.includes("[Format as a concise 2-Mark")) {
+      modeInstructions = `ANSWER MODE: 2-MARK UNIVERSITY EXAM FORMAT
+Format as a high-scoring 2-Mark short university answer:
+1. **Definition / Direct Answer**: 1 to 2 crisp, high-yield sentences.
+2. **Essential Points**: 2 to 3 concise bullet points with key nuances.
+3. **Key Equation / Balanced Reaction**: State the primary governing formula, balanced reaction, or units.
+Keep it strictly under 150 words. Do not pad with unnecessary history or lectures.`;
+    } else if (mode === "5m" || question.includes("[Format as a structured 5-Mark")) {
+      if (isOrganic) {
+        modeInstructions = `ANSWER MODE: 5-MARK MSC ORGANIC CHEMISTRY EXAM RUBRIC
+Provide a structured 5-Mark MSc university examination answer:
+1. **Principle & Definition**: Concise statement and theoretical basis.
+2. **Overall Balanced Reaction**: Full stoichiometric reaction with reagents and conditions.
+3. **Stepwise Reaction Mechanism**: Electron-pushing steps with curved-arrow movement and key intermediates.
+4. **Reaction Conditions & Stereochemistry**: Regioselectivity, stereochemistry, and solvent effects.
+5. **Synthetic Applications / Scope**: 2 to 3 real-world laboratory or industrial synthesis examples.`;
+      } else if (isPhysical) {
+        modeInstructions = `ANSWER MODE: 5-MARK MSC PHYSICAL CHEMISTRY EXAM RUBRIC
+Provide a structured 5-Mark MSc university examination answer:
+1. **Statement of Law / Definition**: Exact physical chemistry law or principle.
+2. **Mathematical Formulation**: Governing equations with all variables and SI units clearly stated.
+3. **Derivation / Physical Interpretation**: Stepwise logical progression from fundamentals.
+4. **Thermodynamic / Kinetic Significance**: Temperature/pressure dependence and graphical representation notes.
+5. **Practical Applications / Solved Illustration**: Direct quantitative application.`;
+      } else if (isInorganic) {
+        modeInstructions = `ANSWER MODE: 5-MARK MSC INORGANIC CHEMISTRY EXAM RUBRIC
+Provide a structured 5-Mark MSc university examination answer:
+1. **Definition & Coordination Context**: IUPAC nomenclature, oxidation state, coordination number.
+2. **Geometry & Electronic Configuration**: d-electron count, spatial arrangement.
+3. **Bonding Model (CFT / MOT)**: Crystal field splitting (Δo / Δt), pairing energy, magnetic moment (μ_eff = √(n(n+2)) BM).
+4. **Spectral & Chemical Properties**: d-d transitions, Jahn-Teller distortion, or ligand exchange.
+5. **Representative Complexes & Applications**: Industrial catalysts or biological roles.`;
+      } else if (isSpectroscopy || isAnalytical) {
+        modeInstructions = `ANSWER MODE: 5-MARK MSC SPECTROSCOPY / ANALYTICAL EXAM RUBRIC
+Provide a structured 5-Mark MSc university examination answer:
+1. **Principle & Fundamental Law**: Selection rules, energy transition, or analytical principle (e.g. Beer-Lambert).
+2. **Instrumentation / Transition Mechanism**: Working mechanism or electromagnetic spectrum region.
+3. **Characteristic Spectral Values / Peaks**: Diagnostic chemical shifts, absorption frequencies, or m/z values.
+4. **Factors Influencing Signals**: Chemical environment, conjugation, solvent effects, or interferents.
+5. **Structural Elucidation / Analytical Application**: Exact diagnostic role in determining molecular structure.`;
+      } else {
+        modeInstructions = `ANSWER MODE: 5-MARK MSC UNIVERSITY EXAM RUBRIC
+Provide a structured 5-Mark MSc university examination answer:
+1. **Definition & Core Law**
+2. **Principle & Governing Formula / Reaction**
+3. **Key Characteristics / Mechanism**
+4. **Representative Example & Solved Problem / Illustration**
+5. **Summary & Synthetic / Analytical Applications**`;
+      }
+    } else if (mode === "10m" || question.includes("[Format as a comprehensive 10-Mark")) {
+      modeInstructions = `ANSWER MODE: 10-MARK MSC COMPREHENSIVE UNIVERSITY EXAM RUBRIC
+Provide an exhaustive, authoritative 10-Mark university exam answer:
+- **1. Historical Background & Fundamental Theoretical Framework** (2 Marks)
+- **2. Detailed Step-by-Step Reaction Mechanism / Mathematical Derivation** (4 Marks)
+- **3. Stereochemical Nuances, Orbital Overlap (HOMO/LUMO), or Kinetic/Thermodynamic Factors** (2 Marks)
+- **4. Limitations, Competing Pathways, and Industrial / Laboratory Synthesis Applications** (2 Marks)`;
+    } else if (mode === "mscconcept" || question.includes("[Explain in Academic MSc Concept Mode")) {
+      modeInstructions = `ANSWER MODE: MSC CONCEPT MODE
+Focus on deep physical-chemical understanding:
+- Molecular orbital explanations (HOMO/LUMO interactions)
+- Thermodynamic stability vs kinetic activation (Hammond's postulate, Curtin-Hammett)
+- Clear, authoritative chemical intuition without hand-waving.`;
+    } else if (mode === "mechanisms" || question.includes("Explain the full stepwise reaction mechanism")) {
+      modeInstructions = `ANSWER MODE: STEPWISE REACTION MECHANISM
+Provide the full, stepwise organic/inorganic reaction mechanism:
+- Step-by-step electron displacement (nucleophilic attack, proton transfer, leaving group departure, rearrangement)
+- Structure and stability of all reactive intermediates (carbocation, carbanion, cyclic intermediate, tetrahedral species)
+- Driving force (thermodynamics, resonance stabilization, aromaticity, leaving group ability).`;
+    } else {
+      // DEFAULT QUICK ANSWER MODE
+      modeInstructions = `DEFAULT MODE: QUICK & DIRECT ANSWER (⚡)
+The student is asking a standard chemistry question.
+- Give a fast, direct, smart, and concise answer (2 to 5 clear sentences or clean bullet points).
+- DO NOT force artificial headings like "### Definition", "### Principle", "### Mechanism", "### Applications" unless requested.
+- Explain cleanly, correctly, and accurately without introductory fluff or repetitive filler.`;
+    }
 
     const systemPrompt = `You are ChemBuddy AI, an intelligent, accurate, and pedagogical Chemistry AI tutor.
 
-CORE OPERATING INSTRUCTIONS:
-1. ADAPTIVE INTELLIGENCE & DEFAULT NORMAL MODE:
-${isExamMode ? `   - The student has requested a formal university exam marking rubric or full mechanism. Follow the requested structure strictly with definitions, balanced equations, and exam points.` : `   - DEFAULT NORMAL MODE: The student is asking a standard chemistry question. Give a direct, normal, clear answer!
-   - Answer quickly, correctly, and concisely (1 to 3 short paragraphs or clean bullet points).
-   - DO NOT over-explain or lecture everything from scratch (e.g. do not introduce quantum mechanics or thermodynamics unless asked).
-   - DO NOT force artificial headers like "### Direct Answer", "### Explanation", "### Exam Key Points" for normal questions.
-   - Simply give the student the correct, smart answer they asked for.`}
+${modeInstructions}
 
-2. CLEAN CHEMICAL FORMULAS & REACTIONS (CRITICAL):
+CORE OPERATING INSTRUCTIONS:
+1. CLEAN CHEMICAL FORMULAS & REACTIONS (CRITICAL):
    - For chemical formulas and reactions, use clean, readable Unicode notation that renders flawlessly:
      * Subscripts: H₂SO₄, H₂O, CO₂, NaOH, CH₃COOH, R-CHO, R-COOH, R-CH₂O⁻, etc.
      * Superscripts and charges: H⁺, OH⁻, Na⁺, Cl⁻, Ca²⁺, SO₄²⁻, O⁻
@@ -234,12 +311,13 @@ ${isExamMode ? `   - The student has requested a formal university exam marking 
        Step 1: R-CHO + OH⁻ ⇌ R-CH(OH)O⁻
        Step 2: R-CH(OH)O⁻ + R-CHO → R-COOH + R-CH₂O⁻ (slow, RDS)
        Step 3: R-COOH + R-CH₂O⁻ → R-COO⁻ + R-CH₂OH (fast)
+   - NEVER output internal placeholders or parser tokens such as DISPLAY_MATH_0 or ___DISPLAY_MATH___.
    - NEVER output broken LaTeX command strings in plain text (e.g. DO NOT write \\text{}, \\to, \\rightleftharpoons, or \\frac{} inside narrative text).
-   - NEVER output broken LaTeX like \\text${} or unmatched trailing $$.
+   - NEVER output broken LaTeX like \\text\${} or unmatched trailing \$\$.
    - ONLY for complex mathematical derivations or thermodynamics laws on their own line, you may use standard display math:
-     $$\\Delta G^\\circ = -RT \\ln K$$
+     \$\$\\Delta G^\\circ = -RT \\ln K\$\$
 
-3. ZERO HALLUCINATIONS:
+2. ZERO HALLUCINATIONS:
    - Always answer the exact topic asked. Never substitute buffer solutions, Henderson-Hasselbalch equations, or generic templates for unrelated questions.
 
 ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${context}` : ""}`;
@@ -284,10 +362,14 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
       return json({ error: "ChemBuddy could not generate an answer right now.", detail: chatRes.errorText }, 502);
     }
 
-    const answer = chatRes.data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    let answer = chatRes.data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     if (!answer) {
       return json({ error: "ChemBuddy produced an empty response." }, 502);
     }
+
+    // Clean any accidental placeholder tokens or broken remnants
+    answer = answer.replace(/___?DISPLAY_MATH[0-9₀-₉_]*___?/g, "");
+    answer = answer.replace(/DISPLAY_MATH[0-9₀-₉_]+/g, "");
 
     const responseData = {
       answer,
