@@ -20,6 +20,7 @@ import '../../data/services/pdf_text_extraction_service.dart';
 import '../../data/services/reaction_mechanism_service.dart';
 import '../providers/app_providers.dart';
 import '../providers/rag_providers.dart';
+import '../widgets/pdf_quiz_setup_dialog.dart';
 import '../widgets/reaction_mechanisms_card.dart';
 import '../widgets/viva_practice_dialog.dart';
 import 'pdf_quiz_screen.dart';
@@ -518,6 +519,27 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                           ],
                         ),
                       ),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          backgroundColor: AppColors.purple.withValues(alpha: 0.3),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        ),
+                        icon: const Icon(Icons.quiz_outlined, size: 14, color: AppColors.purpleBright),
+                        label: const Text('Quiz', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                        onPressed: () {
+                          if (chatState.activeDocumentText != null) {
+                            PdfQuizSetupDialog.show(
+                              context,
+                              documentTitle: chatState.activeDocumentName ?? 'Attached PDF',
+                              sourceText: chatState.activeDocumentText!,
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 4),
                       IconButton(
                         icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.textMuted),
                         tooltip: 'Detach PDF (Switch to General Chemistry AI)',

@@ -20,8 +20,6 @@ class MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<MainShell> {
-  late final PageController _pages = PageController();
-
   static const _tabs = [
     HomeScreen(), // 0: Home
     ClassesHubScreen(), // 1: Classes & Attendance
@@ -29,12 +27,6 @@ class _MainShellState extends ConsumerState<MainShell> {
     ResourcesScreen(), // 3: Library
     ProfileScreen(), // 4: Profile
   ];
-
-  @override
-  void dispose() {
-    _pages.dispose();
-    super.dispose();
-  }
 
   void _goTo(int i) {
     AppHaptics.selection();
@@ -44,30 +36,26 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   Widget build(BuildContext context) {
     final index = ref.watch(shellTabProvider);
-    ref.listen<int>(shellTabProvider, (previous, next) {
-      if (!_pages.hasClients || previous == next) return;
-      _pages.animateToPage(
-        next,
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeOutCubic,
-      );
-    });
 
     return HexBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
           bottom: false,
-          child: PageView(
-            controller: _pages,
-            physics: const BouncingScrollPhysics(),
-            onPageChanged: (i) {
-              if (ref.read(shellTabProvider) != i) {
-                AppHaptics.selection();
-                ref.read(shellTabProvider.notifier).state = i;
-              }
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
             },
-            children: _tabs,
+            child: KeyedSubtree(
+              key: ValueKey<int>(index),
+              child: _tabs[index],
+            ),
           ),
         ),
         extendBody: true,
@@ -170,7 +158,8 @@ class _ModernBottomNav extends StatelessWidget {
           onTap: () => onTabSelected(index),
           borderRadius: BorderRadius.circular(16),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(vertical: 6),
             decoration: BoxDecoration(
               color: isSelected ? AppColors.brandPrimary.withValues(alpha: 0.18) : Colors.transparent,
@@ -178,26 +167,44 @@ class _ModernBottomNav extends StatelessWidget {
               border: isSelected
                   ? Border.all(color: AppColors.brandBright.withValues(alpha: 0.35), width: 0.8)
                   : null,
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: AppColors.brandPrimary.withValues(alpha: 0.20),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  isSelected ? activeIcon : icon,
-                  size: 20,
-                  color: isSelected ? AppColors.brandBright : AppColors.textMuted,
+                AnimatedScale(
+                  scale: isSelected ? 1.15 : 1.0,
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutBack,
+                  child: Icon(
+                    isSelected ? activeIcon : icon,
+                    size: 20,
+                    color: isSelected ? AppColors.brandBright : AppColors.textMuted,
+                  ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.fade,
-                  softWrap: false,
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     color: isSelected ? Colors.white : AppColors.textMuted,
                     letterSpacing: -0.2,
+                  ),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
                   ),
                 ),
               ],
@@ -215,49 +222,54 @@ class _ModernBottomNav extends StatelessWidget {
         AppHaptics.confirm();
         onTabSelected(2);
       },
-      child: AnimatedContainer(
+      child: AnimatedScale(
+        scale: isSelected ? 1.06 : 1.0,
         duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.brandPrimary.withValues(alpha: isSelected ? 0.60 : 0.35),
-              blurRadius: isSelected ? 16 : 10,
-              offset: const Offset(0, 3),
+        curve: Curves.easeOutBack,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
-          border: Border.all(
-            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.30),
-            width: isSelected ? 1.4 : 0.8,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.auto_awesome_rounded,
-              size: 16,
-              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.95),
-            ),
-            const SizedBox(width: 5),
-            Text(
-              'Ask AI',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
-                fontSize: 12,
-                letterSpacing: -0.2,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.brandPrimary.withValues(alpha: isSelected ? 0.65 : 0.35),
+                blurRadius: isSelected ? 18 : 10,
+                offset: const Offset(0, 3),
               ),
+            ],
+            border: Border.all(
+              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.30),
+              width: isSelected ? 1.4 : 0.8,
             ),
-          ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.auto_awesome_rounded,
+                size: 16,
+                color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.95),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                'Ask AI',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                  fontSize: 12,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

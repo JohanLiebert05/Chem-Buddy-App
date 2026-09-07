@@ -13,6 +13,7 @@ import '../../data/services/pdf_ai_study_service.dart';
 import '../../data/services/pdf_library_service.dart';
 import '../../data/services/pdf_text_extraction_service.dart';
 import '../providers/app_providers.dart';
+import '../widgets/pdf_quiz_setup_dialog.dart';
 import 'pdf_reader_screen.dart';
 import 'pdf_study_hub_screen.dart';
 
@@ -229,7 +230,12 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                       _buildQuickActionBtn(
                         label: 'Quiz',
                         icon: Icons.quiz_outlined,
-                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+                        onTap: () => PdfQuizSetupDialog.show(
+                          context,
+                          documentTitle: d.displayName,
+                          docId: d.id,
+                          doc: d,
+                        ),
                       ),
                       _buildQuickActionBtn(
                         label: 'Flashcards',

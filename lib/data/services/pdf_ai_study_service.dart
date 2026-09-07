@@ -20,6 +20,7 @@ class PdfAiStudyService {
   final LocalStore store;
   final SupabaseService remote;
   final _uuid = const Uuid();
+  final Map<String, PdfDocumentAnalysis> _analysisCache = {};
 
   Future<bool> get isOnline async {
     final result = await Connectivity().checkConnectivity();
@@ -191,15 +192,136 @@ CRITICAL: Do NOT use raw LaTeX. Use clean Unicode (Δ, →, ⇌, etc.).''',
   // ==========================================
   // 4. STRICT PDF PAGE-GROUNDED QUIZ GENERATION
   // ==========================================
+  // ==========================================
+  // 4. STRICT PDF PAGE-GROUNDED SMART QUIZ ENGINE
+  // ==========================================
+
+  /// Analyzes the entire document for topic hierarchy, concept density,
+  /// chemical reactions, equations, and importance scoring before quiz generation.
+  Future<PdfDocumentAnalysis> analyzeDocumentForQuiz({
+    required String sourceText,
+    required String documentTitle,
+    String docId = '',
+    DocumentOcrBundle? bundle,
+    void Function(String status)? onProgress,
+  }) async {
+    final cacheKey = docId.isNotEmpty ? docId : '${documentTitle}_${sourceText.length}';
+    if (_analysisCache.containsKey(cacheKey)) {
+      return _analysisCache[cacheKey]!;
+    }
+
+    onProgress?.call('Understanding complete document structure & topics...');
+    bundle ??= (docId.isNotEmpty ? store.getDocumentOcrBundle(docId) : null);
+    final rawCleaned = cleanupExtractedText(sourceText);
+    final cleaned = rawCleaned.length >= 30 ? rawCleaned : 'MSc Chemistry study material for $documentTitle';
+
+    // 1. Build page-topic mapping from bundle or source text
+    final pageTopicMap = <int, List<String>>{};
+    if (bundle != null && bundle.pages.isNotEmpty) {
+      for (final p in bundle.pages) {
+        final concepts = _extractConceptsFromText(p.cleanedText);
+        if (concepts.isNotEmpty) {
+          pageTopicMap[p.pageNumber] = concepts;
+        }
+      }
+    } else {
+      final pageRegex = RegExp(r'\[PAGE\s+(\d+)\]', caseSensitive: false);
+      final matches = pageRegex.allMatches(sourceText).toList();
+      if (matches.isNotEmpty) {
+        for (var i = 0; i < matches.length; i++) {
+          final pageNum = int.tryParse(matches[i].group(1) ?? '1') ?? (i + 1);
+          final startIdx = matches[i].end;
+          final endIdx = (i + 1 < matches.length) ? matches[i + 1].start : sourceText.length;
+          final chunk = sourceText.substring(startIdx, endIdx);
+          final concepts = _extractConceptsFromText(chunk);
+          if (concepts.isNotEmpty) {
+            pageTopicMap[pageNum] = concepts;
+          }
+        }
+      }
+    }
+
+    final classification = classifyDocumentSubject(cleaned, documentTitle);
+    final domain = classification.branchCategory.isNotEmpty ? classification.branchCategory : 'Chemistry';
+
+    PdfDocumentAnalysis? analysis;
+
+    if (remote.configured && await isOnline) {
+      try {
+        final prompt = '''You are an expert MSc Chemistry curriculum analyst.
+Analyze the attached document "$documentTitle" ($domain).
+Extract all core topics, reactions, equations, and definitions strictly present in the text.
+Classify each topic's importance as "high", "medium", or "low" based on conceptual weight and exam relevance.
+
+Return strictly valid JSON matching this schema:
+{
+  "detected_subject": "$domain",
+  "core_topics": [
+    {
+      "concept": "Topic or mechanism name",
+      "importance": "high",
+      "page_number": 1,
+      "summary": "1-line concept note"
+    }
+  ],
+  "reactions_and_reagents": [
+    "Reaction or reagent 1",
+    "Reaction or reagent 2"
+  ],
+  "equations_and_formulas": [
+    "Equation 1",
+    "Equation 2"
+  ],
+  "key_definitions": [
+    {"term": "Term 1", "definition": "Rigorous definition from document"}
+  ]
+}
+CRITICAL: Base every entry STRICTLY on the document text. Never fabricate reactions or formulas.''';
+
+        final raw = await remote.invokeFunction('ask-chembuddy', {
+          'question': prompt,
+          'document_text': cleaned.length > 14000 ? cleaned.substring(0, 14000) : cleaned,
+          'document_name': documentTitle,
+        });
+
+        if (raw is Map && raw['answer'] != null) {
+          final block = _extractJsonBlock(raw['answer'].toString());
+          final map = jsonDecode(block) as Map<String, dynamic>;
+          map['doc_id'] = docId;
+          map['doc_title'] = documentTitle;
+          analysis = PdfDocumentAnalysis.fromJson(map);
+        }
+      } catch (_) {
+        // Fallback to local heuristic analysis
+      }
+    }
+
+    analysis ??= _generateHeuristicAnalysis(
+      cleaned,
+      documentTitle,
+      docId: docId,
+      bundle: bundle,
+      domain: domain,
+      pageTopicMap: pageTopicMap,
+    );
+
+    _analysisCache[cacheKey] = analysis;
+    return analysis;
+  }
+
+  /// Generates a high-quality MSc Chemistry quiz based STRICTLY on the document content.
   Future<ChemistryQuiz> generateQuiz({
     required String sourceText,
     required String documentTitle,
     String docId = '',
     int count = 10,
+    PdfQuizConfig? config,
     void Function(String status)? onProgress,
   }) async {
-    final validCount = count.clamp(5, 30);
-    onProgress?.call('Reading document pages and concepts for quiz...');
+    final quizConfig = config ?? PdfQuizConfig(count: count);
+    final validCount = quizConfig.count.clamp(5, 40);
+
+    onProgress?.call('Analyzing document & mapping topics...');
     final rawCleaned = cleanupExtractedText(sourceText);
     final cleaned = rawCleaned.length >= 30
         ? rawCleaned
@@ -210,12 +332,21 @@ CRITICAL: Do NOT use raw LaTeX. Use clean Unicode (Δ, →, ⇌, etc.).''',
       bundle = store.getDocumentOcrBundle(docId);
     }
 
-    onProgress?.call('Synthesizing $validCount strictly page-grounded MSc Chemistry questions...');
+    // Step 1: Document Understanding & Topic/Importance Detection
+    final analysis = await analyzeDocumentForQuiz(
+      sourceText: cleaned,
+      documentTitle: documentTitle,
+      docId: docId,
+      bundle: bundle,
+      onProgress: onProgress,
+    );
+
+    onProgress?.call('Synthesizing $validCount ${quizConfig.difficulty.label} questions (${quizConfig.mode.label})...');
     List<QuizQuestion>? questions;
 
     if (remote.configured && await isOnline) {
       try {
-        // Build page-indexed document prompt if bundle is available
+        // Build page-indexed document prompt for proportional coverage
         String promptDocumentText = cleaned;
         if (bundle != null && bundle.pages.isNotEmpty) {
           final pageTexts = <String>[];
@@ -230,37 +361,51 @@ CRITICAL: Do NOT use raw LaTeX. Use clean Unicode (Δ, →, ⇌, etc.).''',
           }
         }
 
-        final raw = await remote.invokeFunction('ask-chembuddy', {
-          'question': '''Create exactly $validCount rigorous MSc Chemistry multiple choice questions derived STRICTLY and EXCLUSIVELY from the provided document pages of "$documentTitle".
+        final targetedNote = quizConfig.targetedTopics.isNotEmpty
+            ? 'PRIORITY TARGET TOPICS: The student previously struggled with these topics: ${quizConfig.targetedTopics.join(", ")}. FOCUS QUESTIONS STRICTLY ON THESE TOPICS FROM THE DOCUMENT.'
+            : '';
 
-RULES FOR STRICT PDF GROUNDING:
-1. Every question MUST be strictly from the uploaded document text.
-2. For each question, identify the exact page where the fact, mechanism, or definition appears and include "page_number": <int>.
-3. Include "source_snippet": an exact 1-2 sentence verbatim excerpt from that specific page proving the question and answer.
-4. Set "is_strict_pdf_grounded": true.
-5. Provide exactly 4 distinct options per question.
-6. Randomize the correct answer index across 0, 1, 2, and 3 (A, B, C, D).
-7. Provide a detailed academic explanation citing the concept.
-8. Assign a type: "conceptual", "reaction", "mechanism", "reagent", "spectroscopy", "numerical", or "application".
+        final diffInstructions = _getDifficultyPromptInstruction(quizConfig.difficulty);
+        final typesList = quizConfig.questionTypes.map((t) => t.name).join(', ');
 
-Return strictly valid JSON with this shape:
+        final prompt = '''You are an expert MSc Chemistry examiner.
+Create exactly $validCount rigorous MSc Chemistry multiple choice questions based STRICTLY and EXCLUSIVELY on the uploaded document "$documentTitle".
+
+PRIMARY SOURCE OF TRUTH RULES:
+1. STRICT DOCUMENT GROUNDING: Every question, answer, correct option, and distractor MUST be directly supported by the text of the provided document pages.
+2. ZERO HALLUCINATION: Do NOT bring in outside reactions, mechanisms, experimental numbers, or external topics absent from this PDF.
+3. PAGE CITATIONS: For each question, identify the exact document page where the concept appears and provide "page_number": <int>.
+4. VERBATIM PROOF: Include "source_snippet": an exact 1-2 sentence verbatim quote from that specific page proving the question and correct answer.
+5. Set "is_strict_pdf_grounded": true.
+6. DIFFICULTY: $diffInstructions
+7. QUESTION TYPES: Formulate a balanced distribution of allowed types ($typesList).
+8. OPTIONS: Provide exactly 4 scientifically plausible, distinct options. Never repeat options.
+9. RANDOMIZE CORRECT INDEX: Randomize correct_index across 0, 1, 2, 3 (A, B, C, D).
+10. EXPLANATIONS: Provide an academic explanation explaining why the correct choice is right and citing the chemical principle.
+11. CLEAN NOTATION: Use clean textbook Unicode (Δ, →, ⇌, H₂SO₄, ¹H NMR, etc.) or standard inline math (\$...\$). NEVER output DISPLAY_MATH_0 or raw internal placeholders.
+$targetedNote
+
+Return strictly valid JSON matching this exact structure:
 {
   "questions": [
     {
-      "question": "Question text with proper chemical notation",
+      "question": "Rigorous MSc question text with proper chemistry notation",
       "options": ["Option A", "Option B", "Option C", "Option D"],
       "correct_index": 1,
       "explanation": "Detailed explanation of why the correct option is right...",
       "type": "mechanism",
-      "topic": "$documentTitle",
+      "topic": "Specific Topic Name",
+      "difficulty": "medium",
       "page_number": 1,
       "source_snippet": "Exact quote from document proving this fact...",
       "is_strict_pdf_grounded": true
     }
   ]
-}
-CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).''',
-          'document_text': promptDocumentText.length > 15000 ? promptDocumentText.substring(0, 15000) : promptDocumentText,
+}''';
+
+        final raw = await remote.invokeFunction('ask-chembuddy', {
+          'question': prompt,
+          'document_text': promptDocumentText.length > 16000 ? promptDocumentText.substring(0, 16000) : promptDocumentText,
           'document_name': documentTitle,
         });
 
@@ -268,29 +413,363 @@ CRITICAL: Do NOT use raw LaTeX. Use clean textbook Unicode (Δ, →, ⇌, etc.).
           questions = _parseQuizFromJson(raw['answer'].toString(), bundle: bundle);
         }
       } catch (_) {
-        // Fallback to strict heuristic page extractor
+        // Fallback to heuristic
       }
     }
 
-    final safeQuestions = (questions != null && questions.isNotEmpty)
-        ? questions
-        : _generateHeuristicQuiz(cleaned, documentTitle, validCount, bundle: bundle);
-    onProgress?.call('Generated ${safeQuestions.length} strictly page-grounded questions ✓');
+    // Step 2: Validate and filter questions
+    final parsedQuestions = (questions != null && questions.isNotEmpty)
+        ? validateQuizQuestions(questions, analysis: analysis)
+        : <QuizQuestion>[];
 
-    // Ensure options are shuffled and correct indices are randomized across A, B, C, D
+    final safeQuestions = parsedQuestions.length >= (validCount / 2).floor()
+        ? parsedQuestions
+        : _generateHeuristicSmartQuiz(
+            cleaned,
+            documentTitle,
+            validCount,
+            bundle: bundle,
+            analysis: analysis,
+            config: quizConfig,
+          );
+
+    onProgress?.call('Validated ${safeQuestions.length} strictly page-grounded questions ✓');
+
     final randomized = safeQuestions.map(_randomizeQuestionOptions).take(validCount).toList();
-
     final totalPages = bundle?.totalPages ?? (bundle?.pages.length ?? 1);
+
     return ChemistryQuiz(
       id: _uuid.v4(),
-      title: '$documentTitle Quiz',
+      title: quizConfig.targetedTopics.isNotEmpty
+          ? '$documentTitle - Weak Topics Practice'
+          : '$documentTitle Quiz',
       docId: docId,
       sourceFileName: documentTitle,
       questions: randomized,
       createdAt: DateTime.now(),
       isStrictPdfGrounded: true,
       pageRange: 'Pages 1 - $totalPages',
+      difficulty: quizConfig.difficulty,
+      mode: quizConfig.mode,
     );
+  }
+
+  /// Generates a targeted follow-up quiz for the user's weak topics from the same document context.
+  Future<ChemistryQuiz> generateWeakTopicQuiz({
+    required QuizResult previousResult,
+    required String sourceText,
+    required String documentTitle,
+    String docId = '',
+    void Function(String status)? onProgress,
+  }) async {
+    final count = min(15, max(5, previousResult.weakTopics.length * 2));
+    final config = PdfQuizConfig(
+      count: count,
+      difficulty: QuizDifficulty.mixed,
+      mode: QuizMode.weakTopics,
+      targetedTopics: previousResult.weakTopics,
+    );
+    return generateQuiz(
+      sourceText: sourceText,
+      documentTitle: documentTitle,
+      docId: docId,
+      config: config,
+      onProgress: onProgress,
+    );
+  }
+
+  /// Comprehensive question validation pipeline.
+  List<QuizQuestion> validateQuizQuestions(List<QuizQuestion> questions, {PdfDocumentAnalysis? analysis}) {
+    final valid = <QuizQuestion>[];
+    final seenQuestions = <String>{};
+
+    for (final q in questions) {
+      final sanitizedQ = ChemistryTextFormatter.format(q.question.trim());
+      // Discard invalid / malformed / DISPLAY_MATH_0
+      if (sanitizedQ.length < 10 || sanitizedQ.contains('DISPLAY_MATH_') || sanitizedQ.contains('RAW_TOKEN_')) {
+        continue;
+      }
+
+      final normalizedQ = sanitizedQ.toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+      if (seenQuestions.contains(normalizedQ)) {
+        continue;
+      }
+      seenQuestions.add(normalizedQ);
+
+      // Validate options
+      final cleanOptions = <String>[];
+      for (final opt in q.options) {
+        final cleanOpt = ChemistryTextFormatter.format(opt.trim());
+        if (cleanOpt.isNotEmpty && !cleanOpt.contains('DISPLAY_MATH_') && !cleanOptions.contains(cleanOpt)) {
+          cleanOptions.add(cleanOpt);
+        }
+      }
+
+      if (cleanOptions.length < 2) continue;
+
+      // Ensure 4 distinct options
+      final defaultDistractors = [
+        'Increases by a factor of 2 under standard conditions',
+        'Requires anhydrous catalyst at high temperature',
+        'Follows first-order pseudo kinetics',
+        'Dependent on solvent dielectric constant',
+        'Thermodynamically unfavorable at ambient temperature',
+      ];
+      var distIdx = 0;
+      while (cleanOptions.length < 4) {
+        final d = defaultDistractors[distIdx % defaultDistractors.length];
+        if (!cleanOptions.contains(d)) cleanOptions.add(d);
+        distIdx++;
+      }
+
+      final safeCorrectIdx = q.correctIndex.clamp(0, cleanOptions.length - 1);
+      final safeExplanation = ChemistryTextFormatter.format(q.explanation.trim());
+
+      valid.add(QuizQuestion(
+        id: q.id,
+        question: sanitizedQ,
+        options: cleanOptions,
+        correctIndex: safeCorrectIdx,
+        explanation: safeExplanation.isNotEmpty ? safeExplanation : 'Accurate scientific answer from document.',
+        type: q.type,
+        topic: q.topic.isNotEmpty ? ChemistryTextFormatter.format(q.topic) : (analysis?.detectedSubject ?? 'Chemistry'),
+        difficulty: q.difficulty,
+        numerical: q.numerical,
+        pageNumber: q.pageNumber ?? 1,
+        sourceSnippet: q.sourceSnippet,
+        isStrictPdfGrounded: true,
+      ));
+    }
+
+    return valid;
+  }
+
+  String _getDifficultyPromptInstruction(QuizDifficulty diff) {
+    switch (diff) {
+      case QuizDifficulty.easy:
+        return 'EASY: Direct definitions, essential foundational concepts, standard IUPAC/formula recall.';
+      case QuizDifficulty.medium:
+        return 'MEDIUM: Conceptual reasoning, mechanism steps, reagent selectivity, and condition comparison.';
+      case QuizDifficulty.hard:
+        return 'HARD: Advanced multi-step analysis, complex stereochemistry, kinetic calculations, or spectroscopy data deduction.';
+      case QuizDifficulty.mixed:
+        return 'MIXED: 30% Easy (foundational), 50% Medium (reasoning & mechanism), 20% Hard (advanced deduction).';
+    }
+  }
+
+  List<String> _extractConceptsFromText(String text) {
+    final results = <String>[];
+    final lines = text.split('\n');
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) continue;
+
+      // 1. If line has a colon (e.g. "Spectrochemical series: ..."), grab the term
+      if (trimmed.contains(':')) {
+        final prefix = trimmed.split(':').first.trim();
+        if (prefix.length > 3 && prefix.length < 60) {
+          results.add(ChemistryTextFormatter.format(prefix));
+          if (results.length >= 5) break;
+          continue;
+        }
+      }
+
+      // 2. Standalone short headings / title lines
+      if (trimmed.length > 3 && trimmed.length < 65 && !trimmed.endsWith('.')) {
+        results.add(ChemistryTextFormatter.format(trimmed));
+        if (results.length >= 5) break;
+        continue;
+      }
+
+      // 3. Extract subject phrase from start of first sentence
+      final firstSentence = trimmed.split(RegExp(r'[.?!]')).first.trim();
+      if (firstSentence.length > 5) {
+        final commaParts = firstSentence.split(',');
+        final phrase = commaParts.first.trim();
+        if (phrase.length > 4 && phrase.length < 50) {
+          results.add(ChemistryTextFormatter.format(phrase));
+          if (results.length >= 5) break;
+        }
+      }
+    }
+
+    // 4. Fallback if still empty
+    if (results.isEmpty && text.trim().isNotEmpty) {
+      final words = text.trim().split(RegExp(r'\s+')).take(6).join(' ');
+      if (words.isNotEmpty) results.add(ChemistryTextFormatter.format(words));
+    }
+    return results;
+  }
+
+  PdfDocumentAnalysis _generateHeuristicAnalysis(
+    String text,
+    String docTitle, {
+    String docId = '',
+    DocumentOcrBundle? bundle,
+    String domain = 'Chemistry',
+    Map<int, List<String>> pageTopicMap = const {},
+  }) {
+    final lines = text.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    final topics = <PdfConceptItem>[];
+    final reactions = <String>[];
+    final equations = <String>[];
+    final definitions = <Map<String, String>>[];
+
+    for (final line in lines) {
+      if ((line.contains('→') || line.contains('⇌') || line.contains('->')) && line.length < 120 && line.length > 5) {
+        reactions.add(ChemistryTextFormatter.format(line));
+      } else if ((line.contains('=') || line.contains('Δ') || line.contains('λ')) && line.length < 100 && line.length > 5) {
+        equations.add(ChemistryTextFormatter.format(line));
+      } else if (line.contains(':') && line.length > 15 && line.length < 250) {
+        final parts = line.split(':');
+        if (parts.length >= 2 && parts[0].trim().split(' ').length <= 10) {
+          definitions.add({
+            'term': ChemistryTextFormatter.format(parts[0].trim()),
+            'definition': ChemistryTextFormatter.format(parts.sublist(1).join(':').trim()),
+          });
+        }
+      } else if (line.toLowerCase().contains(' is ') ||
+          line.toLowerCase().contains(' refers to ') ||
+          line.toLowerCase().contains(' explains ') ||
+          line.toLowerCase().contains(' denotes ')) {
+        final match = RegExp(r'^([^,.]+?)\s+(is|refers to|explains|denotes|describes)\s+(.+)$', caseSensitive: false).firstMatch(line);
+        if (match != null && match.group(1)!.trim().split(' ').length <= 8) {
+          definitions.add({
+            'term': ChemistryTextFormatter.format(match.group(1)!.trim()),
+            'definition': ChemistryTextFormatter.format('${match.group(2)} ${match.group(3)}'.trim()),
+          });
+        }
+      }
+    }
+
+    final seen = <String>{};
+    for (final line in lines) {
+      if (line.length > 4 && line.length < 60 && !line.endsWith('.')) {
+        final formatted = ChemistryTextFormatter.format(line);
+        if (!seen.contains(formatted) && seen.length < 12) {
+          seen.add(formatted);
+          final isHigh = formatted.toLowerCase().contains('mechanism') ||
+              formatted.toLowerCase().contains('principle') ||
+              formatted.toLowerCase().contains('reaction') ||
+              formatted.toLowerCase().contains('law') ||
+              formatted.toLowerCase().contains('synthesis');
+          topics.add(PdfConceptItem(
+            concept: formatted,
+            importance: isHigh ? 'high' : (seen.length <= 4 ? 'high' : 'medium'),
+            pageNumber: 1,
+            summary: 'Key concept in $docTitle',
+          ));
+        }
+      }
+    }
+
+    if (topics.isEmpty) {
+      topics.add(PdfConceptItem(
+        concept: '$docTitle Core Principles',
+        importance: 'high',
+        pageNumber: 1,
+        summary: 'Fundamental concepts of $docTitle',
+      ));
+    }
+
+    return PdfDocumentAnalysis(
+      docId: docId,
+      docTitle: docTitle,
+      detectedSubject: domain,
+      coreTopics: topics,
+      reactionsAndReagents: reactions.take(15).toList(),
+      equationsAndFormulas: equations.take(15).toList(),
+      keyDefinitions: definitions.take(15).toList(),
+      pageTopicMap: pageTopicMap,
+    );
+  }
+
+  List<QuizQuestion> _generateHeuristicSmartQuiz(
+    String text,
+    String docTitle,
+    int count, {
+    DocumentOcrBundle? bundle,
+    PdfDocumentAnalysis? analysis,
+    PdfQuizConfig? config,
+  }) {
+    // 1. Check if specific domain heuristic exists
+    final baseQuestions = _generateHeuristicQuiz(text, docTitle, count, bundle: bundle);
+    final pool = List<QuizQuestion>.from(baseQuestions);
+
+    // 2. Synthesize additional grounded questions from extracted definitions and equations if count > pool
+    if (analysis != null && pool.length < count) {
+      for (final def in analysis.keyDefinitions) {
+        if (pool.length >= count) break;
+        final term = def['term'] ?? 'Concept';
+        final explanation = def['definition'] ?? '';
+        if (explanation.length < 15) continue;
+
+        pool.add(QuizQuestion(
+          id: _uuid.v4(),
+          question: 'According to the document "$docTitle", what is the definition and significance of $term?',
+          options: [
+            explanation,
+            'A competing side reaction favored only at non-standard pressure and temperature',
+            'An auxiliary solvent system used to suppress radical recombination',
+            'A qualitative indicator observed only during high-frequency infrared spectroscopy',
+          ],
+          correctIndex: 0,
+          explanation: '$term is defined as: $explanation',
+          type: QuizQuestionType.conceptual,
+          topic: term,
+          difficulty: QuizDifficulty.easy,
+          pageNumber: 1,
+          sourceSnippet: '$term: $explanation',
+          isStrictPdfGrounded: true,
+        ));
+      }
+
+      for (final eq in analysis.equationsAndFormulas) {
+        if (pool.length >= count) break;
+        pool.add(QuizQuestion(
+          id: _uuid.v4(),
+          question: 'Which chemical or physical relationship in "$docTitle" is expressed by the equation: $eq?',
+          options: [
+            'Fundamental governing equation established in the study material: $eq',
+            'An empirical approximation valid only for ideal gases at absolute zero',
+            'A non-linear correction factor applied to heterogeneous catalytic kinetics',
+            'The second derivative of enthalpy with respect to ionic strength',
+          ],
+          correctIndex: 0,
+          explanation: 'The document explicitly states this relationship as: $eq.',
+          type: QuizQuestionType.numerical,
+          topic: 'Formulas & Principles',
+          difficulty: QuizDifficulty.medium,
+          pageNumber: 1,
+          sourceSnippet: eq,
+          isStrictPdfGrounded: true,
+        ));
+      }
+
+      for (final topic in analysis.coreTopics) {
+        if (pool.length >= count) break;
+        pool.add(QuizQuestion(
+          id: _uuid.v4(),
+          question: 'In the analysis of ${topic.concept} in "$docTitle", which statement is accurate based on the text?',
+          options: [
+            '${topic.concept} is a central ${topic.importance.toUpperCase()} priority concept in the course material.',
+            '${topic.concept} is negligible and disregarded in standard laboratory preparations.',
+            '${topic.concept} only applies to gas-phase radical halogenations.',
+            '${topic.concept} was disproven by modern computational molecular orbital theory.',
+          ],
+          correctIndex: 0,
+          explanation: '${topic.concept} is a high-value concept directly presented in $docTitle.',
+          type: QuizQuestionType.application,
+          topic: topic.concept,
+          difficulty: topic.importance == 'high' ? QuizDifficulty.hard : QuizDifficulty.medium,
+          pageNumber: topic.pageNumber ?? 1,
+          sourceSnippet: topic.summary ?? topic.concept,
+          isStrictPdfGrounded: true,
+        ));
+      }
+    }
+
+    return _enrichQuestionsWithPageGrounding(pool.take(count).toList(), bundle);
   }
   // ==========================================
   // 5. RECOMMENDED STUDY PATH
@@ -1126,6 +1605,13 @@ SubjectClassificationResult _classifyDocumentSubjectImpl(String sampleText, Stri
     'ester', 'amine', 'carboxylic', 'heterocyclic', 'carbocation'
   ];
 
+  final spectroscopyKeywords = [
+    'spectroscopy', 'nmr', 'pmr', 'cmr', '1h nmr', '13c nmr', 'chemical shift',
+    'coupling constant', 'splitting pattern', 'infrared', 'ir spectrum', 'mass spectrometry',
+    'm/z', 'fragmentation', 'base peak', 'molecular ion',
+    'molar absorptivity', 'spin-spin coupling', 'shielding', 'deshielding',
+  ];
+
   int countMatches(List<String> keywords) {
     var score = 0;
     for (final kw in keywords) {
@@ -1139,8 +1625,10 @@ SubjectClassificationResult _classifyDocumentSubjectImpl(String sampleText, Stri
   final physScore = countMatches(physicalKeywords);
   final analScore = countMatches(analyticalKeywords);
   final orgScore = countMatches(organicKeywords);
+  final specScore = countMatches(spectroscopyKeywords);
 
   final scores = {
+    'Spectroscopy & Structure': specScore,
     'Organic Chemistry': orgScore,
     'Inorganic Chemistry': inorgScore,
     'Physical Chemistry': physScore,
@@ -1151,7 +1639,7 @@ SubjectClassificationResult _classifyDocumentSubjectImpl(String sampleText, Stri
   final sorted = scores.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
   final best = sorted.first;
 
-  final total = orgScore + inorgScore + physScore + analScore + pScore;
+  final total = orgScore + inorgScore + physScore + analScore + pScore + specScore;
 
   if (best.value >= 2 && total > 0) {
     return SubjectClassificationResult(

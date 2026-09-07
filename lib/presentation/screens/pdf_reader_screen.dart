@@ -8,6 +8,7 @@ import '../../core/widgets/glow_card.dart';
 import '../../data/models/library_models.dart';
 import '../../data/services/pdf_library_service.dart';
 import '../providers/app_providers.dart';
+import '../widgets/pdf_quiz_setup_dialog.dart';
 import 'pdf_study_hub_screen.dart';
 
 class PdfReaderScreen extends ConsumerStatefulWidget {
@@ -112,10 +113,15 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
                 icon: Icons.quiz_outlined,
                 color: AppColors.blue,
                 title: 'Create Practice Quiz',
-                subtitle: '10, 20, or 30 questions with weak area analysis',
+                subtitle: '10, 20, 30, or 40 questions with weak area analysis',
                 onTap: () {
                   Navigator.pop(ctx);
-                  _openStudyHub(2);
+                  PdfQuizSetupDialog.show(
+                    context,
+                    documentTitle: _doc.displayName,
+                    docId: _doc.id,
+                    doc: _doc,
+                  );
                 },
               ),
               _StudyOptionRow(

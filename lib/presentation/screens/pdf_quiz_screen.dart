@@ -30,6 +30,81 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
   bool _submittedCurrent = false;
   bool _finished = false;
   QuizResult? _result;
+  bool _generatingWeakQuiz = false;
+
+  Color _getDifficultyColor(QuizDifficulty diff) {
+    switch (diff) {
+      case QuizDifficulty.easy:
+        return AppColors.statusSuccess;
+      case QuizDifficulty.medium:
+        return AppColors.accentGold;
+      case QuizDifficulty.hard:
+        return AppColors.statusDanger;
+      case QuizDifficulty.mixed:
+        return AppColors.brandBright;
+    }
+  }
+
+  Future<void> _practiceWeakTopics(QuizResult result) async {
+    if (_generatingWeakQuiz) return;
+    setState(() => _generatingWeakQuiz = true);
+    AppHaptics.confirm();
+
+    try {
+      final service = ref.read(pdfAiStudyServiceProvider);
+      final store = ref.read(localStoreProvider);
+
+      // Fetch document source text from cache or bundle
+      var text = '';
+      if (widget.quiz.docId.isNotEmpty) {
+        final bundle = store.getDocumentOcrBundle(widget.quiz.docId);
+        if (bundle != null) {
+          text = bundle.fullText;
+        }
+      }
+      if (text.isEmpty && widget.doc != null) {
+        final bundle = store.getDocumentOcrBundle(widget.doc!.id);
+        text = bundle?.fullText ?? '';
+      }
+      if (text.isEmpty) {
+        // Fallback: reconstruct context from previous quiz questions & explanations
+        text = widget.quiz.questions.map((q) => '${q.question}\n${q.options.join(", ")}\n${q.explanation}\n${q.sourceSnippet ?? ""}').join('\n\n');
+      }
+
+      final weakQuiz = await service.generateWeakTopicQuiz(
+        previousResult: result,
+        sourceText: text,
+        documentTitle: widget.docName ?? widget.quiz.sourceFileName,
+        docId: widget.quiz.docId,
+      );
+
+      await ref.read(appControllerProvider.notifier).saveQuiz(weakQuiz);
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => PdfQuizScreen(
+              quiz: weakQuiz,
+              docName: widget.docName ?? widget.quiz.sourceFileName,
+              doc: widget.doc,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.danger,
+            content: Text('Could not generate weak topics quiz: $e'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _generatingWeakQuiz = false);
+    }
+  }
 
   void _selectOption(int optionIndex) {
     if (_submittedCurrent) return;
@@ -230,9 +305,35 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _getDifficultyColor(q.difficulty).withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: _getDifficultyColor(q.difficulty).withValues(alpha: 0.4)),
+                        ),
+                        child: Text(
+                          q.difficulty.label,
+                          style: TextStyle(color: _getDifficultyColor(q.difficulty), fontWeight: FontWeight.w800, fontSize: 10),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceElevated,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: AppColors.borderSubtle),
+                        ),
+                        child: Text(
+                          q.type.label,
+                          style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 10),
+                        ),
+                      ),
                       if (q.pageNumber != null) ...[
+                        const SizedBox(width: 5),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
                             color: AppColors.brandPrimary.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(6),
@@ -241,11 +342,11 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.menu_book_rounded, size: 12, color: AppColors.brandBright),
-                              const SizedBox(width: 4),
+                              const Icon(Icons.menu_book_rounded, size: 11, color: AppColors.brandBright),
+                              const SizedBox(width: 3),
                               Text(
                                 'Page ${q.pageNumber}',
-                                style: const TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w800, fontSize: 10.5),
+                                style: const TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w800, fontSize: 10),
                               ),
                             ],
                           ),
@@ -754,7 +855,33 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                     ),
                   ),
                   if (result.weakTopics.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.purple,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          elevation: 3,
+                          shadowColor: AppColors.purple.withValues(alpha: 0.4),
+                        ),
+                        onPressed: _generatingWeakQuiz ? null : () => _practiceWeakTopics(result),
+                        icon: _generatingWeakQuiz
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.fitness_center_rounded, size: 18),
+                        label: Text(
+                          _generatingWeakQuiz ? 'Generating Targeted Quiz...' : '🎯 Practice Weak Topics',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(

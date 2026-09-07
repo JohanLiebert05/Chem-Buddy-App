@@ -48,14 +48,14 @@ jobs:
 
       - name: Copy Named APK
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v2.8.1-Release.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.1.1-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-v2.8.1-apk
-          path: ChemBuddy-v2.8.1-Release.apk
+          name: chem-buddy-v3.1.1-apk
+          path: ChemBuddy-v3.1.1-Release.apk
           retention-days: 30
 
       - name: Create GitHub Release (Tags only)
@@ -63,22 +63,25 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ChemBuddy-v2.8.1-Release.apk
+            ChemBuddy-v3.1.1-Release.apk
             Chem-Buddy-MSc-Release.apk
           name: ChemBuddy Release ${{ github.ref_name }}
           body: |
-            ## ChemBuddy Release ${{ github.ref_name }} (Version 2.8.1)
+            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.1.1)
             
-            ### ✨ What's New in v2.8.1:
-            - **Official ChemBuddy App Logo & Launcher Icons**:
-              - New high-resolution ChemBuddy scholar mascot medallion logo with safety goggles, lab coat, bubbling flask, and atomic elements badge.
-              - Full Android adaptive & mipmap launcher icons (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`) and iOS app icon sets.
-              - In-app animated branding with dynamic neon pulsing and fallback vector painting.
-            - **Handwritten & Scanned PDF OCR Learning Upgrade**:
-              - Multi-engine document processing for digital PDFs, scanned notes, and handwritten MSc Chemistry notes.
-              - Chemistry-specific OCR normalization: $O \leftrightarrow 0$ corrections, elemental formula subscripting, valence charge superscripts (`Fe³⁺`, `SO₄²⁻`), and reaction arrows (`→`, `⇌`, `Δ`, `hν`).
-              - Strict source-grounding prompt architecture ensuring all generated flashcards, quizzes, and AI answers derive strictly from uploaded documents without hallucination.
-              - Per-page extraction inspector sheet and document quality indicators.
+            ### ✨ What's New in v3.1.1:
+            - **Smart PDF-to-Quiz Generator**:
+              - Document understanding before generation: domain classification, concept & formula extraction, and page mapping.
+              - Primary source of truth: 100% grounded in uploaded PDF with zero hallucinations.
+              - Smart Quiz, High Priority, and Custom modes with 10, 20, 30, 40 questions.
+              - Remediation loop: "Practice Weak Topics" to generate targeted follow-up quizzes from same PDF.
+            - **ChemBuddy AI Chat Redesign & Answer Modes**:
+              - Normal concise mode by default; MSc in-depth mode on request (2M, 5M, 10M, MSc Concept).
+              - Math parser fix: zero internal placeholders (`DISPLAY_MATH_0`) leak.
+            - **Accelerated Flashcard Generation**:
+              - In-memory response caching and single-call fast path for sub-second flashcard creation.
+            - **Smoother Navigation**:
+              - Silky cross-fade page transitions and tactile spring-scaling bottom nav tabs.
             - **Quality & Performance**:
-              - 100% automated test suite passing (185+ unit & integration tests).
-              - Zero static analysis warnings (`flutter analyze`).
+              - 100% automated test suite passing (254 unit & widget tests).
+              - Zero static analysis issues (`flutter analyze`).

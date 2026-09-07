@@ -14,6 +14,7 @@ import '../widgets/reaction_mechanisms_card.dart';
 import 'chemistry_toolkit_screen.dart';
 import 'exam_pattern_quiz_screen.dart';
 import 'pdf_library_screen.dart';
+import 'pdf_quiz_screen.dart';
 import 'pdf_reader_screen.dart';
 import 'pericyclic_hub_screen.dart';
 import 'predict_important_questions_screen.dart';
@@ -1276,6 +1277,18 @@ class _QuizzesAndMasteryTab extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 10),
               child: GlowCard(
                 padding: const EdgeInsets.all(14),
+                onTap: () {
+                  AppHaptics.selection();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => PdfQuizScreen(
+                        quiz: q,
+                        docName: q.sourceFileName,
+                      ),
+                    ),
+                  );
+                },
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

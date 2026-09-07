@@ -14,6 +14,7 @@ class GeminiFlashcardService {
   GeminiFlashcardService({SupabaseService? remote}) : _remote = remote ?? SupabaseService.instance;
 
   final SupabaseService _remote;
+  static final Map<String, List<GeneratedCard>> _memoryCache = {};
 
   /// Generates exam-quality chemistry flashcards with strict schema enforcement,
   /// exponential backoff retries, robust JSON cleanup, and academic fallbacks.
@@ -32,6 +33,12 @@ class GeminiFlashcardService {
     }
 
     final targetCount = count.clamp(5, 30);
+    final cacheKey = '${topic}_${targetCount}_${sourceText.length}';
+    if (_memoryCache.containsKey(cacheKey) && _memoryCache[cacheKey]!.length >= targetCount) {
+      debugPrint('[GeminiFlashcardService] Fast memory cache hit for $topic');
+      return _memoryCache[cacheKey]!.take(targetCount).toList();
+    }
+
     final allCards = <GeneratedCard>[];
     final seenQuestions = <String>{};
 
@@ -39,10 +46,12 @@ class GeminiFlashcardService {
     String promptText = cleaned;
     if (bundle != null && bundle.pages.isNotEmpty) {
       final pageTexts = <String>[];
+      final maxPerPage = (14000 / bundle.pages.length).clamp(600, 2000).toInt();
       for (final p in bundle.pages) {
         final pageContent = p.cleanedText.trim();
         if (pageContent.isNotEmpty) {
-          pageTexts.add('[PAGE ${p.pageNumber}]\n${pageContent.length > 2500 ? pageContent.substring(0, 2500) : pageContent}');
+          final clipped = pageContent.length > maxPerPage ? pageContent.substring(0, maxPerPage) : pageContent;
+          pageTexts.add('[PAGE ${p.pageNumber}]\n$clipped');
         }
       }
       if (pageTexts.isNotEmpty) {
@@ -50,17 +59,12 @@ class GeminiFlashcardService {
       }
     }
 
-    final chunks = chunkNotes(promptText, size: 12000, overlap: 300);
-    final perChunk = (targetCount / chunks.length).ceil().clamp(5, targetCount);
-
-    for (final chunk in chunks) {
-      final remaining = targetCount - allCards.length;
-      if (remaining <= 0) break;
-      final batchCount = remaining < perChunk ? remaining : perChunk;
-
+    // Fast path: if prompt fits within 14k characters or count <= 12, perform a single rapid call
+    if (promptText.length <= 14000 || targetCount <= 12) {
+      final singleText = promptText.length > 14000 ? promptText.substring(0, 14000) : promptText;
       final batch = await _invokeWithRetry(
-        sourceText: chunk,
-        count: batchCount,
+        sourceText: singleText,
+        count: targetCount,
         topic: topic,
         bundle: bundle,
       );
@@ -70,11 +74,32 @@ class GeminiFlashcardService {
           allCards.add(card);
         }
       }
+    } else {
+      // Parallel execution across 2 top chunks to maximize speed
+      final chunks = chunkNotes(promptText, size: 12000, overlap: 200).take(2).toList();
+      final half = (targetCount / chunks.length).ceil();
+      final futures = chunks.map((chunk) => _invokeWithRetry(
+        sourceText: chunk,
+        count: half,
+        topic: topic,
+        bundle: bundle,
+      ));
+
+      final results = await Future.wait(futures);
+      for (final batch in results) {
+        for (final card in batch) {
+          if (_validateCard(card, sourceText, seenQuestions)) {
+            allCards.add(card);
+          }
+        }
+      }
     }
 
     // 2. If AI call yielded cards, return them
     if (allCards.isNotEmpty) {
-      return allCards.take(targetCount).toList();
+      final finalCards = allCards.take(targetCount).toList();
+      _memoryCache[cacheKey] = finalCards;
+      return finalCards;
     }
 
     // 3. Fallback: High-Value Local Chemistry Synthesis strictly from document text
