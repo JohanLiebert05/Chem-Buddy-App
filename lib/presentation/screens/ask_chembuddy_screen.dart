@@ -30,11 +30,13 @@ import 'smart_flashcards_study_screen.dart';
 
 enum ChemBuddyAiMode {
   normal,
+  simple,
   exam2M,
   exam5M,
   exam10M,
   mscConcept,
   mechanisms,
+  fromMyPdf,
 }
 
 class AskChemBuddyScreen extends ConsumerStatefulWidget {
@@ -193,6 +195,9 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
       modeString = 'quick';
       // Default Quick Answer Mode: concise, direct, intelligent response
       modelPrompt = null;
+    } else if (_currentMode == ChemBuddyAiMode.simple) {
+      modeString = 'simple';
+      modelPrompt = '[Simple Explanation Mode: Explain this in plain, easy-to-understand language as if talking to someone who is new to chemistry. Avoid jargon where possible. Use an analogy if it helps. Keep it short and clear.]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.exam2M) {
       modeString = '2m';
       modelPrompt = '[Format as a concise 2-Mark University Exam Answer: Provide 1) Definition / Direct Statement (1-2 sentences), 2) Core Essential Points, 3) Balanced Reaction or Key Formula if applicable. DO NOT over-explain]: $rawText';
@@ -208,6 +213,12 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
     } else if (_currentMode == ChemBuddyAiMode.mechanisms) {
       modeString = 'mechanisms';
       modelPrompt = 'Explain the full stepwise reaction mechanism, curved arrow electron displacement, intermediates, and driving force for: $rawText';
+    } else if (_currentMode == ChemBuddyAiMode.fromMyPdf) {
+      modeString = 'fromMyPdf';
+      // fromMyPdf mode sends rawText as-is; the attached document context
+      // is already loaded into chatControllerProvider via attachDocument().
+      // The knowledge engine will enforce strict PDF-grounded mode automatically.
+      modelPrompt = null;
     }
 
     _lastSentQuestion = rawText;
@@ -250,6 +261,13 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
             ),
             const SizedBox(width: 8),
             _AiModeChip(
+              icon: Icons.chat_bubble_outline_rounded,
+              label: '💬 Simple',
+              selected: _currentMode == ChemBuddyAiMode.simple,
+              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.simple),
+            ),
+            const SizedBox(width: 8),
+            _AiModeChip(
               icon: Icons.view_headline_rounded,
               label: '≡ 2M Answer',
               selected: _currentMode == ChemBuddyAiMode.exam2M,
@@ -289,6 +307,13 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
               label: '⚗️ Mechanisms',
               selected: _currentMode == ChemBuddyAiMode.mechanisms,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.mechanisms),
+            ),
+            const SizedBox(width: 8),
+            _AiModeChip(
+              icon: Icons.picture_as_pdf_outlined,
+              label: '📄 From My PDF',
+              selected: _currentMode == ChemBuddyAiMode.fromMyPdf,
+              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.fromMyPdf),
             ),
           ],
         ),

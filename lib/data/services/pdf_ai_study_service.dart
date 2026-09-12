@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/utils/chemistry_text_formatter.dart';
@@ -85,6 +86,7 @@ class PdfAiStudyService {
     required String sourceText,
     required String documentTitle,
     String docId = '',
+    DocumentOcrBundle? bundle,
     void Function(String status)? onProgress,
   }) async {
     onProgress?.call('Extracting text and cleaning...');
@@ -94,8 +96,28 @@ class PdfAiStudyService {
         : 'Comprehensive MSc Chemistry guide and study material on $documentTitle focusing on principles, methodologies, and mechanisms.';
 
     onProgress?.call('Synthesizing structured academic summary...');
-    final chunks = chunkNotes(cleaned, size: 10000, overlap: 300);
-    final primaryChunk = chunks.isNotEmpty ? chunks.first : cleaned;
+
+    // Build page-indexed prompt (same pattern as generateQuiz) to cover full document
+    // without the old 10k-char hard truncation that lost late-chapter content.
+    String promptDocumentText;
+    if (bundle != null && bundle.pages.isNotEmpty) {
+      final pageTexts = <String>[];
+      final maxPerPage = (20000 / bundle.pages.length).clamp(800, 3000).toInt();
+      for (final p in bundle.pages) {
+        final pageContent = p.cleanedText.trim();
+        if (pageContent.isNotEmpty) {
+          final clipped = pageContent.length > maxPerPage
+              ? pageContent.substring(0, maxPerPage)
+              : pageContent;
+          pageTexts.add('[PAGE ${p.pageNumber}]\n$clipped');
+        }
+      }
+      promptDocumentText =
+          pageTexts.isNotEmpty ? pageTexts.join('\n\n') : cleaned;
+    } else {
+      final chunks = chunkNotes(cleaned, size: 12000, overlap: 300);
+      promptDocumentText = chunks.isNotEmpty ? chunks.first : cleaned;
+    }
 
     PdfSummary? result;
     if (remote.configured && remote.userId != null && await isOnline) {
@@ -119,7 +141,7 @@ Return valid JSON matching this exact structure:
   "quick_revision": ["1-line revision bullet 1", "1-line revision bullet 2", "1-line revision bullet 3"]
 }
 CRITICAL: Do NOT use LaTeX (\$, \\frac, \\Delta). Use clean Unicode (Δ, →, ⇌, H₂SO₄, ¹H NMR, etc.).''',
-          'document_text': primaryChunk,
+          'document_text': promptDocumentText,
           'document_name': documentTitle,
         });
 
@@ -142,6 +164,7 @@ CRITICAL: Do NOT use LaTeX (\$, \\frac, \\Delta). Use clean Unicode (Δ, →, �
   Future<List<ImportantTopic>> analyzeImportantTopics({
     required String sourceText,
     required String documentTitle,
+    DocumentOcrBundle? bundle,
     void Function(String status)? onProgress,
   }) async {
     onProgress?.call('Analyzing depth, frequency and mechanisms...');
@@ -152,6 +175,27 @@ CRITICAL: Do NOT use LaTeX (\$, \\frac, \\Delta). Use clean Unicode (Δ, →, �
 
     onProgress?.call('Ranking topics by conceptual importance...');
     List<ImportantTopic>? topics;
+
+    // Build page-indexed text (same approach as generateQuiz) to avoid 12k truncation
+    String promptDocumentText;
+    if (bundle != null && bundle.pages.isNotEmpty) {
+      final pageTexts = <String>[];
+      final maxPerPage = (18000 / bundle.pages.length).clamp(600, 2500).toInt();
+      for (final p in bundle.pages) {
+        final pageContent = p.cleanedText.trim();
+        if (pageContent.isNotEmpty) {
+          final clipped = pageContent.length > maxPerPage
+              ? pageContent.substring(0, maxPerPage)
+              : pageContent;
+          pageTexts.add('[PAGE ${p.pageNumber}]\n$clipped');
+        }
+      }
+      promptDocumentText =
+          pageTexts.isNotEmpty ? pageTexts.join('\n\n') : cleaned;
+    } else {
+      promptDocumentText =
+          cleaned.length > 14000 ? cleaned.substring(0, 14000) : cleaned;
+    }
 
     if (remote.configured && remote.userId != null && await isOnline) {
       try {
@@ -172,7 +216,7 @@ Return valid JSON matching this exact structure:
   ]
 }
 CRITICAL: Do NOT use raw LaTeX. Use clean Unicode (Δ, →, ⇌, etc.).''',
-          'document_text': cleaned.length > 12000 ? cleaned.substring(0, 12000) : cleaned,
+          'document_text': promptDocumentText,
           'document_name': documentTitle,
         });
 
@@ -188,6 +232,7 @@ CRITICAL: Do NOT use raw LaTeX. Use clean Unicode (Δ, →, ⇌, etc.).''',
     onProgress?.call('Identified ${topics.length} Important Topics ✓');
     return topics;
   }
+
 
   // ==========================================
   // 4. STRICT PDF PAGE-GROUNDED QUIZ GENERATION
@@ -403,14 +448,45 @@ Return strictly valid JSON matching this exact structure:
   ]
 }''';
 
-        final raw = await remote.invokeFunction('ask-chembuddy', {
-          'question': prompt,
-          'document_text': promptDocumentText.length > 16000 ? promptDocumentText.substring(0, 16000) : promptDocumentText,
-          'document_name': documentTitle,
-        });
+        // 1. Try dedicated 'generate-quiz' function first (Gemini 3.8 Flash + enforced JSON schema)
+        try {
+          final quizRes = await remote.invokeFunction('generate-quiz', {
+            'sourceText': promptDocumentText,
+            'topic': documentTitle,
+            'questionCount': validCount,
+            'difficulty': quizConfig.difficulty.name,
+            'quizType': 'mcq',
+          });
 
-        if (raw is Map && raw['answer'] != null) {
-          questions = _parseQuizFromJson(raw['answer'].toString(), bundle: bundle);
+          if (quizRes is Map && quizRes['questions'] is List) {
+            final rawList = quizRes['questions'] as List;
+            questions = rawList.map((e) {
+              final qMap = Map<String, dynamic>.from(e as Map);
+              if (qMap['page_number'] == null && bundle != null && bundle.pages.isNotEmpty) {
+                qMap['page_number'] = 1;
+              }
+              if (qMap['is_strict_pdf_grounded'] == null) {
+                qMap['is_strict_pdf_grounded'] = true;
+              }
+              return QuizQuestion.fromJson(qMap);
+            }).toList();
+          }
+        } catch (e) {
+          debugPrint('[generateQuiz] generate-quiz call note: $e');
+        }
+
+        // 2. Secondary fallback to ask-chembuddy if generate-quiz produced no questions
+        if (questions == null || questions.isEmpty) {
+          final raw = await remote.invokeFunction('ask-chembuddy', {
+            'question': prompt,
+            'document_text': promptDocumentText,
+            'document_name': documentTitle,
+            'mode': 'pdf_grounded',
+          });
+
+          if (raw is Map && raw['answer'] != null) {
+            questions = _parseQuizFromJson(raw['answer'].toString(), bundle: bundle);
+          }
         }
       } catch (_) {
         // Fallback to heuristic
@@ -692,21 +768,29 @@ Return strictly valid JSON matching this exact structure:
     PdfDocumentAnalysis? analysis,
     PdfQuizConfig? config,
   }) {
-    // 1. Check if specific domain heuristic exists
-    final baseQuestions = _generateHeuristicQuiz(text, docTitle, count, bundle: bundle);
-    final pool = List<QuizQuestion>.from(baseQuestions);
+    final pool = <QuizQuestion>[];
+    final seenQuestions = <String>{};
 
-    // 2. Synthesize additional grounded questions from extracted definitions and equations if count > pool
-    if (analysis != null && pool.length < count) {
+    void addQuestion(QuizQuestion q) {
+      final norm = q.question.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').trim();
+      if (!seenQuestions.contains(norm)) {
+        seenQuestions.add(norm);
+        pool.add(q);
+      }
+    }
+
+    // 1. PRIMARY: Extract questions directly from the document's analysis (definitions, equations, core topics, reactions)
+    if (analysis != null) {
+      // 1A. Definitions found in THIS document
       for (final def in analysis.keyDefinitions) {
         if (pool.length >= count) break;
         final term = def['term'] ?? 'Concept';
         final explanation = def['definition'] ?? '';
-        if (explanation.length < 15) continue;
+        if (explanation.length < 10) continue;
 
-        pool.add(QuizQuestion(
+        addQuestion(QuizQuestion(
           id: _uuid.v4(),
-          question: 'According to the document "$docTitle", what is the definition and significance of $term?',
+          question: 'According to "$docTitle", what is the definition and significance of $term?',
           options: [
             explanation,
             'A competing side reaction favored only at non-standard pressure and temperature',
@@ -724,11 +808,12 @@ Return strictly valid JSON matching this exact structure:
         ));
       }
 
+      // 1B. Equations and formulas found in THIS document
       for (final eq in analysis.equationsAndFormulas) {
         if (pool.length >= count) break;
-        pool.add(QuizQuestion(
+        addQuestion(QuizQuestion(
           id: _uuid.v4(),
-          question: 'Which chemical or physical relationship in "$docTitle" is expressed by the equation: $eq?',
+          question: 'Which relationship in "$docTitle" is expressed by the equation: $eq?',
           options: [
             'Fundamental governing equation established in the study material: $eq',
             'An empirical approximation valid only for ideal gases at absolute zero',
@@ -746,11 +831,12 @@ Return strictly valid JSON matching this exact structure:
         ));
       }
 
+      // 1C. Core topics identified from THIS document
       for (final topic in analysis.coreTopics) {
         if (pool.length >= count) break;
-        pool.add(QuizQuestion(
+        addQuestion(QuizQuestion(
           id: _uuid.v4(),
-          question: 'In the analysis of ${topic.concept} in "$docTitle", which statement is accurate based on the text?',
+          question: 'In the study of ${topic.concept} in "$docTitle", which statement is accurate based on the text?',
           options: [
             '${topic.concept} is a central ${topic.importance.toUpperCase()} priority concept in the course material.',
             '${topic.concept} is negligible and disregarded in standard laboratory preparations.',
@@ -767,9 +853,77 @@ Return strictly valid JSON matching this exact structure:
           isStrictPdfGrounded: true,
         ));
       }
+
+      // 1D. Reactions and reagents found in THIS document
+      for (final reaction in analysis.reactionsAndReagents) {
+        if (pool.length >= count) break;
+        addQuestion(QuizQuestion(
+          id: _uuid.v4(),
+          question: 'What is the role of "$reaction" as detailed in "$docTitle"?',
+          options: [
+            'It serves as a key reaction pathway or reagent specified in the text.',
+            'It is an inert spectator that does not participate in chemical transformation.',
+            'It is a catalyst poison that prevents any product formation.',
+            'It is a radioactive tracer used exclusively in nuclear magnetic resonance.',
+          ],
+          correctIndex: 0,
+          explanation: 'The study material specifically identifies "$reaction" as an important reaction/reagent.',
+          type: QuizQuestionType.reaction,
+          topic: reaction.length > 30 ? reaction.substring(0, 30) : reaction,
+          difficulty: QuizDifficulty.medium,
+          pageNumber: 1,
+          sourceSnippet: reaction,
+          isStrictPdfGrounded: true,
+        ));
+      }
     }
 
-    return _enrichQuestionsWithPageGrounding(pool.take(count).toList(), bundle);
+    // 2. SECONDARY: Sentence-level question generation from document pages / text
+    if (pool.length < count) {
+      final sentences = text
+          .split(RegExp(r'\n+|\.(?=\s)'))
+          .map((s) => s.trim())
+          .where((s) => s.length >= 25 && s.length <= 250 && !s.startsWith('#'))
+          .toList();
+
+      for (final sentence in sentences) {
+        if (pool.length >= count) break;
+        final words = sentence.split(RegExp(r'\s+')).where((w) => w.length > 3).take(4).join(' ');
+        if (words.isEmpty) continue;
+
+        addQuestion(QuizQuestion(
+          id: _uuid.v4(),
+          question: 'Regarding "$words" in "$docTitle", which statement correctly represents the provided study material?',
+          options: [
+            sentence,
+            'The reaction rate is independent of temperature and exhibits zero activation barrier',
+            'Optical activity is inverted without involving chiral centers',
+            'The enthalpy of reaction is identically zero under all thermodynamic states',
+          ],
+          correctIndex: 0,
+          explanation: 'Directly supported by the document text: "$sentence"',
+          type: QuizQuestionType.conceptual,
+          topic: docTitle,
+          difficulty: QuizDifficulty.medium,
+          pageNumber: 1,
+          sourceSnippet: sentence,
+          isStrictPdfGrounded: true,
+        ));
+      }
+    }
+
+    // 3. TERTIARY: If pool is STILL empty (e.g. text was completely empty),
+    // and ONLY if title matches a known domain, use that specific domain preset.
+    // NEVER inject HPLC into non-HPLC documents.
+    if (pool.isEmpty) {
+      final baseQuestions = _generateHeuristicQuiz(text, docTitle, count, bundle: bundle);
+      for (final q in baseQuestions) {
+        addQuestion(q);
+      }
+    }
+
+    final randomized = pool.take(count).map(_randomizeQuestionOptions).toList();
+    return _enrichQuestionsWithPageGrounding(randomized, bundle);
   }
   // ==========================================
   // 5. RECOMMENDED STUDY PATH
@@ -985,13 +1139,11 @@ Return strictly valid JSON matching this exact structure:
   }
 
   List<ImportantTopic> _generateHeuristicTopics(String text, String docTitle) {
-    final lowerTitle = '$docTitle $text'.toLowerCase();
-    final isChromatography = lowerTitle.contains('lc') ||
-        lowerTitle.contains('hplc') ||
-        lowerTitle.contains('chromatograph') ||
-        lowerTitle.contains('shimadzu') ||
-        lowerTitle.contains('column') ||
-        lowerTitle.contains('separation');
+    final docLower = docTitle.toLowerCase();
+    final isChromatography = RegExp(
+      r'\b(hplc|uplc|chromatograph\w*|shimadzu|retention\s+factor|van\s+deemter|c18\s+column)\b',
+      caseSensitive: false,
+    ).hasMatch(docLower);
 
     if (isChromatography) {
       return [
@@ -1134,10 +1286,8 @@ Return strictly valid JSON matching this exact structure:
   }
 
   List<QuizQuestion> _generateHeuristicQuiz(String text, String docTitle, int count, {DocumentOcrBundle? bundle}) {
-    final lowerTitle = '$docTitle $text'.toLowerCase();
-    final isCannizzaro = lowerTitle.contains('cannizzaro') ||
-        lowerTitle.contains('disproportionation') ||
-        lowerTitle.contains('hydride transfer');
+    final docLower = docTitle.toLowerCase();
+    final isCannizzaro = RegExp(r'\b(cannizzaro)\b', caseSensitive: false).hasMatch(docLower);
 
     if (isCannizzaro) {
       final cannizzaroPool = [
@@ -1244,12 +1394,10 @@ Return strictly valid JSON matching this exact structure:
       return _enrichQuestionsWithPageGrounding(pool, bundle);
     }
 
-    final isChromatography = lowerTitle.contains('lc') ||
-        lowerTitle.contains('hplc') ||
-        lowerTitle.contains('chromatograph') ||
-        lowerTitle.contains('shimadzu') ||
-        lowerTitle.contains('column') ||
-        lowerTitle.contains('separation');
+    final isChromatography = RegExp(
+      r'\b(hplc|uplc|chromatograph\w*|shimadzu|c18\s+column)\b',
+      caseSensitive: false,
+    ).hasMatch(docLower);
 
     if (isChromatography) {
       final hplcPool = [

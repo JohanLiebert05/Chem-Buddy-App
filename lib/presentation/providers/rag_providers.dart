@@ -12,6 +12,7 @@ class ChatState {
   final String? activeDocumentName;
   final String? activeDocumentText;
   final String? activeDocumentPath;
+  final String? activeDocumentId;
   final int? activeDocumentSize;
   final int? activeDocumentPages;
   final String? lastQuestion;
@@ -26,6 +27,7 @@ class ChatState {
     this.activeDocumentName,
     this.activeDocumentText,
     this.activeDocumentPath,
+    this.activeDocumentId,
     this.activeDocumentSize,
     this.activeDocumentPages,
     this.lastQuestion,
@@ -44,6 +46,7 @@ class ChatState {
     String? activeDocumentName,
     String? activeDocumentText,
     String? activeDocumentPath,
+    String? activeDocumentId,
     int? activeDocumentSize,
     int? activeDocumentPages,
     bool clearDocument = false,
@@ -59,6 +62,7 @@ class ChatState {
       activeDocumentName: clearDocument ? null : (activeDocumentName ?? this.activeDocumentName),
       activeDocumentText: clearDocument ? null : (activeDocumentText ?? this.activeDocumentText),
       activeDocumentPath: clearDocument ? null : (activeDocumentPath ?? this.activeDocumentPath),
+      activeDocumentId: clearDocument ? null : (activeDocumentId ?? this.activeDocumentId),
       activeDocumentSize: clearDocument ? null : (activeDocumentSize ?? this.activeDocumentSize),
       activeDocumentPages: clearDocument ? null : (activeDocumentPages ?? this.activeDocumentPages),
       lastQuestion: lastQuestion ?? this.lastQuestion,
@@ -77,6 +81,7 @@ class ChatController extends Notifier<ChatState> {
     required String name,
     required String text,
     required String path,
+    String? documentId,
     int? size,
     int? pages,
   }) {
@@ -104,6 +109,7 @@ class ChatController extends Notifier<ChatState> {
       activeDocumentName: name,
       activeDocumentText: text,
       activeDocumentPath: path,
+      activeDocumentId: documentId,
       activeDocumentSize: size,
       activeDocumentPages: pages,
       messages: [...state.messages, summaryMessage],
@@ -153,6 +159,7 @@ class ChatController extends Notifier<ChatState> {
         subject: subject,
         documentText: state.activeDocumentText,
         documentName: state.activeDocumentName,
+        documentId: state.activeDocumentId,
         history: history,
         mode: mode,
       );

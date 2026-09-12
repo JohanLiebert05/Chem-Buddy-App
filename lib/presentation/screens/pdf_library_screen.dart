@@ -144,7 +144,7 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                           children: [
                             Text(d.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5, color: Colors.white)),
                             Text(
-                              '$subjectName · ${DateFormat('d MMM yyyy').format(d.dateAdded)}',
+                              '$subjectName · ${ocrBundle != null ? "${ocrBundle.pageCount} pages · " : ""}${DateFormat('d MMM yyyy').format(d.dateAdded)}',
                               style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                             ),
                           ],

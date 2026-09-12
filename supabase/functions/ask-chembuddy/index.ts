@@ -19,6 +19,7 @@ Deno.serve(async (req) => {
     const subject = body.subject as string | null;
     const documentText = body.document_text as string | null;
     const documentName = (body.document_name as string | null) || "Uploaded PDF";
+    const documentId = (body.document_id as string | null) || null;
     const conversationHistory = body.history as Array<{ role: string; content: string }> | null;
 
     if (question.length < 3) {
@@ -159,6 +160,8 @@ Deno.serve(async (req) => {
               match_count: 6,
               match_threshold: 0.3,
               filter_subject: subject || null,
+              // Scope retrieval to the active document when document_id is provided
+              filter_document_id: documentId || null,
             }),
           });
 
@@ -191,7 +194,9 @@ Deno.serve(async (req) => {
         pageNumber: 1,
         similarity: 1.0,
       });
-      context += `[USER STUDY MATERIAL: ${documentName}]\n${documentText.slice(0, 16000)}\n\n---\n\n`;
+      // Pass full document text — Gemini 3.8 Flash supports 1M token context.
+      // No hard truncation here to avoid losing late-chapter content.
+      context += `[USER STUDY MATERIAL: ${documentName}]\n${documentText}\n\n---\n\n`;
     }
 
     if (chunks.length > 0) {
@@ -288,6 +293,19 @@ Provide the full, stepwise organic/inorganic reaction mechanism:
 - Step-by-step electron displacement (nucleophilic attack, proton transfer, leaving group departure, rearrangement)
 - Structure and stability of all reactive intermediates (carbocation, carbanion, cyclic intermediate, tetrahedral species)
 - Driving force (thermodynamics, resonance stabilization, aromaticity, leaving group ability).`;
+    } else if (mode === "pdf_grounded" || mode === "from_pdf") {
+      // STRICT PDF-GROUNDED MODE: Answer ONLY from the provided document.
+      modeInstructions = `ANSWER MODE: PDF-GROUNDED STRICT (📋)
+You have access to the student's uploaded PDF document (see AVAILABLE STUDY CONTEXT below).
+
+RULES — FOLLOW EXACTLY:
+1. Answer ONLY using information explicitly present in the uploaded document context.
+2. You MUST cite the page number for every claim: e.g. "(Page 3)" or "(p.3)".
+3. If the answer cannot be found in the document text, respond with EXACTLY this format:
+   "I couldn't find information about [restate the topic] in your uploaded PDF (${documentName}). Try asking in General mode for a textbook-based answer."
+4. NEVER supplement the answer with outside chemistry knowledge absent from the document.
+5. NEVER invent page numbers, reactions, or definitions not present in the provided text.
+6. Accuracy over fluency — a short correct answer is better than a long hallucinated one.`;
     } else {
       // DEFAULT QUICK ANSWER MODE
       modeInstructions = `DEFAULT MODE: QUICK & DIRECT ANSWER (⚡)
@@ -371,9 +389,13 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
     answer = answer.replace(/___?DISPLAY_MATH[0-9₀-₉_]*___?/g, "");
     answer = answer.replace(/DISPLAY_MATH[0-9₀-₉_]+/g, "");
 
+    const model = chatModel;
     const responseData = {
       answer,
+      mode: typeof mode !== "undefined" ? mode : "default",
+      model,
       sources: sources.length > 0 ? sources : [],
+      docScoped: typeof documentName !== "undefined" && documentName !== null,
       hasContext: chunks.length > 0,
       chunksUsed: chunks.length,
       cached: false,

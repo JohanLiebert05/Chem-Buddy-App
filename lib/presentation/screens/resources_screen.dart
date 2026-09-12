@@ -12,7 +12,7 @@ import '../../data/services/reaction_mechanism_service.dart';
 import '../providers/app_providers.dart';
 import '../widgets/reaction_mechanisms_card.dart';
 import 'chemistry_toolkit_screen.dart';
-import 'exam_pattern_quiz_screen.dart';
+import 'exam_mode_screen.dart';
 import 'pdf_library_screen.dart';
 import 'pdf_quiz_screen.dart';
 import 'pdf_reader_screen.dart';
@@ -1210,7 +1210,7 @@ class _QuizzesAndMasteryTab extends ConsumerWidget {
         padding: const EdgeInsets.all(14),
         onTap: () {
           AppHaptics.confirm();
-          Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ExamPatternQuizScreen()));
+          Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ExamModeScreen()));
         },
         child: Row(
           children: [

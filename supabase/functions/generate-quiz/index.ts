@@ -130,14 +130,15 @@ Quiz Type: ${quizType}
 Target Questions: ${questionCount}
 
 CRITICAL RULES:
-1. STRICT PDF GROUNDING: Use ONLY the supplied document content as the source of factual information and question content.
-2. Exactly 4 plausible options for each question.
-3. Use standard chemical notation and inline LaTeX ($...$) for chemical formulas and equations.
-4. Explanations must clearly explain WHY the correct answer is right.
-5. Provide page number, source snippet excerpt, and set is_strict_pdf_grounded: true.
+1. STRICT DOCUMENT & TOPIC GROUNDING: Every question, answer, and explanation MUST be strictly and exclusively derived from the provided Study Material about "${topic}".
+2. ZERO OFF-TOPIC QUESTIONS: NEVER generate questions about chromatography, HPLC, LC-MS, column separation, or other unrelated domains unless the Study Material is specifically and explicitly about them. If the Study Material is about another chemistry area (e.g. pericyclic reactions, coordination chemistry, kinetics, organic synthesis, electrochemistry), ALL questions MUST be 100% focused on that exact subject.
+3. Exactly 4 plausible options for each question.
+4. Use standard chemical notation and inline LaTeX ($...$) for chemical formulas and equations.
+5. Explanations must clearly explain WHY the correct answer is right based on the Study Material.
+6. Provide page number, source snippet excerpt, and set is_strict_pdf_grounded: true.
 
 Study Material:
-${sourceText.slice(0, 14000)}`;
+${sourceText.length > 50000 ? sourceText.slice(0, 50000) : sourceText}`;
 
     const responseSchema = {
       type: "OBJECT",
@@ -198,10 +199,20 @@ ${sourceText.slice(0, 14000)}`;
       return json({ error: "Could not parse quiz output." }, 502);
     }
 
+    // Post-processing: downgrade is_strict_pdf_grounded if there's no source_snippet.
+    // Prevents Gemini from claiming grounding without providing evidence.
+    const questions = (quizData?.questions ?? []).map((q: any) => {
+      const snippet = (q.source_snippet ?? "").trim();
+      if (!snippet && q.is_strict_pdf_grounded) {
+        return { ...q, is_strict_pdf_grounded: false };
+      }
+      return q;
+    });
+
     const result = {
       quizTitle: quizData?.quiz_title || `${topic} Quiz`,
       totalMarks: quizData?.total_marks || (quizData?.questions?.length ?? 10) * 2,
-      questions: quizData?.questions ?? [],
+      questions: Array.from(questions),
       cached: false,
     };
 

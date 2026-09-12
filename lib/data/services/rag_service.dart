@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/pdf_ocr_models.dart';
 import '../remote/supabase_service.dart';
 import '../models/rag_models.dart';
 import 'chemistry_knowledge_engine.dart';
@@ -15,13 +16,13 @@ class RagService {
     String? subject,
     String? documentText,
     String? documentName,
+    String? documentId,
     List<AiMessage>? history,
     String? mode,
   }) async {
     debugPrint('[RAG] Incoming question: "$question" | mode: ${mode ?? "quick"} | subject: ${subject ?? "none"} | doc: ${documentName ?? "none"} | history: ${history?.length ?? 0} msgs');
 
     // 1. Try remote cloud first if configured
-
     if (remote.configured) {
       try {
         final response = await remote.invokeFunction('ask-chembuddy', {
@@ -29,7 +30,12 @@ class RagService {
           'subject': ?subject,
           'document_text': ?documentText,
           'document_name': ?documentName,
-          'mode': ?mode,
+          // Pass document_id for scoped RAG retrieval
+          'document_id': ?documentId,
+          // Use pdf_grounded mode when a document is attached
+          'mode': documentText != null && documentText.isNotEmpty
+              ? (mode == 'simple' ? mode : 'pdf_grounded')
+              : (mode ?? 'quick'),
           if (history != null) 'history': history.map((e) => e.toJson()).toList(),
         });
         if (response is Map<String, dynamic> && response['answer'] != null) {
@@ -55,20 +61,43 @@ class RagService {
     );
   }
 
+  /// Ingests a document into the RAG vector store.
+  ///
+  /// Prefers page-structured input ([bundle]) for accurate page citations.
+  /// Falls back to flat [text] for legacy callers.
   Future<void> ingestDocument({
     required String documentId,
-    required String text,
+    String? text,
+    DocumentOcrBundle? bundle,
     String? subject,
     String? topic,
     String? fileName,
+    String? documentTitle,
   }) async {
+    // Build pages array from bundle (preserves page_number per chunk)
+    List<Map<String, dynamic>>? pages;
+    if (bundle != null && bundle.pages.isNotEmpty) {
+      pages = bundle.pages
+          .where((p) => p.cleanedText.trim().length >= 20)
+          .map((p) => {
+                'pageNumber': p.pageNumber,
+                'text': p.cleanedText.trim(),
+              })
+          .toList();
+    }
+
+    final bodyText = text ?? bundle?.fullText ?? '';
+
     try {
       await remote.invokeFunction('ingest-document', {
-        'document_id': documentId,
-        'text': text,
+        'documentId': documentId,
+        if (pages != null && pages.isNotEmpty) 'pages': pages,
+        // Legacy flat text as fallback
+        if (pages == null || pages.isEmpty) 'text': bodyText,
         'subject': ?subject,
         'topic': ?topic,
-        'file_name': ?fileName,
+        'fileName': ?fileName,
+        'documentTitle': ?documentTitle,
       });
     } catch (e) {
       throw StateError('Failed to ingest document: $e');

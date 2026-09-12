@@ -8,11 +8,14 @@ import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/models/library_models.dart';
 import '../../data/models/pdf_ocr_models.dart';
+import '../../data/remote/supabase_service.dart';
 import '../../data/services/gemini_flashcard_service.dart';
 import '../../data/services/pdf_text_utils.dart';
+import '../providers/admin_providers.dart' show ragServiceProvider;
 import '../providers/app_providers.dart';
 import '../providers/rag_providers.dart';
 import '../widgets/contextual_hint_card.dart';
+import '../widgets/pdf_quiz_setup_dialog.dart';
 import 'pdf_reader_screen.dart';
 import 'smart_flashcards_study_screen.dart';
 
@@ -85,7 +88,9 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
         name: widget.doc.displayName,
         text: _extractedText!,
         path: widget.doc.localPath,
+        documentId: widget.doc.id,
         size: widget.doc.fileSize,
+        pages: _ocrBundle?.totalPages,
       );
     }
   }
@@ -119,6 +124,18 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       _extractedText = bundle.fullText;
       _documentQuality = bundle.overallQuality;
       _autoAttachDocToChat();
+
+      // Auto-index PDF pages into RAG vector store in background when online & authenticated
+      if (SupabaseService.instance.configured && SupabaseService.instance.userId != null) {
+        ref.read(ragServiceProvider).ingestDocument(
+          documentId: widget.doc.id,
+          bundle: bundle,
+          documentTitle: widget.doc.displayName,
+          fileName: widget.doc.filename,
+        ).catchError((e) {
+          debugPrint('[AutoIngest] Background ingestion note: $e');
+        });
+      }
     } catch (e) {
       setState(() {
         _errorMessage = e is PdfExtractionException
@@ -414,10 +431,45 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
         onTap: () => _tabController.animateTo(0),
       ),
       (
+        icon: Icons.quiz_outlined,
+        label: 'Smart Quiz',
+        color: AppColors.accentGold,
+        onTap: () => PdfQuizSetupDialog.show(
+          context,
+          documentTitle: widget.doc.displayName,
+          docId: widget.doc.id,
+          doc: widget.doc,
+        ),
+      ),
+      (
         icon: Icons.style_outlined,
         label: 'Smart Flashcards',
         color: AppColors.accentCyan,
         onTap: () => _tabController.animateTo(1),
+      ),
+      (
+        icon: Icons.auto_stories_outlined,
+        label: 'Summarize',
+        color: AppColors.brandBright,
+        onTap: () {
+          _tabController.animateTo(0);
+          _autoAttachDocToChat();
+          ref.read(chatControllerProvider.notifier).sendMessage(
+            'Provide a clear, structured summary of the key chemistry concepts, equations, and topics in this document.',
+          );
+        },
+      ),
+      (
+        icon: Icons.school_outlined,
+        label: 'Exam Revision',
+        color: AppColors.statusWarning,
+        onTap: () {
+          _tabController.animateTo(0);
+          _autoAttachDocToChat();
+          ref.read(chatControllerProvider.notifier).sendMessage(
+            'Extract high-yield 2-mark definitions and 5-mark explanation questions with model answers from this document for university exam revision.',
+          );
+        },
       ),
       (
         icon: Icons.menu_book_rounded,

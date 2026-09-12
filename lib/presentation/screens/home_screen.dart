@@ -3,33 +3,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/attendance_math.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/animated_dashboard.dart';
-
 import '../../core/widgets/branding/chembuddy_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
 import '../../data/models/smart_flashcard.dart';
 import '../../data/models/timetable_entry.dart';
 import '../../data/services/daily_chemistry_service.dart';
+import '../../data/services/study_analytics_service.dart';
 import '../providers/app_providers.dart';
+import '../widgets/home_widgets.dart';
+import '../widgets/reaction_mechanisms_card.dart';
 import 'beginner_tutorial_dialog.dart';
 import 'chemistry_toolkit_screen.dart';
+import 'exam_mode_screen.dart';
 import 'pdf_library_screen.dart';
 import 'pdf_study_hub_screen.dart';
+import 'pericyclic_hub_screen.dart';
+import 'reaction_mechanism_screen.dart';
 import 'search_screen.dart';
 import 'smart_flashcards_hub.dart';
 import 'smart_flashcards_study_screen.dart';
 import 'spectroscopy_hub_screen.dart';
-import 'pericyclic_hub_screen.dart';
-import 'exam_pattern_quiz_screen.dart';
-import 'reaction_mechanism_screen.dart';
-import '../widgets/reaction_mechanisms_card.dart';
-import '../widgets/home_widgets.dart';
-
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -80,6 +78,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final analyticsService = ref.watch(studyAnalyticsServiceProvider);
     final analytics = analyticsService.computeSummary(streakDays: repo.streak());
 
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good morning' : (hour < 17 ? 'Good afternoon' : 'Good evening');
+
     return AnimatedDashboardList(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       children: [
@@ -92,7 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Hi, $name 👋', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                  Text('$greeting, $name 👋', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                   Text(
                     '${state.profile.university.isEmpty ? "MSc Chemistry" : state.profile.university} · Sem ${state.profile.semester}',
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
@@ -341,7 +342,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _QuickTile(
               icon: Icons.upload_file_outlined,
               label: 'Upload',
-              onTap: () => ref.read(shellTabProvider.notifier).state = 3,
+              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PdfLibraryScreen())),
             ),
             _QuickTile(
               icon: Icons.science_outlined,
@@ -399,13 +400,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: 8),
             _buildMscToolCard(
-              title: 'University Exams & Rubrics',
-              subtitle: 'Smart BCU Blueprint, 2M/5M/10M Rubrics & AI Tutor',
+              title: 'Exam Mode & Model Answers',
+              subtitle: 'Smart BCU Blueprint, 2M/5M/10M Rubrics & Answer Generator',
               icon: Icons.school_rounded,
               color: AppColors.accentGold,
               onTap: () {
                 AppHaptics.selection();
-                Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ExamPatternQuizScreen()));
+                Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ExamModeScreen()));
               },
             ),
           ],
@@ -570,8 +571,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           }),
         const SizedBox(height: 16),
 
-        // 8. Daily Chemistry Concept / Quote
+        // 8. MY PROGRESS SECTION
+        const SectionTitle('My Progress 📊'),
+        _MyProgressSection(analytics: analytics),
+        const SizedBox(height: 10),
+
+        // 9. Daily Chemistry Concept / Quote
         _DailyChemistryCard(item: dailyChem),
+
       ],
     );
   }
@@ -1157,3 +1164,253 @@ class _StreakSparklinePainter extends CustomPainter {
       old.streakDays != streakDays;
 }
 
+// =====================================================
+// MY PROGRESS SECTION (Home Screen)
+// =====================================================
+
+class _MyProgressSection extends StatelessWidget {
+  const _MyProgressSection({required this.analytics});
+  final StudyAnalyticsSummary analytics;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasData = analytics.totalQuestionsAnswered > 0;
+
+    if (!hasData) {
+      return GlowCard(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: const [
+            Icon(Icons.bar_chart_outlined, color: AppColors.purpleBright, size: 28),
+            SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('No quiz data yet',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white)),
+                  SizedBox(height: 3),
+                  Text(
+                    'Take your first quiz from a PDF to start tracking your chemistry progress.',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final accuracy = analytics.overallQuizAccuracy;
+    final accuracyColor = accuracy >= 70
+        ? AppColors.statusSuccess
+        : (accuracy >= 50 ? AppColors.statusWarning : AppColors.statusDanger);
+    final weakList = analytics.weakTopics.take(3).toList();
+
+    return Column(
+      children: [
+        // Top row: accuracy ring + mini stats
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceElevated,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: accuracyColor.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 38,
+                      height: 38,
+                      child: CustomPaint(
+                        painter: _RadialAccuracyPainter(
+                          percent: (accuracy / 100).clamp(0.0, 1.0),
+                          color: accuracyColor,
+                        ),
+                        child: Center(
+                          child: Icon(Icons.bolt_rounded, size: 13, color: accuracyColor),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Overall Accuracy',
+                              style: TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600)),
+                          Text('${accuracy.toStringAsFixed(0)}%',
+                              style: TextStyle(
+                                  color: accuracyColor, fontSize: 18, fontWeight: FontWeight.w900)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                children: [
+                  _MiniStatRow(
+                    icon: Icons.quiz_outlined,
+                    label: 'Quizzes',
+                    value: '${analytics.totalQuizzesTaken}',
+                    color: AppColors.brandBright,
+                  ),
+                  const SizedBox(height: 6),
+                  _MiniStatRow(
+                    icon: Icons.style_outlined,
+                    label: 'Cards Mastered',
+                    value: '${analytics.flashcardsMatureCount}',
+                    color: AppColors.accentCyan,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        // Weak Topics (only when data exists)
+        if (weakList.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.statusWarning.withValues(alpha: 0.25)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.warning_amber_rounded, size: 15, color: AppColors.statusWarning),
+                    SizedBox(width: 6),
+                    Text('Needs Attention',
+                        style: TextStyle(
+                            color: AppColors.statusWarning,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12.5)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ...weakList.map((t) {
+                  final acc = t.accuracy.clamp(0.0, 100.0);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(t.topic,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700)),
+                            ),
+                            Text('${acc.toStringAsFixed(0)}%',
+                                style: const TextStyle(
+                                    color: AppColors.statusDanger,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800)),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: acc / 100,
+                            minHeight: 5,
+                            color: AppColors.statusDanger,
+                            backgroundColor: Colors.white12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.statusWarning,
+                      side: const BorderSide(color: AppColors.statusWarning, width: 0.9),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.refresh_rounded, size: 16),
+                    label: const Text('Practice Weak Topics',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute<void>(
+                        builder: (_) => const SmartFlashcardsStudyScreen(
+                          setId: '',
+                          review: ReviewMode.difficult,
+                        ),
+                      ));
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _MiniStatRow extends StatelessWidget {
+  const _MiniStatRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: AppColors.bg2,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(label,
+                style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
+          ),
+          Text(value,
+              style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.w900)),
+        ],
+      ),
+    );
+  }
+}

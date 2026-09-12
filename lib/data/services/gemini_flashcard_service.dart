@@ -106,6 +106,7 @@ class GeminiFlashcardService {
     debugPrint('[GeminiFlashcardService] Invoking Academic Chemistry Fallback Synthesis strictly from document text...');
     final fallback = _synthesizeLocalChemistryCards(promptText, targetCount, topic, bundle: bundle);
     if (fallback.isNotEmpty) {
+      _memoryCache[cacheKey] = fallback;
       return fallback;
     }
 
@@ -344,7 +345,12 @@ class GeminiFlashcardService {
 
   /// Validates that a generated card answer is actually grounded in the source text.
   static bool _isGrounded(String answer, String sourceText) {
-    final answerWords = answer
+    // If the answer uses our structured 'Key idea:' template, check the key factual statement
+    final target = answer.contains('Key idea:')
+        ? answer.split('\n\n').first.replaceFirst('Key idea:', '').trim()
+        : answer;
+
+    final answerWords = target
         .toLowerCase()
         .replaceAll(RegExp(r'[^\w\s]'), ' ')
         .split(RegExp(r'\s+'))

@@ -11,13 +11,36 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const documentId = String(body.documentId ?? "").trim();
-    const text = String(body.text ?? "").trim();
     const subject = String(body.subject ?? "").trim();
     const topic = String(body.topic ?? "").trim();
     const fileName = String(body.fileName ?? "").trim();
+    const documentTitle = String(body.documentTitle ?? fileName ?? "").trim();
 
-    if (!documentId || text.length < 40) {
-      return json({ error: "Document ID and sufficient text are required." }, 400);
+    // Accept either page-aware array OR legacy flat text
+    const pagesInput = body.pages as Array<{ pageNumber: number; text: string }> | null;
+    const legacyText = String(body.text ?? "").trim();
+
+    if (!documentId) {
+      return json({ error: "Document ID is required." }, 400);
+    }
+
+    // Build page list — prefer structured pages, fall back to single flat-text page
+    const pages: Array<{ pageNumber: number; text: string }> = [];
+
+    if (Array.isArray(pagesInput) && pagesInput.length > 0) {
+      for (const p of pagesInput) {
+        const pageText = String(p.text ?? "").trim();
+        if (pageText.length >= 20) {
+          pages.push({ pageNumber: Number(p.pageNumber) || 1, text: pageText });
+        }
+      }
+    } else if (legacyText.length >= 40) {
+      // Legacy: treat entire text as page 1 (no page provenance)
+      pages.push({ pageNumber: 1, text: legacyText });
+    }
+
+    if (pages.length === 0) {
+      return json({ error: "Document ID and sufficient text are required (minimum 40 characters per page)." }, 400);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -33,16 +56,26 @@ Deno.serve(async (req) => {
       "apikey": supabaseServiceKey,
     };
 
+    // Mark document as processing
     await fetch(`${supabaseUrl}/rest/v1/rag_documents?id=eq.${documentId}`, {
       method: "PATCH",
       headers,
       body: JSON.stringify({ status: "processing", updated_at: new Date().toISOString() }),
     });
 
-    const cleanedText = cleanText(text);
-    const chunks = chunkText(cleanedText, 500, 50);
+    // Build all chunks with page provenance using semantic sentence-boundary chunking
+    const allChunks: Array<{ text: string; pageNumber: number }> = [];
+    for (const page of pages) {
+      const cleaned = cleanText(page.text);
+      const chunks = chunkBySentences(cleaned, 500, 50);
+      for (const chunk of chunks) {
+        if (chunk.text.length >= 20) {
+          allChunks.push({ text: chunk.text, pageNumber: page.pageNumber });
+        }
+      }
+    }
 
-    if (chunks.length === 0) {
+    if (allChunks.length === 0) {
       await updateDocStatus(supabaseUrl, headers, documentId, "error", "No usable text found after cleaning.");
       return json({ error: "No usable text found in document." }, 400);
     }
@@ -58,10 +91,12 @@ Deno.serve(async (req) => {
       page_number: number | null;
       token_count: number;
       embedding: string;
+      document_title: string;
+      file_name: string;
     }> = [];
 
-    for (let i = 0; i < chunks.length; i += batchSize) {
-      const batch = chunks.slice(i, i + batchSize);
+    for (let i = 0; i < allChunks.length; i += batchSize) {
+      const batch = allChunks.slice(i, i + batchSize);
       const requests = batch.map((chunk) => ({
         model: `models/${model}`,
         content: { parts: [{ text: chunk.text }] },
@@ -87,6 +122,8 @@ Deno.serve(async (req) => {
               page_number: batch[j].pageNumber,
               token_count: batch[j].text.split(/\s+/).length,
               embedding: `[${values.join(",")}]`,
+              document_title: documentTitle,
+              file_name: fileName,
             });
           }
         }
@@ -112,6 +149,8 @@ Deno.serve(async (req) => {
                 page_number: batch[j].pageNumber,
                 token_count: batch[j].text.split(/\s+/).length,
                 embedding: `[${singleRes.data.embedding.values.join(",")}]`,
+                document_title: documentTitle,
+                file_name: fileName,
               });
             }
           } catch (e) {
@@ -125,6 +164,12 @@ Deno.serve(async (req) => {
       await updateDocStatus(supabaseUrl, headers, documentId, "error", "Could not generate embeddings for any chunks.");
       return json({ error: "Embedding generation failed for all chunks." }, 502);
     }
+
+    // Delete existing chunks for this document before inserting new ones (re-ingest)
+    await fetch(`${supabaseUrl}/rest/v1/rag_chunks?document_id=eq.${documentId}`, {
+      method: "DELETE",
+      headers,
+    });
 
     const insertBatchSize = 50;
     for (let i = 0; i < allChunkRows.length; i += insertBatchSize) {
@@ -149,7 +194,8 @@ Deno.serve(async (req) => {
     return json({
       success: true,
       chunksCreated: allChunkRows.length,
-      totalChunks: chunks.length,
+      totalChunks: allChunks.length,
+      pagesProcessed: pages.length,
     });
   } catch (error) {
     console.error("ingest-document error:", error);
@@ -157,7 +203,59 @@ Deno.serve(async (req) => {
   }
 });
 
-// ─── Key Pool & Multi-Key Failover Engine ───────────────────
+// ─── Semantic sentence-boundary chunker ─────────────────────
+interface Chunk {
+  text: string;
+  pageNumber: number;
+}
+
+/**
+ * Splits text into semantically coherent chunks at sentence boundaries
+ * (`. `, `? `, `! `, `\n\n`), keeping each chunk within maxWords.
+ * Adjacent chunks share overlapWords tail for cross-boundary context.
+ */
+function chunkBySentences(text: string, maxWords: number, overlapWords: number): Chunk[] {
+  const words = text.split(/\s+/).filter((w) => w.length > 0);
+  if (words.length === 0) return [];
+
+  const chunks: Chunk[] = [];
+  let start = 0;
+
+  while (start < words.length) {
+    const end = Math.min(start + maxWords, words.length);
+    let splitAt = end;
+
+    // Walk back from end to find a sentence boundary (word ending in . ? !)
+    if (end < words.length) {
+      for (let i = end - 1; i >= start + Math.floor(maxWords / 2); i--) {
+        if (/[.?!]$/.test(words[i])) {
+          splitAt = i + 1;
+          break;
+        }
+      }
+    }
+
+    const chunkText = words.slice(start, splitAt).join(" ").trim();
+    if (chunkText.length >= 20) {
+      chunks.push({ text: chunkText, pageNumber: 1 }); // pageNumber set by caller
+    }
+
+    if (splitAt >= words.length) break;
+    start = Math.max(start + 1, splitAt - overlapWords);
+  }
+
+  return chunks;
+}
+
+function cleanText(raw: string): string {
+  return raw
+    .replace(/\0/g, "")
+    .replace(/[^\S\n]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+// ─── Key Pool & Multi-Key Failover Engine ─────────────────────
 const GEMINI_API_KEYS_FALLBACK = [
   atob("QVEuQWI4Uk42TFdoRHRwWlppYkYzY08wbjJ0RVdGOWt2enlNVzUwcjRfVE9sZkVpUF9jSHc="),
   atob("QVEuQWI4Uk42TFloMi01alpsTUFkdl9CaXE0cHMzZ2RxeXlpSDVBNV95c09kMktyZWptVHc="),
@@ -187,7 +285,6 @@ function getGeminiKeyPool(): string[] {
   return Array.from(new Set(combined)).filter((k) => k.length > 5);
 }
 
-// Global round-robin index across incoming invocations
 let globalKeyCounter = 0;
 
 async function fetchGeminiWithRotation(
@@ -199,7 +296,6 @@ async function fetchGeminiWithRotation(
     return { ok: false, status: 500, errorText: "No Gemini API keys configured." };
   }
 
-  // Round-robin starting point so load is evenly distributed across all 3 keys
   const startIdx = (globalKeyCounter++) % keys.length;
   const orderedKeys = keys.map((_, i) => keys[(startIdx + i) % keys.length]);
 
@@ -216,9 +312,7 @@ async function fetchGeminiWithRotation(
       if (settled) return;
       settled = true;
       scheduledTimeouts.forEach((t) => clearTimeout(t));
-      activeControllers.forEach((ac) => {
-        try { ac.abort(); } catch (_) {}
-      });
+      activeControllers.forEach((ac) => { try { ac.abort(); } catch (_) {} });
       resolve({ ok: true, status: 200, data });
     }
 
@@ -240,9 +334,7 @@ async function fetchGeminiWithRotation(
       activeControllers.push(ac);
       const url = `https://generativelanguage.googleapis.com/v1beta/${endpointPath}?key=${key}`;
 
-      const attemptTimer = setTimeout(() => {
-        try { ac.abort(); } catch (_) {}
-      }, 12000);
+      const attemptTimer = setTimeout(() => { try { ac.abort(); } catch (_) {} }, 12000);
 
       try {
         const res = await fetch(url, {
@@ -252,89 +344,30 @@ async function fetchGeminiWithRotation(
           signal: ac.signal,
         });
         clearTimeout(attemptTimer);
-
         if (settled) return;
-
         if (res.ok) {
           const data = await res.json();
           settleSuccess(data);
           return;
         }
-
         lastStatus = res.status;
         lastErrorText = await res.text();
-        console.warn(`[Gemini Fast Hedging] Key ${index + 1}/${orderedKeys.length} failed (${res.status}):`, lastErrorText.slice(0, 120));
-
-        if (index + 1 < orderedKeys.length && !settled) {
-          dispatchKey(index + 1);
-        }
+        if (index + 1 < orderedKeys.length && !settled) dispatchKey(index + 1);
       } catch (err: any) {
         clearTimeout(attemptTimer);
         if (settled) return;
-        if (err.name !== "AbortError") {
-          lastErrorText = String(err);
-          console.warn(`[Gemini Fast Hedging] Key ${index + 1} network error:`, err);
-        }
-        if (index + 1 < orderedKeys.length && !settled) {
-          dispatchKey(index + 1);
-        }
+        if (err.name !== "AbortError") { lastErrorText = String(err); }
+        if (index + 1 < orderedKeys.length && !settled) dispatchKey(index + 1);
       }
       checkAllFailed();
     }
 
     dispatchKey(0);
-
     for (let i = 1; i < orderedKeys.length; i++) {
-      const timer = setTimeout(() => {
-        if (!settled) {
-          dispatchKey(i);
-        }
-      }, i * 650);
+      const timer = setTimeout(() => { if (!settled) dispatchKey(i); }, i * 650);
       scheduledTimeouts.push(timer);
     }
   });
-}
-
-function cleanText(raw: string): string {
-  return raw
-    .replace(/\0/g, "")
-    .replace(/[^\S\n]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-interface Chunk {
-  text: string;
-  pageNumber: number | null;
-}
-
-function chunkText(text: string, maxTokens: number, overlapTokens: number): Chunk[] {
-  const words = text.split(/\s+/);
-  if (words.length === 0) return [];
-
-  const chunks: Chunk[] = [];
-  let start = 0;
-
-  while (start < words.length) {
-    const end = Math.min(start + maxTokens, words.length);
-    const chunkWords = words.slice(start, end);
-    const chunkText = chunkWords.join(" ").trim();
-
-    if (chunkText.length > 20) {
-      chunks.push({
-        text: chunkText,
-        pageNumber: null,
-      });
-    }
-
-    if (end >= words.length) break;
-    start = end - overlapTokens;
-    if (start <= (chunks.length > 0 ? end - maxTokens : 0)) {
-      start = end;
-    }
-  }
-
-  return chunks;
 }
 
 async function updateDocStatus(
@@ -344,12 +377,8 @@ async function updateDocStatus(
   status: string,
   errorMessage?: string,
 ) {
-  const payload: Record<string, unknown> = {
-    status,
-    updated_at: new Date().toISOString(),
-  };
+  const payload: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
   if (errorMessage) payload.error_message = errorMessage;
-
   await fetch(`${supabaseUrl}/rest/v1/rag_documents?id=eq.${documentId}`, {
     method: "PATCH",
     headers,
@@ -360,8 +389,7 @@ async function updateDocStatus(
 function cors() {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   };
 }
 

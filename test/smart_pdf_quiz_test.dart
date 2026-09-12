@@ -170,10 +170,53 @@ The magnetic moment is calculated using the spin-only formula: mu_s = sqrt(n(n+2
         expect(q.explanation.isNotEmpty, isTrue);
       }
     });
+
+    test('6. Quiz strictly reflects PDF topic and NEVER generates unrelated HPLC questions', () async {
+      final service = PdfAiStudyService();
+
+      // 1. Coordination chemistry text
+      final coordQuiz = await service.generateQuiz(
+        sourceText: sampleCoordinationPdf,
+        documentTitle: 'Coordination Chemistry',
+        config: const PdfQuizConfig(count: 8),
+      );
+
+      expect(coordQuiz.questions.isNotEmpty, isTrue);
+      for (final q in coordQuiz.questions) {
+        final qText = '${q.question} ${q.explanation} ${q.options.join(" ")}'.toLowerCase();
+        expect(qText.contains('hplc'), isFalse, reason: 'Off-topic HPLC question generated: ${q.question}');
+        expect(qText.contains('c18 column'), isFalse, reason: 'Off-topic C18 question generated: ${q.question}');
+        expect(qText.contains('van deemter'), isFalse, reason: 'Off-topic Van Deemter question generated: ${q.question}');
+      }
+
+      // 2. Organic text containing common words with "lc" (molecule, alcohol, calculation)
+      const organicNoteWithLcWords = '''
+[PAGE 1]
+Nucleophilic substitution reactions depend heavily on molecular geometry.
+In an SN2 mechanism, the nucleophile attacks the carbon center from the backside.
+Alcohols are converted to alkyl halides using thionyl chloride (SOCl2) or phosphorus tribromide (PBr3).
+The calculation of reaction yield is based on stoichiometry.
+''';
+
+      final organicQuiz = await service.generateQuiz(
+        sourceText: organicNoteWithLcWords,
+        documentTitle: 'Organic Substitution Reactions',
+        config: const PdfQuizConfig(count: 5),
+      );
+
+      expect(organicQuiz.questions.isNotEmpty, isTrue);
+      for (final q in organicQuiz.questions) {
+        final qText = '${q.question} ${q.explanation} ${q.options.join(" ")}'.toLowerCase();
+        expect(qText.contains('hplc'), isFalse, reason: 'Off-topic HPLC question generated for organic text: ${q.question}');
+        expect(qText.contains('c18 column'), isFalse);
+        expect(qText.contains('van deemter'), isFalse);
+        expect(qText.contains('chromatograph'), isFalse);
+      }
+    });
   });
 
   group('Flashcard Service Cache & Acceleration Tests', () {
-    test('6. GeminiFlashcardService in-memory cache accelerates repeated lookups', () async {
+    test('7. GeminiFlashcardService in-memory cache accelerates repeated lookups', () async {
       final service = GeminiFlashcardService();
       const mockNote = 'Beer-Lambert law: A = epsilon * c * l, where A is absorbance, c is molar concentration.';
 

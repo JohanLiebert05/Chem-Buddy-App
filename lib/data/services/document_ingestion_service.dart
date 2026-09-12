@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:uuid/uuid.dart';
-import '../remote/supabase_service.dart';
 import '../models/admin_models.dart';
+import '../models/pdf_ocr_models.dart';
+import '../remote/supabase_service.dart';
 import 'rag_service.dart';
 
 class DocumentIngestionService {
@@ -47,10 +48,12 @@ class DocumentIngestionService {
 
   Future<void> triggerIngestion({
     required String documentId,
-    required String extractedText,
+    String? extractedText,
+    DocumentOcrBundle? bundle,
     String? subject,
     String? topic,
     String? fileName,
+    String? documentTitle,
   }) async {
     final ragService = RagService(remote: remote);
     final client = remote.client;
@@ -61,13 +64,18 @@ class DocumentIngestionService {
       await ragService.ingestDocument(
         documentId: documentId,
         text: extractedText,
+        bundle: bundle,
         subject: subject,
         topic: topic,
         fileName: fileName,
+        documentTitle: documentTitle,
       );
-      await client.from('rag_documents').update({'status': 'ready'}).eq('id', documentId);
+      // Status update is handled by the edge function itself on success
     } catch (e) {
-      await client.from('rag_documents').update({'status': 'error', 'error_message': e.toString()}).eq('id', documentId);
+      await client.from('rag_documents').update({
+        'status': 'error',
+        'error_message': e.toString().length > 500 ? e.toString().substring(0, 500) : e.toString(),
+      }).eq('id', documentId);
       rethrow;
     }
   }
