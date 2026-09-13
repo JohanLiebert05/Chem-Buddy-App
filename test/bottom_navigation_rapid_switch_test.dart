@@ -21,12 +21,6 @@ void main() {
     } catch (_) {}
   });
 
-  tearDownAll(() async {
-    try {
-      await Hive.close();
-    } catch (_) {}
-  });
-
   setUp(() {
     final originalOnError = FlutterError.onError;
     FlutterError.onError = (FlutterErrorDetails details) {

@@ -51,14 +51,6 @@ void main() {
     }
   });
 
-  tearDownAll(() async {
-    try {
-      await Hive.close();
-    } catch (_) {
-      // Safe to ignore: Hive may not have fully initialised on CI (Linux).
-    }
-  });
-
   setUp(() {
     methodCalls.clear();
   });
