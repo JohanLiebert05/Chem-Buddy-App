@@ -32,6 +32,44 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
   int _bondCount = 0;
   bool _isAnalyzing = false;
   bool _isPredicting = false;
+  bool _multiReactantMode = true;
+
+  void _showLoadSmilesDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('Load SMILES', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white, fontFamily: 'monospace'),
+          decoration: const InputDecoration(
+            hintText: 'Paste SMILES here...',
+            hintStyle: TextStyle(color: Colors.grey),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyan)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan, foregroundColor: Colors.black),
+            onPressed: () {
+              Navigator.pop(ctx);
+              if (controller.text.isNotEmpty) {
+                _loadSmiles(controller.text);
+              }
+            },
+            child: const Text('Load'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -856,7 +894,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
                   ),
                   Text(
-                    'Touch-Optimized • 100% Offline RDKit',
+                    'Touch-Optimized • Smart Canvas • RDKit',
                     style: TextStyle(fontSize: 10, color: AppColors.textMuted),
                   ),
                 ],
@@ -872,6 +910,14 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                   style: TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.w800, fontSize: 13),
                 ),
               ),
+            Switch(
+              value: _multiReactantMode,
+              onChanged: (val) {
+                setState(() => _multiReactantMode = val);
+                AppHaptics.selection();
+              },
+              activeThumbColor: AppColors.accentCyan,
+            ),
             IconButton(
               icon: _isPredicting
                   ? const SizedBox(
@@ -907,23 +953,49 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                         '$_atomCount Atoms • $_bondCount Bonds',
                         style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
                       ),
+                      if (_multiReactantMode) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.brandPrimary.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: AppColors.brandPrimary),
+                          ),
+                          child: const Text(
+                            'Multi-Reactant',
+                            style: TextStyle(color: AppColors.brandBright, fontSize: 9, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                  if (_currentSmiles.isNotEmpty)
-                    Container(
-                      constraints: const BoxConstraints(maxWidth: 180),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.brandPrimary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
+                  Row(
+                    children: [
+                      if (_currentSmiles.isNotEmpty)
+                        Container(
+                          constraints: const BoxConstraints(maxWidth: 150),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.brandPrimary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            _currentSmiles,
+                            style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontFamily: 'monospace'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.paste_rounded, color: AppColors.accentCyan, size: 18),
+                        tooltip: 'Load from SMILES',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: _showLoadSmilesDialog,
                       ),
-                      child: Text(
-                        _currentSmiles,
-                        style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontFamily: 'monospace'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
+                    ],
+                  ),
                 ],
               ),
             ),

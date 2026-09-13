@@ -48,14 +48,14 @@ jobs:
 
       - name: Copy Named APK
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.2.2-Release.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.3.0-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-v3.2.2-apk
-          path: ChemBuddy-v3.2.2-Release.apk
+          name: chem-buddy-v3.3.0-apk
+          path: ChemBuddy-v3.3.0-Release.apk
           retention-days: 30
 
       - name: Create GitHub Release (Tags only)
@@ -63,19 +63,20 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ChemBuddy-v3.2.2-Release.apk
+            ChemBuddy-v3.3.0-Release.apk
             Chem-Buddy-MSc-Release.apk
           name: ChemBuddy Release ${{ github.ref_name }}
           body: |
-            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.2.2)
+            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.3.0)
             
-            ### 🧪 What's New in v3.2.0:
-            - **Organic Reaction Predictor & Mechanism Viewer**:
-              - **Curated MSc Reaction Engine**: 35 core postgraduate organic named reactions (Aldol, Diels-Alder, Wittig, Robinson Annulation, Stille, Suzuki-Miyaura, Heck, Sharpless, Birch, etc.) with zero cloud latency.
-              - **Animated Electron-Pushing Mechanisms**: Step-by-step interactive viewer with animated curved electron flow arrows (heterolytic double-barbed and homolytic single-barbed radical fishhooks) rendered in crisp vector SVG.
-              - **Rich Reaction Pedagogy**: In-depth explanations covering stereochemistry, regiochemistry, frontier molecular orbitals (HOMO/LUMO), thermodynamic driving forces, and pKa considerations.
-              - **Seamless Chemical Sketcher Integration**: Send molecules drawn in ChemDraw / Ketcher canvas straight into the predictor with a single tap.
-              - **AI-Powered Fallback**: Multi-key Gemini load balancing edge function with automatic failover for predicting reactions beyond the local database.
-            - **Quality & Stability**:
-              - 100% automated test suite passing across all unit, widget, and chemistry engine tests.
-              - 0 static analysis warnings (`flutter analyze`).
+            ### 🎨 What's New in v3.3.0 — ChemDraw Intelligence Upgrade:
+            - **"+" Reactant Separator**: Automatically renders a cyan "+" symbol between disconnected molecular fragments on the canvas.
+            - **Reaction Arrow Tool (→)**: Draw horizontal reaction arrows to visually separate reactants and products.
+            - **Eraser Tool (🧹)**: Granular deletion — tap atoms or bonds to remove them individually.
+            - **Redo Support (↷)**: Full undo/redo stack for non-destructive editing.
+            - **Functional Group Palette**: Quick-insert —OH, —NH₂, —COOH, —CHO, —NO₂, —CN with one tap.
+            - **Pinch-to-Zoom & Pan**: Two-finger zoom and pan with reset-view button.
+            - **Smart Snap Preview**: Ghost bond preview when hovering near existing atoms.
+            - **6 New MSc Templates**: Naphthalene, Indole, Imidazole, Thiophene, Furan, Crown Ether (18-crown-6).
+            - **Multi-Reactant Mode Toggle**: AppBar toggle for multi-fragment drawing mode.
+            - **Load from SMILES**: Paste any SMILES string to instantly render on canvas.

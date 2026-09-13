@@ -76,6 +76,12 @@
       color: #F87171;
       border-color: #7F1D1D;
     }
+    button.tool-btn.danger.active {
+      background: #F87171;
+      border-color: #FECACA;
+      color: #FFFFFF;
+      box-shadow: 0 0 12px rgba(248, 113, 113, 0.5);
+    }
     button.tool-btn.accent {
       background: #0284C7;
       border-color: #38BDF8;
@@ -88,6 +94,7 @@
       position: relative;
       touch-action: none;
       background: radial-gradient(circle at 50% 50%, #131B2E 0%, #0B0F19 100%);
+      overflow: hidden;
     }
     #chem-canvas {
       width: 100%;
@@ -114,6 +121,40 @@
     #hud-info span.value {
       color: #38BDF8;
       font-weight: 700;
+    }
+
+    /* Functional Group Palette */
+    #fg-toolbar {
+      min-height: 50px;
+      background: #0F172A;
+      border-top: 1px solid #1F2937;
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      gap: 6px;
+      overflow-x: auto;
+      z-index: 10;
+    }
+    button.fg-btn {
+      min-width: 54px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1.5px solid #374151;
+      background: #1E293B;
+      color: #E2E8F0;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+    button.fg-btn:active {
+      transform: scale(0.92);
+      background: #8B5CF6;
+      border-color: #A78BFA;
     }
 
     /* Bottom Atom Palette */
@@ -168,7 +209,7 @@
     /* Templates Modal Drawer */
     #templates-sheet {
       position: absolute;
-      bottom: 60px;
+      bottom: 120px;
       left: 10px;
       right: 10px;
       max-height: 280px;
@@ -220,7 +261,6 @@
 </head>
 <body>
   <div id="app-container">
-    <!-- Top Toolbar: Mode, Bonds, Rings, Mechanism Arrows, Actions -->
     <div id="top-toolbar">
       <div class="tool-group">
         <button id="btn-single" class="tool-btn active" title="Single Bond">━</button>
@@ -228,7 +268,8 @@
         <button id="btn-triple" class="tool-btn" title="Triple Bond">≣</button>
         <button id="btn-wedge" class="tool-btn" title="Wedge (Up)">▲</button>
         <button id="btn-dash" class="tool-btn" title="Dash (Down)">▤</button>
-        <button id="btn-arrow" class="tool-btn" title="Curved Electron Arrow">⤹ Arrow</button>
+        <button id="btn-arrow" class="tool-btn" title="Curved Electron Arrow">⤹</button>
+        <button id="btn-rxn-arrow" class="tool-btn" title="Reaction Arrow">→</button>
       </div>
       <div class="tool-group">
         <button id="btn-benzene" class="tool-btn" title="Benzene">⌬</button>
@@ -237,22 +278,23 @@
         <button id="btn-templates" class="tool-btn accent" title="MSc Templates">MSc ⚗</button>
       </div>
       <div class="tool-group">
+        <button id="btn-eraser" class="tool-btn danger" title="Eraser">🧹</button>
         <button id="btn-undo" class="tool-btn" title="Undo">↶</button>
+        <button id="btn-redo" class="tool-btn" title="Redo">↷</button>
+        <button id="btn-reset-view" class="tool-btn" title="Reset View">🔍</button>
         <button id="btn-clear" class="tool-btn danger" title="Clear">🗑</button>
       </div>
     </div>
 
-    <!-- Canvas Viewport -->
     <div id="canvas-viewport">
       <div id="hud-info">
         <span>Atoms: <span id="hud-atoms" class="value">0</span></span>
         <span>Bonds: <span id="hud-bonds" class="value">0</span></span>
-        <span>Mode: <span id="hud-mode" class="value">Single</span></span>
+        <span>Mode: <span id="hud-mode" class="value">SINGLE</span></span>
       </div>
       <canvas id="chem-canvas"></canvas>
     </div>
 
-    <!-- Templates Drawer for MSc Chemistry -->
     <div id="templates-sheet">
       <div class="sheet-title">
         <span>Postgraduate Structure Templates</span>
@@ -268,10 +310,25 @@
         <div class="template-item" data-template="fmoc">Fmoc Group</div>
         <div class="template-item" data-template="tbs">TBS Ether</div>
         <div class="template-item" data-template="adamantane">Adamantane</div>
+        
+        <div class="template-item" data-template="naphthalene">Naphthalene</div>
+        <div class="template-item" data-template="indole">Indole</div>
+        <div class="template-item" data-template="imidazole">Imidazole</div>
+        <div class="template-item" data-template="thiophene">Thiophene</div>
+        <div class="template-item" data-template="furan">Furan</div>
+        <div class="template-item" data-template="crown186">18-Crown-6</div>
       </div>
     </div>
 
-    <!-- Bottom Thumb-Friendly Atoms Palette -->
+    <div id="fg-toolbar">
+      <button class="fg-btn" data-fg="OH">—OH</button>
+      <button class="fg-btn" data-fg="NH2">—NH₂</button>
+      <button class="fg-btn" data-fg="COOH">—COOH</button>
+      <button class="fg-btn" data-fg="CHO">—CHO</button>
+      <button class="fg-btn" data-fg="NO2">—NO₂</button>
+      <button class="fg-btn" data-fg="CN">—CN</button>
+    </div>
+
     <div id="atom-toolbar">
       <button class="atom-btn atom-C active" data-element="C">C</button>
       <button class="atom-btn atom-N" data-element="N">N</button>
@@ -290,26 +347,29 @@
     (function() {
       // 1. Data Structures
       const state = {
-        atoms: [], // { id, element, x, y, charge }
+        atoms: [], // { id, element, x, y }
         bonds: [], // { id, atom1, atom2, order: 1|2|3|'wedge'|'dash' }
-        arrows: [], // { fromAtomId, toAtomId, controlX, controlY }
+        arrows: [], // { fromAtomId, toAtomId }
+        reactionArrows: [], // { id, x1, y1, x2, y2 }
         selectedAtom: 'C',
-        activeTool: 'single', // 'single', 'double', 'triple', 'wedge', 'dash', 'arrow'
+        activeTool: 'single', 
+        eraserMode: false,
         nextAtomId: 1,
         nextBondId: 1,
+        nextReactionArrowId: 1,
         history: [],
+        redoStack: [],
         dragStartAtom: null,
         touchStartPos: null,
         currentPos: null,
-        isDrawingArrow: false,
-        arrowStartAtom: null
+        arrowStartAtom: null,
+        transform: { scale: 1, offsetX: 0, offsetY: 0 }
       };
 
       const canvas = document.getElementById('chem-canvas');
       const ctx = canvas.getContext('2d');
       const viewport = document.getElementById('canvas-viewport');
 
-      // Element Color Mapping
       const ELEMENT_COLORS = {
         'C': '#FFFFFF',
         'N': '#60A5FA',
@@ -323,7 +383,6 @@
         'H': '#94A3B8'
       };
 
-      // Standard bond length in canvas pixels
       const BOND_LENGTH = 55;
       const SNAP_RADIUS = 28;
 
@@ -339,23 +398,49 @@
       }
       window.addEventListener('resize', resizeCanvas);
 
-      // 3. History Snapshot
+      // 3. History Snapshot & Redo
       function saveHistory() {
         state.history.push({
           atoms: JSON.parse(JSON.stringify(state.atoms)),
           bonds: JSON.parse(JSON.stringify(state.bonds)),
-          arrows: JSON.parse(JSON.stringify(state.arrows))
+          arrows: JSON.parse(JSON.stringify(state.arrows)),
+          reactionArrows: JSON.parse(JSON.stringify(state.reactionArrows))
         });
         if (state.history.length > 25) state.history.shift();
+        state.redoStack = [];
         notifyStructureChanged();
       }
 
       function undo() {
         if (state.history.length === 0) return;
+        state.redoStack.push({
+          atoms: JSON.parse(JSON.stringify(state.atoms)),
+          bonds: JSON.parse(JSON.stringify(state.bonds)),
+          arrows: JSON.parse(JSON.stringify(state.arrows)),
+          reactionArrows: JSON.parse(JSON.stringify(state.reactionArrows))
+        });
         const prev = state.history.pop();
         state.atoms = prev.atoms;
         state.bonds = prev.bonds;
         state.arrows = prev.arrows;
+        state.reactionArrows = prev.reactionArrows;
+        redraw();
+        notifyStructureChanged();
+      }
+
+      function redo() {
+        if (state.redoStack.length === 0) return;
+        state.history.push({
+          atoms: JSON.parse(JSON.stringify(state.atoms)),
+          bonds: JSON.parse(JSON.stringify(state.bonds)),
+          arrows: JSON.parse(JSON.stringify(state.arrows)),
+          reactionArrows: JSON.parse(JSON.stringify(state.reactionArrows))
+        });
+        const nxt = state.redoStack.pop();
+        state.atoms = nxt.atoms;
+        state.bonds = nxt.bonds;
+        state.arrows = nxt.arrows;
+        state.reactionArrows = nxt.reactionArrows;
         redraw();
         notifyStructureChanged();
       }
@@ -365,11 +450,24 @@
         state.atoms = [];
         state.bonds = [];
         state.arrows = [];
+        state.reactionArrows = [];
         redraw();
         notifyStructureChanged();
       }
 
-      // 4. Hit Testing
+      // 4. Hit Testing & Coordinate Transform
+      function getCanvasPoint(evt) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = evt.clientX !== undefined ? evt.clientX : evt.touches[0].clientX;
+        const clientY = evt.clientY !== undefined ? evt.clientY : evt.touches[0].clientY;
+        const rawX = clientX - rect.left;
+        const rawY = clientY - rect.top;
+        return {
+          x: (rawX - state.transform.offsetX) / state.transform.scale,
+          y: (rawY - state.transform.offsetY) / state.transform.scale
+        };
+      }
+
       function findAtomNear(x, y, radius = SNAP_RADIUS) {
         for (const atom of state.atoms) {
           const dx = atom.x - x;
@@ -392,16 +490,65 @@
         };
       }
 
+      // Fragments
+      function getFragments() {
+        const visited = new Set();
+        const fragments = [];
+        for (const atom of state.atoms) {
+          if (!visited.has(atom.id)) {
+            const fragAtoms = [];
+            const queue = [atom.id];
+            visited.add(atom.id);
+            while (queue.length > 0) {
+              const currId = queue.shift();
+              fragAtoms.push(currId);
+              const neighbors = state.bonds.reduce((acc, b) => {
+                if (b.atom1 === currId) acc.push(b.atom2);
+                if (b.atom2 === currId) acc.push(b.atom1);
+                return acc;
+              }, []);
+              for (const n of neighbors) {
+                if (!visited.has(n)) {
+                  visited.add(n);
+                  queue.push(n);
+                }
+              }
+            }
+            fragments.push(fragAtoms);
+          }
+        }
+        return fragments;
+      }
+
+      function getFragmentBBox(atomIds) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const id of atomIds) {
+          const a = state.atoms.find(at => at.id === id);
+          if (a) {
+            minX = Math.min(minX, a.x);
+            minY = Math.min(minY, a.y);
+            maxX = Math.max(maxX, a.x);
+            maxY = Math.max(maxY, a.y);
+          }
+        }
+        return { minX, minY, maxX, maxY, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
+      }
+
       // 5. Drawing & Rendering
       function redraw() {
         const rect = viewport.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        ctx.resetTransform();
+        ctx.scale(dpr, dpr);
         ctx.clearRect(0, 0, rect.width, rect.height);
 
-        // Update HUD
         document.getElementById('hud-atoms').innerText = state.atoms.length;
         document.getElementById('hud-bonds').innerText = state.bonds.length;
 
-        // Draw Bonds
+        ctx.save();
+        ctx.translate(state.transform.offsetX, state.transform.offsetY);
+        ctx.scale(state.transform.scale, state.transform.scale);
+
         for (const bond of state.bonds) {
           const a1 = state.atoms.find(a => a.id === bond.atom1);
           const a2 = state.atoms.find(a => a.id === bond.atom2);
@@ -409,7 +556,6 @@
           drawBond(a1, a2, bond.order);
         }
 
-        // Draw Electron Curved Arrows
         for (const arrow of state.arrows) {
           const a1 = state.atoms.find(a => a.id === arrow.fromAtomId);
           const a2 = state.atoms.find(a => a.id === arrow.toAtomId);
@@ -418,22 +564,84 @@
           }
         }
 
-        // Draw In-Flight Interactive Guide
+        for (const ra of state.reactionArrows) {
+          drawReactionArrow(ra);
+        }
+
+        if (state.activeTool === 'rxn-arrow' && state.touchStartPos && state.currentPos) {
+           const ra = {
+             x1: state.touchStartPos.x,
+             y1: state.touchStartPos.y,
+             x2: state.currentPos.x,
+             y2: state.touchStartPos.y
+           };
+           ctx.globalAlpha = 0.5;
+           drawReactionArrow(ra);
+           ctx.globalAlpha = 1.0;
+        }
+
         if (state.dragStartAtom && state.currentPos) {
           ctx.beginPath();
-          ctx.setLineDash([4, 4]);
-          ctx.strokeStyle = '#06B6D4';
-          ctx.lineWidth = 2;
-          ctx.moveTo(state.dragStartAtom.x, state.dragStartAtom.y);
-          ctx.lineTo(state.currentPos.x, state.currentPos.y);
+          const hit = findAtomNear(state.currentPos.x, state.currentPos.y);
+          if (hit && hit.id !== state.dragStartAtom.id) {
+             ctx.setLineDash([6, 3]);
+             ctx.strokeStyle = '#22D3EE';
+             ctx.lineWidth = 2;
+             ctx.moveTo(state.dragStartAtom.x, state.dragStartAtom.y);
+             ctx.lineTo(hit.x, hit.y);
+          } else {
+             ctx.setLineDash([4, 4]);
+             ctx.strokeStyle = '#06B6D4';
+             ctx.lineWidth = 2;
+             ctx.moveTo(state.dragStartAtom.x, state.dragStartAtom.y);
+             ctx.lineTo(state.currentPos.x, state.currentPos.y);
+          }
           ctx.stroke();
           ctx.setLineDash([]);
         }
 
-        // Draw Atoms
         for (const atom of state.atoms) {
           drawAtom(atom);
         }
+
+        const fragments = getFragments();
+        if (fragments.length >= 2) {
+          const bboxes = fragments.map(f => getFragmentBBox(f));
+          bboxes.sort((a, b) => a.cx - b.cx);
+          ctx.fillStyle = '#06B6D4';
+          ctx.font = 'bold 24px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          for (let i = 1; i < bboxes.length; i++) {
+            const prev = bboxes[i - 1];
+            const curr = bboxes[i];
+            const midX = (prev.maxX + curr.minX) / 2;
+            const midY = (prev.cy + curr.cy) / 2;
+            ctx.fillText('+', midX, midY);
+          }
+        }
+        ctx.restore();
+      }
+
+      function drawReactionArrow(ra) {
+        ctx.strokeStyle = '#E2E8F0';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(ra.x1, ra.y1);
+        ctx.lineTo(ra.x2, ra.y2);
+        ctx.stroke();
+        const dx = ra.x2 - ra.x1;
+        const dy = ra.y2 - ra.y1;
+        const angle = Math.atan2(dy, dx);
+        const headLen = 12;
+        ctx.fillStyle = '#E2E8F0';
+        ctx.beginPath();
+        ctx.moveTo(ra.x2, ra.y2);
+        ctx.lineTo(ra.x2 - headLen * Math.cos(angle - Math.PI / 6), ra.y2 - headLen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(ra.x2 - headLen * Math.cos(angle + Math.PI / 6), ra.y2 - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
       }
 
       function drawBond(a1, a2, order) {
@@ -441,66 +649,41 @@
         const dy = a2.y - a1.y;
         const dist = Math.hypot(dx, dy);
         if (dist === 0) return;
-
-        const ux = dx / dist;
-        const uy = dy / dist;
-        const nx = -uy;
-        const ny = ux;
-
+        const ux = dx / dist, uy = dy / dist;
+        const nx = -uy, ny = ux;
         const offsetA1 = (a1.element !== 'C') ? 14 : 4;
         const offsetA2 = (a2.element !== 'C') ? 14 : 4;
-
-        const startX = a1.x + ux * offsetA1;
-        const startY = a1.y + uy * offsetA1;
-        const endX = a2.x - ux * offsetA2;
-        const endY = a2.y - uy * offsetA2;
-
+        const startX = a1.x + ux * offsetA1, startY = a1.y + uy * offsetA1;
+        const endX = a2.x - ux * offsetA2, endY = a2.y - uy * offsetA2;
+        
         ctx.strokeStyle = '#CBD5E1';
         ctx.lineWidth = 2.4;
         ctx.lineCap = 'round';
 
         if (order === 1 || order === 'single') {
-          ctx.beginPath();
-          ctx.moveTo(startX, startY);
-          ctx.lineTo(endX, endY);
-          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
         } else if (order === 2 || order === 'double') {
           const gap = 3.5;
-          ctx.beginPath();
-          ctx.moveTo(startX + nx * gap, startY + ny * gap);
-          ctx.lineTo(endX + nx * gap, endY + ny * gap);
-          ctx.moveTo(startX - nx * gap, startY - ny * gap);
-          ctx.lineTo(endX - nx * gap, endY - ny * gap);
-          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(startX + nx * gap, startY + ny * gap); ctx.lineTo(endX + nx * gap, endY + ny * gap);
+          ctx.moveTo(startX - nx * gap, startY - ny * gap); ctx.lineTo(endX - nx * gap, endY - ny * gap); ctx.stroke();
         } else if (order === 3 || order === 'triple') {
           const gap = 5;
-          ctx.beginPath();
-          ctx.moveTo(startX, startY);
-          ctx.lineTo(endX, endY);
-          ctx.moveTo(startX + nx * gap, startY + ny * gap);
-          ctx.lineTo(endX + nx * gap, endY + ny * gap);
-          ctx.moveTo(startX - nx * gap, startY - ny * gap);
-          ctx.lineTo(endX - nx * gap, endY - ny * gap);
-          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY);
+          ctx.moveTo(startX + nx * gap, startY + ny * gap); ctx.lineTo(endX + nx * gap, endY + ny * gap);
+          ctx.moveTo(startX - nx * gap, startY - ny * gap); ctx.lineTo(endX - nx * gap, endY - ny * gap); ctx.stroke();
         } else if (order === 'wedge') {
           const wedgeW = 6;
           ctx.fillStyle = '#E2E8F0';
-          ctx.beginPath();
-          ctx.moveTo(startX, startY);
-          ctx.lineTo(endX + nx * wedgeW, endY + ny * wedgeW);
-          ctx.lineTo(endX - nx * wedgeW, endY - ny * wedgeW);
-          ctx.closePath();
-          ctx.fill();
+          ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX + nx * wedgeW, endY + ny * wedgeW);
+          ctx.lineTo(endX - nx * wedgeW, endY - ny * wedgeW); ctx.closePath(); ctx.fill();
         } else if (order === 'dash') {
           const steps = 6;
           ctx.beginPath();
           for (let i = 1; i <= steps; i++) {
             const t = i / steps;
-            const px = startX + (endX - startX) * t;
-            const py = startY + (endY - startY) * t;
+            const px = startX + (endX - startX) * t, py = startY + (endY - startY) * t;
             const w = t * 6;
-            ctx.moveTo(px + nx * w, py + ny * w);
-            ctx.lineTo(px - nx * w, py - ny * w);
+            ctx.moveTo(px + nx * w, py + ny * w); ctx.lineTo(px - nx * w, py - ny * w);
           }
           ctx.stroke();
         }
@@ -511,64 +694,104 @@
           const connectedBonds = state.bonds.filter(b => b.atom1 === atom.id || b.atom2 === atom.id);
           if (connectedBonds.length > 0) {
             ctx.fillStyle = '#64748B';
-            ctx.beginPath();
-            ctx.arc(atom.x, atom.y, 2.5, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(atom.x, atom.y, 2.5, 0, Math.PI * 2); ctx.fill();
             return;
           }
         }
-
         ctx.fillStyle = '#0B0F19';
-        ctx.beginPath();
-        ctx.arc(atom.x, atom.y, 13, 0, Math.PI * 2);
-        ctx.fill();
-
+        ctx.beginPath(); ctx.arc(atom.x, atom.y, 13, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = ELEMENT_COLORS[atom.element] || '#FFFFFF';
         ctx.font = 'bold 15px -apple-system, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(atom.element, atom.x, atom.y);
       }
 
       function drawCurvedArrow(x1, y1, x2, y2) {
-        const mx = (x1 + x2) / 2;
-        const my = (y1 + y2) / 2;
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        const cx = mx - dy * 0.35;
-        const cy = my + dx * 0.35;
-
-        ctx.strokeStyle = '#F43F5E';
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.quadraticCurveTo(cx, cy, x2, y2);
-        ctx.stroke();
-
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+        const dx = x2 - x1, dy = y2 - y1;
+        const cx = mx - dy * 0.35, cy = my + dx * 0.35;
+        ctx.strokeStyle = '#F43F5E'; ctx.lineWidth = 2.2;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(cx, cy, x2, y2); ctx.stroke();
         const angle = Math.atan2(y2 - cy, x2 - cx);
         const headLen = 9;
         ctx.fillStyle = '#F43F5E';
-        ctx.beginPath();
-        ctx.moveTo(x2, y2);
+        ctx.beginPath(); ctx.moveTo(x2, y2);
         ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
         ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
-        ctx.closePath();
-        ctx.fill();
+        ctx.closePath(); ctx.fill();
       }
 
-      function getCanvasPoint(evt) {
-        const rect = canvas.getBoundingClientRect();
-        const touch = evt.touches ? evt.touches[0] : evt;
-        return {
-          x: touch.clientX - rect.left,
-          y: touch.clientY - rect.top
-        };
-      }
+      // Input Handling
+      const activePointers = new Map();
+      let lastPinchDist = null;
+      let lastPanCenter = null;
 
       viewport.addEventListener('pointerdown', (e) => {
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (activePointers.size >= 2) {
+           const pts = Array.from(activePointers.values());
+           lastPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+           lastPanCenter = { x: (pts[0].x + pts[1].x)/2, y: (pts[0].y + pts[1].y)/2 };
+           
+           state.dragStartAtom = null;
+           state.touchStartPos = null;
+           state.currentPos = null;
+           state.arrowStartAtom = null;
+           redraw();
+           return;
+        }
+
         const pt = getCanvasPoint(e);
         state.touchStartPos = pt;
         state.currentPos = pt;
+
+        if (state.eraserMode) {
+          const hitAtom = findAtomNear(pt.x, pt.y);
+          if (hitAtom) {
+            saveHistory();
+            state.atoms = state.atoms.filter(a => a.id !== hitAtom.id);
+            state.bonds = state.bonds.filter(b => b.atom1 !== hitAtom.id && b.atom2 !== hitAtom.id);
+            state.arrows = state.arrows.filter(a => a.fromAtomId !== hitAtom.id && a.toAtomId !== hitAtom.id);
+          } else {
+            let deleted = false;
+            for (let i = 0; i < state.bonds.length; i++) {
+              const b = state.bonds[i];
+              const a1 = state.atoms.find(a => a.id === b.atom1);
+              const a2 = state.atoms.find(a => a.id === b.atom2);
+              if (a1 && a2) {
+                const mx = (a1.x + a2.x)/2;
+                const my = (a1.y + a2.y)/2;
+                if (Math.hypot(pt.x - mx, pt.y - my) < 20) {
+                  saveHistory();
+                  state.bonds.splice(i, 1);
+                  deleted = true;
+                  break;
+                }
+              }
+            }
+            if (!deleted) {
+              for (let i = 0; i < state.reactionArrows.length; i++) {
+                 const ra = state.reactionArrows[i];
+                 const mx = (ra.x1 + ra.x2)/2;
+                 const my = (ra.y1 + ra.y2)/2;
+                 if (Math.hypot(pt.x - mx, pt.y - my) < 20) {
+                   saveHistory();
+                   state.reactionArrows.splice(i, 1);
+                   deleted = true;
+                   break;
+                 }
+              }
+            }
+          }
+          redraw();
+          notifyStructureChanged();
+          return;
+        }
+
+        if (state.activeTool === 'rxn-arrow') {
+          return;
+        }
 
         const hit = findAtomNear(pt.x, pt.y);
         if (state.activeTool === 'arrow') {
@@ -583,12 +806,7 @@
           state.dragStartAtom = hit;
         } else {
           saveHistory();
-          const newAtom = {
-            id: state.nextAtomId++,
-            element: state.selectedAtom,
-            x: pt.x,
-            y: pt.y
-          };
+          const newAtom = { id: state.nextAtomId++, element: state.selectedAtom, x: pt.x, y: pt.y };
           state.atoms.push(newAtom);
           state.dragStartAtom = newAtom;
           redraw();
@@ -596,12 +814,71 @@
       });
 
       viewport.addEventListener('pointermove', (e) => {
-        if (!state.dragStartAtom) return;
+        if (activePointers.has(e.pointerId)) {
+          activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        }
+
+        if (activePointers.size >= 2) {
+           const pts = Array.from(activePointers.values());
+           const newDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+           const newCenter = { x: (pts[0].x + pts[1].x)/2, y: (pts[0].y + pts[1].y)/2 };
+
+           if (lastPinchDist && lastPanCenter) {
+             const scaleChange = newDist / lastPinchDist;
+             const oldScale = state.transform.scale;
+             let newScale = oldScale * scaleChange;
+             newScale = Math.max(0.3, Math.min(newScale, 3.0));
+             state.transform.scale = newScale;
+             state.transform.offsetX += (newCenter.x - lastPanCenter.x);
+             state.transform.offsetY += (newCenter.y - lastPanCenter.y);
+           }
+           lastPinchDist = newDist;
+           lastPanCenter = newCenter;
+           redraw();
+           return;
+        }
+
+        if (state.eraserMode) return;
+
         state.currentPos = getCanvasPoint(e);
+        if (state.activeTool === 'rxn-arrow' && state.touchStartPos) {
+           redraw();
+           return;
+        }
+
+        if (!state.dragStartAtom) return;
         redraw();
       });
 
       viewport.addEventListener('pointerup', (e) => {
+        activePointers.delete(e.pointerId);
+        if (activePointers.size < 2) {
+          lastPinchDist = null;
+          lastPanCenter = null;
+        }
+
+        if (state.eraserMode) return;
+
+        if (state.activeTool === 'rxn-arrow' && state.touchStartPos) {
+           const endPt = getCanvasPoint(e);
+           const dist = Math.hypot(endPt.x - state.touchStartPos.x, endPt.y - state.touchStartPos.y);
+           if (dist > 15) {
+             saveHistory();
+             state.reactionArrows.push({
+               id: state.nextReactionArrowId++,
+               x1: state.touchStartPos.x,
+               y1: state.touchStartPos.y,
+               x2: endPt.x,
+               y2: state.touchStartPos.y
+             });
+             redraw();
+             notifyStructureChanged();
+           }
+           state.touchStartPos = null;
+           state.currentPos = null;
+           return;
+        }
+
         if (!state.dragStartAtom) return;
         const endPt = state.currentPos || getCanvasPoint(e);
         const hit = findAtomNear(endPt.x, endPt.y);
@@ -609,10 +886,7 @@
         if (state.activeTool === 'arrow') {
           if (hit && state.arrowStartAtom && hit.id !== state.arrowStartAtom.id) {
             saveHistory();
-            state.arrows.push({
-              fromAtomId: state.arrowStartAtom.id,
-              toAtomId: hit.id
-            });
+            state.arrows.push({ fromAtomId: state.arrowStartAtom.id, toAtomId: hit.id });
           }
           state.dragStartAtom = null;
           state.arrowStartAtom = null;
@@ -622,7 +896,6 @@
         }
 
         const dist = Math.hypot(endPt.x - state.dragStartAtom.x, endPt.y - state.dragStartAtom.y);
-
         if (dist < 15) {
           if (hit && hit.id === state.dragStartAtom.id) {
             saveHistory();
@@ -633,21 +906,14 @@
           let targetAtom = hit;
           if (!targetAtom) {
             const delta = snapAngle(endPt.x - state.dragStartAtom.x, endPt.y - state.dragStartAtom.y);
-            targetAtom = {
-              id: state.nextAtomId++,
-              element: state.selectedAtom,
-              x: state.dragStartAtom.x + delta.x,
-              y: state.dragStartAtom.y + delta.y
-            };
+            targetAtom = { id: state.nextAtomId++, element: state.selectedAtom, x: state.dragStartAtom.x + delta.x, y: state.dragStartAtom.y + delta.y };
             state.atoms.push(targetAtom);
           }
-
           if (targetAtom.id !== state.dragStartAtom.id) {
             const existing = state.bonds.find(b => 
               (b.atom1 === state.dragStartAtom.id && b.atom2 === targetAtom.id) ||
               (b.atom2 === state.dragStartAtom.id && b.atom1 === targetAtom.id)
             );
-
             if (existing) {
               if (existing.order === 1 || existing.order === 'single') existing.order = 2;
               else if (existing.order === 2 || existing.order === 'double') existing.order = 3;
@@ -655,122 +921,27 @@
               else if (existing.order === 'wedge') existing.order = 'dash';
               else existing.order = 1;
             } else {
-              state.bonds.push({
-                id: state.nextBondId++,
-                atom1: state.dragStartAtom.id,
-                atom2: targetAtom.id,
-                order: state.activeTool
-              });
+              state.bonds.push({ id: state.nextBondId++, atom1: state.dragStartAtom.id, atom2: targetAtom.id, order: state.activeTool });
             }
           }
         }
-
         state.dragStartAtom = null;
         state.currentPos = null;
         redraw();
         notifyStructureChanged();
       });
 
-      function stampRing(sides, aromatic = false) {
-        saveHistory();
-        const rect = viewport.getBoundingClientRect();
-        const cx = rect.width / 2;
-        const cy = rect.height / 2;
-        const radius = BOND_LENGTH / (2 * Math.sin(Math.PI / sides));
-
-        const ringAtomIds = [];
-        for (let i = 0; i < sides; i++) {
-          const angle = (i * (2 * Math.PI / sides)) - (Math.PI / 2);
-          const atom = {
-            id: state.nextAtomId++,
-            element: (aromatic && sides === 6 && i === 0 && state.selectedAtom === 'N') ? 'N' : 'C',
-            x: cx + radius * Math.cos(angle),
-            y: cy + radius * Math.sin(angle)
-          };
-          state.atoms.push(atom);
-          ringAtomIds.push(atom.id);
+      viewport.addEventListener('pointercancel', (e) => {
+        activePointers.delete(e.pointerId);
+        if (activePointers.size < 2) {
+          lastPinchDist = null;
+          lastPanCenter = null;
         }
-
-        for (let i = 0; i < sides; i++) {
-          const a1 = ringAtomIds[i];
-          const a2 = ringAtomIds[(i + 1) % sides];
-          const isDouble = aromatic && (i % 2 === 0);
-          state.bonds.push({
-            id: state.nextBondId++,
-            atom1: a1,
-            atom2: a2,
-            order: isDouble ? 2 : 1
-          });
-        }
+        state.dragStartAtom = null;
+        state.touchStartPos = null;
+        state.currentPos = null;
         redraw();
-        notifyStructureChanged();
-      }
-
-      function loadTemplate(name) {
-        saveHistory();
-        const rect = viewport.getBoundingClientRect();
-        const cx = rect.width / 2;
-        const cy = rect.height / 2;
-
-        if (name === 'benzene') {
-          stampRing(6, true);
-        } else if (name === 'cyclohexane') {
-          stampRing(6, false);
-        } else if (name === 'cyclopentane') {
-          stampRing(5, false);
-        } else if (name === 'pyridine') {
-          state.selectedAtom = 'N';
-          stampRing(6, true);
-          state.selectedAtom = 'C';
-        } else if (name === 'boc') {
-          const c1 = addAtom('C', cx - 60, cy);
-          const o1 = addAtom('O', cx - 60, cy - 50);
-          const o2 = addAtom('O', cx, cy);
-          const c2 = addAtom('C', cx + 55, cy);
-          const m1 = addAtom('C', cx + 55, cy - 50);
-          const m2 = addAtom('C', cx + 110, cy);
-          const m3 = addAtom('C', cx + 55, cy + 50);
-          addBond(c1, o1, 2);
-          addBond(c1, o2, 1);
-          addBond(o2, c2, 1);
-          addBond(c2, m1, 1);
-          addBond(c2, m2, 1);
-          addBond(c2, m3, 1);
-          redraw();
-          notifyStructureChanged();
-        } else if (name === 'ferrocene') {
-          const fe = addAtom('Fe', cx, cy);
-          stampRingOffset(5, cx, cy - 55, 35);
-          stampRingOffset(5, cx, cy + 55, 35);
-          redraw();
-          notifyStructureChanged();
-        } else if (name === 'steroid') {
-          stampRingOffset(6, cx - 90, cy + 20, 35);
-          stampRingOffset(6, cx - 35, cy + 20, 35);
-          stampRingOffset(6, cx + 20, cy - 15, 35);
-          stampRingOffset(5, cx + 70, cy - 20, 30);
-          redraw();
-          notifyStructureChanged();
-        } else if (name === 'tbs') {
-          const si = addAtom('Si', cx, cy);
-          const m1 = addAtom('C', cx, cy - 50);
-          const m2 = addAtom('C', cx, cy + 50);
-          const c_tbu = addAtom('C', cx + 55, cy);
-          const tb1 = addAtom('C', cx + 55, cy - 50);
-          const tb2 = addAtom('C', cx + 110, cy);
-          const tb3 = addAtom('C', cx + 55, cy + 50);
-          addBond(si, m1, 1);
-          addBond(si, m2, 1);
-          addBond(si, c_tbu, 1);
-          addBond(c_tbu, tb1, 1);
-          addBond(c_tbu, tb2, 1);
-          addBond(c_tbu, tb3, 1);
-          redraw();
-          notifyStructureChanged();
-        } else {
-          stampRing(6, true);
-        }
-      }
+      });
 
       function addAtom(el, x, y) {
         const a = { id: state.nextAtomId++, element: el, x, y };
@@ -780,7 +951,32 @@
       function addBond(a1, a2, order = 1) {
         state.bonds.push({ id: state.nextBondId++, atom1: a1.id, atom2: a2.id, order });
       }
-      function stampRingOffset(sides, cx, cy, radius) {
+
+      function stampRing(sides, aromatic = false) {
+        saveHistory();
+        const rect = viewport.getBoundingClientRect();
+        const cx = (rect.width / 2 - state.transform.offsetX) / state.transform.scale;
+        const cy = (rect.height / 2 - state.transform.offsetY) / state.transform.scale;
+        const radius = BOND_LENGTH / (2 * Math.sin(Math.PI / sides));
+
+        const ringAtomIds = [];
+        for (let i = 0; i < sides; i++) {
+          const angle = (i * (2 * Math.PI / sides)) - (Math.PI / 2);
+          const atom = addAtom(
+            (aromatic && sides === 6 && i === 0 && state.selectedAtom === 'N') ? 'N' : 'C',
+            cx + radius * Math.cos(angle),
+            cy + radius * Math.sin(angle)
+          );
+          ringAtomIds.push(atom.id);
+        }
+        for (let i = 0; i < sides; i++) {
+          addBond(state.atoms.find(a=>a.id===ringAtomIds[i]), state.atoms.find(a=>a.id===ringAtomIds[(i + 1) % sides]), aromatic && (i % 2 === 0) ? 2 : 1);
+        }
+        redraw();
+        notifyStructureChanged();
+      }
+
+      function stampRingOffset(sides, cx, cy, radius, aromatic=false, isLeft=false) {
         const ringIds = [];
         for (let i = 0; i < sides; i++) {
           const angle = (i * (2 * Math.PI / sides)) - (Math.PI / 2);
@@ -788,12 +984,161 @@
           ringIds.push(atom.id);
         }
         for (let i = 0; i < sides; i++) {
-          state.bonds.push({
-            id: state.nextBondId++,
-            atom1: ringIds[i],
-            atom2: ringIds[(i + 1) % sides],
-            order: 1
-          });
+          const order = (aromatic && (isLeft ? (i%2!==0) : (i%2===0))) ? 2 : 1;
+          addBond(state.atoms.find(a=>a.id===ringIds[i]), state.atoms.find(a=>a.id===ringIds[(i + 1) % sides]), order);
+        }
+      }
+
+      function insertFunctionalGroup(type) {
+        saveHistory();
+        let anchor = null;
+        if (state.atoms.length > 0) anchor = state.atoms[state.atoms.length - 1];
+
+        let cx, cy;
+        if (anchor) {
+          cx = anchor.x + BOND_LENGTH;
+          cy = anchor.y;
+        } else {
+          const rect = viewport.getBoundingClientRect();
+          cx = (rect.width / 2 - state.transform.offsetX) / state.transform.scale;
+          cy = (rect.height / 2 - state.transform.offsetY) / state.transform.scale;
+        }
+
+        if (type === 'OH') {
+          const o = addAtom('O', cx, cy);
+          const h = addAtom('H', cx + BOND_LENGTH * 0.866, cy - BOND_LENGTH * 0.5);
+          addBond(o, h, 1);
+          if (anchor) addBond(anchor, o, 1);
+        } else if (type === 'NH2') {
+          const n = addAtom('N', cx, cy);
+          const h1 = addAtom('H', cx + BOND_LENGTH * 0.866, cy - BOND_LENGTH * 0.5);
+          const h2 = addAtom('H', cx + BOND_LENGTH * 0.866, cy + BOND_LENGTH * 0.5);
+          addBond(n, h1, 1);
+          addBond(n, h2, 1);
+          if (anchor) addBond(anchor, n, 1);
+        } else if (type === 'COOH') {
+          const c = addAtom('C', cx, cy);
+          const o1 = addAtom('O', cx + BOND_LENGTH * 0.866, cy - BOND_LENGTH * 0.5);
+          const o2 = addAtom('O', cx + BOND_LENGTH * 0.866, cy + BOND_LENGTH * 0.5);
+          const h = addAtom('H', cx + BOND_LENGTH * 1.732, cy + BOND_LENGTH);
+          addBond(c, o1, 2);
+          addBond(c, o2, 1);
+          addBond(o2, h, 1);
+          if (anchor) addBond(anchor, c, 1);
+        } else if (type === 'CHO') {
+          const c = addAtom('C', cx, cy);
+          const o = addAtom('O', cx + BOND_LENGTH * 0.866, cy - BOND_LENGTH * 0.5);
+          const h = addAtom('H', cx + BOND_LENGTH * 0.866, cy + BOND_LENGTH * 0.5);
+          addBond(c, o, 2);
+          addBond(c, h, 1);
+          if (anchor) addBond(anchor, c, 1);
+        } else if (type === 'NO2') {
+          const n = addAtom('N', cx, cy);
+          const o1 = addAtom('O', cx + BOND_LENGTH * 0.866, cy - BOND_LENGTH * 0.5);
+          const o2 = addAtom('O', cx + BOND_LENGTH * 0.866, cy + BOND_LENGTH * 0.5);
+          addBond(n, o1, 2);
+          addBond(n, o2, 1);
+          if (anchor) addBond(anchor, n, 1);
+        } else if (type === 'CN') {
+          const c = addAtom('C', cx, cy);
+          const n = addAtom('N', cx + BOND_LENGTH, cy);
+          addBond(c, n, 3);
+          if (anchor) addBond(anchor, c, 1);
+        }
+        redraw();
+        notifyStructureChanged();
+      }
+
+      function loadTemplate(name) {
+        saveHistory();
+        const rect = viewport.getBoundingClientRect();
+        const cx = (rect.width / 2 - state.transform.offsetX) / state.transform.scale;
+        const cy = (rect.height / 2 - state.transform.offsetY) / state.transform.scale;
+
+        if (name === 'benzene') {
+          stampRing(6, true);
+        } else if (name === 'cyclohexane') {
+          stampRing(6, false);
+        } else if (name === 'cyclopentane') {
+          stampRing(5, false);
+        } else if (name === 'pyridine') {
+          state.selectedAtom = 'N'; stampRing(6, true); state.selectedAtom = 'C';
+        } else if (name === 'boc') {
+          const c1 = addAtom('C', cx - 60, cy);
+          const o1 = addAtom('O', cx - 60, cy - 50);
+          const o2 = addAtom('O', cx, cy);
+          const c2 = addAtom('C', cx + 55, cy);
+          const m1 = addAtom('C', cx + 55, cy - 50);
+          const m2 = addAtom('C', cx + 110, cy);
+          const m3 = addAtom('C', cx + 55, cy + 50);
+          addBond(c1, o1, 2); addBond(c1, o2, 1); addBond(o2, c2, 1);
+          addBond(c2, m1, 1); addBond(c2, m2, 1); addBond(c2, m3, 1);
+          redraw(); notifyStructureChanged();
+        } else if (name === 'ferrocene') {
+          addAtom('Fe', cx, cy);
+          stampRingOffset(5, cx, cy - 55, 35); stampRingOffset(5, cx, cy + 55, 35);
+          redraw(); notifyStructureChanged();
+        } else if (name === 'steroid') {
+          stampRingOffset(6, cx - 90, cy + 20, 35);
+          stampRingOffset(6, cx - 35, cy + 20, 35);
+          stampRingOffset(6, cx + 20, cy - 15, 35);
+          stampRingOffset(5, cx + 70, cy - 20, 30);
+          redraw(); notifyStructureChanged();
+        } else if (name === 'tbs') {
+          const si = addAtom('Si', cx, cy);
+          const m1 = addAtom('C', cx, cy - 50); const m2 = addAtom('C', cx, cy + 50);
+          const c_tbu = addAtom('C', cx + 55, cy);
+          const tb1 = addAtom('C', cx + 55, cy - 50); const tb2 = addAtom('C', cx + 110, cy); const tb3 = addAtom('C', cx + 55, cy + 50);
+          addBond(si, m1, 1); addBond(si, m2, 1); addBond(si, c_tbu, 1);
+          addBond(c_tbu, tb1, 1); addBond(c_tbu, tb2, 1); addBond(c_tbu, tb3, 1);
+          redraw(); notifyStructureChanged();
+        } else if (name === 'naphthalene') {
+          const r = 35; const dy = r * 0.866; 
+          const c1 = addAtom('C', cx, cy - dy); const c2 = addAtom('C', cx, cy + dy);
+          const l1 = addAtom('C', cx - r*1.5, cy - dy); const l2 = addAtom('C', cx - r*1.5, cy + dy); const l3 = addAtom('C', cx - r*2.25, cy);
+          addBond(c1, c2, 1); addBond(c1, l1, 2); addBond(l1, l3, 1); addBond(l3, l2, 2); addBond(l2, c2, 1);
+          const r1 = addAtom('C', cx + r*1.5, cy - dy); const r2 = addAtom('C', cx + r*1.5, cy + dy); const r3 = addAtom('C', cx + r*2.25, cy);
+          addBond(c1, r1, 1); addBond(r1, r3, 2); addBond(r3, r2, 1); addBond(r2, c2, 2);
+          redraw(); notifyStructureChanged();
+        } else if (name === 'indole') {
+          const r = 35; const dy = r * 0.866;
+          const c1 = addAtom('C', cx, cy - dy); const c2 = addAtom('C', cx, cy + dy);
+          const l1 = addAtom('C', cx - r*1.5, cy - dy); const l2 = addAtom('C', cx - r*1.5, cy + dy); const l3 = addAtom('C', cx - r*2.25, cy);
+          addBond(c1, c2, 2); addBond(c1, l1, 1); addBond(l1, l3, 2); addBond(l3, l2, 1); addBond(l2, c2, 1);
+          const px = cx + r*1.8;
+          const p1 = addAtom('N', px, cy - dy*0.5); const p2 = addAtom('C', px, cy + dy*0.5); const p3 = addAtom('C', cx + r*2.5, cy);
+          addBond(c1, p1, 1); addBond(p1, p3, 1); addBond(p3, p2, 2); addBond(p2, c2, 1);
+          redraw(); notifyStructureChanged();
+        } else if (name === 'imidazole') {
+          const r = 35;
+          const n1 = addAtom('N', cx, cy - r); const c2 = addAtom('C', cx + r*0.95, cy - r*0.3);
+          const n3 = addAtom('N', cx + r*0.58, cy + r*0.8); const c4 = addAtom('C', cx - r*0.58, cy + r*0.8); const c5 = addAtom('C', cx - r*0.95, cy - r*0.3);
+          addBond(n1, c2, 1); addBond(c2, n3, 2); addBond(n3, c4, 1); addBond(c4, c5, 2); addBond(c5, n1, 1);
+          redraw(); notifyStructureChanged();
+        } else if (name === 'thiophene') {
+          const r = 35;
+          const s1 = addAtom('S', cx, cy - r); const c2 = addAtom('C', cx + r*0.95, cy - r*0.3);
+          const c3 = addAtom('C', cx + r*0.58, cy + r*0.8); const c4 = addAtom('C', cx - r*0.58, cy + r*0.8); const c5 = addAtom('C', cx - r*0.95, cy - r*0.3);
+          addBond(s1, c2, 1); addBond(c2, c3, 2); addBond(c3, c4, 1); addBond(c4, c5, 2); addBond(c5, s1, 1);
+          redraw(); notifyStructureChanged();
+        } else if (name === 'furan') {
+          const r = 35;
+          const o1 = addAtom('O', cx, cy - r); const c2 = addAtom('C', cx + r*0.95, cy - r*0.3);
+          const c3 = addAtom('C', cx + r*0.58, cy + r*0.8); const c4 = addAtom('C', cx - r*0.58, cy + r*0.8); const c5 = addAtom('C', cx - r*0.95, cy - r*0.3);
+          addBond(o1, c2, 1); addBond(c2, c3, 2); addBond(c3, c4, 1); addBond(c4, c5, 2); addBond(c5, o1, 1);
+          redraw(); notifyStructureChanged();
+        } else if (name === 'crown186') {
+          const r = 90;
+          const atoms = [];
+          for (let i = 0; i < 18; i++) {
+             const angle = (i * 2 * Math.PI / 18) - (Math.PI / 2);
+             const el = (i % 3 === 0) ? 'O' : 'C';
+             atoms.push(addAtom(el, cx + r * Math.cos(angle), cy + r * Math.sin(angle)));
+          }
+          for (let i = 0; i < 18; i++) addBond(atoms[i], atoms[(i+1)%18], 1);
+          redraw(); notifyStructureChanged();
+        } else {
+          stampRing(6, true);
         }
       }
 
@@ -806,15 +1151,12 @@
           visited.add(atomId);
           const atom = state.atoms.find(a => a.id === atomId);
           if (!atom) return '';
-
           let s = atom.element;
           if (s !== 'C' && s !== 'N' && s !== 'O' && s !== 'S' && s !== 'P' && s !== 'F' && s !== 'Cl' && s !== 'Br' && s !== 'I') {
             s = `[${s}]`;
           }
-
           const neighborBonds = state.bonds.filter(b => b.atom1 === atomId || b.atom2 === atomId);
           const branches = [];
-
           for (const b of neighborBonds) {
             const nextId = (b.atom1 === atomId) ? b.atom2 : b.atom1;
             if (nextId === parentId) continue;
@@ -825,11 +1167,9 @@
             let bondPrefix = '';
             if (b.order === 2 || b.order === 'double') bondPrefix = '=';
             else if (b.order === 3 || b.order === 'triple') bondPrefix = '#';
-
             const branchStr = bondPrefix + visit(nextId, atomId);
             branches.push(branchStr);
           }
-
           if (branches.length === 1) {
             s += branches[0];
           } else if (branches.length > 1) {
@@ -855,7 +1195,6 @@
         const natoms = String(state.atoms.length).padStart(3, ' ');
         const nbonds = String(state.bonds.length).padStart(3, ' ');
         let counts = `${natoms}${nbonds}  0  0  0  0  0  0  0  0999 V2000\n`;
-
         let atomBlock = '';
         for (const a of state.atoms) {
           const x = (a.x / 40).toFixed(4).padStart(10, ' ');
@@ -864,7 +1203,6 @@
           const sym = a.element.padEnd(3, ' ');
           atomBlock += `${x}${y}${z} ${sym} 0  0  0  0  0  0  0  0  0  0  0  0\n`;
         }
-
         let bondBlock = '';
         for (const b of state.bonds) {
           const idx1 = state.atoms.findIndex(a => a.id === b.atom1) + 1;
@@ -872,11 +1210,9 @@
           let orderNum = 1;
           if (b.order === 2 || b.order === 'double') orderNum = 2;
           else if (b.order === 3 || b.order === 'triple') orderNum = 3;
-
           let stereo = 0;
           if (b.order === 'wedge') stereo = 1;
           else if (b.order === 'dash') stereo = 6;
-
           bondBlock += `${String(idx1).padStart(3, ' ')}${String(idx2).padStart(3, ' ')}${String(orderNum).padStart(3, ' ')}${String(stereo).padStart(3, ' ')}  0  0  0\n`;
         }
         return header + counts + atomBlock + bondBlock + 'M  END\n';
@@ -885,7 +1221,6 @@
       function generateSvg() {
         const rect = viewport.getBoundingClientRect();
         let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${rect.width} ${rect.height}" width="${rect.width}" height="${rect.height}" style="background-color: transparent;">`;
-
         for (const bond of state.bonds) {
           const a1 = state.atoms.find(a => a.id === bond.atom1);
           const a2 = state.atoms.find(a => a.id === bond.atom2);
@@ -897,13 +1232,15 @@
             svg += `<line x1="${a1.x}" y1="${a1.y}" x2="${a2.x}" y2="${a2.y}" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/>`;
           }
         }
-
         for (const a of state.atoms) {
           if (a.element !== 'C') {
             const color = ELEMENT_COLORS[a.element] || '#FFFFFF';
             svg += `<circle cx="${a.x}" cy="${a.y}" r="12" fill="#0B0F19"/>`;
             svg += `<text x="${a.x}" y="${a.y + 5}" font-size="14" font-weight="bold" fill="${color}" text-anchor="middle" font-family="sans-serif">${a.element}</text>`;
           }
+        }
+        for (const ra of state.reactionArrows) {
+          svg += `<line x1="${ra.x1}" y1="${ra.y1}" x2="${ra.x2}" y2="${ra.y2}" stroke="#E2E8F0" stroke-width="3" stroke-linecap="round"/>`;
         }
         svg += `</svg>`;
         return svg;
@@ -923,20 +1260,12 @@
         }
       }
 
-      window.getSmiles = function() {
-        return generateSmiles();
-      };
-      window.getMolfile = function() {
-        return generateMolfile();
-      };
-      window.getSvg = function() {
-        return generateSvg();
-      };
+      window.getSmiles = () => generateSmiles();
+      window.getMolfile = () => generateMolfile();
+      window.getSvg = () => generateSvg();
       window.loadSmiles = function(smi) {
         clearCanvas();
         if (!smi || smi.trim().length === 0) return;
-        state.loadedSmiles = smi.trim();
-
         if (smi.includes('c1ccccc1') || smi.includes('C1=CC=CC=C1') || smi === 'c1ccccc1') {
           stampRing(6, true);
         } else if (smi.includes('C1CCCCC1') || smi === 'C1CCCCC1') {
@@ -947,28 +1276,16 @@
           const rect = viewport.getBoundingClientRect();
           let x = Math.max(50, rect.width / 4);
           let y = rect.height / 2;
-          let prev = null;
-          let inBranch = false;
-          let branchParent = null;
-
+          let prev = null, inBranch = false, branchParent = null;
           for (let i = 0; i < smi.length; i++) {
             const char = smi[i];
-            if (char === '(') {
-              inBranch = true;
-              branchParent = prev;
-            } else if (char === ')') {
-              inBranch = false;
-              prev = branchParent;
-            } else if (char === '=') {
-              state.activeTool = 'double';
-            } else if (char === '#') {
-              state.activeTool = 'triple';
-            } else if (/[A-Z]/.test(char)) {
+            if (char === '(') { inBranch = true; branchParent = prev; }
+            else if (char === ')') { inBranch = false; prev = branchParent; }
+            else if (char === '=') { state.activeTool = 'double'; }
+            else if (char === '#') { state.activeTool = 'triple'; }
+            else if (/[A-Z]/.test(char)) {
               let el = char;
-              if (i + 1 < smi.length && /[a-z]/.test(smi[i + 1])) {
-                el += smi[i + 1];
-                i++;
-              }
+              if (i + 1 < smi.length && /[a-z]/.test(smi[i + 1])) { el += smi[i + 1]; i++; }
               const atomY = inBranch ? y - 48 : y + (state.atoms.length % 2 === 0 ? 26 : -26);
               const a = addAtom(el, x, atomY);
               if (prev) {
@@ -991,36 +1308,53 @@
         { id: 'btn-triple', tool: 'triple' },
         { id: 'btn-wedge', tool: 'wedge' },
         { id: 'btn-dash', tool: 'dash' },
-        { id: 'btn-arrow', tool: 'arrow' }
+        { id: 'btn-arrow', tool: 'arrow' },
+        { id: 'btn-rxn-arrow', tool: 'rxn-arrow' }
       ];
 
       toolButtons.forEach(btn => {
         document.getElementById(btn.id).addEventListener('click', () => {
           toolButtons.forEach(b => document.getElementById(b.id).classList.remove('active'));
+          document.getElementById('btn-eraser').classList.remove('active');
           document.getElementById(btn.id).classList.add('active');
           state.activeTool = btn.tool;
+          state.eraserMode = false;
           document.getElementById('hud-mode').innerText = btn.tool.toUpperCase();
         });
+      });
+
+      document.getElementById('btn-eraser').addEventListener('click', () => {
+        toolButtons.forEach(b => document.getElementById(b.id).classList.remove('active'));
+        document.getElementById('btn-eraser').classList.add('active');
+        state.eraserMode = true;
+        document.getElementById('hud-mode').innerText = 'ERASER';
       });
 
       document.getElementById('btn-benzene').addEventListener('click', () => stampRing(6, true));
       document.getElementById('btn-cyclohexane').addEventListener('click', () => stampRing(6, false));
       document.getElementById('btn-cyclopentane').addEventListener('click', () => stampRing(5, false));
       document.getElementById('btn-undo').addEventListener('click', undo);
+      document.getElementById('btn-redo').addEventListener('click', redo);
       document.getElementById('btn-clear').addEventListener('click', clearCanvas);
+      document.getElementById('btn-reset-view').addEventListener('click', () => {
+        state.transform = { scale: 1, offsetX: 0, offsetY: 0 };
+        redraw();
+      });
 
       const sheet = document.getElementById('templates-sheet');
-      document.getElementById('btn-templates').addEventListener('click', () => {
-        sheet.classList.add('open');
-      });
-      document.getElementById('btn-close-templates').addEventListener('click', () => {
-        sheet.classList.remove('open');
-      });
+      document.getElementById('btn-templates').addEventListener('click', () => sheet.classList.add('open'));
+      document.getElementById('btn-close-templates').addEventListener('click', () => sheet.classList.remove('open'));
 
       document.querySelectorAll('.template-item').forEach(item => {
         item.addEventListener('click', () => {
           loadTemplate(item.getAttribute('data-template'));
           sheet.classList.remove('open');
+        });
+      });
+
+      document.querySelectorAll('.fg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          insertFunctionalGroup(btn.getAttribute('data-fg'));
         });
       });
 
