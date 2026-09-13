@@ -475,8 +475,13 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                     ),
                     onPressed: () {
                       Navigator.pop(context);
-                      _launchChatWithPrompt(
-                        "For the reaction with reactants '$reactantsSmiles' forming major organic product '${result.productSmiles}', provide the complete step-by-step reaction mechanism with curved electron-pushing arrows, transition state, stereochemical outcome, and driving force with postgraduate MSc rigor.",
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (ctx) => OrganicReactionPredictorScreen(
+                            initialReactantsSmiles: reactantsSmiles,
+                          ),
+                        ),
                       );
                     },
                     icon: const Icon(Icons.auto_awesome, color: AppColors.brandBright, size: 16),
@@ -993,6 +998,37 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: _showLoadSmilesDialog,
+                      ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () {
+                          _controller.runJavaScript("document.getElementById('btn-plus').click();");
+                          AppHaptics.confirm();
+                        },
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentCyan.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.accentCyan, width: 1.2),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add, color: AppColors.accentCyan, size: 14),
+                              SizedBox(width: 2),
+                              Text(
+                                'Reactant',
+                                style: TextStyle(
+                                  color: AppColors.accentCyan,
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),

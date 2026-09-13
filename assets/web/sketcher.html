@@ -270,6 +270,7 @@
         <button id="btn-dash" class="tool-btn" title="Dash (Down)">▤</button>
         <button id="btn-arrow" class="tool-btn" title="Curved Electron Arrow">⤹</button>
         <button id="btn-rxn-arrow" class="tool-btn" title="Reaction Arrow">→</button>
+        <button id="btn-plus" class="tool-btn" title="Add Reactant (+)" style="font-size: 22px; font-weight: 900; color: #38BDF8;">＋</button>
       </div>
       <div class="tool-group">
         <button id="btn-benzene" class="tool-btn" title="Benzene">⌬</button>
@@ -351,6 +352,7 @@
         bonds: [], // { id, atom1, atom2, order: 1|2|3|'wedge'|'dash' }
         arrows: [], // { fromAtomId, toAtomId }
         reactionArrows: [], // { id, x1, y1, x2, y2 }
+        plusSymbols: [], // { id, x, y }
         selectedAtom: 'C',
         activeTool: 'single', 
         eraserMode: false,
@@ -404,7 +406,8 @@
           atoms: JSON.parse(JSON.stringify(state.atoms)),
           bonds: JSON.parse(JSON.stringify(state.bonds)),
           arrows: JSON.parse(JSON.stringify(state.arrows)),
-          reactionArrows: JSON.parse(JSON.stringify(state.reactionArrows))
+          reactionArrows: JSON.parse(JSON.stringify(state.reactionArrows)),
+          plusSymbols: JSON.parse(JSON.stringify(state.plusSymbols || []))
         });
         if (state.history.length > 25) state.history.shift();
         state.redoStack = [];
@@ -417,13 +420,15 @@
           atoms: JSON.parse(JSON.stringify(state.atoms)),
           bonds: JSON.parse(JSON.stringify(state.bonds)),
           arrows: JSON.parse(JSON.stringify(state.arrows)),
-          reactionArrows: JSON.parse(JSON.stringify(state.reactionArrows))
+          reactionArrows: JSON.parse(JSON.stringify(state.reactionArrows)),
+          plusSymbols: JSON.parse(JSON.stringify(state.plusSymbols || []))
         });
         const prev = state.history.pop();
         state.atoms = prev.atoms;
         state.bonds = prev.bonds;
         state.arrows = prev.arrows;
         state.reactionArrows = prev.reactionArrows;
+        state.plusSymbols = prev.plusSymbols || [];
         redraw();
         notifyStructureChanged();
       }
@@ -434,13 +439,15 @@
           atoms: JSON.parse(JSON.stringify(state.atoms)),
           bonds: JSON.parse(JSON.stringify(state.bonds)),
           arrows: JSON.parse(JSON.stringify(state.arrows)),
-          reactionArrows: JSON.parse(JSON.stringify(state.reactionArrows))
+          reactionArrows: JSON.parse(JSON.stringify(state.reactionArrows)),
+          plusSymbols: JSON.parse(JSON.stringify(state.plusSymbols || []))
         });
         const nxt = state.redoStack.pop();
         state.atoms = nxt.atoms;
         state.bonds = nxt.bonds;
         state.arrows = nxt.arrows;
         state.reactionArrows = nxt.reactionArrows;
+        state.plusSymbols = nxt.plusSymbols || [];
         redraw();
         notifyStructureChanged();
       }
@@ -451,6 +458,7 @@
         state.bonds = [];
         state.arrows = [];
         state.reactionArrows = [];
+        state.plusSymbols = [];
         redraw();
         notifyStructureChanged();
       }
@@ -604,20 +612,52 @@
           drawAtom(atom);
         }
 
+        function drawPlusBadge(x, y) {
+          ctx.save();
+          // Glowing circular badge
+          ctx.beginPath();
+          ctx.arc(x, y, 20, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(2, 132, 199, 0.22)';
+          ctx.fill();
+          ctx.lineWidth = 1.8;
+          ctx.strokeStyle = '#38BDF8';
+          ctx.stroke();
+
+          // Plus glyph
+          ctx.fillStyle = '#38BDF8';
+          ctx.font = '900 24px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('+', x, y);
+
+          // Subtitle
+          ctx.fillStyle = '#94A3B8';
+          ctx.font = 'bold 9px -apple-system, sans-serif';
+          ctx.fillText('REACTANT +', x, y + 26);
+          ctx.restore();
+        }
+
+        // 1. Draw manually placed plus symbols
+        if (state.plusSymbols && state.plusSymbols.length > 0) {
+          for (const p of state.plusSymbols) {
+            drawPlusBadge(p.x, p.y);
+          }
+        }
+
+        // 2. Draw automatic plus between disconnected fragments
         const fragments = getFragments();
         if (fragments.length >= 2) {
           const bboxes = fragments.map(f => getFragmentBBox(f));
           bboxes.sort((a, b) => a.cx - b.cx);
-          ctx.fillStyle = '#06B6D4';
-          ctx.font = 'bold 24px -apple-system, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
           for (let i = 1; i < bboxes.length; i++) {
             const prev = bboxes[i - 1];
             const curr = bboxes[i];
             const midX = (prev.maxX + curr.minX) / 2;
             const midY = (prev.cy + curr.cy) / 2;
-            ctx.fillText('+', midX, midY);
+            const alreadyHasManual = (state.plusSymbols || []).some(p => Math.abs(p.x - midX) < 45);
+            if (!alreadyHasManual) {
+              drawPlusBadge(midX, midY);
+            }
           }
         }
         ctx.restore();
@@ -782,8 +822,23 @@
                    break;
                  }
               }
+            if (!deleted) {
+              const plusIdx = (state.plusSymbols || []).findIndex(p => Math.hypot(pt.x - p.x, pt.y - p.y) < 25);
+              if (plusIdx !== -1) {
+                saveHistory();
+                state.plusSymbols.splice(plusIdx, 1);
+                deleted = true;
+              }
             }
           }
+          redraw();
+          notifyStructureChanged();
+          return;
+        }
+
+        if (state.activeTool === 'plus') {
+          saveHistory();
+          state.plusSymbols.push({ x: pt.x, y: pt.y });
           redraw();
           notifyStructureChanged();
           return;
@@ -1309,7 +1364,8 @@
         { id: 'btn-wedge', tool: 'wedge' },
         { id: 'btn-dash', tool: 'dash' },
         { id: 'btn-arrow', tool: 'arrow' },
-        { id: 'btn-rxn-arrow', tool: 'rxn-arrow' }
+        { id: 'btn-rxn-arrow', tool: 'rxn-arrow' },
+        { id: 'btn-plus', tool: 'plus' }
       ];
 
       toolButtons.forEach(btn => {
@@ -1320,6 +1376,17 @@
           state.activeTool = btn.tool;
           state.eraserMode = false;
           document.getElementById('hud-mode').innerText = btn.tool.toUpperCase();
+
+          if (btn.id === 'btn-plus' && state.atoms.length > 0) {
+            const frags = getFragments();
+            const bboxes = frags.map(f => getFragmentBBox(f));
+            const rightmostX = Math.max(...bboxes.map(b => b.maxX));
+            const avgY = bboxes.reduce((sum, b) => sum + b.cy, 0) / (bboxes.length || 1);
+            saveHistory();
+            state.plusSymbols.push({ x: rightmostX + 50, y: avgY });
+            redraw();
+            notifyStructureChanged();
+          }
         });
       });
 

@@ -394,6 +394,47 @@ class MechanismSvgRenderer {
     }
   }
 
+  /// Renders a dynamic AI-predicted mechanistic step when no curated coordinate graph is present
+  static String renderAiStepSvg({
+    required int stepNumber,
+    required String stepTitle,
+    required String intermediateSmiles,
+    required String electronPushing,
+    String stepDescription = '',
+    MechanismSvgConfig config = const MechanismSvgConfig(),
+  }) {
+    final buffer = StringBuffer();
+    final title = _escapeXml(stepTitle.isNotEmpty ? stepTitle : 'Step $stepNumber');
+    final smiles = _escapeXml(intermediateSmiles.isNotEmpty ? intermediateSmiles : 'Transient Intermediate / Transition State');
+    final pushing = _escapeXml(electronPushing.isNotEmpty ? electronPushing : 'Nucleophilic attack & electron flow');
+
+    buffer.writeln('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" width="100%" height="100%">');
+    buffer.writeln('  <defs>');
+    _appendArrowDefs(buffer, config);
+    buffer.writeln('  </defs>');
+    buffer.writeln('  <rect width="600" height="320" rx="16" fill="${config.backgroundColor}" stroke="#1E293B" stroke-width="1.5"/>');
+
+    // Header badge
+    buffer.writeln('  <rect x="24" y="20" width="80" height="26" rx="6" fill="#8B5CF6" fill-opacity="0.2" stroke="#A78BFA" stroke-width="1"/>');
+    buffer.writeln('  <text x="64" y="38" font-size="12" font-weight="bold" fill="#A78BFA" text-anchor="middle" font-family="sans-serif">STEP $stepNumber</text>');
+    buffer.writeln('  <text x="116" y="38" font-size="14" font-weight="bold" fill="#F8FAFC" font-family="sans-serif">$title</text>');
+
+    // Intermediate structure container
+    buffer.writeln('  <rect x="24" y="60" width="552" height="150" rx="12" fill="#0F172A" stroke="#334155" stroke-width="1"/>');
+    buffer.writeln('  <circle cx="300" cy="115" r="32" fill="#38BDF8" fill-opacity="0.1" stroke="#38BDF8" stroke-width="1.5" stroke-dasharray="4 3"/>');
+    buffer.writeln('  <text x="300" y="105" font-size="12" font-weight="800" fill="#38BDF8" text-anchor="middle" font-family="sans-serif">INTERMEDIATE STRUCTURE</text>');
+    buffer.writeln('  <text x="300" y="132" font-size="13" font-weight="700" fill="#E2E8F0" text-anchor="middle" font-family="monospace">$smiles</text>');
+
+    // Electron Flow Arrow visualization box
+    buffer.writeln('  <rect x="24" y="222" width="552" height="78" rx="10" fill="#1E293B" fill-opacity="0.6" stroke="#475569" stroke-width="1"/>');
+    buffer.writeln('  <path d="M 40 260 Q 120 235 200 260" fill="none" stroke="#EC4899" stroke-width="2.5" marker-end="url(#arrow-regular)"/>');
+    buffer.writeln('  <text x="215" y="252" font-size="11" font-weight="bold" fill="#EC4899" font-family="sans-serif">CURVED ELECTRON-PUSHING FLOW</text>');
+    buffer.writeln('  <text x="215" y="272" font-size="11" font-weight="500" fill="#94A3B8" font-family="sans-serif">$pushing</text>');
+
+    buffer.writeln('</svg>');
+    return buffer.toString();
+  }
+
   static String _escapeXml(String input) {
     return input
         .replaceAll('&', '&amp;')

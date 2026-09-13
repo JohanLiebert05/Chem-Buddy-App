@@ -48,14 +48,14 @@ jobs:
 
       - name: Copy Named APK
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.3.0-Release.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.3.1-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-v3.3.0-apk
-          path: ChemBuddy-v3.3.0-Release.apk
+          name: chem-buddy-v3.3.1-apk
+          path: ChemBuddy-v3.3.1-Release.apk
           retention-days: 30
 
       - name: Create GitHub Release (Tags only)
@@ -63,20 +63,15 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ChemBuddy-v3.3.0-Release.apk
+            ChemBuddy-v3.3.1-Release.apk
             Chem-Buddy-MSc-Release.apk
           name: ChemBuddy Release ${{ github.ref_name }}
           body: |
-            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.3.0)
+            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.3.1)
             
-            ### 🎨 What's New in v3.3.0 — ChemDraw Intelligence Upgrade:
-            - **"+" Reactant Separator**: Automatically renders a cyan "+" symbol between disconnected molecular fragments on the canvas.
-            - **Reaction Arrow Tool (→)**: Draw horizontal reaction arrows to visually separate reactants and products.
-            - **Eraser Tool (🧹)**: Granular deletion — tap atoms or bonds to remove them individually.
-            - **Redo Support (↷)**: Full undo/redo stack for non-destructive editing.
-            - **Functional Group Palette**: Quick-insert —OH, —NH₂, —COOH, —CHO, —NO₂, —CN with one tap.
-            - **Pinch-to-Zoom & Pan**: Two-finger zoom and pan with reset-view button.
-            - **Smart Snap Preview**: Ghost bond preview when hovering near existing atoms.
-            - **6 New MSc Templates**: Naphthalene, Indole, Imidazole, Thiophene, Furan, Crown Ether (18-crown-6).
-            - **Multi-Reactant Mode Toggle**: AppBar toggle for multi-fragment drawing mode.
-            - **Load from SMILES**: Paste any SMILES string to instantly render on canvas.
+            ### 🔬 What's Fixed & Upgraded in v3.3.1:
+            - **Dedicated "+" Button**: Direct `＋` tool button in the ChemDraw canvas toolbar and `+ Reactant` badge button in the status strip to easily place reactant addition symbols between molecules.
+            - **Real Gemini 3.6 Flash Multi-Key Dispatcher**: Upgraded AI reaction engine to Google Gemini 3.6 Flash with 100% resilient multi-key failover pool. Replaced mock text fallbacks with authentic chemical SMILES and mechanisms.
+            - **Dynamic AI SVG Mechanism Viewer**: Interactive animated mechanism steps with curved electron-pushing flows and intermediate structures now render beautifully for any AI-predicted reaction.
+            - **Seamless Full Mechanism Navigation**: Tapping "Full Mechanism" on ChemDraw directly opens the Animated Mechanism Viewer instead of the text chat screen.
+            - **2D NIH Cactus Vector Structures**: Authentic 2D molecular SVGs populated directly from Cactus for predicted reaction products.

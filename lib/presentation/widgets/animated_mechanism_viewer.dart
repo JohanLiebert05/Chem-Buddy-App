@@ -112,21 +112,26 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
     }
 
     final step = _steps[_currentStepIndex];
-    final stepGraph = step.intermediateGraph ??
-        MechanismSvgRenderer.renderStep(
-          graph: step.intermediateGraph ?? widget.reaction.steps.first.intermediateGraph!,
-          electronFlows: step.electronFlows,
-        );
-
-    final svgContent = step.intermediateGraph != null
-        ? MechanismSvgRenderer.renderStep(
-            graph: step.intermediateGraph!,
-            electronFlows: step.electronFlows,
-            stepTitle: 'Step ${step.stepNumber}: ${step.stepTitle}',
-            stepDescription: step.stepDescription,
-            transitionStateNote: step.isRds ? 'Rate-Determining (RDS)' : (step.isReversible ? 'Equilibrium (Reversible)' : null),
-          )
-        : stepGraph.toString();
+    final String svgContent;
+    if (step.intermediateGraph != null) {
+      svgContent = MechanismSvgRenderer.renderStep(
+        graph: step.intermediateGraph!,
+        electronFlows: step.electronFlows,
+        stepTitle: 'Step ${step.stepNumber}: ${step.stepTitle}',
+        stepDescription: step.stepDescription,
+        transitionStateNote: step.isRds
+            ? 'Rate-Determining (RDS)'
+            : (step.isReversible ? 'Equilibrium (Reversible)' : null),
+      );
+    } else {
+      svgContent = MechanismSvgRenderer.renderAiStepSvg(
+        stepNumber: step.stepNumber,
+        stepTitle: step.stepTitle,
+        intermediateSmiles: step.intermediateSmiles,
+        electronPushing: step.bondChanges,
+        stepDescription: step.stepDescription,
+      );
+    }
 
     return Container(
       decoration: BoxDecoration(
