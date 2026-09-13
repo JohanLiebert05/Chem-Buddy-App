@@ -1,17 +1,19 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/services/rdkit_service.dart';
+import '../../services/reaction_predictor_service.dart';
 import 'ask_chembuddy_screen.dart';
 
 /// Mobile-First Chemical Sketcher (ChemDraw Alternative)
 /// Optimized for mobile touchscreens with generous hitboxes, haptic snaps,
-/// local zero-cost RDKit descriptors, and direct ChemBuddy AI integration.
+/// local zero-cost RDKit descriptors, forward reaction product predictor, and direct ChemBuddy AI integration.
 class ChemSketcherScreen extends StatefulWidget {
   const ChemSketcherScreen({super.key, this.initialSmiles});
 
@@ -28,6 +30,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
   int _atomCount = 0;
   int _bondCount = 0;
   bool _isAnalyzing = false;
+  bool _isPredicting = false;
 
   @override
   void initState() {
@@ -142,6 +145,314 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
         );
       }
     }
+  }
+
+  Future<void> _predictMajorProduct() async {
+    AppHaptics.confirm();
+    final rawSmiles = await _getSmiles();
+    final smiles = rawSmiles.trim();
+
+    if (smiles.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please draw or select reactant molecule(s) on the canvas first.'),
+            backgroundColor: AppColors.statusDanger,
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() => _isPredicting = true);
+
+    try {
+      final result = await ReactionPredictorService.instance.predictMajorProduct(smiles);
+      setState(() => _isPredicting = false);
+
+      if (!mounted) return;
+
+      if (!result.success || result.productSmiles.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error ?? 'Reaction product prediction unavailable across all 4 keys.'),
+            backgroundColor: AppColors.statusDanger,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+
+      _showPredictionBottomSheet(smiles, result);
+    } catch (e) {
+      setState(() => _isPredicting = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Prediction failed: $e'),
+            backgroundColor: AppColors.statusDanger,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showPredictionBottomSheet(String reactantsSmiles, ReactionPredictionResult result) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF111827),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.72,
+        maxChildSize: 0.92,
+        minChildSize: 0.45,
+        expand: false,
+        builder: (_, scrollCtrl) => ListView(
+          controller: scrollCtrl,
+          padding: const EdgeInsets.all(20),
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade700,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Predicted Major Product',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      'Forward Chemical Reaction Outcome',
+                      style: TextStyle(color: AppColors.accentCyan, fontSize: 11.5, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFA78BFA), width: 1.2),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.auto_awesome_rounded, color: Color(0xFFA78BFA), size: 13),
+                      const SizedBox(width: 4),
+                      Text(
+                        result.isCached ? 'Cached Zero-Token' : '4-Key Gemini',
+                        style: const TextStyle(
+                          color: Color(0xFFA78BFA),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Reactants Input Card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.bg1,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderSubtle),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.input_rounded, color: AppColors.textMuted, size: 14),
+                      SizedBox(width: 6),
+                      Text(
+                        'Reactants (Canvas Input)',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  SelectableText(
+                    reactantsSmiles,
+                    style: const TextStyle(color: Colors.white, fontSize: 12.5, fontFamily: 'monospace', fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 2D Vector Structure Rendering
+            const Text(
+              '2D Molecular Vector Structure (NIH Cactus Engine)',
+              style: TextStyle(color: AppColors.brandBright, fontSize: 13, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              height: 200,
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0B0F19),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.borderHighlight, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: result.svgData.isNotEmpty && result.svgData.contains('<svg')
+                    ? SvgPicture.string(
+                        result.svgData,
+                        fit: BoxFit.contain,
+                        placeholderBuilder: (_) => const Center(
+                          child: CircularProgressIndicator(color: AppColors.accentCyan, strokeWidth: 2),
+                        ),
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.science_rounded, color: AppColors.accentCyan, size: 36),
+                            const SizedBox(height: 8),
+                            Text(
+                              result.productSmiles,
+                              style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Product SMILES Text & Copy
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.bg1,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderSubtle),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Product SMILES',
+                          style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 4),
+                        SelectableText(
+                          result.productSmiles,
+                          style: const TextStyle(color: AppColors.accentCyan, fontSize: 13, fontFamily: 'monospace', fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy_rounded, color: AppColors.textMuted, size: 18),
+                    tooltip: 'Copy Product SMILES',
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: result.productSmiles));
+                      AppHaptics.selection();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Product SMILES copied to clipboard!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Action Buttons: Import to Canvas & Ask ChemBuddy Mechanism
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentCyan,
+                      foregroundColor: const Color(0xFF0B0F19),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await _loadSmiles(result.productSmiles);
+                      AppHaptics.confirm();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Imported "${result.productSmiles}" onto canvas!'),
+                            backgroundColor: AppColors.statusSuccess,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.input_rounded, size: 18),
+                    label: const Text(
+                      'Import to Canvas',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: AppColors.brandBright),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _launchChatWithPrompt(
+                        "For the reaction with reactants '$reactantsSmiles' forming major organic product '${result.productSmiles}', provide the complete step-by-step reaction mechanism with curved electron-pushing arrows, transition state, stereochemical outcome, and driving force with postgraduate MSc rigor.",
+                      );
+                    },
+                    icon: const Icon(Icons.auto_awesome, color: AppColors.brandBright, size: 16),
+                    label: const Text(
+                      'Full Mechanism',
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showDescriptorsSheet(MolecularDescriptors d) {
@@ -331,7 +642,14 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 16),
-          _buildAiOption(
+            _buildAiOption(
+              title: 'Predict Major Forward Reaction Product',
+              subtitle: 'Calculates major organic product and renders 2D SVG vector via Cactus API.',
+              icon: Icons.auto_mode_rounded,
+              onTap: _predictMajorProduct,
+            ),
+            const SizedBox(height: 10),
+            _buildAiOption(
             title: 'Predict ¹H & ¹³C NMR Spectral Peaks',
             subtitle: 'Chemical shifts (δ ppm), splitting multiplicities, and integration.',
             icon: Icons.graphic_eq_rounded,
@@ -529,6 +847,17 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
           ),
           actions: [
             IconButton(
+              icon: _isPredicting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentCyan),
+                    )
+                  : const Icon(Icons.auto_awesome_rounded, color: Color(0xFFA78BFA), size: 21),
+              tooltip: 'Predict Major Product ⚡',
+              onPressed: _isPredicting ? null : _predictMajorProduct,
+            ),
+            IconButton(
               icon: const Icon(Icons.file_upload_outlined, color: AppColors.accentCyan, size: 20),
               tooltip: 'Export SMILES / Molfile',
               onPressed: _showExportDialog,
@@ -593,49 +922,80 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
               ),
               child: SafeArea(
                 top: false,
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
+                    // Primary Action: Predict Major Product
+                    SizedBox(
+                      width: double.infinity,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentCyan,
-                          foregroundColor: const Color(0xFF0B0F19),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: _isAnalyzing ? null : _analyzeWithRdkit,
-                        icon: _isAnalyzing
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                              )
-                            : const Icon(Icons.biotech_outlined, size: 18),
-                        label: const Text(
-                          'Analyze with RDKit',
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.brandPrimary,
+                          backgroundColor: const Color(0xFF7C3AED),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 3,
                         ),
-                        onPressed: () async {
-                          final smiles = await _getSmiles();
-                          _openAiWithSmiles(smiles.isNotEmpty ? smiles : 'C1=CC=CC=C1');
-                        },
-                        icon: const Icon(Icons.auto_awesome, size: 18),
-                        label: const Text(
-                          'Ask ChemBuddy AI',
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                        onPressed: _isPredicting ? null : _predictMajorProduct,
+                        icon: _isPredicting
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.auto_awesome_rounded, size: 18, color: AppColors.accentCyan),
+                        label: Text(
+                          _isPredicting ? 'Predicting Reaction Product...' : 'Predict Major Product ⚡',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.accentCyan,
+                              foregroundColor: const Color(0xFF0B0F19),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: _isAnalyzing ? null : _analyzeWithRdkit,
+                            icon: _isAnalyzing
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                                  )
+                                : const Icon(Icons.biotech_outlined, size: 16),
+                            label: const Text(
+                              'RDKit Descriptors',
+                              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: AppColors.borderHighlight),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: () async {
+                              final smiles = await _getSmiles();
+                              _openAiWithSmiles(smiles.isNotEmpty ? smiles : 'C1=CC=CC=C1');
+                            },
+                            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: AppColors.brandBright),
+                            label: const Text(
+                              'Ask ChemBuddy',
+                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
