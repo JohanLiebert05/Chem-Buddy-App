@@ -121,7 +121,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
             icon: const Icon(Icons.notifications_active_rounded),
             label: const Text('🔔 Send Test Notification Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
             onPressed: () async {
-              await NotificationService.instance.sendTestNotification();
+              final repo = ref.read(chemRepositoryProvider);
+              final stats = repo.overallStats();
+              await NotificationService.instance.sendTestNotification(stats: stats);
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

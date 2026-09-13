@@ -4,6 +4,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../core/utils/attendance_math.dart';
 import '../models/library_models.dart';
 import '../models/models.dart';
 import '../models/smart_flashcard.dart';
@@ -110,7 +111,7 @@ class NotificationService {
     return granted;
   }
 
-  Future<void> sendTestNotification() async {
+  Future<void> sendTestNotification({SubjectAttendanceStats? stats}) async {
     if (!ready) await init();
     debugPrint('[NotificationService] Triggering test notification');
     const androidDetails = AndroidNotificationDetails(
@@ -122,10 +123,15 @@ class NotificationService {
       icon: '@mipmap/ic_launcher',
     );
     const details = NotificationDetails(android: androidDetails, iOS: DarwinNotificationDetails());
+    
+    final pctStr = stats != null && stats.counted > 0
+        ? '${stats.percent.toStringAsFixed(1)}%'
+        : '68.4%'; // Playful demo percentage if no logs yet
+
     await _plugin.show(
       99999,
-      '🧪 ChemBuddy Test Notification',
-      'Notifications are functioning! Class, timetable, and study reminders are active.',
+      '🧪 ChemBuddy Alert Engine: Armed & Dangerous!',
+      'Attendance tracker online ($pctStr in Organic Chem)! Expect witty banter, urgent attendance alerts, and zero excuses to bunk.',
       details,
     );
   }
@@ -137,6 +143,8 @@ class NotificationService {
     required List<AppReminder> reminders,
     List<SmartFlashcardSet>? flashcardSets,
     List<SmartFlashcard>? smartCards,
+    Map<String, SubjectAttendanceStats>? subjectStats,
+    SubjectAttendanceStats? overallStats,
   }) async {
     if (!ready) await init();
     await _plugin.cancelAll();
@@ -149,12 +157,16 @@ class NotificationService {
 
     if (prefs.classReminders) {
       for (final entry in entries) {
-        await _scheduleClass(entry, prefs.defaultMinutesBefore);
+        // Resolve subject stats by code, name, or id
+        final stats = subjectStats?[entry.subjectCode.trim().toUpperCase()] ??
+            subjectStats?[entry.subject.trim().toUpperCase()] ??
+            subjectStats?[entry.id];
+        await _scheduleClass(entry, prefs.defaultMinutesBefore, stats: stats);
         scheduledCount++;
       }
     }
     if (prefs.dailyTimetable) {
-      await _scheduleDaily(entries);
+      await _scheduleDaily(entries, overallStats: overallStats);
       scheduledCount++;
     }
     if (prefs.assignmentReminders || prefs.examReminders) {
@@ -200,10 +212,17 @@ class NotificationService {
       final fire = tz.TZDateTime.from(earliest, tz.local);
       if (fire.isBefore(tz.TZDateTime.now(tz.local))) continue;
 
+      final titles = [
+        '🧠 Your brain cells are getting rusty!',
+        '⚡ Active Recall Emergency: $setName',
+        '🔬 Review time: $setName',
+      ];
+      final title = titles[setName.hashCode.abs() % titles.length];
+
       await _plugin.zonedSchedule(
         setId.hashCode,
-        '📚 Flashcards Due: $setName',
-        '${setCards.length} chemistry card(s) ready for active recall review.',
+        title,
+        '${setCards.length} card(s) due! Memory decays exponentially without review—don\'t let your chemistry evaporate!',
         fire,
         const NotificationDetails(android: flashcardChannel, iOS: DarwinNotificationDetails()),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -214,7 +233,92 @@ class NotificationService {
     return count;
   }
 
-  Future<void> _scheduleClass(TimetableEntry entry, int minutesBefore) async {
+  /// Constructs cheeky, intelligent chemistry banter customized by subject attendance tier
+  ({String title, String body}) _buildClassBanter({
+    required String subjectName,
+    required int minutesBefore,
+    required String room,
+    required String type,
+    SubjectAttendanceStats? stats,
+  }) {
+    final locationInfo = room.trim().isNotEmpty ? ' in $room' : '';
+    final timeStr = minutesBefore == 0 ? 'now' : 'in $minutesBefore min';
+
+    if (stats == null || stats.counted == 0) {
+      final banters = [
+        'First impressions matter! Show up so the professor knows you actually exist this semester.',
+        'Time to synthesize some attendance. Grab your notebook and head to class!',
+        'Your attendance ledger is fresh. Start strong or suffer the consequences during finals!',
+      ];
+      final banter = banters[subjectName.hashCode.abs() % banters.length];
+      return (
+        title: '🧪 $subjectName starts $timeStr$locationInfo!',
+        body: banter,
+      );
+    }
+
+    final pct = stats.percent;
+    final pctStr = '${pct.toStringAsFixed(1)}%';
+
+    if (pct < 70.0) {
+      // Critical danger tier (< 70%)
+      final needed = stats.attendToReach75;
+      final banters = [
+        'Sitting at $pctStr attendance? That is dangerously close to a hall ticket hostage situation. Drag yourself to class!',
+        'Your attendance is a tragic $pctStr. The professor thinks you are a mythical creature. Show up today!',
+        'You are at $pctStr (Need $needed consecutive classes for 75%). Stop calculating minimum probabilities and attend!',
+        'Only $pctStr attendance?! If you bunk today, your HOD will personally haunt you. Move those legs!',
+      ];
+      final banter = banters[subjectName.hashCode.abs() % banters.length];
+      return (
+        title: '🚨 $subjectName ($pctStr) in $timeStr$locationInfo!',
+        body: banter,
+      );
+    } else if (pct < 75.0) {
+      // Borderline warning tier (70% - 74.9%)
+      final banters = [
+        'You are sitting on the razor\'s edge at $pctStr. ONE missed class and you lose eligibility. Run to class!',
+        'Attendance: $pctStr. The attendance gods are watching you closely. Don\'t even think about sleeping in!',
+        '$pctStr in $subjectName! You are walking on thin ice. Get into class and secure that percentage.',
+      ];
+      final banter = banters[subjectName.hashCode.abs() % banters.length];
+      return (
+        title: '⚠️ $subjectName ($pctStr) in $timeStr$locationInfo!',
+        body: banter,
+      );
+    } else if (pct < 85.0) {
+      // Safe tier (75% - 84.9%)
+      final skips = stats.canSkip;
+      final banters = [
+        '$pctStr attendance—you passed the 75% cutoff, but don\'t get cocky. Class starts $timeStr!',
+        'You are at $pctStr. You have $skips safe bunk(s), but save them for a real emergency. Be a good chemist today!',
+        '$subjectName ($pctStr). Protect that buffer like an air-sensitive Grignard reagent!',
+      ];
+      final banter = banters[subjectName.hashCode.abs() % banters.length];
+      return (
+        title: '⏳ $subjectName ($pctStr) starts $timeStr$locationInfo',
+        body: banter,
+      );
+    } else {
+      // Exemplary tier (85%+)
+      final banters = [
+        '$pctStr attendance?! Look at you, academic weapon! Don\'t let that flawless streak slip now.',
+        'Flexing a stellar $pctStr in $subjectName! The professor might actually know your name. See you in class!',
+        '$pctStr attendance! High yield, zero impurities. Keep up the chemistry mastery!',
+      ];
+      final banter = banters[subjectName.hashCode.abs() % banters.length];
+      return (
+        title: '🌟 $subjectName ($pctStr) in $timeStr$locationInfo',
+        body: banter,
+      );
+    }
+  }
+
+  Future<void> _scheduleClass(
+    TimetableEntry entry,
+    int minutesBefore, {
+    SubjectAttendanceStats? stats,
+  }) async {
     final start = entry.startMinutes;
     var hour = start ~/ 60;
     var minute = start % 60 - minutesBefore;
@@ -224,11 +328,20 @@ class NotificationService {
     }
     if (hour < 0) return;
     final next = _nextWeekday(entry.weekdayNumber, hour, minute);
-    final title = entry.displayName.isEmpty ? 'Class' : entry.displayName;
+    final title = entry.displayName.isEmpty ? 'Chemistry Class' : entry.displayName;
+
+    final banter = _buildClassBanter(
+      subjectName: title,
+      minutesBefore: minutesBefore,
+      room: entry.room,
+      type: entry.type,
+      stats: stats,
+    );
+
     await _plugin.zonedSchedule(
       entry.id.hashCode,
-      '$title starts in $minutesBefore minutes',
-      '${entry.type} · ${entry.startTime}${entry.room.isEmpty ? '' : ' · ${entry.room}'}',
+      banter.title,
+      banter.body,
       next,
       const NotificationDetails(android: classChannel, iOS: DarwinNotificationDetails()),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -237,19 +350,48 @@ class NotificationService {
     );
   }
 
-  Future<void> _scheduleDaily(List<TimetableEntry> entries) async {
+  Future<void> _scheduleDaily(
+    List<TimetableEntry> entries, {
+    SubjectAttendanceStats? overallStats,
+  }) async {
     final now = tz.TZDateTime.now(tz.local);
     var fire = tz.TZDateTime(tz.local, now.year, now.month, now.day, 7, 30);
     if (fire.isBefore(now)) fire = fire.add(const Duration(days: 1));
     final weekday = fire.weekday;
     final today = entries.where((e) => e.weekdayNumber == weekday).toList()
       ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
-    final body = today.isEmpty
-        ? 'No classes scheduled today.'
-        : today.map((e) => '${e.startTime} ${e.displayName}').join('\n');
+
+    String title;
+    String body;
+
+    if (today.isEmpty) {
+      title = '☕ Zero classes today! Rest day.';
+      body = overallStats != null && overallStats.counted > 0
+          ? 'Overall attendance sitting at ${overallStats.percent.toStringAsFixed(1)}%. Recharge those synapses!'
+          : 'No classes on schedule. Sleep in or catch up on chemistry research!';
+    } else {
+      final count = today.length;
+      final classList = today.map((e) => '• ${e.startTime} ${e.displayName}').join('\n');
+
+      if (overallStats != null && overallStats.counted > 0) {
+        final pct = overallStats.percent;
+        final pctStr = '${pct.toStringAsFixed(1)}%';
+        if (pct < 75.0) {
+          title = '🚨 Wake up! $count class(es) today · Overall: $pctStr';
+          body = 'Your overall attendance is in the danger zone ($pctStr). No bunking allowed today!\n$classList';
+        } else {
+          title = '🌅 Rise & Shine! $count class(es) today · Overall: $pctStr';
+          body = 'Overall attendance is solid at $pctStr. Let\'s keep the momentum going!\n$classList';
+        }
+      } else {
+        title = '🌅 Rise & Shine! $count class(es) today';
+        body = 'Your bed is comfortable, but passing your semester is better. Today\'s lineup:\n$classList';
+      }
+    }
+
     await _plugin.zonedSchedule(
       71001,
-      'Good morning! Here is your timetable for today.',
+      title,
       body,
       fire,
       const NotificationDetails(android: dailyChannel, iOS: DarwinNotificationDetails()),

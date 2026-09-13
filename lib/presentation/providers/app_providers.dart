@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/seed_data.dart';
+import '../../core/utils/attendance_math.dart';
 import '../../data/local/local_store.dart';
 import '../../data/models/library_models.dart';
 import '../../data/models/models.dart';
@@ -118,6 +119,20 @@ class AppController extends Notifier<AppState> {
     final smartCards = localStore.all(localStore.smartCards).map(SmartFlashcard.fromJson).toList();
     final flashcardSets = localStore.all(localStore.smartSets).map(SmartFlashcardSet.fromJson).toList();
 
+    // Map subject attendance stats by id, code, and name for precise notification banter
+    final Map<String, SubjectAttendanceStats> subjectStats = {};
+    for (final s in state.subjects) {
+      final stats = _repo.statsFor(s.id);
+      subjectStats[s.id] = stats;
+      if (s.code.trim().isNotEmpty) {
+        subjectStats[s.code.trim().toUpperCase()] = stats;
+      }
+      if (s.name.trim().isNotEmpty) {
+        subjectStats[s.name.trim().toUpperCase()] = stats;
+      }
+    }
+    final overallStats = _repo.overallStats();
+
     await NotificationService.instance.resync(
       prefs: state.notificationPrefs,
       entries: state.entries,
@@ -125,6 +140,8 @@ class AppController extends Notifier<AppState> {
       reminders: state.reminders,
       flashcardSets: flashcardSets,
       smartCards: smartCards,
+      subjectStats: subjectStats,
+      overallStats: overallStats,
     );
   }
 

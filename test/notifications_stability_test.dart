@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:chem_buddy/core/utils/attendance_math.dart';
 import 'package:chem_buddy/data/local/local_store.dart';
 import 'package:chem_buddy/data/models/library_models.dart';
 import 'package:chem_buddy/data/models/models.dart';
@@ -127,6 +128,7 @@ void main() {
         ),
       ];
 
+      final organicStats = const SubjectAttendanceStats(present: 6, absent: 4, postponed: 0); // 60.0% attendance
       await service.resync(
         prefs: const NotificationPrefs(
           enabled: true,
@@ -142,12 +144,24 @@ void main() {
         reminders: sampleReminders,
         flashcardSets: sampleSets,
         smartCards: sampleCards,
+        subjectStats: {'CHE-501': organicStats},
+        overallStats: organicStats,
       );
 
       expect(service.ready, isTrue);
 
       final scheduled = methodCalls.where((c) => c.method == 'zonedSchedule').toList();
       expect(scheduled.length, greaterThan(0));
+
+      final classSchedule = scheduled.firstWhere((c) => c.arguments['id'] == 'slot-1'.hashCode);
+      expect(classSchedule.arguments['title'], contains('60.0%'));
+      expect(classSchedule.arguments['title'], contains('🚨'));
+      expect(classSchedule.arguments['body'], anyOf([
+        contains('hostage'),
+        contains('mythical creature'),
+        contains('attend'),
+        contains('haunt'),
+      ]));
 
       // Test with notifications disabled clears all
       methodCalls.clear();
@@ -161,15 +175,18 @@ void main() {
       expect(cancelAll.length, greaterThan(0));
     });
 
-    test('3. Immediate test notification dispatches to Android notification manager', () async {
+    test('3. Immediate test notification dispatches to Android notification manager with attendance banter', () async {
       final service = NotificationService.instance;
       await service.init();
       methodCalls.clear();
 
-      await service.sendTestNotification();
+      await service.sendTestNotification(
+        stats: const SubjectAttendanceStats(present: 12, absent: 8, postponed: 0),
+      );
       final shown = methodCalls.where((c) => c.method == 'show').toList();
       expect(shown.length, equals(1));
-      expect(shown.first.arguments['title'], contains('ChemBuddy Test Notification'));
+      expect(shown.first.arguments['title'], contains('Armed & Dangerous'));
+      expect(shown.first.arguments['body'], contains('60.0%'));
     });
 
     testWidgets('4. NotificationSettingsScreen displays test notification button and flashcard reminder toggle', (tester) async {
