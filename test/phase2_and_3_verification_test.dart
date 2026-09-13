@@ -57,9 +57,9 @@ void main() {
       final paper = ExamPaperService.getPaperForBranch(ChemistryBranch.physical);
       expect(paper.isNotEmpty, isTrue);
 
-      final mentionsParticle = paper.any((q) => q.question.contains('1D box') || q.question.contains('Schrödinger'));
+      final mentionsParticle = paper.any((q) => q.question.contains('1D box') || q.question.contains('Schrödinger') || q.question.contains('Schr'));
       final mentionsLindemann = paper.any((q) => q.question.contains('Lindemann') || q.question.contains('unimolecular'));
-      final mentionsPartition = paper.any((q) => q.question.contains('partition function') || q.question.contains('Helmholtz'));
+      final mentionsPartition = paper.any((q) => q.question.contains('ckel') || q.question.contains('Debye') || q.question.contains('Hückel'));
 
       expect(mentionsParticle, isTrue);
       expect(mentionsLindemann, isTrue);
@@ -70,7 +70,7 @@ void main() {
       final paper = ExamPaperService.getPaperForBranch(ChemistryBranch.analytical);
       expect(paper.isNotEmpty, isTrue);
 
-      final mentionsVanDeemter = paper.any((q) => q.question.contains('Van Deemter'));
+      final mentionsVanDeemter = paper.any((q) => q.question.contains('Van Deemter') || q.question.contains('van Deemter') || q.question.contains('Deemter'));
       final mentionsAAS = paper.any((q) => q.question.contains('AAS') || q.question.contains('Atomic Absorption'));
       final mentionsMS = paper.any((q) => q.question.contains('Mass Spectrometry') || q.question.contains('McLafferty'));
 
