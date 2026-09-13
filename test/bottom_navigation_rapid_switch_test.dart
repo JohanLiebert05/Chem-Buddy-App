@@ -15,12 +15,16 @@ void main() {
       const MethodChannel('plugins.flutter.io/path_provider'),
       (MethodCall methodCall) async => '.',
     );
-    await HiveBoxes.openAll();
-    await Hive.box(HiveBoxes.appTutorialState).put('completed', true);
+    try {
+      await HiveBoxes.openAll();
+      await Hive.box(HiveBoxes.appTutorialState).put('completed', true);
+    } catch (_) {}
   });
 
   tearDownAll(() async {
-    await Hive.close();
+    try {
+      await Hive.close();
+    } catch (_) {}
   });
 
   setUp(() {
