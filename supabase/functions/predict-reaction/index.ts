@@ -333,14 +333,10 @@ async function executeGeminiWithRotation(
       },
       generationConfig: {
         temperature: 0.1,
-        maxOutputTokens: enableSearch ? 2048 : 256,
-        responseMimeType: enableSearch ? "application/json" : undefined,
+        maxOutputTokens: 2048,
+        responseMimeType: "application/json",
       },
     };
-
-    if (enableSearch) {
-      body.tools = [{ googleSearch: {} }];
-    }
 
     try {
       const resp = await fetch(url, {
