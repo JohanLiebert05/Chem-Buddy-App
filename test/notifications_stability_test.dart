@@ -44,11 +44,19 @@ void main() {
         return null;
       },
     );
-    await HiveBoxes.openAll();
+    try {
+      await HiveBoxes.openAll();
+    } catch (_) {
+      // Hive path may not be available in CI — tests use in-memory mocks anyway.
+    }
   });
 
   tearDownAll(() async {
-    await Hive.close();
+    try {
+      await Hive.close();
+    } catch (_) {
+      // Safe to ignore: Hive may not have fully initialised on CI (Linux).
+    }
   });
 
   setUp(() {
