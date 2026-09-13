@@ -604,8 +604,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             const Icon(Icons.event_available_rounded, size: 16, color: AppColors.statusSuccess),
             const SizedBox(width: 6),
-            const Text('Official Attendance Audit', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white)),
-            const Spacer(),
+            const Expanded(
+              child: Text(
+                'Official Attendance Audit',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(
@@ -672,8 +678,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             const Icon(Icons.school_rounded, size: 16, color: AppColors.purpleBright),
             const SizedBox(width: 6),
-            const Text('Academic Coursework & Mastery Audit', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white)),
-            const Spacer(),
+            const Expanded(
+              child: Text(
+                'Academic Coursework & Mastery Audit',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(
@@ -736,7 +748,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             Icon(Icons.science_rounded, size: 16, color: AppColors.accentCyan),
             SizedBox(width: 6),
-            Text('MSc Reaction Mechanism Dossier', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white)),
+            Expanded(
+              child: Text(
+                'MSc Reaction Mechanism Dossier',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 6),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/widgets/app_error_boundary.dart';
 import 'core/widgets/hex_background.dart';
 import 'presentation/providers/app_providers.dart';
 import 'presentation/screens/admin/admin_shell.dart';
@@ -37,7 +38,10 @@ class ChemBuddyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       themeMode: ThemeMode.dark,
-      home: home,
+      home: AppErrorBoundary(
+        screenName: 'ChemBuddy Home',
+        child: home,
+      ),
     );
   }
 }

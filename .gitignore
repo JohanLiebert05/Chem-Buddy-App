@@ -68,3 +68,7 @@ supabase/.branches/
 # Release APKs (too large for GitHub)
 *.apk
 build/
+
+# Local Hive test files
+*.hive
+*.lock

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/app_error_boundary.dart';
 import '../../core/widgets/hex_background.dart';
 import '../providers/app_providers.dart';
 import '../screens/ask_chembuddy_screen.dart';
@@ -20,6 +21,14 @@ class MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<MainShell> {
+  static const _tabNames = [
+    'Home',
+    'Classes & Attendance',
+    'Ask AI',
+    'Library',
+    'Profile',
+  ];
+
   static const _tabs = [
     HomeScreen(), // 0: Home
     ClassesHubScreen(), // 1: Classes & Attendance
@@ -29,40 +38,46 @@ class _MainShellState extends ConsumerState<MainShell> {
   ];
 
   void _goTo(int i) {
+    final current = ref.read(shellTabProvider);
+    final clamped = i.clamp(0, _tabs.length - 1);
+    debugPrint('[MainShell] Tab switch: from $current (${_tabNames[current.clamp(0, 4)]}) to $clamped (${_tabNames[clamped]})');
+    if (current == clamped) {
+      debugPrint('[MainShell] Tab $clamped is already active; ignoring redundant tap');
+      return;
+    }
     AppHaptics.selection();
-    ref.read(shellTabProvider.notifier).state = i;
+    ref.read(shellTabProvider.notifier).state = clamped;
   }
 
   @override
   Widget build(BuildContext context) {
-    final index = ref.watch(shellTabProvider);
+    final rawIndex = ref.watch(shellTabProvider);
+    final safeIndex = rawIndex.clamp(0, _tabs.length - 1);
+    if (rawIndex != safeIndex) {
+      debugPrint('[MainShell] Warning: raw tab index $rawIndex out of bounds, clamped to $safeIndex');
+    }
 
     return HexBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
           bottom: false,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
-            },
-            child: KeyedSubtree(
-              key: ValueKey<int>(index),
-              child: _tabs[index],
-            ),
+          child: IndexedStack(
+            index: safeIndex,
+            children: [
+              for (var i = 0; i < _tabs.length; i++)
+                AppErrorBoundary(
+                  screenName: _tabNames[i],
+                  child: _tabs[i],
+                ),
+            ],
           ),
         ),
         extendBody: true,
         bottomNavigationBar: (View.of(context).viewInsets.bottom > 0)
             ? null
             : _ModernBottomNav(
-                selectedIndex: index,
+                selectedIndex: safeIndex,
                 onTabSelected: _goTo,
               ),
       ),
