@@ -75,3 +75,4 @@ flutter:
     - assets/mechanisms/pericyclic/diels_alder/
     - assets/mechanisms/rearrangements/beckmann/
     - assets/web/
+    - assets/chemistry/reactions/

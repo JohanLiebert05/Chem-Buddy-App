@@ -48,14 +48,14 @@ jobs:
 
       - name: Copy Named APK
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.1.2-Release.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.2.0-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-v3.1.2-apk
-          path: ChemBuddy-v3.1.2-Release.apk
+          name: chem-buddy-v3.2.0-apk
+          path: ChemBuddy-v3.2.0-Release.apk
           retention-days: 30
 
       - name: Create GitHub Release (Tags only)
@@ -63,25 +63,19 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ChemBuddy-v3.1.2-Release.apk
+            ChemBuddy-v3.2.0-Release.apk
             Chem-Buddy-MSc-Release.apk
           name: ChemBuddy Release ${{ github.ref_name }}
           body: |
-            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.1.2)
+            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.2.0)
             
-            ### ✨ What's New in v3.1.2:
-            - **Smart PDF-to-Quiz Generator**:
-              - Document understanding before generation: domain classification, concept & formula extraction, and page mapping.
-              - Primary source of truth: 100% grounded in uploaded PDF with zero hallucinations.
-              - Smart Quiz, High Priority, and Custom modes with 10, 20, 30, 40 questions.
-              - Remediation loop: "Practice Weak Topics" to generate targeted follow-up quizzes from same PDF.
-            - **ChemBuddy AI Chat Redesign & Answer Modes**:
-              - Normal concise mode by default; MSc in-depth mode on request (2M, 5M, 10M, MSc Concept).
-              - Math parser fix: zero internal placeholders (`DISPLAY_MATH_0`) leak.
-            - **Accelerated Flashcard Generation**:
-              - In-memory response caching and single-call fast path for sub-second flashcard creation.
-            - **Smoother Navigation**:
-              - Silky cross-fade page transitions and tactile spring-scaling bottom nav tabs.
-            - **Quality & Performance**:
-              - 100% automated test suite passing (254 unit & widget tests).
-              - Zero static analysis issues (`flutter analyze`).
+            ### 🧪 What's New in v3.2.0:
+            - **Organic Reaction Predictor & Mechanism Viewer**:
+              - **Curated MSc Reaction Engine**: 35 core postgraduate organic named reactions (Aldol, Diels-Alder, Wittig, Robinson Annulation, Stille, Suzuki-Miyaura, Heck, Sharpless, Birch, etc.) with zero cloud latency.
+              - **Animated Electron-Pushing Mechanisms**: Step-by-step interactive viewer with animated curved electron flow arrows (heterolytic double-barbed and homolytic single-barbed radical fishhooks) rendered in crisp vector SVG.
+              - **Rich Reaction Pedagogy**: In-depth explanations covering stereochemistry, regiochemistry, frontier molecular orbitals (HOMO/LUMO), thermodynamic driving forces, and pKa considerations.
+              - **Seamless Chemical Sketcher Integration**: Send molecules drawn in ChemDraw / Ketcher canvas straight into the predictor with a single tap.
+              - **AI-Powered Fallback**: Multi-key Gemini load balancing edge function with automatic failover for predicting reactions beyond the local database.
+            - **Quality & Stability**:
+              - 100% automated test suite passing across all unit, widget, and chemistry engine tests.
+              - 0 static analysis warnings (`flutter analyze`).

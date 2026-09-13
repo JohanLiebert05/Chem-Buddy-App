@@ -11,6 +11,7 @@ class AppColors {
   static const borderAccent = Color(0x808B5CF6); // Interactive card highlights
 
   static const brandPrimary = Color(0xFF8B5CF6); // Vibrant brand purple
+  static const electricViolet = Color(0xFF8B5CF6); // Vibrant electric violet
   static const brandBright = Color(0xFFA78BFA); // Lavender heading/LaTeX
   static const brandDeep = Color(0xFF6B45FA); // Royal glow violet
   static const accentCyan = Color(0xFF06B6D4); // Spectroscopy / lab cyan

@@ -1,0 +1,29 @@
+electron_flow_id,reaction_id,step_id,source_type,source_atom_role,source_atom_identifier,target_type,target_atom_role,target_atom_identifier,flow_type,arrow_type,description
+EF_SN2_01,RXN_SN2_001,ST_SN2_01,lone_pair,nucleophile_donor,Nu1,atom,electrophilic_carbon,C1,lone_pair_attack,curved_full,Nucleophile lone pair attacks the backside of electrophilic sp3 carbon C1
+EF_SN2_02,RXN_SN2_001,ST_SN2_01,bond,carbon_leaving_group_bond,C1-LG1,atom,leaving_group_acceptor,LG1,bond_break,curved_full,Carbon-leaving group sigma bonding pair departs onto leaving group LG1
+EF_SN1_01,RXN_SN1_001,ST_SN1_01,bond,carbon_leaving_group_bond,C1-LG1,atom,leaving_group_acceptor,LG1,bond_break,curved_full,Heterolytic cleavage: C1-LG bond electrons move onto leaving group forming carbocation C1(+)
+EF_SN1_02,RXN_SN1_001,ST_SN1_02,lone_pair,nucleophile_donor,Nu1,atom,carbocation_center,C1,lone_pair_attack,curved_full,Nucleophile lone pair attacks vacant p-orbital of planar carbocation C1
+EF_E2_01,RXN_E2_001,ST_E2_01,lone_pair,base_donor,B1,atom,beta_hydrogen,H1,proton_transfer,curved_full,Base lone pair abstracts anti-periplanar beta proton H1
+EF_E2_02,RXN_E2_001,ST_E2_01,bond,beta_carbon_hydrogen_bond,C2-H1,bond,carbon_carbon_bond,C1-C2,elimination,curved_full,C2-H1 sigma bonding pair collapses into C1-C2 interatomic space to form C=C pi bond
+EF_E2_03,RXN_E2_001,ST_E2_01,bond,alpha_carbon_leaving_group_bond,C1-LG1,atom,leaving_group,LG1,bond_break,curved_full,Alpha C1-LG1 bond electrons depart onto leaving group LG1
+EF_ALDOL_01,RXN_ALDOL_001,ST_ALDOL_01,lone_pair,base_donor,OH_Base,atom,alpha_proton,H_alpha,proton_transfer,curved_full,Hydroxide abstracts acidic alpha-proton H_alpha
+EF_ALDOL_02,RXN_ALDOL_001,ST_ALDOL_01,bond,alpha_c_h_bond,C_alpha-H_alpha,atom,enolate_alpha_carbon,C_alpha,resonance,curved_full,C-H electron pair forms enolate carbanion / oxyanion resonance system
+EF_ALDOL_03,RXN_ALDOL_001,ST_ALDOL_02,lone_pair,enolate_carbon,C_alpha,atom,carbonyl_carbon_acceptor,C_carbonyl,lone_pair_attack,curved_full,Nucleophilic alpha-carbon attacks the electrophilic carbonyl carbon C_carbonyl
+EF_ALDOL_04,RXN_ALDOL_001,ST_ALDOL_02,pi_bond,carbonyl_pi_bond,C_carbonyl=O1,atom,carbonyl_oxygen,O1,bond_break,curved_full,Carbonyl pi electrons displace onto oxygen O1 forming alkoxide oxyanion
+EF_ALDOL_05,RXN_ALDOL_001,ST_ALDOL_03,negative_charge,alkoxide_oxygen,O1,atom,water_proton,H_water,proton_transfer,curved_full,Alkoxide oxygen abstracts proton from water regenerating OH- catalyst
+EF_GRIG_01,RXN_GRIGNARD_ALD_001,ST_GRIG_01,bond,carbanion_magnesium_bond,C_alkyl-Mg,atom,carbonyl_carbon,C_carbonyl,bond_formation,curved_full,Nucleophilic C-Mg bonding pair attacks carbonyl carbon C_carbonyl
+EF_GRIG_02,RXN_GRIGNARD_ALD_001,ST_GRIG_01,pi_bond,carbonyl_pi_bond,C_carbonyl=O1,atom,carbonyl_oxygen,O1,bond_break,curved_full,Carbonyl pi electrons shift onto oxygen forming magnesium alkoxide
+EF_GRIG_03,RXN_GRIGNARD_ALD_001,ST_GRIG_02,lone_pair,alkoxide_oxygen,O1,atom,hydronium_proton,H_acid,proton_transfer,curved_full,Alkoxide oxygen picks up proton from aqueous acid to yield alcohol
+EF_FISCH_01,RXN_ESTER_FISCHER_001,ST_FISCHER_01,lone_pair,carbonyl_oxygen,O_carbonyl,atom,catalyst_proton,H_catalyst,proton_transfer,curved_full,Carbonyl oxygen lone pair attacks acid proton activating carbonyl
+EF_FISCH_02,RXN_ESTER_FISCHER_001,ST_FISCHER_02,lone_pair,alcohol_oxygen,O_alcohol,atom,activated_carbonyl_carbon,C_carbonyl,lone_pair_attack,curved_full,Alcohol oxygen attacks activated carbonyl carbon
+EF_FISCH_03,RXN_ESTER_FISCHER_001,ST_FISCHER_02,pi_bond,protonated_carbonyl_pi,C_carbonyl=OH+,atom,protonated_oxygen,O_carbonyl,bond_break,curved_full,Pi electrons neutralize oxonium oxygen forming tetrahedral intermediate
+EF_FISCH_04,RXN_ESTER_FISCHER_001,ST_FISCHER_03,lone_pair,hydroxyl_oxygen,O_gemdiol,bond,carbonyl_bond,C-O,elimination,curved_full,Hydroxyl lone pair collapses to reform C=O double bond
+EF_FISCH_05,RXN_ESTER_FISCHER_001,ST_FISCHER_03,bond,carbon_water_bond,C-OH2+,atom,water_leaving_group,O_water,bond_break,curved_full,Water molecule departs as neutral leaving group
+EF_NIT_01,RXN_EAS_NITRATION_001,ST_EAS_NIT_01,bond,nitrogen_water_bond,N-OH2+,atom,water_leaving_group,O_water,bond_break,curved_full,Water departs from protonated nitric acid generating linear NO2+ electrophile
+EF_NIT_02,RXN_EAS_NITRATION_001,ST_EAS_NIT_02,pi_bond,aromatic_pi_cloud,C1=C2,atom,nitronium_nitrogen,N_nitro,pi_attack,curved_full,Aromatic pi bond attacks electrophilic nitrogen of nitronium ion
+EF_NIT_03,RXN_EAS_NITRATION_001,ST_EAS_NIT_02,pi_bond,nitronium_n_o_pi,N=O,atom,nitro_oxygen,O_nitro,bond_break,curved_full,N=O pi electrons neutralize formal charge on oxygen
+EF_NIT_04,RXN_EAS_NITRATION_001,ST_EAS_NIT_03,lone_pair,bisulfate_base,O_base,atom,arenium_proton,H_arenium,proton_transfer,curved_full,Base removes proton from sp3 hybridized arenium carbon
+EF_NIT_05,RXN_EAS_NITRATION_001,ST_EAS_NIT_03,bond,arenium_c_h_bond,C1-H_arenium,bond,aromatic_ring_bond,C1-C2,elimination,curved_full,C-H bonding electrons restore aromatic 6-pi sextet
+EF_DA_01,RXN_DIELS_ALDER_001,ST_DA_01,pi_bond,diene_c1_c2_pi,C1=C2,bond,new_c1_c5_sigma,C1-C5,pi_attack,curved_full,Diene C1 pi electrons attack dienophile carbon C5 forming first new sigma bond
+EF_DA_02,RXN_DIELS_ALDER_001,ST_DA_01,pi_bond,dienophile_c5_c6_pi,C5=C6,bond,new_c4_c6_sigma,C4-C6,pi_attack,curved_full,Dienophile pi electrons attack diene C4 forming second new sigma bond
+EF_DA_03,RXN_DIELS_ALDER_001,ST_DA_01,pi_bond,diene_c3_c4_pi,C3=C4,bond,diene_c2_c3_new_pi,C2=C3,resonance,curved_full,Diene C3=C4 pi electrons shift to form new C2=C3 pi double bond

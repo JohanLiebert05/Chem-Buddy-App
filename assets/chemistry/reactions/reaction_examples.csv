@@ -1,0 +1,18 @@
+example_id,reaction_id,reactant_smiles,reagent_smiles,solvent,temperature,expected_product_smiles,expected_product_name,stereochemical_outcome,example_notes
+EX_SN2_01,RXN_SN2_001,CCBr,[Na+].[I-],Acetone,25°C,CCI,Iodoethane,Achiral primary substrate; rapid Finkelstein precipitation,Classic Finkelstein SN2: NaBr precipitates in acetone driving reaction
+EX_SN2_02,RXN_SN2_001,CCCCBr,[Na+].[O-]C(=O)C,DMF,50°C,CCCCOC(=O)C,Butyl acetate,Primary aliphatic substitution,Acetate nucleophilic displacement in polar aprotic DMF
+EX_SN1_01,RXN_SN1_001,CC(C)(C)Br,O,H2O,40°C,CC(C)(C)O,tert-Butyl alcohol,Achiral planar intermediate,Solvolysis of tertiary halide in aqueous medium
+EX_E2_01,RXN_E2_001,CC(C)Br,[Na+].[O-]CC,EtOH,78°C,C=CC,Propene,Anti-periplanar elimination,Dehydrohalogenation of isopropyl bromide with ethoxide
+EX_E1_01,RXN_E1_001,CC(C)(C)O,OS(=O)(=O)O,H2O,90°C,CC(=C)C,2-Methylpropene (Isobutylene),Thermodynamic alkene formation,Acid-catalyzed dehydration of tert-butanol via E1
+EX_ALDOL_01,RXN_ALDOL_001,CC=O,[Na+].[OH-],H2O,5°C,CC(O)CC=O,3-Hydroxybutanal (Acetaldol),Racemic mixture at C3 stereocenter,Self-addition of acetaldehyde at low temperature
+EX_ALDOL_COND_01,RXN_ALDOL_COND_001,CC=O,[Na+].[OH-],H2O,80°C,CC=CC=O,(E)-Crotonaldehyde,(E)-alkene stereospecific,Aldol condensation with heat drives dehydration to conjugated enal
+EX_CLAISEN_01,RXN_CLAISEN_001,CCOC(=O)C,[Na+].[O-]CC,EtOH,80°C,CCOC(=O)CC(=O)C,Ethyl acetoacetate,Achiral beta-keto ester,Classic Claisen self-condensation of ethyl acetate
+EX_GRIGNARD_01,RXN_GRIGNARD_ALD_001,CC(=O)C,C[Mg]Br,Et2O,25°C,CC(C)(C)O,tert-Butyl alcohol,Achiral tertiary alcohol,Addition of methylmagnesium bromide to acetone
+EX_FISCHER_01,RXN_ESTER_FISCHER_001,CC(=O)O.CCO,OS(=O)(=O)O,Ethanol,78°C,CCOC(=O)C,Ethyl acetate,Achiral ester,Equilibrium Fischer esterification of acetic acid with ethanol
+EX_NITRATION_01,RXN_EAS_NITRATION_001,c1ccccc1,O=N(=O)O.OS(=O)(=O)O,H2SO4,50°C,[O-][N+](=O)c1ccccc1,Nitrobenzene,Planar aromatic ring,Mononitration of benzene with mixed acid
+EX_DIELS_ALDER_01,RXN_DIELS_ALDER_001,C=CC=C.C=CC(=O)OC,Toluene,Toluene,100°C,COC(=O)C1CCC=CC1,Methyl cyclohex-3-enecarboxylate,Racemic endo cycloadduct,Butadiene with methyl acrylate [4+2] cycloaddition
+EX_CANNIZZARO_01,RXN_CANNIZZARO_001,c1ccccc1C=O,[Na+].[OH-],H2O,60°C,c1ccccc1CO.c1ccccc1C(=O)O,Benzyl alcohol + Benzoic acid,Achiral products,Disproportionation of benzaldehyde without alpha-protons
+EX_WITTIG_01,RXN_WITTIG_001,c1ccccc1C=O,C=[P](c1ccccc1)(c2ccccc2)c3ccccc3,THF,25°C,C=Cc1ccccc1,Styrene,Terminal alkene,Methylenetriphenylphosphorane with benzaldehyde
+EX_BAEYER_VILLIGER_01,RXN_BAEYER_VILLIGER_001,CC(=O)c1ccccc1,O=C(OO)c1cccc(Cl)c1,CH2Cl2,25°C,CC(=O)Oc1ccccc1,Phenyl acetate,Phenyl migration preferred over methyl,Acetophenone Baeyer-Villiger oxidation with mCPBA
+EX_NABH4_01,RXN_NABH4_RED_001,CC(=O)C,[Na+].[BH4-],MeOH,20°C,CC(C)O,Isopropanol (Propan-2-ol),Achiral secondary alcohol,Selective reduction of acetone to isopropanol
+EX_EPOXIDATION_01,RXN_EPOXIDATION_001,CC=CC,O=C(OO)c1cccc(Cl)c1,CH2Cl2,0°C,CC1OC1C,"2,3-Dimethyloxirane",Stereospecific syn epoxidation,mCPBA epoxidation of 2-butene

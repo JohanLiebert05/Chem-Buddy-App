@@ -13,6 +13,7 @@ import '../providers/app_providers.dart';
 import '../widgets/reaction_mechanisms_card.dart';
 import 'chemistry_toolkit_screen.dart';
 import 'exam_mode_screen.dart';
+import 'organic_reaction_predictor_screen.dart';
 import 'pdf_library_screen.dart';
 import 'pdf_quiz_screen.dart';
 import 'pdf_reader_screen.dart';
@@ -671,6 +672,71 @@ class _ReactionLibrarySectionState extends State<_ReactionLibrarySection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Hero Card: Organic Reaction Predictor & Mechanism Viewer
+        GlowCard(
+          borderColor: const Color(0xFF38BDF8).withValues(alpha: 0.5),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.electricViolet.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.bolt_rounded, color: AppColors.brandPrimary, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Reaction Predictor & Mechanism Viewer',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
+                        ),
+                        Text(
+                          'Deterministic Forward Prediction • Vector SVG Arrows',
+                          style: TextStyle(color: Color(0xFF38BDF8), fontSize: 11.5, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Draw or enter reactants and reagents to identify the reaction pathway, simulate curved electron flows step-by-step, and practice MSc exam viva questions.',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.4),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    AppHaptics.confirm();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const OrganicReactionPredictorScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.electricViolet,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
+                  label: const Text('Open Predictor & Mechanism Viewer', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         const ReactionMechanismsCard(compact: false),
         const SizedBox(height: 16),
 

@@ -10,6 +10,7 @@ import '../../core/widgets/hex_background.dart';
 import '../../data/services/rdkit_service.dart';
 import '../../services/reaction_predictor_service.dart';
 import 'ask_chembuddy_screen.dart';
+import 'organic_reaction_predictor_screen.dart';
 
 /// Mobile-First Chemical Sketcher (ChemDraw Alternative)
 /// Optimized for mobile touchscreens with generous hitboxes, haptic snaps,
@@ -643,6 +644,23 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             ),
             const SizedBox(height: 16),
             _buildAiOption(
+              title: 'Reaction Predictor & Mechanism Viewer ⚡',
+              subtitle: 'Deterministic forward prediction, curved electron-pushing SVG player & MSc pedagogy.',
+              icon: Icons.bolt_rounded,
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OrganicReactionPredictorScreen(
+                      initialReactantsSmiles: smiles,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 10),
+            _buildAiOption(
               title: 'Predict Major Forward Reaction Product',
               subtitle: 'Calculates major organic product and renders 2D SVG vector via Cactus API.',
               icon: Icons.auto_mode_rounded,
@@ -817,7 +835,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, _currentSmiles),
           ),
           title: Row(
             children: [
@@ -846,6 +864,14 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             ],
           ),
           actions: [
+            if (_currentSmiles.isNotEmpty)
+              TextButton(
+                onPressed: () => Navigator.pop(context, _currentSmiles),
+                child: const Text(
+                  'Use',
+                  style: TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.w800, fontSize: 13),
+                ),
+              ),
             IconButton(
               icon: _isPredicting
                   ? const SizedBox(
