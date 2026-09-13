@@ -5,6 +5,7 @@ import '../../data/local/local_store.dart';
 import '../../data/models/library_models.dart';
 import '../../data/models/models.dart';
 import '../../data/models/pdf_study_models.dart';
+import '../../data/models/smart_flashcard.dart';
 import '../../data/models/timetable_entry.dart';
 import '../../data/remote/notification_service.dart';
 import '../../data/remote/supabase_service.dart';
@@ -89,7 +90,11 @@ class AppController extends Notifier<AppState> {
   ChemRepository get _repo => ref.read(chemRepositoryProvider);
 
   @override
-  AppState build() => _snapshot();
+  AppState build() {
+    // Automatically reschedule and ensure active notifications on app startup/restart
+    Future.microtask(() => reload());
+    return _snapshot();
+  }
 
   AppState _snapshot() {
     return AppState(
@@ -109,11 +114,17 @@ class AppController extends Notifier<AppState> {
 
   Future<void> reload() async {
     state = _snapshot();
+    final localStore = _repo.store;
+    final smartCards = localStore.all(localStore.smartCards).map(SmartFlashcard.fromJson).toList();
+    final flashcardSets = localStore.all(localStore.smartSets).map(SmartFlashcardSet.fromJson).toList();
+
     await NotificationService.instance.resync(
       prefs: state.notificationPrefs,
       entries: state.entries,
       events: state.events,
       reminders: state.reminders,
+      flashcardSets: flashcardSets,
+      smartCards: smartCards,
     );
   }
 

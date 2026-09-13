@@ -176,6 +176,7 @@ class NotificationPrefs {
     this.dailyTimetable = false,
     this.assignmentReminders = true,
     this.examReminders = true,
+    this.studyReminders = true,
     this.defaultMinutesBefore = 30,
   });
 
@@ -184,6 +185,7 @@ class NotificationPrefs {
   final bool dailyTimetable;
   final bool assignmentReminders;
   final bool examReminders;
+  final bool studyReminders;
   final int defaultMinutesBefore;
 
   NotificationPrefs copyWith({
@@ -192,6 +194,7 @@ class NotificationPrefs {
     bool? dailyTimetable,
     bool? assignmentReminders,
     bool? examReminders,
+    bool? studyReminders,
     int? defaultMinutesBefore,
   }) {
     return NotificationPrefs(
@@ -200,6 +203,7 @@ class NotificationPrefs {
       dailyTimetable: dailyTimetable ?? this.dailyTimetable,
       assignmentReminders: assignmentReminders ?? this.assignmentReminders,
       examReminders: examReminders ?? this.examReminders,
+      studyReminders: studyReminders ?? this.studyReminders,
       defaultMinutesBefore: defaultMinutesBefore ?? this.defaultMinutesBefore,
     );
   }
@@ -210,6 +214,7 @@ class NotificationPrefs {
         'dailyTimetable': dailyTimetable,
         'assignmentReminders': assignmentReminders,
         'examReminders': examReminders,
+        'studyReminders': studyReminders,
         'defaultMinutesBefore': defaultMinutesBefore,
       };
 
@@ -221,6 +226,7 @@ class NotificationPrefs {
       dailyTimetable: json['dailyTimetable'] as bool? ?? false,
       assignmentReminders: json['assignmentReminders'] as bool? ?? true,
       examReminders: json['examReminders'] as bool? ?? true,
+      studyReminders: json['studyReminders'] as bool? ?? true,
       defaultMinutesBefore: json['defaultMinutesBefore'] as int? ?? 30,
     );
   }

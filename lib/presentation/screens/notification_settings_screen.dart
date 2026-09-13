@@ -21,41 +21,51 @@ class NotificationSettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
         children: [
           GlowCard(
-            child: Column(
-              children: [
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Enable all notifications'),
-                  value: prefs.enabled,
-                  activeThumbColor: AppColors.purpleBright,
-                  onChanged: (v) => _save(ref, prefs.copyWith(enabled: v)),
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Class reminders'),
-                  value: prefs.classReminders,
-                  onChanged: (v) => _save(ref, prefs.copyWith(classReminders: v)),
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Daily timetable'),
-                  subtitle: const Text('Morning overview at 7:30 AM'),
-                  value: prefs.dailyTimetable,
-                  onChanged: (v) => _save(ref, prefs.copyWith(dailyTimetable: v)),
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Assignment reminders'),
-                  value: prefs.assignmentReminders,
-                  onChanged: (v) => _save(ref, prefs.copyWith(assignmentReminders: v)),
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Exam reminders'),
-                  value: prefs.examReminders,
-                  onChanged: (v) => _save(ref, prefs.copyWith(examReminders: v)),
-                ),
-              ],
+            child: Material(
+              type: MaterialType.transparency,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Enable all notifications'),
+                    value: prefs.enabled,
+                    activeThumbColor: AppColors.purpleBright,
+                    onChanged: (v) => _save(ref, prefs.copyWith(enabled: v)),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Class reminders'),
+                    value: prefs.classReminders,
+                    onChanged: (v) => _save(ref, prefs.copyWith(classReminders: v)),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Daily timetable'),
+                    subtitle: const Text('Morning overview at 7:30 AM'),
+                    value: prefs.dailyTimetable,
+                    onChanged: (v) => _save(ref, prefs.copyWith(dailyTimetable: v)),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Assignment reminders'),
+                    value: prefs.assignmentReminders,
+                    onChanged: (v) => _save(ref, prefs.copyWith(assignmentReminders: v)),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Exam reminders'),
+                    value: prefs.examReminders,
+                    onChanged: (v) => _save(ref, prefs.copyWith(examReminders: v)),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Flashcard & study reminders'),
+                    subtitle: const Text('Due active recall decks & review sessions'),
+                    value: prefs.studyReminders,
+                    onChanged: (v) => _save(ref, prefs.copyWith(studyReminders: v)),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -101,6 +111,27 @@ class NotificationSettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.purple,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: const Icon(Icons.notifications_active_rounded),
+            label: const Text('🔔 Send Test Notification Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            onPressed: () async {
+              await NotificationService.instance.sendTestNotification();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Test notification dispatched! Check your system notification shade.'),
+                  backgroundColor: AppColors.statusSuccess,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 10),
           PrimaryButton(
             label: 'Request notification permission',
             onPressed: () async {
