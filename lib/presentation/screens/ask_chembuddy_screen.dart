@@ -40,7 +40,9 @@ enum ChemBuddyAiMode {
 }
 
 class AskChemBuddyScreen extends ConsumerStatefulWidget {
-  const AskChemBuddyScreen({super.key});
+  const AskChemBuddyScreen({super.key, this.initialQuestion});
+
+  final String? initialQuestion;
 
   @override
   ConsumerState<AskChemBuddyScreen> createState() => _AskChemBuddyScreenState();
@@ -70,6 +72,9 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
   @override
   void initState() {
     super.initState();
+    if (widget.initialQuestion != null && widget.initialQuestion!.isNotEmpty) {
+      _controller.text = widget.initialQuestion!;
+    }
     _micPulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),

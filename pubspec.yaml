@@ -44,6 +44,7 @@ dependencies:
   shared_preferences: ^2.3.2
   crypto: ^3.0.3
   shimmer: ^3.0.0
+  webview_flutter: ^4.14.1
 
 dev_dependencies:
   flutter_test:
@@ -73,3 +74,4 @@ flutter:
     - assets/mechanisms/carbonyl/grignard/
     - assets/mechanisms/pericyclic/diels_alder/
     - assets/mechanisms/rearrangements/beckmann/
+    - assets/web/
