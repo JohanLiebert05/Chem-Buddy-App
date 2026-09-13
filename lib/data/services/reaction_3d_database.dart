@@ -1,4 +1,5 @@
 import '../../core/widgets/molecule_3d/molecule_3d_models.dart';
+import 'postgraduate_reaction_data.dart';
 
 /// Curated library of 3D molecular structures for MSc Chemistry reaction mechanisms.
 /// Provides geometrically accurate Reactants, Intermediates / Transition States, and Products.
@@ -2408,11 +2409,17 @@ class Reaction3DDatabase {
   };
 
   /// Returns 3D structure set for a mechanism ID.
-  static Reaction3DSet? get3DSet(String id) => _catalog[id.toLowerCase()];
+  static Reaction3DSet? get3DSet(String id) =>
+      _catalog[id.toLowerCase()] ?? PostgraduateReactionData.molecular3DSets[id.toLowerCase()];
 
   /// Returns true if 3D molecular structures are available for this reaction.
-  static bool has3D(String id) => _catalog.containsKey(id.toLowerCase());
+  static bool has3D(String id) =>
+      _catalog.containsKey(id.toLowerCase()) ||
+      PostgraduateReactionData.molecular3DSets.containsKey(id.toLowerCase());
 
   /// Returns all available 3D reaction IDs.
-  static List<String> get availableIds => _catalog.keys.toList();
+  static List<String> get availableIds => [
+        ..._catalog.keys,
+        ...PostgraduateReactionData.molecular3DSets.keys,
+      ];
 }

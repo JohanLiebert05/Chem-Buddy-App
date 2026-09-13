@@ -649,6 +649,26 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.4),
                                   ),
                                 ),
+                                const SizedBox(height: 6),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton.icon(
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => PdfReaderScreen(doc: widget.doc, initialPage: page.pageNumber),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.open_in_new, size: 13, color: AppColors.purpleBright),
+                                    label: Text(
+                                      'Jump to Page ${page.pageNumber} in Reader',
+                                      style: const TextStyle(color: AppColors.purpleBright, fontSize: 11.5, fontWeight: FontWeight.w700),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -715,10 +735,65 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                               m.content,
                               style: const TextStyle(color: Colors.white, fontSize: 13.5, height: 1.35),
                             )
-                          : ChemistryMarkdownView(
-                              text: m.content,
-                              textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13.5, height: 1.45),
-                              selectable: true,
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ChemistryMarkdownView(
+                                  text: m.content,
+                                  textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13.5, height: 1.45),
+                                  selectable: true,
+                                ),
+                                ...() {
+                                  // Extract page citations like "Page 3", "[Page 3]", "p. 3", "(p. 3)"
+                                  final pageMatches = RegExp(r'(?:\[|\()?(?:Page|p\.)\s*(\d+)(?:\]|\))?', caseSensitive: false).allMatches(m.content);
+                                  final pageNums = <int>{};
+                                  for (final match in pageMatches) {
+                                    final p = int.tryParse(match.group(1)!);
+                                    if (p != null) pageNums.add(p);
+                                  }
+                                  if (pageNums.isEmpty) return const <Widget>[];
+                                  return [
+                                    const SizedBox(height: 8),
+                                    const Divider(color: AppColors.borderSubtle, height: 12),
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 4,
+                                      children: pageNums.map((pn) {
+                                        return InkWell(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute<void>(
+                                                builder: (_) => PdfReaderScreen(doc: widget.doc, initialPage: pn),
+                                              ),
+                                            );
+                                          },
+                                          borderRadius: BorderRadius.circular(6),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.purple.withValues(alpha: 0.2),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(Icons.bookmark_added_rounded, size: 12, color: AppColors.purpleBright),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Jump to Page $pn',
+                                                  style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 11),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ];
+                                }(),
+                              ],
                             ),
                     ),
                   ),

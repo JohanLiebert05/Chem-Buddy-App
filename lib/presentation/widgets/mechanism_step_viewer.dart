@@ -29,7 +29,7 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
   String? _loadError;
 
   List<ReactionStep> get _steps =>
-      widget.mechanism.steps.where((s) => s.svgAsset != null && s.svgAsset!.isNotEmpty).toList();
+      widget.mechanism.steps.where((s) => (s.svgAsset != null && s.svgAsset!.isNotEmpty) || (s.svgContent != null && s.svgContent!.isNotEmpty)).toList();
 
   ReactionStep get _current => _steps[_stepIndex];
 
@@ -52,7 +52,15 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
       _loadError = null;
     });
     try {
-      var raw = await rootBundle.loadString(_current.svgAsset!);
+      String raw;
+      if (_current.svgContent != null && _current.svgContent!.isNotEmpty) {
+        raw = _current.svgContent!;
+      } else if (_current.svgAsset != null && _current.svgAsset!.isNotEmpty) {
+        raw = await rootBundle.loadString(_current.svgAsset!);
+      } else {
+        throw StateError('No SVG schematic available for this step');
+      }
+
       if (!_showElectronFlow) {
         raw = raw.replaceFirst(
           'id="electron-arrows"',

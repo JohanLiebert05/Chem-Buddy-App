@@ -697,6 +697,27 @@ class SpectroscopyService {
     ));
     fullReport.writeln('### Step 8: Final Verification\n${step8Buffer.toString()}\n');
 
+    // Run Rule-Based Spectral Sanity Checks
+    final sanityReport = runSanityChecks(
+      formula: parsed,
+      irPeaks: irPeaks,
+      nmrPeaks: nmrPeaks,
+      msPeaks: msPeaks,
+    );
+
+    if (sanityReport.items.isNotEmpty) {
+      fullReport.writeln('### Rule-Based Spectral Sanity Checks 🛡️\n');
+      fullReport.writeln('**Checks Summary**: ${sanityReport.passedCount} Passed • ${sanityReport.warningCount} Warnings • ${sanityReport.violationCount} Violations\n');
+      for (final item in sanityReport.items) {
+        final icon = item.passed ? '✅' : (item.severity == SanitySeverity.violation ? '🚨' : '⚠️');
+        fullReport.writeln('- $icon **${item.title}** [${item.category}]: ${item.message}');
+        if (!item.passed) {
+          fullReport.writeln('  - _Recommendation_: ${item.recommendation}');
+        }
+      }
+      fullReport.writeln();
+    }
+
     return SpectroscopyAnalysisResult(
       isValid: true,
       formula: fUpper,
@@ -704,7 +725,290 @@ class SpectroscopyService {
       molarMass: parsed.molarMass,
       steps: steps,
       markdownFull: fullReport.toString(),
+      sanityReport: sanityReport,
     );
+  }
+
+  /// Rule-Based Sanity Check Engine for Spectral Consistency
+  static SpectroscopySanityReport runSanityChecks({
+    required ParsedFormula formula,
+    List<double>? irPeaks,
+    List<double>? nmrPeaks,
+    List<double>? msPeaks,
+  }) {
+    final items = <SanityCheckItem>[];
+    final dbe = formula.dbe;
+    final ir = irPeaks ?? [];
+    final nmr = nmrPeaks ?? [];
+    final ms = msPeaks ?? [];
+
+    // 1. Fractional DBE Check
+    if ((dbe % 1.0) != 0) {
+      items.add(SanityCheckItem(
+        title: 'Closed-Shell Unsaturation Limit',
+        category: 'DBE & Valence',
+        passed: false,
+        severity: SanitySeverity.warning,
+        message: 'Calculated DBE is ${dbe.toStringAsFixed(1)} (fractional). Neutral closed-shell organic compounds possess integer DBE values.',
+        recommendation: 'Verify if the compound is a radical cation (e.g. MS [M]⁺•), free radical, or ionic salt.',
+      ));
+    } else {
+      items.add(SanityCheckItem(
+        title: 'Closed-Shell Valence Consistency',
+        category: 'DBE & Valence',
+        passed: true,
+        severity: SanitySeverity.info,
+        message: 'Calculated DBE of ${dbe.toInt()} is an integer, fully consistent with neutral tetravalent carbon stoichiometry.',
+        recommendation: 'Valid baseline for closed-shell organic framework.',
+      ));
+    }
+
+    // 2. Aromatic Ring vs Minimum DBE Threshold
+    final aromaticProtons = nmr.where((p) => p >= 6.5 && p <= 8.5).toList();
+    if (aromaticProtons.isNotEmpty) {
+      if (dbe < 4.0) {
+        items.add(SanityCheckItem(
+          title: 'Aromatic Ring DBE Deficit',
+          category: 'Aromatic Consistency',
+          passed: false,
+          severity: SanitySeverity.violation,
+          message: 'Aromatic proton signals (δ ${aromaticProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm) were detected, but DBE is ${dbe.toStringAsFixed(1)} (< 4.0). An intact benzene ring requires at least 4 units of unsaturation (1 ring + 3 π bonds).',
+          recommendation: 'Formula cannot accommodate a benzene ring. Check carbon/hydrogen stoichiometry or assign to olefinic systems.',
+        ));
+      } else {
+        items.add(SanityCheckItem(
+          title: 'Aromatic Proton vs DBE Correlation',
+          category: 'Aromatic Consistency',
+          passed: true,
+          severity: SanitySeverity.info,
+          message: 'DBE (${dbe.toStringAsFixed(1)}) satisfies the minimum requirement (≥ 4.0) for the observed aromatic proton signals (δ ${aromaticProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm).',
+          recommendation: 'Aromatic core confirmed. Inspect multiplet splits for ortho/meta/para substitution.',
+        ));
+      }
+    } else if (dbe >= 4.0 && nmr.isNotEmpty) {
+      items.add(SanityCheckItem(
+        title: 'High DBE without Aromatic Hydrogens',
+        category: 'Aromatic Consistency',
+        passed: false,
+        severity: SanitySeverity.warning,
+        message: 'DBE is ${dbe.toStringAsFixed(1)} (≥ 4.0), but no aromatic protons were detected in the δ 6.5–8.5 ppm window.',
+        recommendation: 'Consider a fully substituted (hexasubstituted) benzene ring, conjugated polyynes/polyenes, or multiple isolated rings/carbonyls.',
+      ));
+    }
+
+    // 3. FT-IR Carbonyl Stretch vs Oxygen Presence
+    final carbonylPeaks = ir.where((p) => p >= 1650 && p <= 1780).toList();
+    if (carbonylPeaks.isNotEmpty) {
+      if (formula.oxygens == 0) {
+        items.add(SanityCheckItem(
+          title: 'Carbonyl Stretch Without Oxygen',
+          category: 'FT-IR Heteroatom Check',
+          passed: false,
+          severity: SanitySeverity.violation,
+          message: 'Strong FT-IR carbonyl absorption claimed at ${carbonylPeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹, but molecular formula contains 0 Oxygen atoms.',
+          recommendation: 'Impossible: Carbonyl groups (C=O) require at least 1 oxygen atom. Re-verify formula or reassign peak (e.g. C=C alkene ~1640 cm⁻¹ or C=N imine).',
+        ));
+      } else {
+        items.add(SanityCheckItem(
+          title: 'Carbonyl (C=O) Valence Consistency',
+          category: 'FT-IR Heteroatom Check',
+          passed: true,
+          severity: SanitySeverity.info,
+          message: 'FT-IR carbonyl stretch (${carbonylPeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹) is corroborated by ${formula.oxygens} Oxygen atom(s) in formula.',
+          recommendation: 'Carbonyl group validated. Correlate wave number with ester, ketone, aldehyde, or acid.',
+        ));
+      }
+
+      // Check if DBE satisfies carbonyl
+      if (dbe < 1.0) {
+        items.add(SanityCheckItem(
+          title: 'Carbonyl Unsaturation Deficit',
+          category: 'DBE & Valence',
+          passed: false,
+          severity: SanitySeverity.violation,
+          message: 'Carbonyl band detected, but DBE is ${dbe.toStringAsFixed(1)} (< 1.0). A C=O double bond requires at least 1 unit of unsaturation.',
+          recommendation: 'Check formula saturation: neutral aldehydes and ketones have DBE ≥ 1.0.',
+        ));
+      }
+    }
+
+    // 4. Ester Carbonyl vs Minimum Oxygen Count
+    final esterPeaks = ir.where((p) => p >= 1735 && p <= 1755).toList();
+    if (esterPeaks.isNotEmpty) {
+      if (formula.oxygens < 2) {
+        items.add(SanityCheckItem(
+          title: 'Ester Oxygen Requirement',
+          category: 'FT-IR Heteroatom Check',
+          passed: false,
+          severity: SanitySeverity.warning,
+          message: 'FT-IR band at ${esterPeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹ falls in the aliphatic ester range (1735–1750 cm⁻¹), but formula has only ${formula.oxygens} Oxygen atom(s).',
+          recommendation: 'Esters require at least 2 oxygen atoms (-COO-). Consider saturated ketone (~1715 cm⁻¹) or cyclopentanone (~1745 cm⁻¹).',
+        ));
+      }
+    }
+
+    // 5. Carboxylic Acid O-H vs Carbonyl & Oxygen Count
+    final broadAcidOh = ir.where((p) => p >= 2500 && p <= 3300 && !nmr.any((n) => n >= 11)).toList();
+    final highAcidNmr = nmr.where((p) => p >= 10.5 && p <= 13.5).toList();
+    if (highAcidNmr.isNotEmpty || (broadAcidOh.isNotEmpty && carbonylPeaks.isNotEmpty)) {
+      if (formula.oxygens < 2) {
+        items.add(SanityCheckItem(
+          title: 'Carboxylic Acid Oxygen Deficit',
+          category: 'FT-IR / NMR Correlation',
+          passed: false,
+          severity: SanitySeverity.violation,
+          message: 'Carboxylic acid signature detected (extreme downfield proton δ ${highAcidNmr.isNotEmpty ? highAcidNmr.join(', ') : ''} ppm or broad 2500–3300 cm⁻¹ O-H), but formula has only ${formula.oxygens} Oxygen atom(s).',
+          recommendation: 'Carboxylic acids (-COOH) strictly require at least 2 Oxygen atoms and 1 DBE.',
+        ));
+      } else {
+        items.add(SanityCheckItem(
+          title: 'Carboxylic Acid Consistency',
+          category: 'FT-IR / NMR Correlation',
+          passed: true,
+          severity: SanitySeverity.info,
+          message: 'Carboxylic acid spectral features are corroborated by formula (${formula.oxygens} Oxygens, DBE = ${dbe.toStringAsFixed(1)}).',
+          recommendation: 'Correlate with base solubility (effervescence with NaHCO₃).',
+        ));
+      }
+    }
+
+    // 6. Alcohol / Hydroxyl Stretch vs Oxygen Presence
+    final alcoholOhPeaks = ir.where((p) => p >= 3200 && p <= 3650).toList();
+    if (alcoholOhPeaks.isNotEmpty) {
+      if (formula.oxygens == 0) {
+        items.add(SanityCheckItem(
+          title: 'Hydroxyl (O-H) Without Oxygen',
+          category: 'FT-IR Heteroatom Check',
+          passed: false,
+          severity: SanitySeverity.violation,
+          message: 'Broad hydroxyl O-H stretch entered (${alcoholOhPeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹), but formula has 0 Oxygens.',
+          recommendation: 'Re-verify formula or reassign to N-H (amine/amide) if Nitrogen is present.',
+        ));
+      } else {
+        items.add(SanityCheckItem(
+          title: 'Hydroxyl (O-H) Formula Corroboration',
+          category: 'FT-IR Heteroatom Check',
+          passed: true,
+          severity: SanitySeverity.info,
+          message: 'O-H stretch (${alcoholOhPeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹) corroborated by ${formula.oxygens} Oxygen atom(s).',
+          recommendation: 'Check D₂O exchange in ¹H NMR: O-H proton singlet should disappear.',
+        ));
+      }
+    }
+
+    // 7. Nitrile & Triple Bond Consistency
+    final nitrilePeaks = ir.where((p) => p >= 2200 && p <= 2260).toList();
+    if (nitrilePeaks.isNotEmpty) {
+      if (formula.nitrogens == 0) {
+        items.add(SanityCheckItem(
+          title: 'Nitrile Stretch Without Nitrogen',
+          category: 'FT-IR Heteroatom Check',
+          passed: false,
+          severity: SanitySeverity.violation,
+          message: 'Sharp band in nitrile region (${nitrilePeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹), but formula contains 0 Nitrogens.',
+          recommendation: 'Assign to internal alkyne (C≡C) if formula has DBE ≥ 2, or check Nitrogen content.',
+        ));
+      } else if (dbe < 2.0) {
+        items.add(SanityCheckItem(
+          title: 'Nitrile Unsaturation Deficit',
+          category: 'DBE & Valence',
+          passed: false,
+          severity: SanitySeverity.violation,
+          message: 'Nitrile (C≡N) group requires at least 2 units of unsaturation, but DBE is ${dbe.toStringAsFixed(1)}.',
+          recommendation: 'Check formula: C≡N triple bond consumes 2 DBE units.',
+        ));
+      } else {
+        items.add(SanityCheckItem(
+          title: 'Nitrile (C≡N) Correlation',
+          category: 'FT-IR Heteroatom Check',
+          passed: true,
+          severity: SanitySeverity.info,
+          message: 'Nitrile band (${nitrilePeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹) is corroborated by ${formula.nitrogens} Nitrogen(s) and DBE = ${dbe.toStringAsFixed(1)}.',
+          recommendation: 'Nitrile confirmed. Look for quaternary ¹³C resonance at δ 115–125 ppm.',
+        ));
+      }
+    }
+
+    // 8. Aldehyde Proton vs FT-IR Carbonyl Correlation
+    final aldehydeProtons = nmr.where((p) => p >= 9.0 && p <= 10.5).toList();
+    if (aldehydeProtons.isNotEmpty) {
+      if (formula.oxygens == 0) {
+        items.add(SanityCheckItem(
+          title: 'Aldehyde Proton Without Oxygen',
+          category: 'NMR / Formula Correlation',
+          passed: false,
+          severity: SanitySeverity.violation,
+          message: 'Characteristic aldehyde proton singlet observed at δ ${aldehydeProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm, but formula contains 0 Oxygen atoms.',
+          recommendation: 'Aldehydes (-CHO) require an oxygen atom. Check formula.',
+        ));
+      } else if (ir.isNotEmpty && carbonylPeaks.isEmpty) {
+        items.add(SanityCheckItem(
+          title: 'Aldehyde NMR Without FT-IR Carbonyl',
+          category: 'Cross-Spectra Contradiction',
+          passed: false,
+          severity: SanitySeverity.warning,
+          message: 'Aldehyde proton observed (δ ${aldehydeProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm), but no FT-IR carbonyl band was found in 1680–1740 cm⁻¹.',
+          recommendation: 'Aldehydes always show an intense C=O stretch at 1700–1725 cm⁻¹ and Fermi doublet at 2720/2820 cm⁻¹.',
+        ));
+      } else {
+        items.add(SanityCheckItem(
+          title: 'Aldehyde Proton Corroboration',
+          category: 'Cross-Spectra Contradiction',
+          passed: true,
+          severity: SanitySeverity.info,
+          message: 'Aldehyde proton at δ ${aldehydeProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm is consistent with formula and carbonyl presence.',
+          recommendation: 'Check for Fermi resonance doublet (2720 and 2820 cm⁻¹) in FT-IR.',
+        ));
+      }
+    }
+
+    // 9. Mass Spec Molecular Ion Consistency
+    if (ms.isNotEmpty) {
+      final maxMs = ms.reduce((a, b) => a > b ? a : b);
+      if ((maxMs - formula.molarMass).abs() <= 1.5) {
+        items.add(SanityCheckItem(
+          title: 'Molecular Ion [M]⁺• Corroboration',
+          category: 'Mass Spectrometry',
+          passed: true,
+          severity: SanitySeverity.info,
+          message: 'Highest observed m/z peak ($maxMs) precisely matches calculated molecular mass (${formula.molarMass} g/mol).',
+          recommendation: 'Molecular weight unambiguously established.',
+        ));
+      } else if (maxMs < formula.molarMass - 2.0) {
+        items.add(SanityCheckItem(
+          title: 'Absent Molecular Ion Peak',
+          category: 'Mass Spectrometry',
+          passed: false,
+          severity: SanitySeverity.warning,
+          message: 'Highest recorded m/z ($maxMs) is significantly below the theoretical molecular weight (${formula.molarMass} g/mol).',
+          recommendation: 'Molecular ion peak [M]⁺• may be fragile (common in tertiary alcohols, acetals, aliphatic amines) or degraded. Inspect base peak.',
+        ));
+      }
+    }
+
+    // 10. Halogen Isotopic Signatures in Formula vs Mass Spec
+    if (formula.chlorines > 0) {
+      items.add(SanityCheckItem(
+        title: 'Chlorine Isotopic Multiplicity Check',
+        category: 'Halogen Isotope Rules',
+        passed: true,
+        severity: SanitySeverity.info,
+        message: 'Formula contains ${formula.chlorines}x Cl atom(s). Expect classic 3:1 (M:M+2) ratio for ³⁵Cl/³⁷Cl.',
+        recommendation: 'Verify 3:1 cluster around molecular ion or chlorine-containing fragments.',
+      ));
+    }
+    if (formula.bromines > 0) {
+      items.add(SanityCheckItem(
+        title: 'Bromine Isotopic Doublet Check',
+        category: 'Halogen Isotope Rules',
+        passed: true,
+        severity: SanitySeverity.info,
+        message: 'Formula contains ${formula.bromines}x Br atom(s). Expect equal 1:1 twin peaks separated by 2 m/z units (⁷⁹Br/⁸¹Br).',
+        recommendation: 'Verify 1:1 doublet for bromine-containing ions.',
+      ));
+    }
+
+    return SpectroscopySanityReport(items: items);
   }
 
   // Backward-compatible string helper
@@ -775,6 +1079,42 @@ class ParsedFormula {
   int get halogens => fluorines + chlorines + bromines + iodines;
 }
 
+enum SanitySeverity {
+  info,
+  warning,
+  violation,
+}
+
+class SanityCheckItem {
+  final String title;
+  final String category;
+  final bool passed;
+  final SanitySeverity severity;
+  final String message;
+  final String recommendation;
+
+  const SanityCheckItem({
+    required this.title,
+    required this.category,
+    required this.passed,
+    required this.severity,
+    required this.message,
+    required this.recommendation,
+  });
+}
+
+class SpectroscopySanityReport {
+  final List<SanityCheckItem> items;
+
+  const SpectroscopySanityReport({required this.items});
+
+  int get passedCount => items.where((i) => i.passed).length;
+  int get warningCount => items.where((i) => !i.passed && i.severity == SanitySeverity.warning).length;
+  int get violationCount => items.where((i) => !i.passed && i.severity == SanitySeverity.violation).length;
+  bool get hasViolations => violationCount > 0;
+  bool get isAllPassed => items.every((i) => i.passed);
+}
+
 class SpectroscopyAnalysisResult {
   final bool isValid;
   final String? errorMessage;
@@ -783,6 +1123,7 @@ class SpectroscopyAnalysisResult {
   final double molarMass;
   final List<DeductionStep> steps;
   final String markdownFull;
+  final SpectroscopySanityReport? sanityReport;
 
   const SpectroscopyAnalysisResult({
     required this.isValid,
@@ -792,6 +1133,7 @@ class SpectroscopyAnalysisResult {
     required this.molarMass,
     required this.steps,
     required this.markdownFull,
+    this.sanityReport,
   });
 }
 

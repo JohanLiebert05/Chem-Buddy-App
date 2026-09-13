@@ -54,6 +54,13 @@ class ChemistryTextFormatter {
   /// Main public entry point: sanitizes and formats any chemistry text or AI response.
   static String format(String? raw) => sanitizeChemistryResponse(raw);
 
+  /// Formats plain chemical formulas (e.g. C6H5CHO, H2SO4, Fe(CN)6^4-) into textbook Unicode
+  /// with proper subscripts and superscripts, strictly preserving LaTeX math blocks.
+  static String formatPlainFormulas(String input) {
+    if (input.isEmpty) return input;
+    return _processOutsideMathDelimiters(input, _normalizeChemistryTypography);
+  }
+
   /// Public converter: converts any LaTeX math expression or equation to a clean,
   /// formatted Unicode mathematical representation with zero raw TeX commands.
   static String toUnicodeMath(String? expr) {
@@ -429,22 +436,22 @@ class ChemistryTextFormatter {
       return '$metal${_toSuperscript(charge)}';
     });
 
-    // General explicit ions matching: e.g. M^{n+}, X^{n-}
-    s = s.replaceAllMapped(RegExp(r'([A-Za-z0-9\u2080-\u2089\)]+)\^\{?([0-9]?[+\-−])\}?'), (m) {
+    // General explicit ions matching: e.g. M^{n+}, X^{n-}, [Fe(CN)6]^{4-}, Fe(CN)6^4-
+    s = s.replaceAllMapped(RegExp(r'([A-Za-z0-9\u2080-\u2089\)\]]+)\^\{?([0-9]*[+\-−])\}?'), (m) {
       return '${m[1]}${_toSuperscript(m[2] ?? '')}';
     });
 
     // Subscripts in explicit formulas: H_2SO_4 -> H₂SO₄
-    s = s.replaceAllMapped(RegExp(r'([A-Za-z\(\)])_\{?([0-9a-z\+\-]+)\}?'), (m) {
+    s = s.replaceAllMapped(RegExp(r'([A-Za-z\(\)\]])_\{?([0-9a-z\+\-]+)\}?'), (m) {
       return '${m[1]}${_toSubscript(m[2] ?? '')}';
     });
 
     // Authoritative chemical formula dictionary
     s = _applyChemicalDictionary(s);
 
-    // Multi-element formula subscripts: e.g. C6H5CHO -> C₆H₅CHO, CH3COOH -> CH₃COOH
+    // Multi-element formula subscripts: e.g. C6H5CHO -> C₆H₅CHO, CH3COOH -> CH₃COOH, [Fe(CN)6] -> [Fe(CN)₆]
     s = s.replaceAllMapped(
-      RegExp(r'([A-Z][a-z]?|\))(\d+)'),
+      RegExp(r'([A-Z][a-z]?|\)|\])(\d+)'),
       (m) {
         final elem = m[1]!;
         final num = m[2]!;
@@ -527,6 +534,26 @@ class ChemistryTextFormatter {
       'R-COO^-': 'R-COO⁻',
       'R-CH(O-)(OH)': 'R-CH(O⁻)(OH)',
       'R-CH(O^-)(OH)': 'R-CH(O⁻)(OH)',
+      'Fe(CN)6^4-': 'Fe(CN)₆⁴⁻',
+      'Fe(CN)6 4-': 'Fe(CN)₆⁴⁻',
+      'Fe(CN)6^3-': 'Fe(CN)₆³⁻',
+      'Fe(CN)6 3-': 'Fe(CN)₆³⁻',
+      '[Fe(CN)6]^4-': '[Fe(CN)₆]⁴⁻',
+      '[Fe(CN)6]4-': '[Fe(CN)₆]⁴⁻',
+      '[Fe(CN)6]^3-': '[Fe(CN)₆]³⁻',
+      '[Fe(CN)6]3-': '[Fe(CN)₆]³⁻',
+      'K4[Fe(CN)6]': 'K₄[Fe(CN)₆]',
+      'K3[Fe(CN)6]': 'K₃[Fe(CN)₆]',
+      '[Co(NH3)6]3+': '[Co(NH₃)₆]³⁺',
+      '[Co(NH3)6]^3+': '[Co(NH₃)₆]³⁺',
+      '[Cu(NH3)4]2+': '[Cu(NH₃)₄]²⁺',
+      '[Cu(NH3)4]^2+': '[Cu(NH₃)₄]²⁺',
+      '[Ni(CO)4]': '[Ni(CO)₄]',
+      '[Pt(NH3)2Cl2]': '[Pt(NH₃)₂Cl₂]',
+      'MnO4-': 'MnO₄⁻',
+      'MnO4^-': 'MnO₄⁻',
+      'Cr2O7 2-': 'Cr₂O₇²⁻',
+      'Cr2O7^2-': 'Cr₂O₇²⁻',
     };
 
     var res = text;

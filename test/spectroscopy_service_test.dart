@@ -38,6 +38,74 @@ void main() {
       expect(walkthrough, contains('¹H NMR Chemical Shift Assignment'));
       expect(walkthrough, contains('Mass Spectrometry Fragment Diagnostics'));
       expect(walkthrough, contains('m/z 105'));
+      expect(walkthrough, contains('Rule-Based Spectral Sanity Checks 🛡️'));
+    });
+
+    test('runSanityChecks passes consistent spectra for Acetophenone', () {
+      final parsed = SpectroscopyService.parseFormula('C8H8O');
+      final report = SpectroscopyService.runSanityChecks(
+        formula: parsed,
+        irPeaks: [1685, 1600, 1450],
+        nmrPeaks: [2.6, 7.5, 7.9],
+        msPeaks: [120, 105, 77],
+      );
+
+      expect(report.hasViolations, isFalse);
+      expect(report.violationCount, equals(0));
+      expect(report.passedCount, greaterThanOrEqualTo(3));
+      expect(report.items.any((i) => i.title.contains('Carbonyl (C=O) Valence Consistency') && i.passed), isTrue);
+      expect(report.items.any((i) => i.title.contains('Aromatic Proton vs DBE') && i.passed), isTrue);
+      expect(report.items.any((i) => i.title.contains('Molecular Ion [M]⁺•') && i.passed), isTrue);
+    });
+
+    test('runSanityChecks flags Carbonyl stretch with zero oxygens as violation', () {
+      final parsed = SpectroscopyService.parseFormula('C6H12');
+      final report = SpectroscopyService.runSanityChecks(
+        formula: parsed,
+        irPeaks: [1715],
+      );
+
+      expect(report.hasViolations, isTrue);
+      final cViolation = report.items.firstWhere((i) => i.title.contains('Carbonyl Stretch Without Oxygen'));
+      expect(cViolation.severity, equals(SanitySeverity.violation));
+      expect(cViolation.passed, isFalse);
+    });
+
+    test('runSanityChecks flags aromatic protons with DBE < 4 as violation', () {
+      final parsed = SpectroscopyService.parseFormula('C3H6O'); // DBE = 1
+      final report = SpectroscopyService.runSanityChecks(
+        formula: parsed,
+        nmrPeaks: [7.25, 7.35],
+      );
+
+      expect(report.hasViolations, isTrue);
+      final aroDeficit = report.items.firstWhere((i) => i.title.contains('Aromatic Ring DBE Deficit'));
+      expect(aroDeficit.severity, equals(SanitySeverity.violation));
+      expect(aroDeficit.message, contains('intact benzene ring requires at least 4 units'));
+    });
+
+    test('runSanityChecks flags nitrile stretch with 0 nitrogens as violation', () {
+      final parsed = SpectroscopyService.parseFormula('C6H10O');
+      final report = SpectroscopyService.runSanityChecks(
+        formula: parsed,
+        irPeaks: [2240],
+      );
+
+      expect(report.hasViolations, isTrue);
+      final nitViolation = report.items.firstWhere((i) => i.title.contains('Nitrile Stretch Without Nitrogen'));
+      expect(nitViolation.severity, equals(SanitySeverity.violation));
+    });
+
+    test('runSanityChecks flags ester peak with only 1 oxygen as warning', () {
+      final parsed = SpectroscopyService.parseFormula('C4H8O'); // only 1 oxygen
+      final report = SpectroscopyService.runSanityChecks(
+        formula: parsed,
+        irPeaks: [1745],
+      );
+
+      expect(report.warningCount, greaterThanOrEqualTo(1));
+      final esterWarn = report.items.firstWhere((i) => i.title.contains('Ester Oxygen Requirement'));
+      expect(esterWarn.severity, equals(SanitySeverity.warning));
     });
   });
 }

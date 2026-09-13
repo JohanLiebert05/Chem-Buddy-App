@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -120,6 +121,8 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
               const _AnalyticalErrorCalculator(),
               const SizedBox(height: 16),
               const _VanDeemterCalculator(),
+              const SizedBox(height: 16),
+              const _HplcCalibrationCurveCalculator(),
             ],
           ],
         ),
@@ -798,8 +801,32 @@ class _PhCalculatorState extends State<_PhCalculator> {
 }
 
 // ==========================================
-// 5. HENDERSON-HASSELBALCH BUFFER CALCULATOR
+// 5. HENDERSON-HASSELBALCH BUFFER & FORMULATION ASSISTANT
 // ==========================================
+class _BufferPreset {
+  final String name;
+  final double pKa;
+  final String acidName;
+  final double acidMw;
+  final bool acidIsLiquid;
+  final double? acidDensity; // g/mL
+  final String baseName;
+  final double baseMw;
+  final String notes;
+
+  const _BufferPreset({
+    required this.name,
+    required this.pKa,
+    required this.acidName,
+    required this.acidMw,
+    this.acidIsLiquid = false,
+    this.acidDensity,
+    required this.baseName,
+    required this.baseMw,
+    required this.notes,
+  });
+}
+
 class _HendersonHasselbalchCalculator extends StatefulWidget {
   const _HendersonHasselbalchCalculator();
 
@@ -808,17 +835,94 @@ class _HendersonHasselbalchCalculator extends StatefulWidget {
 }
 
 class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCalculator> {
+  // Mode: 0 = Buffer pH & Ratio, 1 = Lab Formulation Assistant
+  int _activeMode = 0;
+
+  // Controllers for Mode 0 (pH from concentrations)
   final _pKa = TextEditingController(text: '4.76'); // Acetic acid
   final _salt = TextEditingController(text: '0.1'); // [A-]
   final _acid = TextEditingController(text: '0.1'); // [HA]
   double? _ph = 4.76;
+  double? _ratio = 1.0;
+  double? _alphaBase = 0.5;
+  double? _alphaAcid = 0.5;
+  double? _bufferCapacity = 0.115;
   String? _error;
+
+  // Presets for Mode 1 (Formulation from target pH)
+  static const List<_BufferPreset> _presets = [
+    _BufferPreset(
+      name: 'Acetic Acid / Sodium Acetate',
+      pKa: 4.76,
+      acidName: 'Glacial Acetic Acid (CH₃COOH)',
+      acidMw: 60.05,
+      acidIsLiquid: true,
+      acidDensity: 1.05,
+      baseName: 'Sodium Acetate Trihydrate (CH₃COONa·3H₂O)',
+      baseMw: 136.08,
+      notes: 'Optimal range pH 3.76–5.76. Common in DNA extraction & enzymatic assays.',
+    ),
+    _BufferPreset(
+      name: 'Sodium Phosphate (NaH₂PO₄ / Na₂HPO₄)',
+      pKa: 7.20,
+      acidName: 'Sodium Dihydrogen Phosphate Monohydrate (NaH₂PO₄·H₂O)',
+      acidMw: 137.99,
+      baseName: 'Disodium Hydrogen Phosphate (Na₂HPO₄)',
+      baseMw: 141.96,
+      notes: 'Optimal range pH 6.20–8.20. Primary physiological buffer for biochemical research.',
+    ),
+    _BufferPreset(
+      name: 'Tris / Tris-HCl',
+      pKa: 8.06,
+      acidName: 'Tris Hydrochloride (Tris-HCl, C₄H₁₁NO₃·HCl)',
+      acidMw: 157.60,
+      baseName: 'Tris Base (C₄H₁₁NO₃)',
+      baseMw: 121.14,
+      notes: 'Optimal range pH 7.10–9.10. Standard buffer in biochemistry and electrophoresis.',
+    ),
+    _BufferPreset(
+      name: 'Ammonium Chloride / Ammonia',
+      pKa: 9.25,
+      acidName: 'Ammonium Chloride (NH₄Cl)',
+      acidMw: 53.49,
+      baseName: 'Ammonia Solution (NH₃, 25% w/w)',
+      baseMw: 17.03,
+      notes: 'Optimal range pH 8.25–10.25. Classic analytical buffer for EDTA titrations.',
+    ),
+    _BufferPreset(
+      name: 'Citric Acid / Sodium Citrate',
+      pKa: 4.76,
+      acidName: 'Citric Acid Monohydrate (C₆H₈O₇·H₂O)',
+      acidMw: 210.14,
+      baseName: 'Trisodium Citrate Dihydrate (Na₃C₆H₅O₇·2H₂O)',
+      baseMw: 294.10,
+      notes: 'Optimal range pH 3.0–6.2. Widely utilized in antigen retrieval and food biochemistry.',
+    ),
+  ];
+
+  int _selectedPresetIdx = 0;
+  final _formTargetPhCtrl = TextEditingController(text: '4.76');
+  final _formConcCtrl = TextEditingController(text: '0.1'); // M
+  final _formVolCtrl = TextEditingController(text: '500'); // mL
+  final _customPkaCtrl = TextEditingController(text: '4.76');
+  final _customAcidMwCtrl = TextEditingController(text: '60.05');
+  final _customBaseMwCtrl = TextEditingController(text: '136.08');
+
+  // Formulation result state
+  Map<String, dynamic>? _formulationResult;
+  String? _formError;
 
   @override
   void dispose() {
     _pKa.dispose();
     _salt.dispose();
     _acid.dispose();
+    _formTargetPhCtrl.dispose();
+    _formConcCtrl.dispose();
+    _formVolCtrl.dispose();
+    _customPkaCtrl.dispose();
+    _customAcidMwCtrl.dispose();
+    _customBaseMwCtrl.dispose();
     super.dispose();
   }
 
@@ -852,10 +956,110 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
       return;
     }
 
-    final ph = pka + (log(a / ha) / ln10);
+    final ratio = a / ha;
+    final ph = pka + (log(ratio) / ln10);
+    final alphaA = a / (a + ha);
+    final alphaHa = ha / (a + ha);
+    final totalC = a + ha;
+    final beta = 2.303 * totalC * alphaA * alphaHa;
+
     setState(() {
       _ph = ph;
+      _ratio = ratio;
+      _alphaBase = alphaA;
+      _alphaAcid = alphaHa;
+      _bufferCapacity = beta;
       _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  void _calculateFormulation() {
+    final targetPh = double.tryParse(_formTargetPhCtrl.text.trim());
+    final conc = double.tryParse(_formConcCtrl.text.trim());
+    final volMl = double.tryParse(_formVolCtrl.text.trim());
+
+    if (targetPh == null || targetPh < 0 || targetPh > 14) {
+      setState(() {
+        _formError = 'Please enter a valid target pH between 0 and 14.';
+        _formulationResult = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+    if (conc == null || conc <= 0) {
+      setState(() {
+        _formError = 'Total buffer concentration must be strictly positive (> 0 M).';
+        _formulationResult = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+    if (volMl == null || volMl <= 0) {
+      setState(() {
+        _formError = 'Desired volume must be strictly positive (> 0 mL).';
+        _formulationResult = null;
+      });
+      AppHaptics.error();
+      return;
+    }
+
+    final isCustom = _selectedPresetIdx >= _presets.length;
+    final double pKa = isCustom
+        ? (double.tryParse(_customPkaCtrl.text.trim()) ?? 4.76)
+        : _presets[_selectedPresetIdx].pKa;
+    final double acidMw = isCustom
+        ? (double.tryParse(_customAcidMwCtrl.text.trim()) ?? 60.05)
+        : _presets[_selectedPresetIdx].acidMw;
+    final double baseMw = isCustom
+        ? (double.tryParse(_customBaseMwCtrl.text.trim()) ?? 136.08)
+        : _presets[_selectedPresetIdx].baseMw;
+    final bool acidIsLiquid = isCustom ? false : _presets[_selectedPresetIdx].acidIsLiquid;
+    final double? acidDensity = isCustom ? null : _presets[_selectedPresetIdx].acidDensity;
+    final String acidName = isCustom ? 'Weak Acid (HA)' : _presets[_selectedPresetIdx].acidName;
+    final String baseName = isCustom ? 'Conjugate Base (A⁻)' : _presets[_selectedPresetIdx].baseName;
+
+    final ratio = pow(10.0, targetPh - pKa).toDouble();
+    final alphaBase = ratio / (1.0 + ratio);
+    final alphaAcid = 1.0 / (1.0 + ratio);
+
+    final concBase = conc * alphaBase;
+    final concAcid = conc * alphaAcid;
+
+    final volL = volMl / 1000.0;
+    final molesBase = concBase * volL;
+    final molesAcid = concAcid * volL;
+
+    final massBaseG = molesBase * baseMw;
+    final massAcidG = molesAcid * acidMw;
+    final double? volAcidMl = (acidIsLiquid && acidDensity != null && acidDensity > 0)
+        ? (massAcidG / acidDensity)
+        : null;
+
+    final beta = 2.303 * conc * alphaAcid * alphaBase;
+    final deltaPka = (targetPh - pKa).abs();
+    final isOptimal = deltaPka <= 1.0;
+
+    setState(() {
+      _formulationResult = {
+        'targetPh': targetPh,
+        'pKa': pKa,
+        'conc': conc,
+        'volMl': volMl,
+        'acidName': acidName,
+        'baseName': baseName,
+        'massBaseG': massBaseG,
+        'massAcidG': massAcidG,
+        'volAcidMl': volAcidMl,
+        'ratio': ratio,
+        'alphaBase': alphaBase,
+        'alphaAcid': alphaAcid,
+        'concBase': concBase,
+        'concAcid': concAcid,
+        'beta': beta,
+        'isOptimal': isOptimal,
+      };
+      _formError = null;
     });
     AppHaptics.confirm();
   }
@@ -870,37 +1074,339 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Henderson-Hasselbalch Buffer pH', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          const ChemistryMarkdownView(
-            text: r'$$\text{pH} = \text{p}K_a + \log\frac{[\text{A}^-]}{[\text{HA}]}$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
-            selectable: false,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.science_outlined, color: AppColors.purpleBright, size: 20),
+                  SizedBox(width: 8),
+                  Text('Henderson-Hasselbalch Buffer Assistant', style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.purple.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text('Acid-Base', style: TextStyle(color: AppColors.purpleBright, fontSize: 10, fontWeight: FontWeight.w700)),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+          // Mode Toggle
           Row(
             children: [
-              Expanded(child: TextField(controller: _pKa, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'pKa'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: ChoiceChip(
+                  label: const Text('pH & Molar Ratio', style: TextStyle(fontSize: 12)),
+                  selected: _activeMode == 0,
+                  selectedColor: AppColors.purple.withValues(alpha: 0.35),
+                  backgroundColor: AppColors.bg0,
+                  onSelected: (val) {
+                    if (val) {
+                      setState(() => _activeMode = 0);
+                      AppHaptics.selection();
+                    }
+                  },
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _salt, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: '[Conjugate Base]'), onChanged: (_) => _onFieldChanged())),
-              const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _acid, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: '[Weak Acid]'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: ChoiceChip(
+                  label: const Text('Formulation Recipe (g)', style: TextStyle(fontSize: 12)),
+                  selected: _activeMode == 1,
+                  selectedColor: AppColors.purple.withValues(alpha: 0.35),
+                  backgroundColor: AppColors.bg0,
+                  onSelected: (val) {
+                    if (val) {
+                      setState(() {
+                        _activeMode = 1;
+                        if (_formulationResult == null) _calculateFormulation();
+                      });
+                      AppHaptics.selection();
+                    }
+                  },
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: _calculate, child: const Text('Compute Buffer pH')),
-          if (_error != null) ...[
-            const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
-          ],
-          if (_ph != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
-              child: Text('Buffer pH = ${_ph!.toStringAsFixed(3)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.purpleBright)),
+          if (_activeMode == 0) ...[
+            const ChemistryMarkdownView(
+              text: r'$$\text{pH} = \text{p}K_a + \log\frac{[\text{A}^-]}{[\text{HA}]}, \quad \beta = 2.303 \, C_{\text{total}} \, \alpha_{\text{HA}} \, \alpha_{\text{A}^-}$$',
+              textStyle: TextStyle(fontSize: 12, color: AppColors.purpleBright),
+              selectable: false,
             ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: TextField(controller: _pKa, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'pKa'), onChanged: (_) => _onFieldChanged())),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(controller: _salt, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: '[Conjugate Base]'), onChanged: (_) => _onFieldChanged())),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(controller: _acid, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: '[Weak Acid]'), onChanged: (_) => _onFieldChanged())),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(onPressed: _calculate, child: const Text('Compute Buffer pH')),
+            if (_error != null) ...[
+              const SizedBox(height: 8),
+              Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            ],
+            if (_ph != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Buffer pH = ${_ph!.toStringAsFixed(3)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.purpleBright)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: (_ph! >= 6.5 && _ph! <= 7.5 ? AppColors.success : AppColors.brandPrimary).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(_ph! < 7.0 ? 'Acidic Buffer' : (_ph! > 7.0 ? 'Basic Buffer' : 'Neutral Buffer'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                    const Divider(color: Colors.white12, height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Molar Ratio [A⁻]/[HA]:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                        Text('${_ratio?.toStringAsFixed(3)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 12.5)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Fractions (α_base / α_acid):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                        Text('${((_alphaBase ?? 0) * 100).toStringAsFixed(1)}% / ${((_alphaAcid ?? 0) * 100).toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentCyan, fontSize: 12.5)),
+                      ],
+                    ),
+                    if (_bufferCapacity != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Buffer Capacity (β):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                          Text('${_bufferCapacity!.toStringAsFixed(4)} mol/(L·pH)', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 12.5)),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ] else ...[
+            // Mode 1: Formulation Assistant
+            const Text(
+              'Select Standard Buffer System:',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: AppColors.bg0,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                  value: _selectedPresetIdx,
+                  isExpanded: true,
+                  dropdownColor: AppColors.bg1,
+                  items: [
+                    ..._presets.asMap().entries.map((e) => DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value.name, style: const TextStyle(fontSize: 13, color: Colors.white)),
+                    )),
+                    const DropdownMenuItem(
+                      value: 999,
+                      child: Text('Custom Acid-Base Conjugate Pair', style: TextStyle(fontSize: 13, color: AppColors.accentCyan)),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() {
+                        _selectedPresetIdx = val;
+                        if (val < _presets.length) {
+                          _formTargetPhCtrl.text = _presets[val].pKa.toStringAsFixed(2);
+                        }
+                      });
+                      _calculateFormulation();
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (_selectedPresetIdx >= _presets.length) ...[
+              Row(
+                children: [
+                  Expanded(child: TextField(controller: _customPkaCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Custom pKa'))),
+                  const SizedBox(width: 8),
+                  Expanded(child: TextField(controller: _customAcidMwCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Acid MW (g/mol)'))),
+                  const SizedBox(width: 8),
+                  Expanded(child: TextField(controller: _customBaseMwCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Base MW (g/mol)'))),
+                ],
+              ),
+              const SizedBox(height: 10),
+            ],
+            Row(
+              children: [
+                Expanded(child: TextField(controller: _formTargetPhCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Target pH'))),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(controller: _formConcCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Total Conc (M)'))),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(controller: _formVolCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Volume (mL)'))),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: _calculateFormulation,
+              icon: const Icon(Icons.calculate_outlined, size: 16),
+              label: const Text('Calculate Formulation Recipe'),
+            ),
+            if (_formError != null) ...[
+              const SizedBox(height: 8),
+              Text(_formError!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            ],
+            if (_formulationResult != null) ...[
+              const SizedBox(height: 12),
+              _buildFormulationReportCard(_formulationResult!),
+            ],
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormulationReportCard(Map<String, dynamic> r) {
+    final bool isOptimal = r['isOptimal'] as bool;
+    final double targetPh = r['targetPh'] as double;
+    final double massBaseG = r['massBaseG'] as double;
+    final double massAcidG = r['massAcidG'] as double;
+    final double? volAcidMl = r['volAcidMl'] as double?;
+    final double volMl = r['volMl'] as double;
+    final String baseName = r['baseName'] as String;
+    final String acidName = r['acidName'] as String;
+    final double beta = r['beta'] as double;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.bg0,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isOptimal ? AppColors.success.withValues(alpha: 0.5) : AppColors.accentGold.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    isOptimal ? Icons.check_circle_outline : Icons.warning_amber_rounded,
+                    color: isOptimal ? AppColors.success : AppColors.accentGold,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Formulation for pH ${targetPh.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: (isOptimal ? AppColors.success : AppColors.accentGold).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  isOptimal ? 'Optimal Range (pKa ± 1)' : 'Sub-optimal Range',
+                  style: TextStyle(
+                    color: isOptimal ? AppColors.success : AppColors.accentGold,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Masses to weigh
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.bg1,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text('1. Weigh $baseName:', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    ),
+                    Text('${massBaseG.toStringAsFixed(3)} g', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentCyan, fontSize: 13)),
+                  ],
+                ),
+                const Divider(color: Colors.white12, height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        volAcidMl != null ? '2. Pipette $acidName:' : '2. Weigh $acidName:',
+                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      ),
+                    ),
+                    Text(
+                      volAcidMl != null
+                          ? '${volAcidMl.toStringAsFixed(2)} mL (${massAcidG.toStringAsFixed(3)} g)'
+                          : '${massAcidG.toStringAsFixed(3)} g',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.brandBright, fontSize: 13),
+                    ),
+                  ],
+                ),
+                const Divider(color: Colors.white12, height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Buffer Capacity (β):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    Text('${beta.toStringAsFixed(4)} mol/(L·pH)', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 12.5)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text('Laboratory Protocol 🧪:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)),
+          const SizedBox(height: 6),
+          Text(
+            '1. Dissolve ${massBaseG.toStringAsFixed(3)} g of $baseName and ${volAcidMl != null ? "${volAcidMl.toStringAsFixed(2)} mL" : "${massAcidG.toStringAsFixed(3)} g"} of $acidName in ${(volMl * 0.8).round()} mL of deionized water.\n'
+            '2. Stir thoroughly until completely dissolved.\n'
+            '3. Calibrate pH meter and verify pH = ${targetPh.toStringAsFixed(2)} (adjust dropwise with 1M HCl or 1M NaOH if needed).\n'
+            '4. Quantitatively dilute with deionized water to final volume of ${volMl.round()} mL in a volumetric flask.',
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.4),
+          ),
         ],
       ),
     );
@@ -2753,6 +3259,499 @@ class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
         Text(l, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
         Text(v, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
       ],
+    );
+  }
+}
+
+// ==========================================
+// 17. HPLC CALIBRATION CURVE PLOTTER
+// ==========================================
+class _CalibPoint {
+  final double concentration;
+  final double peakArea;
+  const _CalibPoint(this.concentration, this.peakArea);
+}
+
+class _HplcCalibrationCurveCalculator extends StatefulWidget {
+  const _HplcCalibrationCurveCalculator();
+
+  @override
+  State<_HplcCalibrationCurveCalculator> createState() => _HplcCalibrationCurveCalculatorState();
+}
+
+class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCalculator> {
+  final List<_CalibPoint> _points = [
+    const _CalibPoint(10.0, 15200.0),
+    const _CalibPoint(25.0, 37800.0),
+    const _CalibPoint(50.0, 74500.0),
+    const _CalibPoint(100.0, 149200.0),
+    const _CalibPoint(200.0, 298000.0),
+  ];
+
+  final _newConcCtrl = TextEditingController();
+  final _newAreaCtrl = TextEditingController();
+  final _unknownAreaCtrl = TextEditingController(text: '85400');
+  String? _error;
+
+  @override
+  void dispose() {
+    _newConcCtrl.dispose();
+    _newAreaCtrl.dispose();
+    _unknownAreaCtrl.dispose();
+    super.dispose();
+  }
+
+  void _addPoint() {
+    final x = double.tryParse(_newConcCtrl.text.trim());
+    final y = double.tryParse(_newAreaCtrl.text.trim());
+    if (x == null || x < 0) {
+      setState(() => _error = 'Concentration must be a valid non-negative number.');
+      AppHaptics.error();
+      return;
+    }
+    if (y == null || y < 0) {
+      setState(() => _error = 'Peak area must be a valid non-negative number.');
+      AppHaptics.error();
+      return;
+    }
+    setState(() {
+      _points.add(_CalibPoint(x, y));
+      _points.sort((a, b) => a.concentration.compareTo(b.concentration));
+      _newConcCtrl.clear();
+      _newAreaCtrl.clear();
+      _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  void _removePoint(int index) {
+    if (_points.length <= 2) {
+      setState(() => _error = 'At least 2 calibration points are required for regression analysis.');
+      AppHaptics.error();
+      return;
+    }
+    setState(() {
+      _points.removeAt(index);
+      _error = null;
+    });
+    AppHaptics.selection();
+  }
+
+  void _resetDefaults() {
+    setState(() {
+      _points.clear();
+      _points.addAll([
+        const _CalibPoint(10.0, 15200.0),
+        const _CalibPoint(25.0, 37800.0),
+        const _CalibPoint(50.0, 74500.0),
+        const _CalibPoint(100.0, 149200.0),
+        const _CalibPoint(200.0, 298000.0),
+      ]);
+      _error = null;
+    });
+    AppHaptics.confirm();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final n = _points.length;
+    double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+    for (final p in _points) {
+      sumX += p.concentration;
+      sumY += p.peakArea;
+      sumXY += (p.concentration * p.peakArea);
+      sumX2 += (p.concentration * p.concentration);
+      sumY2 += (p.peakArea * p.peakArea);
+    }
+    final meanX = sumX / n;
+    final meanY = sumY / n;
+    final sxx = sumX2 - (n * meanX * meanX);
+    final syy = sumY2 - (n * meanY * meanY);
+    final sxy = sumXY - (n * meanX * meanY);
+
+    final double slope = (sxx != 0) ? (sxy / sxx) : 0.0;
+    final double intercept = meanY - (slope * meanX);
+    final double r = (sxx > 0 && syy > 0) ? (sxy / sqrt(sxx * syy)) : 0.0;
+    final double rSquared = r * r;
+
+    // Residual standard deviation syx = sqrt( sum( (y - y_hat)^2 ) / (n - 2) )
+    double ssResiduals = 0;
+    for (final p in _points) {
+      final yHat = slope * p.concentration + intercept;
+      final diff = p.peakArea - yHat;
+      ssResiduals += diff * diff;
+    }
+    final double syx = n > 2 ? sqrt(ssResiduals / (n - 2)) : 0.0;
+    final double lod = (slope > 0 && n > 2) ? (3.3 * syx / slope) : 0.0;
+    final double loq = (slope > 0 && n > 2) ? (10.0 * syx / slope) : 0.0;
+
+    // Unknown sample quantification
+    final unkY = double.tryParse(_unknownAreaCtrl.text.trim());
+    final double? unkX = (unkY != null && slope != 0) ? ((unkY - intercept) / slope) : null;
+    final bool isUnkInterpolated = (unkX != null && _points.isNotEmpty)
+        ? (unkX >= _points.first.concentration && unkX <= _points.last.concentration)
+        : false;
+
+    // Chart data
+    final spots = _points.map((p) => FlSpot(p.concentration, p.peakArea)).toList();
+    final maxX = _points.isNotEmpty ? _points.last.concentration : 100.0;
+    final lineSpots = [
+      FlSpot(0, intercept > 0 ? intercept : 0),
+      FlSpot(maxX * 1.05, slope * (maxX * 1.05) + intercept),
+    ];
+
+    return GlowCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.show_chart_rounded, color: AppColors.purpleBright, size: 20),
+                  SizedBox(width: 8),
+                  Text('HPLC Calibration Curve Plotter', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              InkWell(
+                onTap: _resetDefaults,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.purple.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text('Reset Defaults', style: TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const ChemistryMarkdownView(
+            text: r'$$y = m x + c, \quad R^2 = \frac{S_{xy}^2}{S_{xx}S_{yy}}, \quad \text{LOD} = \frac{3.3 \, s_{y/x}}{m}, \quad \text{LOQ} = \frac{10 \, s_{y/x}}{m}$$',
+            textStyle: TextStyle(fontSize: 12, color: AppColors.purpleBright),
+            selectable: false,
+          ),
+          const SizedBox(height: 14),
+
+          // Interactive Chart
+          Container(
+            height: 220,
+            padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
+            decoration: BoxDecoration(
+              color: AppColors.bg0,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: true,
+                  getDrawingHorizontalLine: (_) => const FlLine(color: AppColors.borderSubtle, strokeWidth: 0.8),
+                  getDrawingVerticalLine: (_) => const FlLine(color: AppColors.borderSubtle, strokeWidth: 0.8),
+                ),
+                titlesData: FlTitlesData(
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 46,
+                      getTitlesWidget: (val, meta) {
+                        if (val == meta.min || val == meta.max) return const SizedBox.shrink();
+                        final txt = val >= 1000 ? '${(val / 1000).toStringAsFixed(0)}k' : val.toStringAsFixed(0);
+                        return Text(txt, style: const TextStyle(color: AppColors.textMuted, fontSize: 10));
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 24,
+                      getTitlesWidget: (val, meta) {
+                        if (val == meta.min || val == meta.max) return const SizedBox.shrink();
+                        return Text(val.toStringAsFixed(0), style: const TextStyle(color: AppColors.textMuted, fontSize: 10));
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(color: AppColors.borderSubtle),
+                ),
+                lineBarsData: [
+                  // 1. Fitted Regression Line
+                  LineChartBarData(
+                    spots: lineSpots,
+                    isCurved: false,
+                    color: AppColors.accentCyan,
+                    barWidth: 2.2,
+                    dotData: const FlDotData(show: false),
+                  ),
+                  // 2. Calibration Standards Scatter Points
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: false,
+                    color: Colors.transparent,
+                    barWidth: 0,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                        radius: 5,
+                        color: AppColors.brandBright,
+                        strokeWidth: 2,
+                        strokeColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  // 3. Unknown Sample Point (if calculated)
+                  if (unkX != null && unkY != null)
+                    LineChartBarData(
+                      spots: [FlSpot(unkX, unkY)],
+                      isCurved: false,
+                      color: Colors.transparent,
+                      barWidth: 0,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                          radius: 6.5,
+                          color: AppColors.accentGold,
+                          strokeWidth: 2,
+                          strokeColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Center(
+            child: Text(
+              'X-axis: Concentration (μg/mL)  •  Y-axis: Peak Area (mAU·s)',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 10.5),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Regression Metrics Summary Card
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.bg0,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Regression Equation:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
+                    Text('y = ${slope.toStringAsFixed(2)} x + ${intercept.toStringAsFixed(1)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                  ],
+                ),
+                const Divider(color: Colors.white12, height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Coefficient of Determination (R²):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
+                    Row(
+                      children: [
+                        Text(rSquared.toStringAsFixed(5), style: TextStyle(fontWeight: FontWeight.bold, color: rSquared >= 0.999 ? AppColors.statusSuccess : AppColors.accentGold, fontSize: 13)),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: (rSquared >= 0.999 ? AppColors.statusSuccess : AppColors.accentGold).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            rSquared >= 0.999 ? 'ICH Q2 Linearity' : (rSquared >= 0.995 ? 'Acceptable' : 'Non-Linear'),
+                            style: TextStyle(
+                              color: rSquared >= 0.999 ? AppColors.statusSuccess : AppColors.accentGold,
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const Divider(color: Colors.white12, height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Residual Std Dev (sy/x):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
+                    Text(syx.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                  ],
+                ),
+                const Divider(color: Colors.white12, height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Limit of Detection (LOD, 3.3σ/S):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
+                    Text('${lod.toStringAsFixed(3)} μg/mL', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentCyan, fontSize: 13)),
+                  ],
+                ),
+                const Divider(color: Colors.white12, height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Limit of Quantitation (LOQ, 10σ/S):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
+                    Text('${loq.toStringAsFixed(3)} μg/mL', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.brandBright, fontSize: 13)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Unknown Sample Quantitation Card
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.bg0,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.brandPrimary.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Unknown Sample Quantification 🔍', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _unknownAreaCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(labelText: 'Unknown Peak Area (mAU·s)', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                  ],
+                ),
+                if (unkX != null) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Quantified Conc (x_unk):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
+                      Text('${unkX.toStringAsFixed(3)} μg/mL', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 14)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Interpolation Status:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                      Text(
+                        isUnkInterpolated ? '✓ Within linear calibration range' : '⚠️ Extrapolated beyond standard range',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: isUnkInterpolated ? AppColors.statusSuccess : AppColors.accentGold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Standards Data Table & Add Point
+          const Text('Calibration Standards Table:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.bg0,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.borderSubtle),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: const BoxDecoration(
+                    color: AppColors.bg2,
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Expanded(flex: 3, child: Text('Conc (x)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.textMuted))),
+                      Expanded(flex: 3, child: Text('Area (y)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.textMuted))),
+                      Expanded(flex: 3, child: Text('Calc (ŷ)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.textMuted))),
+                      SizedBox(width: 30),
+                    ],
+                  ),
+                ),
+                ..._points.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final pt = entry.value;
+                  final yHat = slope * pt.concentration + intercept;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      border: Border(top: BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.5))),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(flex: 3, child: Text(pt.concentration.toStringAsFixed(1), style: const TextStyle(fontSize: 12, color: Colors.white))),
+                        Expanded(flex: 3, child: Text(pt.peakArea.toStringAsFixed(0), style: const TextStyle(fontSize: 12, color: AppColors.accentCyan))),
+                        Expanded(flex: 3, child: Text(yHat.toStringAsFixed(0), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary))),
+                        SizedBox(
+                          width: 30,
+                          child: IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.textMuted),
+                            onPressed: () => _removePoint(idx),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _newConcCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'Conc (x)', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _newAreaCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'Area (y)', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _addPoint,
+                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
+                child: const Text('Add'),
+              ),
+            ],
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+          ],
+        ],
+      ),
     );
   }
 }

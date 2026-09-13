@@ -341,6 +341,18 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                   _buildSpecRow('Reagents & Conditions', m.reagentsAndConditions),
                   const SizedBox(height: 8),
                   _buildSpecRow('Products', m.products),
+                  if (m.regioselectivity != null) ...[
+                    const SizedBox(height: 8),
+                    _buildSpecRow('Regioselectivity', m.regioselectivity!),
+                  ],
+                  if (m.stereochemistry != null) ...[
+                    const SizedBox(height: 8),
+                    _buildSpecRow('Stereochemistry', m.stereochemistry!),
+                  ],
+                  if (m.drivingForce != null) ...[
+                    const SizedBox(height: 8),
+                    _buildSpecRow('Driving Force', m.drivingForce!),
+                  ],
                   if (m.representativeExample != null) ...[
                     const SizedBox(height: 8),
                     _buildSpecRow('Representative example', m.representativeExample!),

@@ -41,16 +41,16 @@ class ChemistryMarkdownView extends StatelessWidget {
     // 1. Sanitize chemistry & auto-wrap naked LaTeX expressions
     final sanitized = _preprocessText(text.trim());
 
-    // 2. Check if display math blocks ($$...$$ or \[...\]) exist
+    // 2. Check if display math blocks ($$...$$ or \[...\]) or tables exist
     final hasDisplayMath = sanitized.contains(r'$$') || sanitized.contains(r'\[');
     final hasTable = RegExp(r'^\|.+\|', multiLine: true).hasMatch(sanitized);
 
-    if (!hasDisplayMath) {
+    if (!hasDisplayMath && !hasTable) {
       // Direct unified markdown + inline LaTeX rendering
-      return _buildMarkdownBlock(context, sanitized, textStyle, selectable, hasTable);
+      return _buildMarkdownBlock(context, sanitized, textStyle, selectable);
     }
 
-    // Split display math blocks ($$...$$) from Markdown narrative blocks
+    // Split display math blocks ($$...$$) and tables from Markdown narrative blocks
     final blocks = _splitIntoBlocks(sanitized);
     final defaultStyle = textStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.45);
 
@@ -87,9 +87,13 @@ class ChemistryMarkdownView extends StatelessWidget {
             ),
           );
         }
+      } else if (b.isTable) {
+        widgetList.add(
+          _buildTableCard(context, b.text, defaultStyle, selectable),
+        );
       } else {
         widgetList.add(
-          _buildMarkdownBlock(context, b.text, defaultStyle, false, hasTable),
+          _buildMarkdownBlock(context, b.text, defaultStyle, selectable),
         );
       }
     }
@@ -100,15 +104,60 @@ class ChemistryMarkdownView extends StatelessWidget {
       children: widgetList,
     );
 
-    if (selectable) {
-      return SizedBox(
-        width: double.infinity,
-        child: SelectionArea(child: column),
-      );
-    }
     return SizedBox(
       width: double.infinity,
       child: column,
+    );
+  }
+
+  static Widget _buildTableCard(
+    BuildContext context,
+    String tableContent,
+    TextStyle? textStyle,
+    bool selectable,
+  ) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.bg1,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.borderHighlight, width: 0.8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final minW = constraints.hasBoundedWidth && constraints.maxWidth > 0
+                ? constraints.maxWidth - 24
+                : 300.0;
+            return ExcludeSemantics(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: minW),
+                    child: MarkdownBody(
+                      data: tableContent,
+                      selectable: false,
+                      fitContent: false,
+                      styleSheet: _buildMarkdownStyleSheet(context, textStyle),
+                      extensionSet: md.ExtensionSet.gitHubFlavored,
+                      inlineSyntaxes: [
+                        LatexInlineSyntax(),
+                      ],
+                      builders: {
+                        'latex-inline': _LatexInlineBuilder(textStyle: textStyle),
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -117,7 +166,6 @@ class ChemistryMarkdownView extends StatelessWidget {
     String content,
     TextStyle? textStyle,
     bool selectable,
-    bool hasTable,
   ) {
     final markdownBody = MarkdownBody(
       data: content,
@@ -132,19 +180,6 @@ class ChemistryMarkdownView extends StatelessWidget {
         'latex-inline': _LatexInlineBuilder(textStyle: textStyle),
       },
     );
-
-    if (hasTable) {
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: MediaQuery.sizeOf(context).width - 64,
-          ),
-          child: markdownBody,
-        ),
-      );
-    }
 
     return SizedBox(
       width: double.infinity,
@@ -189,17 +224,40 @@ class ChemistryMarkdownView extends StatelessWidget {
     // 5. Preserve genuine display math blocks ($$...$$) while sanitizing narrative text
     // Use collision-proof Unicode Private Use Area tokens without underscores or ASCII letters
     final displayMathPlaceholders = <String>[];
-    s = s.replaceAllMapped(RegExp(r'\$\$(.*?)\$\$', dotAll: true), (m) {
+    s = s.replaceAllMapped(RegExp(r'\$\$([\s\S]*?)\$\$'), (m) {
       displayMathPlaceholders.add(m[0]!);
       return '\uE000${displayMathPlaceholders.length - 1}\uE001';
     });
 
-    // In narrative text, unwrap \text{...}, \mathrm{...}, \mathbf{...} so it never renders as literal "\text{...}"
-    for (var pass = 0; pass < 3; pass++) {
+    // 6. Preserve genuine inline math blocks ($...$) before any text cleanups
+    final inlineMathPlaceholders = <String>[];
+    s = s.replaceAllMapped(RegExp(r'(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)'), (m) {
+      inlineMathPlaceholders.add(m[0]!);
+      return '\uE002${inlineMathPlaceholders.length - 1}\uE003';
+    });
+
+    // 7. In narrative text outside of math, auto-wrap naked mathematical expressions (e.g. \Delta G^\circ, \Psi_3, \text{p}K_a, \mu_B)
+    s = s.replaceAllMapped(
+      RegExp(r'(\\Delta\s*[A-Za-z](?:\^[0-9\circ\*\+\-]+|_\{?[0-9a-zA-Z]+\}?)?|\\Psi_?[0-9]+|\\psi_?[0-9]+|\\text\{p\}K[ab]?|\\text\{pH\}|\\mu_[A-Za-z0-9]+|\\pi\^\*|\\sigma\^\*)'),
+      (m) => '\$${m[1]}\$',
+    );
+    // Mask newly wrapped inline math expressions as well
+    s = s.replaceAllMapped(RegExp(r'(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)'), (m) {
+      inlineMathPlaceholders.add(m[0]!);
+      return '\uE002${inlineMathPlaceholders.length - 1}\uE003';
+    });
+
+    // 8. In narrative text, unwrap leftover \text{...}, \mathrm{...}, \mathbf{...} so it never renders as literal "\text{...}"
+    for (var pass = 0; pass < 5; pass++) {
       s = s.replaceAllMapped(RegExp(r'\\text\{([^{}]*)\}'), (m) => m[1] ?? '');
       s = s.replaceAllMapped(RegExp(r'\\mathrm\{([^{}]*)\}'), (m) => m[1] ?? '');
       s = s.replaceAllMapped(RegExp(r'\\mathbf\{([^{}]*)\}'), (m) => m[1] ?? '');
     }
+    // Clean any stray \text remnants in narrative
+    s = s.replaceAll(RegExp(r'\\text\b'), '');
+
+    // 9. Auto-sanitizer for plain chemical formulas in narrative text (C6H5CHO, H2SO4, Fe(CN)6^4-)
+    s = ChemistryTextFormatter.formatPlainFormulas(s);
 
     // Convert naked LaTeX commands in narrative text to clean Unicode
     s = s.replaceAll(r'\rightleftharpoons', '⇌')
@@ -247,6 +305,11 @@ class ChemistryMarkdownView extends StatelessWidget {
     // Clean leftover empty braces
     s = s.replaceAll('{}', '');
 
+    // Restore preserved inline math blocks
+    for (var i = 0; i < inlineMathPlaceholders.length; i++) {
+      s = s.replaceFirst('\uE002$i\uE003', inlineMathPlaceholders[i]);
+    }
+
     // Restore preserved display math blocks
     for (var i = 0; i < displayMathPlaceholders.length; i++) {
       s = s.replaceFirst('\uE000$i\uE001', displayMathPlaceholders[i]);
@@ -255,7 +318,7 @@ class ChemistryMarkdownView extends StatelessWidget {
     // Failsafe purge: ensure no leftover placeholders, PUA tokens or DISPLAY_MATH ever escape
     s = s.replaceAll(RegExp(r'___?DISPLAY_MATH[0-9₀-₉_]*___?'), '');
     s = s.replaceAll(RegExp(r'DISPLAY_MATH[0-9₀-₉_]+'), '');
-    s = s.replaceAll(RegExp(r'[\uE000\uE001]'), '');
+    s = s.replaceAll(RegExp(r'[\uE000-\uE003]'), '');
 
     return s;
   }
@@ -290,7 +353,7 @@ class ChemistryMarkdownView extends StatelessWidget {
       if (match.start > lastIndex) {
         final nonMath = text.substring(lastIndex, match.start).trim();
         if (nonMath.isNotEmpty) {
-          blocks.add(_Block(text: nonMath, isDisplayMath: false));
+          blocks.addAll(_splitMarkdownAndTables(nonMath));
         }
       }
 
@@ -305,11 +368,44 @@ class ChemistryMarkdownView extends StatelessWidget {
     if (lastIndex < text.length) {
       final remaining = text.substring(lastIndex).trim();
       if (remaining.isNotEmpty) {
-        blocks.add(_Block(text: remaining, isDisplayMath: false));
+        blocks.addAll(_splitMarkdownAndTables(remaining));
       }
     }
 
     return blocks;
+  }
+
+  /// Splits markdown text into standard narrative blocks and horizontally scrollable table blocks.
+  static List<_Block> _splitMarkdownAndTables(String markdownText) {
+    final blocks = <_Block>[];
+    final tablePattern = RegExp(r'(?:^|\n)([ \t]*\|[^\n]+\|[ \t]*(?:\r?\n[ \t]*\|[^\n]+\|[ \t]*)+)');
+    var lastEnd = 0;
+
+    for (final match in tablePattern.allMatches(markdownText)) {
+      final matchStart = match.start;
+      if (matchStart > lastEnd) {
+        final narrative = markdownText.substring(lastEnd, matchStart).trim();
+        if (narrative.isNotEmpty) {
+          blocks.add(_Block(text: narrative, isDisplayMath: false));
+        }
+      }
+
+      final tableText = (match.group(1) ?? match.group(0) ?? '').trim();
+      if (tableText.isNotEmpty) {
+        blocks.add(_Block(text: tableText, isDisplayMath: false, isTable: true));
+      }
+
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < markdownText.length) {
+      final remaining = markdownText.substring(lastEnd).trim();
+      if (remaining.isNotEmpty) {
+        blocks.add(_Block(text: remaining, isDisplayMath: false));
+      }
+    }
+
+    return blocks.isEmpty ? [_Block(text: markdownText, isDisplayMath: false)] : blocks;
   }
 
   static MarkdownStyleSheet _buildMarkdownStyleSheet(BuildContext? context, TextStyle? overrideStyle) {
@@ -457,21 +553,26 @@ class _LatexInlineBuilder extends MarkdownElementBuilder {
     final style = preferredStyle ?? parentStyle ?? textStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5);
     final sanitized = ChemistryMarkdownView._sanitizeLatex(mathCode);
 
-    return Math.tex(
-      sanitized,
-      mathStyle: MathStyle.text,
-      textStyle: style.copyWith(color: Colors.white),
-      onErrorFallback: (err) {
-        // Strip raw LaTeX commands so they never appear as ugly raw text
-        final cleaned = _cleanLatexFallback(mathCode);
-        return Text(
-          cleaned,
-          style: style.copyWith(
-            color: AppColors.purpleBright,
-            fontWeight: FontWeight.w600,
-          ),
-        );
-      },
+    return Semantics(
+      label: _cleanLatexFallback(mathCode),
+      child: ExcludeSemantics(
+        child: Math.tex(
+          sanitized,
+          mathStyle: MathStyle.text,
+          textStyle: style.copyWith(color: Colors.white),
+          onErrorFallback: (err) {
+            // Strip raw LaTeX commands so they never appear as ugly raw text
+            final cleaned = _cleanLatexFallback(mathCode);
+            return Text(
+              cleaned,
+              style: style.copyWith(
+                color: AppColors.purpleBright,
+                fontWeight: FontWeight.w600,
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -514,7 +615,12 @@ class _LatexInlineBuilder extends MarkdownElementBuilder {
 }
 
 class _Block {
-  const _Block({required this.text, required this.isDisplayMath});
+  const _Block({
+    required this.text,
+    required this.isDisplayMath,
+    this.isTable = false,
+  });
   final String text;
   final bool isDisplayMath;
+  final bool isTable;
 }

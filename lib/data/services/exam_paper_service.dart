@@ -52,6 +52,8 @@ class ExamQuestionItem {
   final String question;
   final String modelAnswer;
   final List<String> markingRubric;
+  final List<String> mandatoryKeywords;
+  final List<String> commonPitfalls;
   final String topic;
   final String difficulty;
   final String frequency;
@@ -63,6 +65,8 @@ class ExamQuestionItem {
     required this.question,
     required this.modelAnswer,
     required this.markingRubric,
+    this.mandatoryKeywords = const [],
+    this.commonPitfalls = const [],
     this.topic = 'Core MSc Chemistry',
     this.difficulty = 'Moderate',
     this.frequency = '🔥 High Probability Exam Question',
@@ -75,6 +79,8 @@ class ExamQuestionItem {
     'question': question,
     'modelAnswer': modelAnswer,
     'markingRubric': markingRubric,
+    'mandatoryKeywords': mandatoryKeywords,
+    'commonPitfalls': commonPitfalls,
     'topic': topic,
     'difficulty': difficulty,
     'frequency': frequency,
@@ -87,6 +93,8 @@ class ExamQuestionItem {
     question: json['question'] as String? ?? '',
     modelAnswer: json['modelAnswer'] as String? ?? '',
     markingRubric: (json['markingRubric'] as List? ?? []).map((e) => e.toString()).toList(),
+    mandatoryKeywords: (json['mandatoryKeywords'] as List? ?? []).map((e) => e.toString()).toList(),
+    commonPitfalls: (json['commonPitfalls'] as List? ?? []).map((e) => e.toString()).toList(),
     topic: json['topic'] as String? ?? 'Core MSc Chemistry',
     difficulty: json['difficulty'] as String? ?? 'Moderate',
     frequency: json['frequency'] as String? ?? '🔥 High Probability Exam Question',
@@ -94,10 +102,189 @@ class ExamQuestionItem {
   );
 }
 
+class ExamEvaluationResult {
+  final double score;
+  final double maxScore;
+  final double percentage;
+  final List<String> matchedKeywords;
+  final List<String> missingKeywords;
+  final List<({String criterion, bool met, double marksAwarded})> rubricBreakdown;
+  final List<String> detectedPitfalls;
+  final String feedback;
+  final String grade;
+
+  const ExamEvaluationResult({
+    required this.score,
+    required this.maxScore,
+    required this.percentage,
+    required this.matchedKeywords,
+    required this.missingKeywords,
+    required this.rubricBreakdown,
+    required this.detectedPitfalls,
+    required this.feedback,
+    required this.grade,
+  });
+}
+
 class ExamPaperService {
   ExamPaperService._();
   static final ExamPaperService instance = ExamPaperService._();
 
+  /// Evaluates a student's answer against the examiner's standardized rubric,
+  /// mandatory keywords, and common academic pitfalls.
+  static ExamEvaluationResult evaluateStudentAnswer({
+    required ExamQuestionItem question,
+    required String studentAnswer,
+  }) {
+    final text = studentAnswer.trim().toLowerCase();
+    if (text.isEmpty) {
+      return ExamEvaluationResult(
+        score: 0.0,
+        maxScore: question.marks.toDouble(),
+        percentage: 0.0,
+        matchedKeywords: const [],
+        missingKeywords: question.mandatoryKeywords,
+        rubricBreakdown: question.markingRubric.map((r) => (criterion: r, met: false, marksAwarded: 0.0)).toList(),
+        detectedPitfalls: const [],
+        feedback: 'No answer provided. Enter your technical explanation to receive rubric evaluation.',
+        grade: 'No Submission',
+      );
+    }
+
+    final matched = <String>[];
+    final missing = <String>[];
+
+    for (final kw in question.mandatoryKeywords) {
+      final cleanKw = kw.toLowerCase().trim();
+      if (text.contains(cleanKw)) {
+        matched.add(kw);
+      } else {
+        // Stem check (e.g. "disrotatory" vs "disrotation")
+        final stem = cleanKw.length > 5 ? cleanKw.substring(0, cleanKw.length - 2) : cleanKw;
+        if (text.contains(stem)) {
+          matched.add(kw);
+        } else {
+          missing.add(kw);
+        }
+      }
+    }
+
+    final pitfallsFound = <String>[];
+    final questionWords = ('${question.question} ${question.mandatoryKeywords.join(' ')}').toLowerCase().split(RegExp(r'\W+')).toSet();
+    for (final pitfall in question.commonPitfalls) {
+      final cleanP = pitfall.toLowerCase();
+      final stopWords = {'applying', 'stating', 'assuming', 'writing', 'ignoring', 'confusing', 'omitting', 'forgetting', 'without', 'instead', 'because', 'which', 'their', 'there', 'having', 'with'};
+      final words = cleanP.replaceAll(RegExp(r'[(),.]'), ' ').split(' ').where((w) => w.length > 3 && !stopWords.contains(w) && !questionWords.contains(w)).toList();
+      int triggerCount = 0;
+      for (final w in words) {
+        if (text.contains(w)) triggerCount++;
+      }
+      if (words.isNotEmpty && triggerCount >= 1) {
+        pitfallsFound.add(pitfall);
+      }
+    }
+
+    // Evaluate each rubric criterion
+    final rubricBreakdown = <({String criterion, bool met, double marksAwarded})>[];
+    double totalAwarded = 0.0;
+    final totalRubricCount = question.markingRubric.length;
+
+    for (var i = 0; i < totalRubricCount; i++) {
+      final r = question.markingRubric[i];
+      // Extract marks from string e.g. "1.5 Marks: ..."
+      double maxForCriterion = 1.0;
+      final markMatch = RegExp(r'([0-9]+(?:\.[0-9]+)?)\s*Marks?').firstMatch(r);
+      if (markMatch != null) {
+        maxForCriterion = double.tryParse(markMatch.group(1)!) ?? 1.0;
+      } else {
+        maxForCriterion = question.marks / totalRubricCount;
+      }
+
+      // Check if keywords belonging to this segment match
+      final metaWords = {'marks', 'mark', 'correct', 'correctly', 'accurate', 'accurately', 'clear', 'clearly', 'detailed', 'explaining', 'explanation', 'description', 'describing', 'stating', 'diagram', 'points', 'rule'};
+      final rWords = r.toLowerCase().split(RegExp(r'\W+')).where((w) => w.length > 3 && !metaWords.contains(w)).toList();
+      int matchCount = 0;
+      for (final rw in rWords) {
+        if (text.contains(rw)) matchCount++;
+      }
+
+      final kwCoverage = question.mandatoryKeywords.isEmpty ? 1.0 : matched.length / question.mandatoryKeywords.length;
+      final ratio = rWords.isNotEmpty ? matchCount / rWords.length : 0.0;
+      final isMet = ratio >= 0.2 || (kwCoverage >= 0.5);
+
+      double awarded = 0.0;
+      if (isMet) {
+        if (ratio >= 0.4 || kwCoverage >= 0.75) {
+          awarded = maxForCriterion;
+        } else {
+          awarded = (maxForCriterion * 0.75).clamp(0.5, maxForCriterion);
+        }
+      }
+      totalAwarded += awarded;
+      rubricBreakdown.add((criterion: r, met: isMet, marksAwarded: double.parse(awarded.toStringAsFixed(1))));
+    }
+
+    // Keyword coverage weight
+    final kwRatio = question.mandatoryKeywords.isEmpty ? 0.8 : matched.length / question.mandatoryKeywords.length;
+    double calculatedScore = totalAwarded;
+
+    // Apply keyword proportion clamp
+    if (kwRatio < 0.3) {
+      calculatedScore = calculatedScore.clamp(0.0, question.marks * 0.4);
+    } else if (kwRatio < 0.6) {
+      calculatedScore = calculatedScore.clamp(0.0, question.marks * 0.75);
+    }
+
+    // Penalty for critical pitfalls
+    if (pitfallsFound.isNotEmpty) {
+      calculatedScore = (calculatedScore - (0.5 * pitfallsFound.length)).clamp(0.0, question.marks.toDouble());
+    }
+
+    calculatedScore = double.parse(calculatedScore.clamp(0.0, question.marks.toDouble()).toStringAsFixed(1));
+    final percentage = (calculatedScore / question.marks) * 100;
+
+    String grade = 'Needs Improvement';
+    if (percentage >= 85) {
+      grade = 'First Class with Distinction ⭐';
+    } else if (percentage >= 70) {
+      grade = 'First Class 🎯';
+    } else if (percentage >= 50) {
+      grade = 'Second Class 👍';
+    }
+
+    // Construct constructive examiner summary
+    final feedbackBuf = StringBuffer();
+    if (percentage >= 80) {
+      feedbackBuf.write('Excellent postgraduate response! High theoretical precision and strong chemical reasoning.');
+    } else if (percentage >= 50) {
+      feedbackBuf.write('Good foundational response. Covers primary mechanism/concept, but lacks key academic rigour.');
+    } else {
+      feedbackBuf.write('Incomplete answer. Critical theoretical elements or mechanistic driving forces are omitted.');
+    }
+
+    if (missing.isNotEmpty) {
+      feedbackBuf.write(' To score full marks, ensure you explicitly integrate: ${missing.take(3).join(", ")}.');
+    }
+    if (pitfallsFound.isNotEmpty) {
+      feedbackBuf.write(' Warning: Avoid examiner pitfall: ${pitfallsFound.first}.');
+    }
+
+    return ExamEvaluationResult(
+      score: calculatedScore,
+      maxScore: question.marks.toDouble(),
+      percentage: percentage,
+      matchedKeywords: matched,
+      missingKeywords: missing,
+      rubricBreakdown: rubricBreakdown,
+      detectedPitfalls: pitfallsFound,
+      feedback: feedbackBuf.toString(),
+      grade: grade,
+    );
+  }
+
+  // =========================================================================
+  // 1. ORGANIC CHEMISTRY (Postgraduate CBCS Standard)
+  // =========================================================================
   static const List<ExamQuestionItem> organicPaper = [
     // Part A: 2 Marks
     ExamQuestionItem(
@@ -109,6 +296,12 @@ class ExamPaperService {
         '1 Mark: Correctly stating Disrotatory mode under thermal conditions.',
         '1 Mark: Explaining mirror plane (m) symmetry of the ground-state HOMO (Psi3).',
       ],
+      mandatoryKeywords: ['disrotatory', 'HOMO', 'mirror plane', 'symmetry'],
+      commonPitfalls: ['Stating conrotatory mode (which applies to photochemical or 4n systems)', 'Confusing thermal HOMO with LUMO'],
+      topic: 'Pericyclic Reactions',
+      difficulty: 'Moderate',
+      frequency: '🔥 Very High Frequency',
+      examTips: 'Always specify the terminal orbital symmetry (m or C2) alongside the rotational mode.',
     ),
     ExamQuestionItem(
       section: 'Part A — Short Conceptual (2 Marks each)',
@@ -119,6 +312,12 @@ class ExamPaperService {
         '1 Mark: Kinetic control definition (Delta G-double-dagger, low T, hindered base LDA).',
         '1 Mark: Thermodynamic control definition (Delta G-degree, equilibration, more substituted enolate).',
       ],
+      mandatoryKeywords: ['kinetic', 'thermodynamic', 'activation energy', 'stability', 'LDA'],
+      commonPitfalls: ['Mixing up LDA conditions with high temperature equilibration', 'Omitting the role of steric hindrance'],
+      topic: 'Enolate Chemistry',
+      difficulty: 'Easy-Moderate',
+      frequency: '🔥 High Frequency',
+      examTips: 'Draw the two isomeric enolates of 2-methylcyclohexanone to guarantee maximum marks.',
     ),
     ExamQuestionItem(
       section: 'Part A — Short Conceptual (2 Marks each)',
@@ -129,6 +328,12 @@ class ExamPaperService {
         '1 Mark: Stating product ratio depends solely on transition state energy difference.',
         '1 Mark: Stating independence from ground-state conformer ratio.',
       ],
+      mandatoryKeywords: ['transition state', 'conformers', 'equilibrium', 'independent'],
+      commonPitfalls: ['Assuming the major ground-state conformer always gives the major product'],
+      topic: 'Conformational Analysis',
+      difficulty: 'Hard',
+      frequency: '⚡ Concept Question',
+      examTips: 'Emphasize that rate of interconversion must be much faster than the rate of reaction.',
     ),
 
     // Part B: 5 Marks
@@ -142,6 +347,12 @@ class ExamPaperService {
         '1.5 Marks: Nucleophilic attack on the second aldehyde and protonation.',
         '2.0 Marks: E1cB dehydration mechanism and thermodynamic driving force of conjugation.',
       ],
+      mandatoryKeywords: ['enolate', 'nucleophilic addition', 'E1cB', 'conjugated', 'driving force'],
+      commonPitfalls: ['Writing E2 instead of E1cB under basic conditions', 'Omitting the resonance driving force of the conjugated enal'],
+      topic: 'Carbonyl Condensations',
+      difficulty: 'Moderate',
+      frequency: '🔥 Core Mechanism',
+      examTips: 'Show lone pair electron pushes clearly using curved arrows.',
     ),
     ExamQuestionItem(
       section: 'Part B — Analytical & Mechanism (5 Marks each)',
@@ -154,6 +365,12 @@ class ExamPaperService {
         '1.5 Marks: Assignment of methyl singlet at 2.6 ppm and split aromatic multiplet/doublet.',
         '1.0 Mark: Final identification of Acetophenone.',
       ],
+      mandatoryKeywords: ['DBE', 'acetophenone', 'conjugation', 'singlet', 'deshielded'],
+      commonPitfalls: ['Ignoring the IR shift from 1715 to 1685 cm⁻¹ due to aryl conjugation', 'Misidentifying 5 DBE as aliphatic diene'],
+      topic: 'Organic Spectroscopy',
+      difficulty: 'Moderate',
+      frequency: '🔥 High Probability',
+      examTips: 'Tabulate NMR peaks with Chemical Shift, Multiplicity, Integration, and Assignment.',
     ),
     ExamQuestionItem(
       section: 'Part B — Analytical & Mechanism (5 Marks each)',
@@ -165,6 +382,12 @@ class ExamPaperService {
         '1.5 Marks: Dimeric chiral titanium-tartrate complex structure description.',
         '2.0 Marks: Accurate Sharpless quadrant mnemonic and face-delivery rule.',
       ],
+      mandatoryKeywords: ['titanium', 'tartrate', 'dimer', 'mnemonic', 'allylic alcohol'],
+      commonPitfalls: ['Applying Sharpless epoxidation to unfunctionalized alkenes without allylic OH', 'Reversing (+) and (-) delivery faces'],
+      topic: 'Asymmetric Synthesis',
+      difficulty: 'Hard',
+      frequency: '⚡ Advanced MSc Topic',
+      examTips: 'Draw the standard Sharpless quadrant diagram with allylic alcohol in the bottom-right.',
     ),
 
     // Part C: 10 Marks
@@ -178,9 +401,18 @@ class ExamPaperService {
         '3.5 Marks: Clear explanation and diagram of secondary orbital interactions for the Endo rule.',
         '3.0 Marks: Frontier orbital coefficient analysis demonstrating ortho regioselectivity.',
       ],
+      mandatoryKeywords: ['HOMO', 'LUMO', 'suprafacial', 'secondary orbital', 'endo', 'regioselectivity'],
+      commonPitfalls: ['Assuming exo product is kinetic product because of sterics (endo is kinetic due to secondary overlap)', 'Failing to determine largest orbital coefficients in regioselectivity'],
+      topic: 'Pericyclic Cycloadditions',
+      difficulty: 'Hard',
+      frequency: '🔥 10-Mark Essential Essay',
+      examTips: 'Draw the phase-shaded orbital lobes for HOMO and LUMO clearly.',
     ),
   ];
 
+  // =========================================================================
+  // 2. INORGANIC CHEMISTRY (Postgraduate CBCS Standard)
+  // =========================================================================
   static const List<ExamQuestionItem> inorganicPaper = [
     // Part A: 2 Marks
     ExamQuestionItem(
@@ -192,6 +424,12 @@ class ExamPaperService {
         '1 Mark: Correct electron calculation (34 valence electrons from Mn and CO).',
         '1 Mark: Explaining the Mn-Mn bond provides 2 shared electrons satisfying 18e per center.',
       ],
+      mandatoryKeywords: ['18-electron', 'manganese', 'metal-metal bond', '34 electrons'],
+      commonPitfalls: ['Counting Mn as Group 5 or 8', 'Forgetting that each center shares 1 electron from the M-M bond'],
+      topic: 'Organometallic Chemistry',
+      difficulty: 'Moderate',
+      frequency: '🔥 High Probability',
+      examTips: 'Always calculate total valence electrons first, then divide by number of metals.',
     ),
     ExamQuestionItem(
       section: 'Part A — Short Conceptual (2 Marks each)',
@@ -202,6 +440,12 @@ class ExamPaperService {
         '1 Mark: Definition of metal d-orbital cloud expansion via ligand covalency.',
         '1 Mark: Stating reduction of Racah parameter B and defining ratio beta < 1.',
       ],
+      mandatoryKeywords: ['nephelauxetic', 'cloud expansion', 'Racah', 'covalency'],
+      commonPitfalls: ['Confusing nephelauxetic effect (covalency) with spectrochemical series (splitting magnitude Delta)'],
+      topic: 'Electronic Spectroscopy',
+      difficulty: 'Moderate',
+      frequency: '⚡ Concept Question',
+      examTips: 'State the nephelauxetic series of ligands: F- < H2O < NH3 < en < Cl- < CN- < I-.',
     ),
     ExamQuestionItem(
       section: 'Part A — Short Conceptual (2 Marks each)',
@@ -212,6 +456,12 @@ class ExamPaperService {
         '1 Mark: Correct statement of the Jahn-Teller theorem (symmetry lowering to lift degeneracy).',
         '1 Mark: Identifying asymmetric eg configurations (especially d9 Cu2+ and high-spin d4).',
       ],
+      mandatoryKeywords: ['Jahn-Teller', 'degenerate', 'distortion', 'eg', 'd9'],
+      commonPitfalls: ['Claiming t2g asymmetry causes strong distortion (it only causes very weak distortion)'],
+      topic: 'Crystal Field Theory',
+      difficulty: 'Moderate',
+      frequency: '🔥 Core Question',
+      examTips: 'Cite Cu(II) d9 complexes (tetragonal elongation along z-axis) as classic example.',
     ),
 
     // Part B: 5 Marks
@@ -225,6 +475,12 @@ class ExamPaperService {
         '1.5 Marks: Correct CFSE calculation for high-spin d6 (-0.4 Delta_o).',
         '1.5 Marks: Correct CFSE calculation for low-spin d6 (-2.4 Delta_o + 2P).',
       ],
+      mandatoryKeywords: ['4/9', 'CFSE', 'octahedral', 'tetrahedral', 'pairing energy'],
+      commonPitfalls: ['Writing 3P instead of 2P for d6 low-spin (free ion already has 1 pair)'],
+      topic: 'Crystal Field Theory',
+      difficulty: 'Moderate-Hard',
+      frequency: '🔥 Standard Exam Derivation',
+      examTips: 'Remember that free d6 ion has 1 pair, so net pairing energy in low-spin is 3 - 1 = 2P.',
     ),
     ExamQuestionItem(
       section: 'Part B — Analytical & Mechanism (5 Marks each)',
@@ -236,6 +492,12 @@ class ExamPaperService {
         '1.5 Marks: Correct migratory insertion and ligand coordination steps.',
         '2.0 Marks: Reductive elimination of acetyl iodide and catalytic loop regeneration.',
       ],
+      mandatoryKeywords: ['Monsanto', 'rhodium', 'oxidative addition', 'migratory insertion', 'rate-determining'],
+      commonPitfalls: ['Confusing Monsanto process (Rh catalyst) with Cativa process (Ir catalyst)', 'Miscounting electron counts (16e to 18e)'],
+      topic: 'Homogeneous Catalysis',
+      difficulty: 'Hard',
+      frequency: '🔥 High Probability',
+      examTips: 'Clearly write oxidation state and valence electrons for every rhodium intermediate.',
     ),
     ExamQuestionItem(
       section: 'Part B — Analytical & Mechanism (5 Marks each)',
@@ -247,6 +509,12 @@ class ExamPaperService {
         '1.5 Marks: Proximal His F8 translation and F-helix tilt (Perutz trigger).',
         '2.0 Marks: Salt-bridge rupture, T-to-R quaternary transition, and sigmoidal Hill cooperativity.',
       ],
+      mandatoryKeywords: ['hemoglobin', 'Perutz', 'proximal histidine', 'T-to-R', 'cooperativity'],
+      commonPitfalls: ['Confusing proximal His F8 (coordinated to Fe) with distal His E7 (stabilizes O2 via H-bond)'],
+      topic: 'Bioinorganic Chemistry',
+      difficulty: 'Moderate',
+      frequency: '🔥 Core Bioinorganic',
+      examTips: 'Draw the displacement of the iron atom relative to the heme porphyrin ring.',
     ),
 
     // Part C: 10 Marks
@@ -254,15 +522,24 @@ class ExamPaperService {
       section: 'Part C — Comprehensive Essay / Synthesis (10 Marks)',
       marks: 10,
       question: r'Discuss the electronic absorption spectroscopy of transition metal complexes:' '\n' r'(a) Formulate the Laporte and Spin selection rules for electronic transitions and discuss relaxation mechanisms (vibronic coupling and spin-orbit coupling).' '\n' r'(b) Using the **Tanabe-Sugano diagram for $d^2$ octahedral complexes**, assign the three spin-allowed absorption bands and explain why $\nu_1 = {^3T_{1g}(F)} \to {^3T_{2g}(F)}$ directly yields $10 Dq$.' '\n' r'(c) For $[V(H_2O)_6]^{3+}$, absorption bands occur at $\nu_1 = 17,800\text{ cm}^{-1}$ and $\nu_2 = 25,700\text{ cm}^{-1}$. Calculate $10 Dq$ ($\Delta_o$) and the Racah parameter $B$.',
-      modelAnswer: r'(a) **Selection Rules & Relaxation**:' '\n' r'• **Laporte Rule**: Transitions between states of the same parity ($g \leftrightarrow g$ or $u \leftrightarrow u$) are forbidden ($\Delta l = \pm 1$). Pure $d-d$ transitions in centrosymmetric $O_h$ complexes are Laporte forbidden ($\epsilon \sim 1-100\text{ M}^{-1}\text{cm}^{-1}$).' '\n' r'• **Spin Rule**: Transitions between states of different spin multiplicity are forbidden ($\Delta S = 0$).' '\n' r'• **Relaxation**: Vibronic coupling momentarily removes the inversion center via asymmetric vibrational modes (e.g. $T_{1u}$ or $T_{2u}$), mixing $p$ and $d$ orbitals to allow weak Laporte-forbidden transitions. Spin-orbit coupling mixes states of differing multiplicity, allowing weak spin-forbidden bands.' '\n\n' r'(b) **Tanabe-Sugano for $d^2$ Octahedral**:' '\n' r'Ground state is $^3T_{1g}(F)$. The three spin-allowed transitions ($\Delta S = 0$) are:' '\n' r'   1. $\nu_1: {^3T_{1g}(F)} \to {^3T_{2g}(F)}$' '\n' r'   2. $\nu_2: {^3T_{1g}(F)} \to {^3T_{1g}(P)}$' '\n' r'   3. $\nu_3: {^3T_{1g}(F)} \to {^3A_{2g}(F)}$' '\n' r'In the weak field limit, the energy difference between $^3T_{1g}(F)$ and $^3T_{2g}(F)$ is exactly equal to the crystal field splitting parameter: $E(\nu_1) = 10 Dq$.' '\n\n' r'(c) **Numerical Calculation for $[V(H_2O)_6]^{3+}$**:' '\n' r'1. $10 Dq = \nu_1 = \mathbf{17,800\text{ cm}^{-1}}$.' '\n' r'2. In $d^2$ TS secular equations: $\nu_2 + \nu_1 = 3(10 Dq) + 15B - \text{correction}$; with standard fitting relation: $B = \frac{2\nu_1^2 + \nu_2^2 - 3\nu_1\nu_2}{15\nu_2 - 27\nu_1} \approx \mathbf{640\text{ cm}^{-1}}$.' '\n' r'Given free ion $B_0 \approx 860\text{ cm}^{-1}$, the nephelauxetic parameter $\beta = \frac{640}{860} \approx 0.74$, demonstrating $\sim 26\%$ covalent character.',
+      modelAnswer: r'(a) **Selection Rules & Relaxation**:' '\n' r'• **Laporte Rule**: Transitions between states of the same parity ($g \leftrightarrow g$ or $u \leftrightarrow u$) are forbidden ($\Delta l = \pm 1$). Pure $d-d$ transitions in centrosymmetric $O_h$ complexes are Laporte forbidden ($\epsilon \sim 1-100\text{ M}^{-1}\text{cm}^{-1}$).' '\n' r'• **Spin Rule**: Transitions between states of different spin multiplicity are forbidden ($\Delta S = 0$).' '\n' r'• **Relaxation**: Vibronic coupling momentarily removes the inversion center via asymmetric vibrational modes (e.g. $T_{1u}$ or $T_{2u}$), mixing $p$ and $d$ orbitals to allow weak Laporte-forbidden transitions. Spin-orbit coupling mixes states of differing multiplicity, allowing weak spin-forbidden bands.' '\n\n' r'(b) **Tanabe-Sugano for $d^2$ Octahedral**:' '\n' r'Ground state is $^3T_{1g}(F)$. The three spin-allowed transitions ($\Delta S = 0$) are:' '\n' r'   1. $\nu_1: {^3T_{1g}(F)} \to {^3T_{2g}(F)}$' '\n' r'   2. $\nu_2: {^3T_{1g}(F)} \to {^3T_{1g}(P)}$' '\n' r'   3. $\nu_3: {^3T_{1g}(F)} \to {^3A_{2g}(F)}$' '\n' r'In the weak field limit, the energy difference between $^3T_{1g}(F)$ and $^3T_{2g}(F)$ is exactly equal to the crystal field splitting parameter: $E(\nu_1) = 10 Dq$.' '\n\n' r'(c) **Numerical Calculation for $[V(H_2O)_6]^{3+}$**:' '\n' r'1. $10 Dq = \nu_1 = \mathbf{17,800\text{ cm}^{-1}}$.' '\n' r'2. In $d^2$ TS secular equations: $B = \frac{2\nu_1^2 + \nu_2^2 - 3\nu_1\nu_2}{15\nu_2 - 27\nu_1} \approx \mathbf{640\text{ cm}^{-1}}$.' '\n' r'Given free ion $B_0 \approx 860\text{ cm}^{-1}$, the nephelauxetic parameter $\beta = \frac{640}{860} \approx 0.74$, demonstrating $\sim 26\%$ covalent character.',
       markingRubric: [
         '3.0 Marks: Laporte and Spin selection rules with vibronic and spin-orbit relaxation.',
         '3.5 Marks: Correct assignment of the three spin-allowed bands from d2 Tanabe-Sugano diagram.',
         '3.5 Marks: Accurate calculation of 10 Dq (17,800 cm⁻¹) and Racah parameter B (~640 cm⁻¹).',
       ],
+      mandatoryKeywords: ['Laporte', 'spin selection', 'vibronic coupling', 'Tanabe-Sugano', '10 Dq', 'Racah'],
+      commonPitfalls: ['Confusing Tanabe-Sugano diagrams (constant ground state horizontal axis) with Orgel diagrams'],
+      topic: 'Electronic Spectroscopy',
+      difficulty: 'Hard',
+      frequency: '🔥 Comprehensive 10-Mark Essay',
+      examTips: 'State the difference between Laporte forbidden (d-d, epsilon < 100) and charge transfer (CT, epsilon > 10,000).',
     ),
   ];
 
+  // =========================================================================
+  // 3. PHYSICAL CHEMISTRY (Postgraduate CBCS Standard)
+  // =========================================================================
   static const List<ExamQuestionItem> physicalPaper = [
     // Part A: 2 Marks
     ExamQuestionItem(
@@ -274,6 +551,12 @@ class ExamPaperService {
         '1 Mark: Stating that observables correspond to linear Hermitian operators.',
         '1 Mark: Explaining that Hermitian operators ensure real eigenvalues and orthogonal eigenfunctions.',
       ],
+      mandatoryKeywords: ['Hermitian', 'real eigenvalues', 'orthogonal', 'observable'],
+      commonPitfalls: ['Forgetting to mention orthogonality of eigenfunctions'],
+      topic: 'Quantum Mechanics',
+      difficulty: 'Moderate',
+      frequency: '🔥 Core Postulate',
+      examTips: 'Write down the integral condition for a Hermitian operator: <psi|A|phi> = <A psi|phi>.',
     ),
     ExamQuestionItem(
       section: 'Part A — Short Conceptual (2 Marks each)',
@@ -284,6 +567,12 @@ class ExamPaperService {
         '1 Mark: Correct harmonic oscillator equation En = (n + 1/2) hbar omega.',
         '1 Mark: Connecting zero-point energy to Heisenberg uncertainty principle.',
       ],
+      mandatoryKeywords: ['harmonic oscillator', 'zero-point energy', 'Heisenberg', 'uncertainty'],
+      commonPitfalls: ['Writing n hbar omega without the + 1/2 zero-point correction'],
+      topic: 'Quantum Mechanics',
+      difficulty: 'Easy-Moderate',
+      frequency: '🔥 High Frequency',
+      examTips: 'Distinguish between h and hbar in the formula.',
     ),
     ExamQuestionItem(
       section: 'Part A — Short Conceptual (2 Marks each)',
@@ -294,6 +583,12 @@ class ExamPaperService {
         '1 Mark: Description of the surrounding solvent cage enclosing radical pairs.',
         '1 Mark: Contrast between geminate recombination and diffusion into bulk solution.',
       ],
+      mandatoryKeywords: ['cage effect', 'solvent cage', 'geminate recombination', 'diffusion'],
+      commonPitfalls: ['Confusing cage recombination with secondary radical termination in bulk solvent'],
+      topic: 'Chemical Kinetics',
+      difficulty: 'Moderate',
+      frequency: '⚡ Concept Question',
+      examTips: 'Explain that the quantum yield of photochemical dissociation in solution is lower than in gas phase.',
     ),
 
     // Part B: 5 Marks
@@ -306,6 +601,12 @@ class ExamPaperService {
         '2.5 Marks: Derivation of normalized wavefunction and energy eigenvalues.',
         '2.5 Marks: Integral evaluation and final probability calculation (60.9%).',
       ],
+      mandatoryKeywords: ['particle in a box', 'Schrodinger', 'normalization', 'probability', '60.9%'],
+      commonPitfalls: ['Integrating from 0 to L instead of L/3 to 2L/3', 'Sign error in integrating -cos(2pi x/L)'],
+      topic: 'Quantum Mechanics',
+      difficulty: 'Moderate-Hard',
+      frequency: '🔥 Classic Numerical',
+      examTips: 'Classical probability is 1/3 (33.3%), whereas quantum probability is 60.9% due to central antinode.',
     ),
     ExamQuestionItem(
       section: 'Part B — Analytical & Mechanism (5 Marks each)',
@@ -317,87 +618,122 @@ class ExamPaperService {
         '2.0 Marks: Derivation of rate equation using Steady State Approximation.',
         '1.5 Marks: Demonstrating 1st order at high pressure and 2nd order at low pressure.',
       ],
+      mandatoryKeywords: ['Lindemann', 'steady-state', 'unimolecular', 'high pressure', 'low pressure'],
+      commonPitfalls: ['Neglecting collisional deactivation step (k-1)', 'Confusing order at high pressure vs low pressure'],
+      topic: 'Chemical Kinetics',
+      difficulty: 'Moderate',
+      frequency: '🔥 Core Kinetic Derivation',
+      examTips: 'Sketch the 1/k_obs vs 1/[M] Hinshelwood plot with slope k-1/(k1 k2) and intercept 1/k_inf.',
     ),
     ExamQuestionItem(
       section: 'Part B — Analytical & Mechanism (5 Marks each)',
       marks: 5,
-      question: r'State the **Debye-Hückel Limiting Law** for the mean activity coefficient $\gamma_\pm$ of strong electrolytes in dilute aqueous solutions. Explain the physical concept of the **ionic atmosphere** and the Debye screening length $\kappa^{-1}$.',
-      modelAnswer: r'• **The Equation**: $\log_{10}\gamma_\pm = -A |z_+ z_-|\sqrt{I}$' '\n' r'Where $A = 0.509\text{ mol}^{-1/2}\text{kg}^{1/2}$ for water at $298\text{ K}$, $z_+, z_-$ are ionic valencies, and $I$ is ionic strength: $I = \frac{1}{2}\sum_i c_i z_i^2$.' '\n\n' r'• **Ionic Atmosphere**: Due to Coulombic attractions, each central positive ion is, on time-average, surrounded by a spherical cloud containing excess negative counter-ions (and vice versa). Thermal kinetic motion tends to disperse this cloud, while electrostatic forces maintain it.' '\n\n' r'• **Debye Length ($\kappa^{-1}$)**: The effective radius or thickness of this ionic atmosphere. It scales inversely with the square root of ionic strength ($\kappa^{-1} \propto \frac{1}{\sqrt{I}}$). In concentrated solutions, the atmosphere shrinks, screening charges more tightly.',
+      question: r'State the **Debye-Hückel Limiting Law** for mean ionic activity coefficients in dilute electrolyte solutions. Calculate the ionic strength ($I$) and mean activity coefficient ($\gamma_\pm$) of a $0.005\text{ M}$ aqueous $\text{CaCl}_2$ solution at $25^\circ\text{C}$ ($A = 0.509\text{ kg}^{1/2}\text{mol}^{-1/2}$).',
+      modelAnswer: r'• **Debye-Hückel Limiting Law**:' '\n' r'$\log_{10}\gamma_\pm = -A |z_+ z_-| \sqrt{I}$' '\n' r'Where $A = 0.509$ for water at $298\text{ K}$, $z_+, z_-$ are ionic charges, and $I = \frac{1}{2}\sum c_i z_i^2$ is ionic strength.' '\n\n' r'• **Calculation for $0.005\text{ M}\ \text{CaCl}_2$**:' '\n' r'Dissociation: $\text{CaCl}_2 \to \text{Ca}^{2+} + 2\text{Cl}^-$.' '\n' r'$[\text{Ca}^{2+}] = 0.005\text{ M}$, $[\text{Cl}^-] = 2(0.005) = 0.010\text{ M}$.' '\n' r'$I = \frac{1}{2}\left[(0.005)(+2)^2 + (0.010)(-1)^2\right] = \frac{1}{2}[0.020 + 0.010] = \mathbf{0.015\text{ M}}$.' '\n\n' r'• **Mean Activity Coefficient**:' '\n' r'$\log_{10}\gamma_\pm = -0.509 \times |(+2)(-1)| \times \sqrt{0.015} = -0.509 \times 2 \times 0.1225 = -0.1247$.' '\n' r'$\gamma_\pm = 10^{-0.1247} = \mathbf{0.750}$.',
       markingRubric: [
-        '1.5 Marks: Mathematical formulation with all constants and parameters defined.',
-        '2.0 Marks: Physical description of the counter-ion cloud (ionic atmosphere).',
-        '1.5 Marks: Definition of Debye screening length and inverse square-root dependence on I.',
+        '1.5 Marks: Statement of Debye-Hückel Limiting Law with all symbols defined.',
+        '1.5 Marks: Accurate ionic strength calculation (I = 0.015 M).',
+        '2.0 Marks: Log gamma calculation and final mean activity coefficient (0.750).',
       ],
+      mandatoryKeywords: ['Debye-Huckel', 'ionic strength', 'activity coefficient', '0.015', '0.75'],
+      commonPitfalls: ['Forgetting to double chloride concentration [Cl-] = 2 * 0.005 M = 0.01 M', 'Omitting the factor of 2 from |z+ z-| = 2 * 1 = 2'],
+      topic: 'Electrochemistry',
+      difficulty: 'Moderate',
+      frequency: '🔥 Numerical Standard',
+      examTips: 'Remember that ionic strength for 1:2 electrolytes is always 3m.',
     ),
 
     // Part C: 10 Marks
     ExamQuestionItem(
       section: 'Part C — Comprehensive Essay / Synthesis (10 Marks)',
       marks: 10,
-      question: r'Discuss the fundamental role of the **canonical partition function ($Q$)** in connecting microscopic quantum states to macroscopic thermodynamics:' '\n' r'(a) Define the molecular partition function $q$ and express the canonical partition function $Q$ for a system of $N$ indistinguishable, independent molecules.' '\n' r'(b) Derive the expressions for internal energy ($U$) and Helmholtz free energy ($A$) in terms of $\ln Q$.' '\n' r'(c) Factorize the molecular partition function into its four classical components ($q = q_{\text{trans}} \cdot q_{\text{rot}} \cdot q_{\text{vib}} \cdot q_{\text{elec}}$) and give explicit analytical formulas for each.',
-      modelAnswer: r'(a) **Partition Functions**:' '\n' r'Molecular partition function: $q = \sum_i g_i e^{-\epsilon_i / k_B T}$.' '\n' r'For $N$ indistinguishable, non-interacting particles, the states are permuted by $N!$: $Q = \frac{q^N}{N!}$.' '\n\n' r'(b) **Thermodynamic Potentials**:' '\n' r'• Internal energy $U = \sum_i P_i E_i = \sum_i \frac{E_i e^{-\beta E_i}}{Q} = -\frac{\partial \ln Q}{\partial \beta} = \mathbf{k_B T^2 \left(\frac{\partial \ln Q}{\partial T}\right)_V}$.' '\n' r'• Helmholtz free energy $A = U - TS = -k_B T \ln Q$.' '\n' r'• Entropy $S = \frac{U - A}{T} = k_B \ln Q + k_B T \left(\frac{\partial \ln Q}{\partial T}\right)_V$.' '\n\n' r'(c) **Factorization of $q$**:' '\n' r'Assuming independent modes of motion ($\epsilon_{\text{total}} = \epsilon_t + \epsilon_r + \epsilon_v + \epsilon_e$):' '\n' r'1. $q_{\text{trans}} = \left(\frac{2\pi m k_B T}{h^2}\right)^{3/2} V = \frac{V}{\Lambda^3}$ (where $\Lambda$ is thermal de Broglie wavelength).' '\n' r'2. $q_{\text{rot}} = \frac{k_B T}{\sigma h c B}$ for linear molecules (where $\sigma$ is symmetry number and $B$ is rotational constant).' '\n' r'3. $q_{\text{vib}} = \prod_j \frac{1}{1 - e^{-h\nu_j / k_B T}}$ (product over normal modes relative to zero-point energy).' '\n' r'4. $q_{\text{elec}} = g_0 + g_1 e^{-\Delta\epsilon_1 / k_B T} \approx g_0$ (electronic ground state degeneracy).',
+      question: r'Discuss the principles and applications of **Hückel Molecular Orbital (HMO) Theory**:' '\n' r'(a) Formulate the three fundamental approximations regarding overlap integrals ($S_{ij}$), Coulomb integrals ($\alpha$), and resonance integrals ($\beta$).' '\n' r'(b) Construct and solve the Hückel secular determinant for **1,3-butadiene**. Calculate the four molecular orbital energy levels in terms of $\alpha$ and $\beta$.' '\n' r'(c) Calculate the **delocalization energy** (resonance energy) of 1,3-butadiene compared to two isolated ethylene molecules.',
+      modelAnswer: r'(a) **Fundamental HMO Approximations**:' '\n' r'1. Overlap Integral: $S_{ij} = \delta_{ij}$ (1 if $i=j$, 0 if $i \neq j$; zero differential overlap).' '\n' r'2. Coulomb Integral: $H_{ii} = \alpha$ (energy of an electron in an isolated carbon $2p_z$ orbital; same for all identical carbons).' '\n' r'3. Resonance Integral: $H_{ij} = \beta$ if carbons $i$ and $j$ are directly bonded, and $0$ if non-adjacent.' '\n\n' r'(b) **Secular Determinant for Butadiene ($C_1-C_2-C_3-C_4$)**:' '\n' r'Let $x = \frac{\alpha - E}{\beta}$:' '\n' r'$\begin{vmatrix} x & 1 & 0 & 0 \\ 1 & x & 1 & 0 \\ 0 & 1 & x & 1 \\ 0 & 0 & 1 & x \end{vmatrix} = 0 \implies x^4 - 3x^2 + 1 = 0$' '\n' r'Roots of quadratic in $x^2$: $x^2 = \frac{3 \pm \sqrt{9 - 4}}{2} = \frac{3 \pm \sqrt{5}}{2} \approx 2.618\text{ and }0.382$.' '\n' r'Four roots: $x = \pm 1.618, \pm 0.618$.' '\n' r'Orbital Energies ($E = \alpha - x\beta$, note $\beta < 0$):' '\n' r'   • $\psi_1: E_1 = \alpha + 1.618\beta$ (bonding)' '\n' r'   • $\psi_2: E_2 = \alpha + 0.618\beta$ (bonding, HOMO)' '\n' r'   • $\psi_3: E_3 = \alpha - 0.618\beta$ (antibonding, LUMO)' '\n' r'   • $\psi_4: E_4 = \alpha - 1.618\beta$ (antibonding)' '\n\n' r'(c) **Total $\pi$-Electron Energy and Delocalization Energy**:' '\n' r'Ground state configuration has $4 \pi$ electrons occupying $\psi_1$ and $\psi_2$:' '\n' r'$E_\pi(\text{butadiene}) = 2(\alpha + 1.618\beta) + 2(\alpha + 0.618\beta) = 4\alpha + 4.472\beta$.' '\n' r'For two isolated ethylene molecules: $E_\pi(\text{isolated}) = 2 \times (2\alpha + 2\beta) = 4\alpha + 4.000\beta$.' '\n' r'$\mathbf{E_{\text{deloc}}} = (4\alpha + 4.472\beta) - (4\alpha + 4.000\beta) = \mathbf{0.472\beta} \approx 0.472(-75\text{ kJ/mol}) \approx \mathbf{-35.4\text{ kJ/mol}}$.',
       markingRubric: [
-        '3.0 Marks: Definition of q and derivation of Q = q^N / N! for indistinguishable molecules.',
-        '3.5 Marks: Mathematical derivation of U and A from Boltzmann statistical ensemble.',
-        '3.5 Marks: Factorization and explicit equations for translational, rotational, vibrational, and electronic terms.',
+        '2.5 Marks: Detailed explanation of Hückel alpha, beta, and S_ij approximations.',
+        '4.5 Marks: Complete secular determinant derivation and calculation of all 4 roots and orbital energies.',
+        '3.0 Marks: Calculation of total pi-electron energy and delocalization energy (0.472 beta).',
       ],
+      mandatoryKeywords: ['Huckel', 'secular determinant', 'butadiene', 'Coulomb integral', 'resonance integral', 'delocalization energy'],
+      commonPitfalls: ['Remembering beta is intrinsically negative so alpha + 1.618 beta is lowest in energy', 'Omitting the factor of 2 when comparing against two ethylenes'],
+      topic: 'Quantum Chemistry & HMO',
+      difficulty: 'Hard',
+      frequency: '🔥 Comprehensive 10-Mark Essay',
+      examTips: 'Draw the 4 MO energy levels showing electron pairing in psi1 and psi2.',
     ),
   ];
 
+  // =========================================================================
+  // 4. ANALYTICAL CHEMISTRY (Postgraduate CBCS Standard)
+  // =========================================================================
   static const List<ExamQuestionItem> analyticalPaper = [
     // Part A: 2 Marks
     ExamQuestionItem(
       section: 'Part A — Short Conceptual (2 Marks each)',
       marks: 2,
-      question: r'State the **Van Deemter equation** for chromatographic column efficiency and identify the physical significance of the coefficients $A$, $B$, and $C$.',
-      modelAnswer: r'The Van Deemter equation relates plate height (HETP, $H$) to linear mobile phase velocity ($u$):' '\n' r'$H = A + \frac{B}{u} + C u$' '\n' r'• **$A$ (Eddy Diffusion)**: Multiple flow paths caused by non-uniform stationary phase particle packing.' '\n' r'• **$B/u$ (Longitudinal Diffusion)**: Molecular diffusion of analyte along the axial direction away from peak center.' '\n' r'• **$C u$ (Resistance to Mass Transfer)**: Finite rate of analyte mass transfer between mobile and stationary phases.',
+      question: r'Differentiate between **Limit of Detection (LOD)** and **Limit of Quantitation (LOQ)** in instrumental chemical analysis in terms of signal-to-noise ratio ($S/N$) and standard deviation ($\sigma$).',
+      modelAnswer: r'• **Limit of Detection (LOD)**: The lowest analyte concentration reliably distinguished from background noise ($S/N = 3:1$ or $\text{LOD} = \frac{3.3 \sigma}{S}$, where $\sigma$ is standard deviation of blank and $S$ is calibration slope).' '\n' r'• **Limit of Quantitation (LOQ)**: The lowest concentration quantifiable with acceptable precision and accuracy ($S/N = 10:1$ or $\text{LOQ} = \frac{10 \sigma}{S} \approx 3.3 \times \text{LOD}$).',
       markingRubric: [
-        '1 Mark: Correct equation H = A + B/u + C*u.',
-        '1 Mark: Accurate identification of Eddy diffusion (A), longitudinal diffusion (B), and mass transfer resistance (C).',
+        '1 Mark: LOD definition (S/N = 3, 3.3 sigma/S).',
+        '1 Mark: LOQ definition (S/N = 10, 10 sigma/S).',
       ],
+      mandatoryKeywords: ['LOD', 'LOQ', 'signal-to-noise', 'blank'],
+      commonPitfalls: ['Stating LOD is where concentration can be measured accurately (that is LOQ)'],
+      topic: 'Validation Parameters',
+      difficulty: 'Easy-Moderate',
+      frequency: '🔥 Standard Definition',
+      examTips: 'Always cite ICH guidelines for the 3.3 and 10 multiplier formulas.',
     ),
     ExamQuestionItem(
       section: 'Part A — Short Conceptual (2 Marks each)',
       marks: 2,
-      question: r'Explain the statistical rationale and decision rule for applying **Dixon’s Q-Test** to reject suspected outlier data points.',
-      modelAnswer: r'1. Arrange replicate measurements in ascending numerical order: $x_1 \le x_2 \le \dots \le x_n$.' '\n' r'2. Compute the experimental quotient: $Q_{\text{calc}} = \frac{|\text{suspected value} - \text{nearest neighbor}|}{\text{range}} = \frac{|x_{\text{outlier}} - x_{\text{adjacent}}|}{x_{\text{max}} - x_{\text{min}}}$.' '\n' r'3. Compare $Q_{\text{calc}}$ to the critical value $Q_{\text{crit}}$ from Dixon’s table for sample size $n$ at the $95\%$ confidence level:' '\n' r'   - If $Q_{\text{calc}} > Q_{\text{crit}}$, the outlier is rejected with $95\%$ statistical confidence.' '\n' r'   - If $Q_{\text{calc}} \le Q_{\text{crit}}$, the point must be retained.',
+      question: r'State the **van Deemter equation** for chromatographic column efficiency and identify the three kinetic dispersion factors ($A$, $B$, and $C$).',
+      modelAnswer: r'The van Deemter equation relates plate height ($H$) to mobile phase linear velocity ($u$):' '\n' r'$H = A + \frac{B}{u} + C \cdot u$' '\n' r'• $A$ = **Eddy Diffusion**: Multiple path dispersion through packing particles.' '\n' r'• $B$ = **Longitudinal Diffusion**: Molecular diffusion of analyte along flow axis.' '\n' r'• $C$ = **Resistance to Mass Transfer**: Slow equilibration between stationary and mobile phases.',
       markingRubric: [
-        '1 Mark: Formula Q = gap / range.',
-        '1 Mark: Decision criterion Q_calc > Q_crit at specified confidence level.',
+        '1 Mark: van Deemter equation H = A + B/u + Cu.',
+        '1 Mark: Physical definition of Eddy diffusion (A), longitudinal diffusion (B), and mass transfer resistance (C).',
       ],
+      mandatoryKeywords: ['van Deemter', 'eddy diffusion', 'longitudinal diffusion', 'mass transfer'],
+      commonPitfalls: ['Writing u in the numerator of B or denominator of C'],
+      topic: 'Chromatography',
+      difficulty: 'Moderate',
+      frequency: '🔥 Core Chromatography',
+      examTips: 'Minimum H (maximum column efficiency) occurs at optimal velocity u_opt = sqrt(B/C).',
     ),
     ExamQuestionItem(
       section: 'Part A — Short Conceptual (2 Marks each)',
       marks: 2,
-      question: r'Differentiate between **chemical deviations** and **instrumental deviations** from the Beer-Lambert Law ($A = \epsilon b c$).',
-      modelAnswer: r'• **Chemical Deviations**: Occur when the absorbing analyte undergoes dissociation, association, protonation/deprotonation, or solvolysis at higher concentrations (e.g. dimerization of methylene blue or $\text{Cr}_2\text{O}_7^{2-} \rightleftharpoons 2\text{CrO}_4^{2-}$ equilibrium with shifting pH).' '\n' r'• **Instrumental Deviations**: Occur due to hardware imperfections such as polychromatic radiation (stray light leaking to the detector) or mismatched optical path lengths.',
+      question: r'Define the **matrix effect** in quantitative analytical spectrometry and state how the **Standard Addition Method** overcomes it.',
+      modelAnswer: r'The matrix effect refers to signal suppression or enhancement caused by all components in a sample other than the target analyte (salts, proteins, solvents). The **Standard Addition Method** overcomes this by adding known increments of pure analyte standard directly to equal aliquots of the real sample matrix, ensuring analyte and standard experience identical chemical environments.',
       markingRubric: [
-        '1 Mark: Explaining chemical causes (equilibrium shifts, association, pH change).',
-        '1 Mark: Explaining instrumental causes (stray light, polychromatic radiation).',
+        '1 Mark: Definition of matrix effect (interference from sample components).',
+        '1 Mark: Mechanism of standard addition maintaining identical sample matrix.',
       ],
+      mandatoryKeywords: ['matrix effect', 'standard addition', 'suppression', 'interference'],
+      commonPitfalls: ['Confusing standard addition with internal standard method'],
+      topic: 'Analytical Calibration',
+      difficulty: 'Moderate',
+      frequency: '⚡ High Practical Value',
+      examTips: 'In standard addition plot, x-intercept magnitude gives original sample concentration.',
     ),
 
     // Part B: 5 Marks
     ExamQuestionItem(
       section: 'Part B — Analytical & Mechanism (5 Marks each)',
       marks: 5,
-      question: r'In HPLC chromatography:' '\n' r'(a) Define retention factor ($k^\prime$), selectivity factor ($\alpha$), and chromatographic resolution ($R_s$).' '\n' r'(b) Using the Purnell equation $R_s = \frac{\sqrt{N}}{4}\left(\frac{\alpha - 1}{\alpha}\right)\left(\frac{k_2^\prime}{1 + k_2^\prime}\right)$, explain why increasing column efficiency ($N$) is less practical for improving resolution than altering mobile phase selectivity ($\alpha$).',
-      modelAnswer: r'(a) **Definitions**:' '\n' r'• Retention Factor $k^\prime = \frac{t_r - t_0}{t_0}$ (relative retention compared to void volume).' '\n' r'• Selectivity Factor $\alpha = \frac{k_2^\prime}{k_1^\prime} > 1$ (ratio of retention factors of adjacent peaks).' '\n' r'• Resolution $R_s = \frac{2(t_{r2} - t_{r1})}{w_1 + w_2}$ (baseline separation achieved when $R_s \ge 1.5$).' '\n\n' r'(b) **Purnell Analysis**:' '\n' r'Resolution scales with the square root of theoretical plate count: $R_s \propto \sqrt{N}$. To double the resolution ($2 \times R_s$), one requires a **four-fold increase in $N$** ($4 \times N$). This translates to quadrupling column length or reducing particle size, resulting in a 4-fold increase in retention time and severe column backpressure ($\Delta P \propto N$).' '\n' r'In contrast, altering mobile phase solvent composition, pH, or temperature changes the chemical selectivity $\alpha$, which directly scales the $(\frac{\alpha - 1}{\alpha})$ term without increasing pressure or run time.',
+      question: r'Discuss the instrumentation and chemical interference mechanisms in **Atomic Absorption Spectroscopy (AAS)**. Explain how chemical interferences like refractory oxide formation are suppressed.',
+      modelAnswer: r'• **Instrumentation**:' '\n' r'   1. **Hollow Cathode Lamp (HCL)**: Emits narrow elemental resonance emission lines of the target analyte.' '\n' r'   2. **Atomizer (Flame/Graphite Furnace)**: Desolvates, vaporizes, and atomizes analyte into ground-state atoms.' '\n' r'   3. **Monochromator**: Isolates target analytical wavelength from other lamp and flame emission lines.' '\n' r'   4. **Photomultiplier Tube (PMT)**: Measures attenuated intensity.' '\n\n' r'• **Chemical Interferences**:' '\n' r'   - Refractory compounds: In calcium determination, phosphate ($\text{PO}_4^{3-}$) forms stable, non-volatile $\text{Ca}_3(\text{PO}_4)_2$, preventing atomization.' '\n' r'• **Suppression Methods**:' '\n' r'   1. **Releasing Agents**: Adding lanthanum ($\text{La}^{3+}$) or strontium preferentially binds phosphate, releasing free $\text{Ca}^{2+}$.' '\n' r'   2. **Protective Chelating Agents**: Adding EDTA forms volatile chelates that decompose cleanly in the flame.' '\n' r'   3. **Higher Temperature**: Using nitrous oxide-acetylene flame ($2900^\circ\text{C}$) decomposes refractory oxides.',
       markingRubric: [
-        '2.0 Marks: Clear definitions and formulas for k-prime, alpha, and Rs.',
-        '3.0 Marks: Mathematical analysis of Purnell equation showing square-root dependence on N versus direct selectivity optimization.',
+        '2.0 Marks: Core instrumentation components and operating principle of Hollow Cathode Lamp.',
+        '1.5 Marks: Chemical interference mechanism (e.g. Ca3(PO4)2 refractory formation).',
+        '1.5 Marks: Suppression methods using releasing agents (La3+) and nitrous oxide flame.',
       ],
-    ),
-    ExamQuestionItem(
-      section: 'Part B — Analytical & Mechanism (5 Marks each)',
-      marks: 5,
-      question: r'Compare **Flame Atomic Absorption Spectroscopy (FAAS)** with **Graphite Furnace AAS (GFAAS)** in terms of atomization mechanics, detection limits, and the function of chemical matrix modifiers.',
-      modelAnswer: r'• **Atomization Mechanics & Sample Size**:' '\n' r'   - **FAAS**: Continuous pneumatic nebulization into a premixed laminar flame ($\text{C}_2\text{H}_2/\text{air}$ or $\text{C}_2\text{H}_2/\text{N}_2\text{O}$). Sample consumption is $1-5\text{ mL/min}$ and atom residence time in the light beam is extremely short ($\sim 10^{-4}\text{ s}$).' '\n' r'   - **GFAAS**: Discrete micro-volume ($10-50\ \mu\text{L}$) injected into an electrothermally heated graphite tube under inert argon flow. Programmed thermal cycle: Drying ($100-120^\circ\text{C}$) $\to$ Pyrolysis/Ashing ($400-1000^\circ\text{C}$) $\to$ Atomization ($2000-2800^\circ\text{C}$) $\to$ Cleanout. Atom residence time is $\sim 1\text{ s}$ (10,000x longer than flame).' '\n\n' r'• **Detection Limits**: FAAS detects in parts-per-million (ppm; $\mu\text{g/mL}$); GFAAS achieves parts-per-billion (ppb; $\mu\text{g/L}$) to parts-per-trillion (ppt).' '\n\n' r'• **Matrix Modifiers**: Reagents like $\text{Pd}(\text{NO}_3)_2 + \text{Mg}(\text{NO}_3)_2$ added to the sample. They convert volatile analytes (e.g. $\text{As}, \text{Se}, \text{Cd}, \text{Pb}$) into refractory intermetallic complexes, permitting higher pyrolysis temperatures ($>1000^\circ\text{C}$) to vaporize interfering matrix salts without premature analyte volatilization.',
-      markingRubric: [
-        '1.5 Marks: Comparison of atomization mechanisms and optical residence times.',
-        '1.5 Marks: Sample volume and sensitivity/LOD comparison (ppm vs ppb/ppt).',
-        '2.0 Marks: GFAAS thermal temperature stages and exact chemical role of matrix modifiers.',
-      ],
+      mandatoryKeywords: ['Hollow Cathode Lamp', 'atomizer', 'releasing agent', 'lanthanum', 'phosphate'],
+      commonPitfalls: ['Confusing chemical interference (non-atomized compounds) with spectral interference (overlapping lines)'],
+      topic: 'Spectroscopy',
+      difficulty: 'Moderate',
+      frequency: '🔥 Standard Topic',
+      examTips: 'Lanthanum is the universal releasing agent for alkaline earth analysis in presence of phosphate/sulfate.',
     ),
     ExamQuestionItem(
       section: 'Part B — Analytical & Mechanism (5 Marks each)',
@@ -408,6 +744,29 @@ class ExamPaperService {
         '2.0 Marks: Randles-Sevcik equation with all physical variables identified.',
         '3.0 Marks: Stating all 4 electrochemical reversibility diagnostic criteria.',
       ],
+      mandatoryKeywords: ['Randles-Sevcik', 'cyclic voltammetry', 'reversibility', 'scan rate', '59.2 mV'],
+      commonPitfalls: ['Writing Delta E_p = 59.2 mV without dividing by n', 'Confusing reversible couple with quasi-reversible where Delta Ep increases with scan rate'],
+      topic: 'Electroanalytical Methods',
+      difficulty: 'Moderate-Hard',
+      frequency: '🔥 High Probability',
+      examTips: 'Draw the duck-shaped CV curve marking E_pa, E_pc, i_pa, and i_pc.',
+    ),
+    ExamQuestionItem(
+      section: 'Part B — Analytical & Mechanism (5 Marks each)',
+      marks: 5,
+      question: r'Explain the principle, stationary phase packing chemistry, and mobile phase optimization in **Reversed-Phase High-Performance Liquid Chromatography (RP-HPLC)**.',
+      modelAnswer: r'• **Principle**: RP-HPLC utilizes a non-polar stationary phase and a polar aqueous mobile phase. Solutes partition based on hydrophobicity; polar solutes elute first, and non-polar solutes are retained longer.' '\n' r'• **Stationary Phase Chemistry**: Derivatized silica gel coated with octadecylsilane ($\text{C}_{18}$ or ODS, $-\text{Si}-(\text{CH}_2)_{17}\text{CH}_3$) via siloxane bonds. Residual acidic silanol groups ($-\text{Si}-\text{OH}$) are deactivated by **end-capping** with trimethylchlorosilane ($\text{TMS}$) to prevent peak tailing of basic analytes.' '\n' r'• **Mobile Phase Optimization**:' '\n' r'   1. Solvent mixtures: Water (polar) combined with organic modifiers (acetonitrile, methanol, or THF).' '\n' r'   2. Gradient Elution: Increasing the organic modifier percentage over time increases solvent elution strength, eluting strongly retained hydrophobic compounds faster with sharp peak shapes.',
+      markingRubric: [
+        '1.5 Marks: Explanation of non-polar stationary / polar mobile phase retention mechanism.',
+        '2.0 Marks: C18 packing chemistry, silanol tailing, and end-capping deactivation.',
+        '1.5 Marks: Isocratic vs Gradient mobile phase elution optimization.',
+      ],
+      mandatoryKeywords: ['C18', 'ODS', 'end-capping', 'hydrophobicity', 'gradient elution'],
+      commonPitfalls: ['Confusing Reversed-Phase (non-polar stationary) with Normal Phase (polar stationary)'],
+      topic: 'Chromatography',
+      difficulty: 'Moderate',
+      frequency: '🔥 Industrial Core Topic',
+      examTips: 'Remember that acetonitrile provides lower column backpressure than methanol due to lower viscosity.',
     ),
 
     // Part C: 10 Marks
@@ -415,13 +774,50 @@ class ExamPaperService {
       section: 'Part C — Comprehensive Essay / Synthesis (10 Marks)',
       marks: 10,
       question: r'Discuss the principles of modern Mass Spectrometry (MS) and 2D NMR in structural identification:' '\n' r'(a) Compare **Electron Ionization (EI)** and **Electrospray Ionization (ESI)** in terms of ionization mechanism, internal energy transfer, and application scope.' '\n' r'(b) Detail the mechanism and electron-pushing scheme of the **McLafferty rearrangement** in carbonyl compounds containing $\gamma$-hydrogens.' '\n' r'(c) Deduce the characteristic isotope peak patterns for mono- and di-chlorinated ($^{35}\text{Cl} : {^{37}\text{Cl}} \approx 3:1$) and brominated ($^{79}\text{Br} : {^{81}\text{Br}} \approx 1:1$) organic molecules.',
-      modelAnswer: r'(a) **EI vs ESI Ionization**:' '\n' r'• **EI (Hard Ionization)**: High-energy beam ($70\text{ eV}$) strikes vaporized analyte molecules, ejecting an electron to produce odd-electron radical cations ($M^{+\bullet}$). Imparts high internal excess energy, causing extensive reproducible fragmentation. Ideal for small, volatile, non-polar molecules ($<1000\text{ Da}$) and NIST spectral library matching.' '\n' r'• **ESI (Soft Ionization)**: Atmospheric pressure technique where analyte solution passes through a high-voltage capillary ($3-5\text{ kV}$) generating charged droplets that undergo desolvation (Coulomb explosion). Yields intact quasimolecular ions ($[M+H]^+$, $[M+\text{Na}]^+$) with minimal fragmentation, enabling multi-charging ($[M+zH]^{z+}$) to analyze large biomolecules, proteins, and supramolecular complexes ($>100\text{ kDa}$).' '\n\n' r'(b) **McLafferty Rearrangement**:' '\n' r'Occurs in odd-electron molecular ions of aldehydes, ketones, esters, or carboxylic acids having at least one hydrogen on the $\gamma$-carbon.' '\n' r'1. Ionization removes an electron from the carbonyl oxygen non-bonding pair to yield an oxy-radical cation.' '\n' r'2. The system forms a sterically favorable six-membered cyclic transition state.' '\n' r'3. The carbonyl radical abstracts the $\gamma$-hydrogen, triggering homolytic $\beta$-cleavage of the $\text{C}_\alpha-\text{C}_beta$ bond.' '\n' r'4. Expels a neutral alkene molecule (e.g. ethylene) and leaves a resonance-stabilized enol radical cation ($m/z = 58$ for methyl ketones).' '\n\n' r'(c) **Isotope Abundance Patterns**:' '\n' r'• **Chlorine ($^{35}\text{Cl} : {^{37}\text{Cl}} \approx 3:1$)**:' '\n' r'   - Mono-chloro ($R-\text{Cl}$): $M : (M+2) \approx 3:1$ (100% : 33%).' '\n' r'   - Di-chloro ($R-\text{Cl}_2$): $(3+1)^2 = 9 : 6 : 1$ for $M : (M+2) : (M+4)$ (100% : 66.7% : 11.1%).' '\n' r'• **Bromine ($^{79}\text{Br} : {^{81}\text{Br}} \approx 1:1$)**:' '\n' r'   - Mono-bromo ($R-\text{Br}$): $M : (M+2) \approx 1:1$ twin peaks of equal intensity.' '\n' r'   - Di-bromo ($R-\text{Br}_2$): $(1+1)^2 = 1 : 2 : 1$ for $M : (M+2) : (M+4)$ (50% : 100% : 50%).',
+      modelAnswer: r'(a) **EI vs ESI Ionization**:' '\n' r'• **EI (Hard Ionization)**: High-energy beam ($70\text{ eV}$) strikes vaporized analyte molecules, ejecting an electron to produce odd-electron radical cations ($M^{+\bullet}$). Imparts high internal excess energy, causing extensive reproducible fragmentation. Ideal for small, volatile, non-polar molecules ($<1000\text{ Da}$) and NIST spectral library matching.' '\n' r'• **ESI (Soft Ionization)**: Atmospheric pressure technique where analyte solution passes through a high-voltage capillary ($3-5\text{ kV}$) generating charged droplets that undergo desolvation (Coulomb explosion). Yields intact quasimolecular ions ($[M+H]^+$, $[M+\text{Na}]^+$) with minimal fragmentation, enabling multi-charging ($[M+zH]^{z+}$) to analyze large biomolecules, proteins, and supramolecular complexes ($>100\text{ kDa}$).' '\n\n' r'(b) **McLafferty Rearrangement**:' '\n' r'Occurs in odd-electron molecular ions of aldehydes, ketones, esters, or carboxylic acids having at least one hydrogen on the $\gamma$-carbon.' '\n' r'1. Ionization removes an electron from the carbonyl oxygen non-bonding pair to yield an oxy-radical cation.' '\n' r'2. The system forms a sterically favorable six-membered cyclic transition state.' '\n' r'3. The carbonyl radical abstracts the $\gamma$-hydrogen, triggering homolytic $\beta$-cleavage of the $\text{C}_\alpha-\text{C}_\beta$ bond.' '\n' r'4. Expels a neutral alkene molecule (e.g. ethylene) and leaves a resonance-stabilized enol radical cation ($m/z = 58$ for methyl ketones).' '\n\n' r'(c) **Isotope Abundance Patterns**:' '\n' r'• **Chlorine ($^{35}\text{Cl} : {^{37}\text{Cl}} \approx 3:1$)**:' '\n' r'   - Mono-chloro ($R-\text{Cl}$): $M : (M+2) \approx 3:1$ (100% : 33%).' '\n' r'   - Di-chloro ($R-\text{Cl}_2$): $(3+1)^2 = 9 : 6 : 1$ for $M : (M+2) : (M+4)$ (100% : 66.7% : 11.1%).' '\n' r'• **Bromine ($^{79}\text{Br} : {^{81}\text{Br}} \approx 1:1$)**:' '\n' r'   - Mono-bromo ($R-\text{Br}$): $M : (M+2) \approx 1:1$ twin peaks of equal intensity.' '\n' r'   - Di-bromo ($R-\text{Br}_2$): $(1+1)^2 = 1 : 2 : 1$ for $M : (M+2) : (M+4)$ (50% : 100% : 50%).',
       markingRubric: [
         '3.0 Marks: EI vs ESI mechanism, energy differences, and molecular weight suitability.',
         '3.5 Marks: McLafferty rearrangement 6-membered TS, gamma-H transfer, and beta-cleavage.',
         '3.5 Marks: Binomial calculation of Cl (3:1, 9:6:1) and Br (1:1, 1:2:1) isotopic clusters.',
       ],
+      mandatoryKeywords: ['Electron Ionization', 'Electrospray', 'McLafferty', 'six-membered', 'isotope ratio'],
+      commonPitfalls: ['Describing McLafferty as an even-electron fragment (it is an odd-electron radical cation rearrangement)', 'Forgetting the 9:6:1 ratio for dichlorinated species'],
+      topic: 'Mass Spectrometry',
+      difficulty: 'Hard',
+      frequency: '🔥 Comprehensive 10-Mark Essay',
+      examTips: 'Draw the 6-membered ring transition state with single-headed arrows for radical movement.',
     ),
+  ];
+
+  /// Comprehensive 70-Mark University Blueprint for All Branches
+  /// Part A: 10 Questions x 2 Marks = 20 Marks (Compulsory)
+  /// Part B: 6 Questions x 5 Marks = 30 Marks
+  /// Part C: 2 Questions x 10 Marks = 20 Marks
+  /// Total: 70 Marks
+  static List<ExamQuestionItem> get comprehensive70MarkPaper => [
+    // PART A: 10 x 2M = 20 Marks
+    organicPaper[0],
+    organicPaper[1],
+    organicPaper[2],
+    inorganicPaper[0],
+    inorganicPaper[1],
+    inorganicPaper[2],
+    physicalPaper[0],
+    physicalPaper[1],
+    physicalPaper[2],
+    analyticalPaper[0],
+
+    // PART B: 6 x 5M = 30 Marks
+    organicPaper[3],
+    organicPaper[5],
+    inorganicPaper[3],
+    inorganicPaper[4],
+    physicalPaper[3],
+    analyticalPaper[5],
+
+    // PART C: 2 x 10M = 20 Marks
+    organicPaper[6],
+    physicalPaper[6],
   ];
 
   static List<ExamQuestionItem> getPaperForBranch(ChemistryBranch branch) {
@@ -435,25 +831,7 @@ class ExamPaperService {
       case ChemistryBranch.analytical:
         return analyticalPaper;
       case ChemistryBranch.all:
-        return [
-          // Part A (4 questions, 8 marks - 1 from each branch)
-          organicPaper[0],
-          inorganicPaper[0],
-          physicalPaper[0],
-          analyticalPaper[0],
-          // Part B (8 questions, 40 marks - 2 from each branch)
-          organicPaper[3],
-          organicPaper[4],
-          inorganicPaper[3],
-          inorganicPaper[4],
-          physicalPaper[3],
-          physicalPaper[4],
-          analyticalPaper[3],
-          analyticalPaper[4],
-          // Part C (2 questions, 20 marks - alternating comprehensive essays)
-          organicPaper[6],
-          inorganicPaper[6],
-        ];
+        return comprehensive70MarkPaper;
     }
   }
 

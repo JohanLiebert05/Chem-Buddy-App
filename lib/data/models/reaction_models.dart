@@ -82,6 +82,7 @@ class ReactionStep {
   final String? curvedArrowNotes;
   final String? intermediate;
   final String? svgAsset;
+  final String? svgContent;
   final List<ElectronFlow> electronFlow;
 
   const ReactionStep({
@@ -91,6 +92,7 @@ class ReactionStep {
     this.curvedArrowNotes,
     this.intermediate,
     this.svgAsset,
+    this.svgContent,
     this.electronFlow = const [],
   });
 
@@ -102,6 +104,7 @@ class ReactionStep {
       curvedArrowNotes: json['curved_arrow_notes'] as String?,
       intermediate: json['intermediate'] as String?,
       svgAsset: json['svg'] as String? ?? json['svg_asset'] as String?,
+      svgContent: json['svg_content'] as String?,
       electronFlow: (json['electron_flow'] as List? ?? const [])
           .map((e) => ElectronFlow.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(),
@@ -115,6 +118,7 @@ class ReactionStep {
     if (curvedArrowNotes != null) 'curved_arrow_notes': curvedArrowNotes,
     if (intermediate != null) 'intermediate': intermediate,
     if (svgAsset != null) 'svg_asset': svgAsset,
+    if (svgContent != null) 'svg_content': svgContent,
     if (electronFlow.isNotEmpty) 'electron_flow': electronFlow.map((e) => e.toJson()).toList(),
   };
 }
@@ -137,6 +141,9 @@ class ReactionMechanism {
   final bool isVerified;
   final String? representativeExample;
   final String verificationStatus;
+  final String? regioselectivity;
+  final String? stereochemistry;
+  final String? drivingForce;
 
   const ReactionMechanism({
     required this.id,
@@ -156,9 +163,12 @@ class ReactionMechanism {
     this.isVerified = false,
     this.representativeExample,
     this.verificationStatus = 'needs_review',
+    this.regioselectivity,
+    this.stereochemistry,
+    this.drivingForce,
   });
 
-  bool get hasChemDrawSteps => steps.any((s) => s.svgAsset != null && s.svgAsset!.isNotEmpty);
+  bool get hasChemDrawSteps => steps.any((s) => (s.svgAsset != null && s.svgAsset!.isNotEmpty) || (s.svgContent != null && s.svgContent!.isNotEmpty));
 
   factory ReactionMechanism.fromJson(Map<String, dynamic> json) {
     return ReactionMechanism(
@@ -184,6 +194,9 @@ class ReactionMechanism {
       isVerified: json['is_verified'] as bool? ?? false,
       representativeExample: json['representative_example'] as String?,
       verificationStatus: json['verification_status'] as String? ?? 'needs_review',
+      regioselectivity: json['regioselectivity'] as String?,
+      stereochemistry: json['stereochemistry'] as String?,
+      drivingForce: json['driving_force'] as String?,
     );
   }
 
@@ -205,6 +218,9 @@ class ReactionMechanism {
     'is_verified': isVerified,
     if (representativeExample != null) 'representative_example': representativeExample,
     'verification_status': verificationStatus,
+    if (regioselectivity != null) 'regioselectivity': regioselectivity,
+    if (stereochemistry != null) 'stereochemistry': stereochemistry,
+    if (drivingForce != null) 'driving_force': drivingForce,
   };
 }
 

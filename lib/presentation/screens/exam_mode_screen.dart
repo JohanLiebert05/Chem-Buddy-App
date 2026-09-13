@@ -37,6 +37,15 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
   int _secondsRemaining = 10800; // 3 hours (70 marks)
   Timer? _examTimer;
 
+  // Student Self-Assessment Mode State
+  final Map<int, TextEditingController> _studentAnswerControllers = {};
+  final Map<int, bool> _selfAssessmentOpen = {};
+  final Map<int, ExamEvaluationResult> _evaluationResults = {};
+
+  TextEditingController _getAnswerController(int index) {
+    return _studentAnswerControllers.putIfAbsent(index, () => TextEditingController());
+  }
+
   // Tab 2: Exam Answer Generator State
   final TextEditingController _questionController = TextEditingController();
   int _selectedMarkType = 5; // 2, 5, or 10
@@ -56,6 +65,9 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
     _tabController.dispose();
     _questionController.dispose();
     _examTimer?.cancel();
+    for (final controller in _studentAnswerControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -215,9 +227,15 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
   // ==========================================
   Widget _buildBlueprintTab() {
     final questions = ExamPaperService.getPaperForBranch(_selectedBranch);
+    final maxPaperScore = questions.fold<int>(0, (sum, q) => sum + q.marks);
     final filtered = _selectedSection == 'All'
         ? questions
-        : questions.where((q) => q.section == _selectedSection).toList();
+        : questions.where((q) {
+            if (_selectedSection == 'Part A' || _selectedSection == 'Section A') return q.marks == 2;
+            if (_selectedSection == 'Part B' || _selectedSection == 'Section B') return q.marks == 5;
+            if (_selectedSection == 'Part C' || _selectedSection == 'Section C') return q.marks == 10;
+            return true;
+          }).toList();
 
     int totalScore = 0;
     for (final marks in _awardedMarks.values) {
@@ -270,8 +288,14 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
               // Section Filter Chips
               Wrap(
                 spacing: 6,
-                children: ['All', 'Section A (2M)', 'Section B (5M)', 'Section C (10M)'].map((sec) {
-                  final code = sec.startsWith('All') ? 'All' : sec.substring(0, 9);
+                children: [
+                  ('All', 'All'),
+                  ('Part A (2M)', 'Part A'),
+                  ('Part B (5M)', 'Part B'),
+                  ('Part C (10M)', 'Part C'),
+                ].map((sec) {
+                  final label = sec.$1;
+                  final code = sec.$2;
                   final isSel = _selectedSection == code;
                   return InkWell(
                     onTap: () => setState(() => _selectedSection = code),
@@ -286,7 +310,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                         ),
                       ),
                       child: Text(
-                        sec.split(' ').first,
+                        label,
                         style: TextStyle(
                           color: isSel ? AppColors.brandBright : AppColors.textMuted,
                           fontSize: 11.5,
@@ -307,7 +331,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                   border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  'Score: $totalScore / 70',
+                  'Score: $totalScore / $maxPaperScore',
                   style: const TextStyle(
                     color: AppColors.accentGold,
                     fontSize: 12,
@@ -425,15 +449,42 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
 
                             const SizedBox(height: 10),
 
-                            // Reveal Answer Button
+                            // Action Row: Self-Assessment & View Model Answer
                             Row(
                               children: [
                                 TextButton.icon(
                                   onPressed: () {
                                     AppHaptics.tap();
                                     setState(() {
+                                      _selfAssessmentOpen[index] = !(_selfAssessmentOpen[index] ?? false);
+                                    });
+                                  },
+                                  icon: Icon(
+                                    (_selfAssessmentOpen[index] ?? false)
+                                        ? Icons.edit_note_rounded
+                                        : Icons.rate_review_outlined,
+                                    size: 16,
+                                    color: AppColors.accentGold,
+                                  ),
+                                  label: Text(
+                                    (_selfAssessmentOpen[index] ?? false)
+                                        ? 'Hide Rubric Test'
+                                        : '✍️ Self-Assessment',
+                                    style: const TextStyle(
+                                      color: AppColors.accentGold,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                TextButton.icon(
+                                  onPressed: () {
+                                    AppHaptics.tap();
+                                    setState(() {
                                       _revealed[index] = !isRevealed;
                                     });
+                                    ExamPaperService.instance.savePaperProgress(_selectedBranch, _awardedMarks, _revealed);
                                   },
                                   icon: Icon(
                                     isRevealed ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -441,17 +492,17 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                                     color: AppColors.brandBright,
                                   ),
                                   label: Text(
-                                    isRevealed ? 'Hide Model Answer' : 'View Model Answer & Rubric',
+                                    isRevealed ? 'Hide Model' : 'Model Answer',
                                     style: const TextStyle(
                                       color: AppColors.brandBright,
                                       fontWeight: FontWeight.w700,
-                                      fontSize: 12.5,
+                                      fontSize: 12,
                                     ),
                                   ),
                                 ),
                                 const Spacer(),
                                 // Self-evaluation marks dropdown
-                                if (isRevealed) ...[
+                                if (isRevealed || (_evaluationResults[index] != null)) ...[
                                   const Text(
                                     'Award: ',
                                     style: TextStyle(color: AppColors.textMuted, fontSize: 11.5),
@@ -476,12 +527,125 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                                     onChanged: (newMarks) {
                                       if (newMarks != null) {
                                         setState(() => _awardedMarks[index] = newMarks);
+                                        ExamPaperService.instance.savePaperProgress(_selectedBranch, _awardedMarks, _revealed);
                                       }
                                     },
                                   ),
                                 ],
                               ],
                             ),
+
+                            // Student Self-Assessment Panel
+                            if (_selfAssessmentOpen[index] ?? false) ...[
+                              const Divider(color: AppColors.borderSubtle, height: 18),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.bg2,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: AppColors.accentGold.withValues(alpha: 0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Row(
+                                      children: [
+                                        Icon(Icons.edit_document, size: 15, color: AppColors.accentGold),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'STUDENT SELF-ASSESSMENT & RUBRIC MATCHER',
+                                          style: TextStyle(
+                                            color: AppColors.accentGold,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextField(
+                                      controller: _getAnswerController(index),
+                                      maxLines: 4,
+                                      style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.35),
+                                      decoration: InputDecoration(
+                                        hintText: 'Draft your MSc chemistry answer here (mention key terms, equations, stereochemistry, or mechanisms)...',
+                                        hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                        filled: true,
+                                        fillColor: AppColors.surfaceElevated,
+                                        contentPadding: const EdgeInsets.all(10),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                          borderSide: const BorderSide(color: AppColors.borderSubtle),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                          borderSide: const BorderSide(color: AppColors.borderSubtle),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                          borderSide: const BorderSide(color: AppColors.accentGold),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed: () {
+                                            AppHaptics.confirm();
+                                            final text = _getAnswerController(index).text;
+                                            final eval = ExamPaperService.evaluateStudentAnswer(
+                                              question: item,
+                                              studentAnswer: text,
+                                            );
+                                            setState(() {
+                                              _evaluationResults[index] = eval;
+                                            });
+                                          },
+                                          icon: const Icon(Icons.analytics_outlined, size: 15),
+                                          label: const Text(
+                                            'Evaluate Against Rubric',
+                                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors.accentGold,
+                                            foregroundColor: Colors.black,
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        TextButton(
+                                          onPressed: () {
+                                            _getAnswerController(index).clear();
+                                            setState(() {
+                                              _evaluationResults.remove(index);
+                                            });
+                                          },
+                                          child: const Text('Clear', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                        ),
+                                      ],
+                                    ),
+
+                                    // Diagnostic Scorecard
+                                    if (_evaluationResults[index] != null) ...[
+                                      const SizedBox(height: 12),
+                                      _buildDiagnosticScorecard(
+                                        item: item,
+                                        index: index,
+                                        result: _evaluationResults[index]!,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
 
                             // Model Answer (revealed)
                             if (isRevealed) ...[
@@ -539,6 +703,278 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                 ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDiagnosticScorecard({
+    required ExamQuestionItem item,
+    required int index,
+    required ExamEvaluationResult result,
+  }) {
+    final scoreColor = result.percentage >= 75
+        ? AppColors.statusSuccess
+        : (result.percentage >= 50 ? AppColors.accentGold : AppColors.danger);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: scoreColor.withValues(alpha: 0.4), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Score Header & Accept Button
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: scoreColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: scoreColor.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${result.score.toStringAsFixed(1)} / ${result.maxScore.toInt()} Marks',
+                      style: TextStyle(
+                        color: scoreColor,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: scoreColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        result.grade,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              ElevatedButton.icon(
+                onPressed: () {
+                  AppHaptics.confirm();
+                  final rounded = result.score.round().clamp(0, item.marks);
+                  setState(() {
+                    _awardedMarks[index] = rounded;
+                  });
+                  ExamPaperService.instance.savePaperProgress(_selectedBranch, _awardedMarks, _revealed);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Recorded $rounded / ${item.marks} marks to exam total!'),
+                      duration: const Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.check_circle_outline, size: 14),
+                label: const Text('Accept Score', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.statusSuccess,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Mandatory Keywords Checklist
+          const Text(
+            'MANDATORY KEYWORDS & CONCEPTS:',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              ...result.matchedKeywords.map((kw) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.statusSuccess.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.statusSuccess.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.check, size: 12, color: AppColors.statusSuccess),
+                      const SizedBox(width: 4),
+                      Text(
+                        kw,
+                        style: const TextStyle(
+                          color: AppColors.statusSuccess,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              ...result.missingKeywords.map((kw) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.close, size: 12, color: AppColors.danger),
+                      const SizedBox(width: 4),
+                      Text(
+                        kw,
+                        style: const TextStyle(
+                          color: AppColors.danger,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+
+          // Detailed Rubric Criteria Breakdown
+          if (result.rubricBreakdown.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const Text(
+              'RUBRIC CRITERIA BREAKDOWN:',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            ...result.rubricBreakdown.map((rb) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      rb.met ? Icons.check_circle : Icons.radio_button_unchecked,
+                      size: 13,
+                      color: rb.met ? AppColors.statusSuccess : AppColors.textMuted,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        rb.criterion,
+                        style: TextStyle(
+                          color: rb.met ? Colors.white : AppColors.textMuted,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '+${rb.marksAwarded.toStringAsFixed(1)}M',
+                      style: TextStyle(
+                        color: rb.met ? AppColors.statusSuccess : AppColors.textMuted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+
+          // Pitfalls Detected
+          if (result.detectedPitfalls.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.danger.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppColors.danger.withValues(alpha: 0.4)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.danger),
+                      SizedBox(width: 6),
+                      Text(
+                        'EXAMINER PITFALLS TRIGGERED (MARKS DEDUCTED):',
+                        style: TextStyle(
+                          color: AppColors.danger,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  ...result.detectedPitfalls.map((p) => Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          '• $p',
+                          style: const TextStyle(color: Colors.white, fontSize: 11.5),
+                        ),
+                      )),
+                ],
+              ),
+            ),
+          ],
+
+          // Feedback notes
+          if (result.feedback.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const Text(
+              'EXAMINER RUBRIC FEEDBACK:',
+              style: TextStyle(
+                color: AppColors.accentGold,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                result.feedback,
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.3),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

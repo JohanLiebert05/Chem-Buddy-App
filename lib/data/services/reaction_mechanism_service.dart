@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/reaction_models.dart';
 import 'chemdraw_library.dart';
+import 'postgraduate_reaction_data.dart';
 import 'reaction_diagram_svg_catalog.dart';
 
 /// Service providing verified, step-by-step MSc chemistry reaction mechanisms,
@@ -41,8 +42,10 @@ class ReactionMechanismService {
     return svg;
   }
 
-  static final List<ReactionMechanism> curatedMechanisms =
-      _baseMechanisms.map(ChemDrawLibrary.attach).toList(growable: false);
+  static final List<ReactionMechanism> curatedMechanisms = [
+    ..._baseMechanisms.map(ChemDrawLibrary.attach),
+    ...PostgraduateReactionData.mechanisms,
+  ];
 
   static final List<ReactionMechanism> _baseMechanisms = [
     // 1. SN1 SUBSTITUTION

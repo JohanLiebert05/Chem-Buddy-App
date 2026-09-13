@@ -452,6 +452,8 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
               ),
             ),
             const SizedBox(height: 12),
+            if (_analysisResult!.sanityReport != null)
+              _buildSanityChecksCard(_analysisResult!.sanityReport!),
             if (_showFullReport)
               AppCard(
                 padding: const EdgeInsets.all(16),
@@ -530,6 +532,200 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.borderSubtle)),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.borderSubtle)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.brandBright)),
+      ),
+    );
+  }
+
+  Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
+    final hasIssues = report.hasViolations || report.warningCount > 0;
+    final borderColor = report.hasViolations
+        ? AppColors.statusDanger.withValues(alpha: 0.6)
+        : (report.warningCount > 0
+            ? AppColors.accentGold.withValues(alpha: 0.6)
+            : AppColors.statusSuccess.withValues(alpha: 0.5));
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GlowCard(
+        padding: EdgeInsets.zero,
+        borderColor: borderColor,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: hasIssues,
+            tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: (report.hasViolations
+                    ? AppColors.statusDanger
+                    : (report.warningCount > 0 ? AppColors.accentGold : AppColors.statusSuccess)).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                report.hasViolations
+                    ? Icons.gpp_bad_rounded
+                    : (report.warningCount > 0 ? Icons.gpp_maybe_rounded : Icons.gpp_good_rounded),
+                color: report.hasViolations
+                    ? AppColors.statusDanger
+                    : (report.warningCount > 0 ? AppColors.accentGold : AppColors.statusSuccess),
+                size: 22,
+              ),
+            ),
+            title: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Spectral Sanity Checks 🛡️',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
+                  ),
+                ),
+                if (report.violationCount > 0)
+                  Container(
+                    margin: const EdgeInsets.only(left: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.statusDanger.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.statusDanger.withValues(alpha: 0.5)),
+                    ),
+                    child: Text(
+                      '${report.violationCount} Violations',
+                      style: const TextStyle(color: AppColors.statusDanger, fontSize: 10.5, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                if (report.warningCount > 0)
+                  Container(
+                    margin: const EdgeInsets.only(left: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentGold.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.5)),
+                    ),
+                    child: Text(
+                      '${report.warningCount} Warnings',
+                      style: const TextStyle(color: AppColors.accentGold, fontSize: 10.5, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                Container(
+                  margin: const EdgeInsets.only(left: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.statusSuccess.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '${report.passedCount} Passed',
+                    style: const TextStyle(color: AppColors.statusSuccess, fontSize: 10.5, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                hasIssues
+                    ? 'Cross-spectral inconsistencies or valence violations detected'
+                    : 'All rule-based chemical valence and spectroscopic checks verified',
+                style: TextStyle(
+                  color: hasIssues ? AppColors.accentGold : AppColors.textSecondary,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                child: Column(
+                  children: report.items.map((item) {
+                    final itemColor = item.passed
+                        ? AppColors.statusSuccess
+                        : (item.severity == SanitySeverity.violation
+                            ? AppColors.statusDanger
+                            : AppColors.accentGold);
+                    final itemIcon = item.passed
+                        ? Icons.check_circle_outline_rounded
+                        : (item.severity == SanitySeverity.violation
+                            ? Icons.error_outline_rounded
+                            : Icons.warning_amber_rounded);
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.bg0,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: itemColor.withValues(alpha: item.passed ? 0.2 : 0.5)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(itemIcon, color: itemColor, size: 16),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  item.title,
+                                  style: TextStyle(
+                                    color: itemColor,
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: AppColors.bg2,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  item.category,
+                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            item.message,
+                            style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.35),
+                          ),
+                          if (!item.passed) ...[
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: itemColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.lightbulb_outline, color: itemColor, size: 14),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Recommendation: ${item.recommendation}',
+                                      style: TextStyle(color: itemColor, fontSize: 11.5, height: 1.3, fontStyle: FontStyle.italic),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

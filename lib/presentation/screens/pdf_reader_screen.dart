@@ -27,17 +27,55 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
   PDFViewController? _controller;
   bool _night = true;
   String? _error;
+  bool _showCitationBanner = false;
 
   @override
   void initState() {
     super.initState();
     _doc = widget.doc;
+    _showCitationBanner = widget.initialPage != null;
     _page = widget.initialPage != null
         ? (widget.initialPage! - 1).clamp(0, 9999)
         : widget.doc.lastPage;
     if (!PdfLibraryService.instance.exists(_doc.localPath)) {
       _error = 'This PDF is missing from storage. It may have been moved or deleted.';
     }
+  }
+
+  void _promptJumpToPage() {
+    if (_total <= 0) return;
+    final controller = TextEditingController(text: '${_page + 1}');
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Jump to Page', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: '1 - $_total',
+            labelText: 'Page Number (1 to $_total)',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.purple),
+            onPressed: () {
+              final target = int.tryParse(controller.text.trim());
+              if (target != null && target >= 1 && target <= _total) {
+                _controller?.setPage(target - 1);
+                setState(() => _page = target - 1);
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Jump'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _persistPage(int page) async {
@@ -184,6 +222,28 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
             )
           : Column(
               children: [
+                // Citation Jump Banner
+                if (_showCitationBanner && widget.initialPage != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    color: AppColors.purple.withValues(alpha: 0.25),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.bookmark_added_rounded, size: 16, color: AppColors.purpleBright),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Jumped to Page ${widget.initialPage} from citation',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
+                        ),
+                        const Spacer(),
+                        InkWell(
+                          onTap: () => setState(() => _showCitationBanner = false),
+                          child: const Icon(Icons.close, size: 16, color: AppColors.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 // Top Page Counter & Study Header
                 Container(
                   color: AppColors.background,
@@ -191,9 +251,23 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        _total == 0 ? 'Loading…' : 'Page ${_page + 1} / $_total',
-                        style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 13),
+                      InkWell(
+                        onTap: _promptJumpToPage,
+                        borderRadius: BorderRadius.circular(6),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _total == 0 ? 'Loading…' : 'Page ${_page + 1} / $_total',
+                                style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 13),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.unfold_more, size: 13, color: AppColors.textMuted),
+                            ],
+                          ),
+                        ),
                       ),
                       GestureDetector(
                         onTap: _showStudyOptions,
