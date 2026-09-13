@@ -3,6 +3,7 @@ import 'package:chem_buddy/core/chemistry/chemical_graph.dart';
 import 'package:chem_buddy/core/chemistry/electron_arrow_model.dart';
 import 'package:chem_buddy/core/chemistry/mechanism_svg_renderer.dart';
 import 'package:chem_buddy/data/services/reaction_matcher_engine.dart';
+import 'package:chem_buddy/services/reaction_predictor_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -235,6 +236,60 @@ void main() {
       expect(res.isMatched, isTrue);
       expect(res.reaction?.reactionId, equals('RXN_WITTIG_001'));
       expect(res.reaction?.reactionName, contains('Wittig'));
+    });
+  });
+
+  group('Postgraduate MSc Organic Synthesis Schema Tests', () {
+    test('OrganicSynthesisPrediction parses postgraduate JSON schema accurately', () {
+      final sampleJson = {
+        'reaction_name': 'Aldol Condensation',
+        'reaction_class': 'Enolate Chemistry / Carbonyl Addition',
+        'reactants_smiles': ['CC(=O)C', 'CC(=O)C'],
+        'reagents': 'NaOH, H2O, 25°C',
+        'major_product': {
+          'name': '4-Methylpent-3-en-2-one (Mesityl Oxide)',
+          'smiles': 'CC(=CC(=O)C)C',
+          'formula': 'C6H10O',
+          'stereochemistry': 'E-alkene preferred'
+        },
+        'mechanism_steps': [
+          {
+            'step_number': 1,
+            'step_title': 'Enolate Formation',
+            'intermediate_smiles': 'C=C([O-])C',
+            'description': 'Hydroxide deprotonates alpha proton of acetone generating resonance-stabilized enolate',
+            'electron_pushing': 'OH- lone pair abstracts alpha-H; C-H bond collapses into C=C pi bond; C=O pi bond shifts to O'
+          },
+          {
+            'step_number': 2,
+            'step_title': 'Nucleophilic Carbonyl Addition',
+            'intermediate_smiles': 'CC(C)(O)CC(=O)C',
+            'description': 'Enolate nucleophilic alpha carbon attacks electrophilic carbonyl carbon of second acetone molecule',
+            'electron_pushing': 'Enolate pi bond attacks electrophilic carbonyl carbon; C=O pi bond shifts onto oxygen'
+          }
+        ],
+        'pedagogy': {
+          'driving_force': 'Conjugation of alkene with carbonyl group in alpha,beta-unsaturated ketone',
+          'regioselectivity_rule': 'Kinetic vs thermodynamic enolate control governed by base bulk and temperature',
+          'viva_question': 'Why is dehydration of aldol addition products particularly facile compared to normal alcohol dehydration?',
+          'viva_answer': 'Dehydration is facilitated by alpha-hydrogen acidity and forms conjugated alpha,beta-enone via E1cB pathway.'
+        }
+      };
+
+      final prediction = OrganicSynthesisPrediction.fromJson(sampleJson, keyIndexUsed: 1, model: 'gemini-1.5-flash');
+
+      expect(prediction.success, isTrue);
+      expect(prediction.reactionName, equals('Aldol Condensation'));
+      expect(prediction.reactionClass, equals('Enolate Chemistry / Carbonyl Addition'));
+      expect(prediction.reactantsSmiles.length, equals(2));
+      expect(prediction.majorProduct?.smiles, equals('CC(=CC(=O)C)C'));
+      expect(prediction.majorProduct?.formula, equals('C6H10O'));
+      expect(prediction.mechanismSteps.length, equals(2));
+      expect(prediction.mechanismSteps.first.intermediateSmiles, equals('C=C([O-])C'));
+      expect(prediction.mechanismSteps.first.electronPushing, contains('OH- lone pair'));
+      expect(prediction.pedagogy?.drivingForce, contains('Conjugation'));
+      expect(prediction.pedagogy?.vivaQuestion, contains('facile'));
+      expect(prediction.keyIndexUsed, equals(1));
     });
   });
 }

@@ -8,6 +8,7 @@ import '../../data/services/reaction_curation_repository.dart';
 import '../../data/services/reaction_matcher_engine.dart';
 import '../widgets/animated_mechanism_viewer.dart';
 import '../widgets/reaction_pedagogy_sheet.dart';
+import '../../services/reaction_predictor_service.dart';
 import 'ask_chembuddy_screen.dart';
 import 'chem_sketcher_screen.dart';
 
@@ -126,13 +127,28 @@ class _OrganicReactionPredictorScreenState
     });
 
     try {
-      final result = await ReactionMatcherEngine.instance.matchReaction(
+      var result = await ReactionMatcherEngine.instance.matchReaction(
         reactantsSmiles: reactants,
         reagents: reagents,
         solvent: solvent,
         temperature: temp,
         optionalReactionName: _selectedCatalogReaction?.reactionId,
       );
+
+      // If local curated database does not have a direct rule match,
+      // fallback to the MSc Organic Synthesis Engine (Supabase Edge Function / Gemini Orchestrator)
+      if (!result.isMatched && reactants.isNotEmpty) {
+        final aiPred = await ReactionPredictorService.instance.predictFullReaction(
+          reactantsSmiles: reactants,
+          reagents: reagents,
+          solvent: solvent,
+          temperature: temp,
+        );
+
+        if (aiPred.success && aiPred.majorProduct != null) {
+          result = _convertAiPredictionToMatchResult(aiPred, reactants, reagents, solvent, temp);
+        }
+      }
 
       setState(() {
         _matchResult = result;
@@ -142,10 +158,59 @@ class _OrganicReactionPredictorScreenState
       setState(() {
         _isPredicting = false;
         _matchResult = ReactionMatchResult.unmatched(
-          reason: 'Error matching reaction: $e',
+          reason: 'Error predicting reaction: $e',
         );
       });
     }
+  }
+
+  ReactionMatchResult _convertAiPredictionToMatchResult(
+    OrganicSynthesisPrediction aiPred,
+    String reactants,
+    String reagents,
+    String solvent,
+    String temp,
+  ) {
+    final steps = aiPred.mechanismSteps.map((s) {
+      return CuratedReactionStep(
+        stepId: 'ai_step_${s.stepNumber}',
+        reactionId: 'ai_synthesis_rxn',
+        stepNumber: s.stepNumber,
+        stepTitle: s.stepTitle,
+        stepDescription: s.description,
+        intermediateName: s.intermediateSmiles,
+        intermediateSmiles: s.intermediateSmiles,
+        bondChanges: s.electronPushing,
+      );
+    }).toList();
+
+    final dynamicReaction = CuratedReaction(
+      reactionId: 'AI_SYNTHESIS',
+      reactionName: aiPred.reactionName,
+      reactionClass: aiPred.reactionClass,
+      description: aiPred.pedagogy?.drivingForce ?? '',
+      conditions: aiPred.reagents.isNotEmpty ? aiPred.reagents : (reagents.isNotEmpty ? reagents : 'Standard conditions'),
+      solvent: solvent,
+      temperature: temp,
+      majorProductRule: aiPred.majorProduct?.name ?? '',
+      selectivityNotes: aiPred.pedagogy?.regioselectivityRule ?? '',
+      stereochemistryNotes: aiPred.majorProduct?.stereochemistry ?? '',
+      sourceReference: 'MSc Organic Synthesis Engine',
+      steps: steps,
+      examples: const [],
+    );
+
+    return ReactionMatchResult(
+      isMatched: true,
+      confidence: ReactionConfidence.high,
+      reaction: dynamicReaction,
+      majorProductSmiles: aiPred.majorProduct?.smiles ?? '',
+      majorProductName: aiPred.majorProduct?.name ?? 'Major Product',
+      mechanismSteps: steps,
+      schemeSvg: aiPred.majorProduct?.svgData ?? '',
+      notes: aiPred.reactionClass,
+      suggestions: const [],
+    );
   }
 
   Future<void> _openCanvasSketcher() async {

@@ -3,7 +3,52 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 interface PredictRequestPayload {
   reactants_smiles?: string;
   reactants?: string;
+  reagents?: string;
+  solvent?: string;
+  temperature?: string;
+  full_mechanism?: boolean;
 }
+
+const MASTER_SYNTHESIS_SYSTEM_INSTRUCTION = `You are an expert postgraduate MSc-level organic synthesis engine.
+
+Analyze the given reactant(s) and reaction conditions provided in the user prompt (or extracted from the image).
+Search standard organic chemistry literature, named reaction compendiums, and synthesis databases to determine the authentic major reaction pathway.
+
+STRICT INSTRUCTIONS:
+1. Do not hallucinate mechanisms or force transformations into incorrect templates.
+2. If only reactants are provided without reagents, predict the most thermodynamically and kinetically favored intrinsic reaction (e.g., self-condensation, tautomerization, pericyclic rearrangement) or state the required standard reagent in "reaction_notes".
+3. Return ONLY a valid JSON object conforming exactly to the schema below. Never add conversational intros, explanations outside the JSON, or markdown code blocks (e.g., do not wrap in \`\`\`json).
+4. All SMILES strings MUST be canonical, valid, and chemically accurate.
+5. In each mechanism step, explicitly specify the nucleophilic source and electrophilic target for curved electron-pushing arrows.
+
+JSON SCHEMA:
+{
+  "reaction_name": "Standard IUPAC / Named Reaction",
+  "reaction_class": "e.g., Electrophilic Aromatic Substitution, Pericyclic, Aldol Condensation",
+  "reactants_smiles": ["canonical_smiles_1", "canonical_smiles_2"],
+  "reagents": "Specific reagent/catalyst, solvent, temperature",
+  "major_product": {
+    "name": "IUPAC or standard chemical name",
+    "smiles": "canonical_product_smiles",
+    "formula": "e.g., C8H7NO3",
+    "stereochemistry": "e.g., syn-addition, anti-elimination, racemic, retention"
+  },
+  "mechanism_steps": [
+    {
+      "step_number": 1,
+      "step_title": "Short title (e.g., Generation of Electrophile)",
+      "intermediate_smiles": "canonical_smiles_or_empty_if_transient",
+      "description": "Clear step explanation with MSc-level rigor",
+      "electron_pushing": "Curved arrow description: e.g., Lone pair on O attacks carbonyl carbon; pi bond breaks to oxygen"
+    }
+  ],
+  "pedagogy": {
+    "driving_force": "Thermodynamic / kinetic rationale (e.g., Restoration of aromaticity, resonance stabilization)",
+    "regioselectivity_rule": "e.g., Markovnikov, Zaitsev, Ortho/Para orientation via +M resonance",
+    "viva_question": "One advanced oral viva examination question testing mechanistic nuance",
+    "viva_answer": "Concise postgraduate model answer"
+  }
+}`;
 
 // Global rotation cursor for fair round-robin distribution across keys
 let keyCursor = 0;
@@ -43,6 +88,11 @@ serve(async (req: Request) => {
       );
     }
 
+    const reagentsInput = (payload.reagents || "").trim();
+    const solventInput = (payload.solvent || "").trim();
+    const tempInput = (payload.temperature || "").trim();
+    const isFullMechanism = payload.full_mechanism ?? true;
+
     // 2. Read 4 Gemini Keys (from GEMINI_KEYS comma-separated or individual fallbacks)
     const keys = getAvailableGeminiKeys();
     if (keys.length === 0) {
@@ -56,18 +106,89 @@ serve(async (req: Request) => {
       );
     }
 
-    // 3. Query Gemini with 4-Key Failover & Retry on HTTP 429
     const modelName = Deno.env.get("GEMINI_MODEL") || "gemini-1.5-flash";
+
+    if (isFullMechanism) {
+      // Dynamic conditions string
+      const conditionsList: string[] = [];
+      if (reagentsInput) conditionsList.push(`Reagent: ${reagentsInput}`);
+      if (solventInput) conditionsList.push(`Solvent: ${solventInput}`);
+      if (tempInput) conditionsList.push(`Temperature: ${tempInput}`);
+      const conditionsStr = conditionsList.length > 0 ? conditionsList.join(", ") : "Infer standard conditions";
+
+      const dynamicUserPrompt = `User Reaction Input:
+- Reactants / Structure: ${reactantsSmiles}
+- Reagents / Solvent / Conditions: ${conditionsStr}
+
+Identify the major organic product and generate the complete step-by-step reaction mechanism in valid JSON.`;
+
+      const geminiResult = await executeGeminiWithRotation(
+        keys,
+        modelName,
+        MASTER_SYNTHESIS_SYSTEM_INSTRUCTION,
+        dynamicUserPrompt,
+        true // enable search and higher tokens
+      );
+
+      if (!geminiResult.ok || !geminiResult.text) {
+        return jsonResponse(
+          {
+            success: false,
+            error:
+              geminiResult.error ||
+              "Gemini API quota exhausted or service unavailable across all 4 keys.",
+            details: geminiResult.details,
+          },
+          geminiResult.status || 500
+        );
+      }
+
+      // Parse JSON from output
+      const parsedJson = parseSynthesisJson(geminiResult.text);
+      if (parsedJson && parsedJson.major_product && parsedJson.major_product.smiles) {
+        const prodSmiles = sanitizeSmiles(parsedJson.major_product.smiles);
+        parsedJson.major_product.smiles = prodSmiles;
+
+        // Fetch SVG for major product
+        let majorSvg = await fetchCactusSvg(prodSmiles);
+        if (!majorSvg) majorSvg = generateVectorSvgFallback(prodSmiles);
+        parsedJson.major_product.svg_data = majorSvg;
+
+        // Fetch SVGs for intermediates if present
+        if (Array.isArray(parsedJson.mechanism_steps)) {
+          for (const step of parsedJson.mechanism_steps) {
+            if (step.intermediate_smiles && step.intermediate_smiles.trim().length > 1) {
+              const cleanedIntermediate = sanitizeSmiles(step.intermediate_smiles);
+              step.intermediate_smiles = cleanedIntermediate;
+              const stepSvg = await fetchCactusSvg(cleanedIntermediate);
+              step.svg_data = stepSvg || generateVectorSvgFallback(cleanedIntermediate);
+            }
+          }
+        }
+
+        return jsonResponse({
+          success: true,
+          reaction: parsedJson,
+          product_smiles: prodSmiles,
+          svg_data: majorSvg,
+          key_index_used: geminiResult.keyIndexUsed,
+          total_keys: keys.length,
+          model: modelName,
+        });
+      }
+    }
+
+    // Fallback: Single product SMILES prediction mode
     const systemInstruction =
       "You are an expert organic reaction outcome engine. Return ONLY the valid SMILES string of the single major organic product. Do not include markdown blocks, notes, or explanations.";
-
-    const promptText = `Reactants: ${reactantsSmiles}\nPredict the single major organic product under standard/reasonable reaction conditions. Return ONLY the canonical or valid SMILES of the major organic product.`;
+    const promptText = `Reactants: ${reactantsSmiles}\nReagents / Conditions: ${reagentsInput || "Infer standard conditions"}\nPredict the single major organic product. Return ONLY the canonical or valid SMILES of the major organic product.`;
 
     const geminiResult = await executeGeminiWithRotation(
       keys,
       modelName,
       systemInstruction,
-      promptText
+      promptText,
+      false
     );
 
     if (!geminiResult.ok || !geminiResult.text) {
@@ -83,7 +204,6 @@ serve(async (req: Request) => {
       );
     }
 
-    // 4. Sanitize and Extract Clean SMILES
     const cleanProductSmiles = sanitizeSmiles(geminiResult.text);
     if (!cleanProductSmiles) {
       return jsonResponse(
@@ -96,10 +216,7 @@ serve(async (req: Request) => {
       );
     }
 
-    // 5. Fetch 2D Vector SVG from NIH Cactus Cheminformatics API
     let svgData = await fetchCactusSvg(cleanProductSmiles);
-
-    // If Cactus cannot render (e.g. timeout or complex coordination), generate a crisp vector fallback
     if (!svgData) {
       svgData = generateVectorSvgFallback(cleanProductSmiles);
     }
@@ -169,7 +286,8 @@ async function executeGeminiWithRotation(
   keys: string[],
   model: string,
   systemInstruction: string,
-  prompt: string
+  prompt: string,
+  enableSearch = false
 ): Promise<{
   ok: boolean;
   text?: string;
@@ -203,16 +321,21 @@ async function executeGeminiWithRotation(
       },
       generationConfig: {
         temperature: 0.1,
-        maxOutputTokens: 256,
+        maxOutputTokens: enableSearch ? 2048 : 256,
+        responseMimeType: enableSearch ? "application/json" : undefined,
       },
     };
+
+    if (enableSearch) {
+      body.tools = [{ googleSearch: {} }];
+    }
 
     try {
       const resp = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(enableSearch ? 20000 : 12000),
       });
 
       if (resp.ok) {
@@ -235,6 +358,30 @@ async function executeGeminiWithRotation(
         lastDetails.slice(0, 160)
       );
 
+      // If googleSearch tool caused an error (e.g. unsupported model), retry without tools on same key
+      if (enableSearch && (resp.status === 400 || lastDetails.includes("tool"))) {
+        console.warn("[predict-reaction] Retrying without googleSearch tool...");
+        delete body.tools;
+        const retryResp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(16000),
+        });
+        if (retryResp.ok) {
+          const retryData = await retryResp.json();
+          const extracted = extractTextFromGeminiResponse(retryData);
+          if (extracted) {
+            return {
+              ok: true,
+              text: extracted,
+              status: 200,
+              keyIndexUsed: keyIndex + 1,
+            };
+          }
+        }
+      }
+
       // On 429 (Resource Exhausted), 503 (Overloaded), or 403 (Forbidden/Invalid), failover to next key
       if (resp.status === 429 || resp.status === 503 || resp.status === 403) {
         lastError = `HTTP ${resp.status} (Rate limited / Quota exhausted). Rotating to next key.`;
@@ -252,6 +399,23 @@ async function executeGeminiWithRotation(
     error: lastError || "All 4 Gemini keys failed or exhausted quota.",
     details: lastDetails,
   };
+}
+
+function parseSynthesisJson(raw: string): any {
+  try {
+    let clean = raw.trim();
+    // Remove markdown ```json ... ``` wrapper if present
+    clean = clean.replace(/```(?:json)?\n?([\s\S]*?)```/gi, "$1").trim();
+    const firstBrace = clean.indexOf("{");
+    const lastBrace = clean.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      clean = clean.substring(firstBrace, lastBrace + 1);
+    }
+    return JSON.parse(clean);
+  } catch (e) {
+    console.warn("[predict-reaction] Failed to parse synthesis JSON:", e);
+    return null;
+  }
 }
 
 function extractTextFromGeminiResponse(data: any): string {
