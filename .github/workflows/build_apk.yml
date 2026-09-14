@@ -63,15 +63,14 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ChemBuddy-v3.3.1-Release.apk
+            ChemBuddy-v3.4.0-Release.apk
             Chem-Buddy-MSc-Release.apk
           name: ChemBuddy Release ${{ github.ref_name }}
           body: |
-            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.3.1)
+            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.4.0)
             
-            ### 🔬 What's Fixed & Upgraded in v3.3.1:
-            - **Dedicated "+" Button**: Direct `＋` tool button in the ChemDraw canvas toolbar and `+ Reactant` badge button in the status strip to easily place reactant addition symbols between molecules.
-            - **Real Gemini 3.6 Flash Multi-Key Dispatcher**: Upgraded AI reaction engine to Google Gemini 3.6 Flash with 100% resilient multi-key failover pool. Replaced mock text fallbacks with authentic chemical SMILES and mechanisms.
-            - **Dynamic AI SVG Mechanism Viewer**: Interactive animated mechanism steps with curved electron-pushing flows and intermediate structures now render beautifully for any AI-predicted reaction.
-            - **Seamless Full Mechanism Navigation**: Tapping "Full Mechanism" on ChemDraw directly opens the Animated Mechanism Viewer instead of the text chat screen.
-            - **2D NIH Cactus Vector Structures**: Authentic 2D molecular SVGs populated directly from Cactus for predicted reaction products.
+            ### 🔬 What's Fixed & Upgraded in v3.4.0:
+            - **Handwritten Notes → OCR → Flashcards**: Upload camera photos or multi-page gallery scans of handwritten chemistry notes to automatically transcribe formulas, correct OCR mixups, and synthesize active-recall flashcards.
+            - **ChemDraw Intelligence Suite**: Fixed SMILES generation with two-pass DFS ring closure, reactant addition (+) markers, touch zoom/pan, eraser tool, and expanded MSc template library.
+            - **UI & Stability Polish**: Resolved bottom navigation bar hiding under keyboard and upgraded chemistry notifications with witty quips.
+            - **Google Gemini 2.5 Flash Engine**: Free-tier high-speed multimodal reasoning and flashcard extraction.
