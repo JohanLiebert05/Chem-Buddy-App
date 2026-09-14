@@ -148,7 +148,7 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             onPressed: busy ? null : _snapPhoto,
-                            icon: const Icon(Icons.photo_camera_rounded, size: 18, color: AppColors.cyanBright),
+                            icon: const Icon(Icons.photo_camera_rounded, size: 18, color: AppColors.accentCyan),
                             label: const Text('Scan Page', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                           ),
                         ),
@@ -216,7 +216,7 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
                           if (pdfFileName != null)
                             Text(
                               pdfFileName!,
-                              style: const TextStyle(color: AppColors.cyanBright, fontSize: 12.5),
+                              style: const TextStyle(color: AppColors.accentCyan, fontSize: 12.5),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -383,7 +383,7 @@ class _SmartFlashcardsGenerateScreenState extends ConsumerState<SmartFlashcardsG
               width: 38,
               height: 38,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (context, error, stackTrace) => Container(
                 width: 38,
                 height: 38,
                 color: Colors.grey.shade900,

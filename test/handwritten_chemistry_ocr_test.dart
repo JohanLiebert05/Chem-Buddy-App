@@ -66,23 +66,10 @@ void main() {
   });
 
   group('Flashcard Quality & Ranking Tests', () {
-    test('1. Ranks mechanism and formula-rich flashcards higher than generic cards', () {
-      final card1 = GeneratedCard(
-        question: 'What is chemistry?',
-        answer: 'It is the study of matter and change.',
-        topic: 'General',
-        keyTerms: ['Chemistry', 'Matter'],
-        pageNumber: 1,
-        sourceSnippet: 'Intro',
-        cardType: FlashcardType.definition,
-        isStrictPdfGrounded: true,
-      );
-
-      final card2 = GeneratedCard(
+    test('1. Validates mechanism and formula-rich flashcards', () {
+      final card = GeneratedCard(
         question: 'Explain the mechanism of acid-catalyzed esterification of CH₃COOH with C₂H₅OH.',
-        answer: 'Key idea: Protonation of carbonyl oxygen creates an electrophilic center attacked by ethanol → tetrahedral intermediate → proton transfer → loss of H₂O yields ethyl acetate.
-
-Why / Mechanism: Reversible equilibrium shifted by removing H₂O (Le Chatelier principle).',
+        answer: 'Key idea: Protonation of carbonyl oxygen creates an electrophilic center attacked by ethanol → tetrahedral intermediate → proton transfer → loss of H₂O yields ethyl acetate.\n\nWhy / Mechanism: Reversible equilibrium shifted by removing H₂O (Le Chatelier principle).',
         topic: 'Organic Chemistry',
         keyTerms: ['Esterification', 'Mechanism', 'Tetrahedral Intermediate', 'Nucleophile', 'Le Chatelier'],
         pageNumber: 2,
@@ -91,12 +78,10 @@ Why / Mechanism: Reversible equilibrium shifted by removing H₂O (Le Chatelier 
         isStrictPdfGrounded: true,
       );
 
-      final service = GeminiFlashcardService();
-      // The ranking algorithm evaluates both cards
-      expect(card2.cardType, equals(FlashcardType.mechanism));
-      expect(card2.keyTerms.length, equals(5));
-      expect(card2.answer.contains('→'), isTrue);
-      expect(card2.answer.contains('H₂O'), isTrue);
+      expect(card.cardType, equals(FlashcardType.mechanism));
+      expect(card.keyTerms.length, equals(5));
+      expect(card.answer.contains('→'), isTrue);
+      expect(card.answer.contains('H₂O'), isTrue);
     });
   });
 }

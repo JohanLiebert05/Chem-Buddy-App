@@ -1,7 +1,4 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import '../../models/pdf_ocr_models.dart';
 import 'chemistry_ocr_normalizer.dart';
 import 'handwritten_image_preprocessor.dart';
@@ -36,7 +33,7 @@ class HandwrittenNotesOcrPipeline {
         docId: 'empty-handwritten',
         docTitle: docTitle,
         pages: const [],
-        overallQuality: PageQuality.poorHandwriting,
+        overallQuality: PageQuality.handwritten,
         processedAt: DateTime.now(),
         totalPages: 0,
       );
@@ -141,15 +138,15 @@ class HandwrittenNotesOcrPipeline {
 
   PageQuality _assessQuality(String raw, List<String> formulas) {
     final clean = raw.trim();
-    if (clean.length < 30) return PageQuality.poorHandwriting;
-    if (formulas.isNotEmpty && clean.length >= 100) return PageQuality.scannedClean;
-    return PageQuality.handwritingAcceptable;
+    if (clean.length < 30) return PageQuality.handwritten;
+    if (formulas.isNotEmpty && clean.length >= 100) return PageQuality.scannedImage;
+    return PageQuality.handwritten;
   }
 
   PageQuality _computeOverallQuality(List<PdfPageOcrResult> pages) {
-    if (pages.isEmpty) return PageQuality.poorHandwriting;
-    final acceptable = pages.where((p) => p.quality != PageQuality.poorHandwriting).length;
-    if (acceptable >= (pages.length * 0.7)) return PageQuality.handwritingAcceptable;
-    return PageQuality.poorHandwriting;
+    if (pages.isEmpty) return PageQuality.handwritten;
+    final scannedCount = pages.where((p) => p.quality == PageQuality.scannedImage).length;
+    if (scannedCount >= (pages.length * 0.7)) return PageQuality.scannedImage;
+    return PageQuality.handwritten;
   }
 }
