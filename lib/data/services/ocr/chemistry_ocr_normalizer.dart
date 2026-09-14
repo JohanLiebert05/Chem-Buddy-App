@@ -338,11 +338,11 @@ class ChemistryOcrNormalizer {
     });
 
     // 5. Scientific concentration notation: 10^-3 M -> 10⁻³ M, 10^-7 M -> 10⁻⁷ M
-    s = s.replaceAllMapped(RegExp(r'\b10\s*[\^]?\s*([–\-]?)(\d+)\s*([MmMµu]?)(\b|\s)'), (m) {
-      final sign = m.group(1)!;
-      final exponent = m.group(2)!;
-      final unit = m.group(3)!;
-      final trail = m.group(4)!;
+    s = s.replaceAllMapped(RegExp(r'\b10\s*(?:\^\s*([–\-]?)(\d+)|([–\-])(\d+))\s*([MmMµu]?)(\b|\s)'), (m) {
+      final sign = m.group(1) ?? m.group(3) ?? '';
+      final exponent = m.group(2) ?? m.group(4) ?? '';
+      final unit = m.group(5) ?? '';
+      final trail = m.group(6) ?? '';
 
       final superSign = sign.isNotEmpty ? '⁻' : '';
       final superExp = exponent.split('').map((c) => _superscriptMap[c] ?? c).join();
