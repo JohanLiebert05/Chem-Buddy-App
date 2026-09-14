@@ -48,14 +48,14 @@ jobs:
 
       - name: Copy Named APK
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.4.0-Release.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.4.1-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-v3.4.0-apk
-          path: ChemBuddy-v3.4.0-Release.apk
+          name: chem-buddy-v3.4.1-apk
+          path: ChemBuddy-v3.4.1-Release.apk
           retention-days: 30
 
       - name: Create GitHub Release (Tags only)
@@ -63,13 +63,14 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ChemBuddy-v3.4.0-Release.apk
+            ChemBuddy-v3.4.1-Release.apk
             Chem-Buddy-MSc-Release.apk
           name: ChemBuddy Release ${{ github.ref_name }}
           body: |
-            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.4.0)
+            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.4.1)
             
-            ### 🔬 What's Fixed & Upgraded in v3.4.0:
+            ### 🔬 What's Fixed & Upgraded in v3.4.1:
+            - **ChemDraw Canvas Restored**: Fixed JavaScript syntax error caused by missing loop closing brace in eraserMode handler, restoring touch-drawing, auto-benzene placement, and tool selection on canvas.
             - **Handwritten Notes → OCR → Flashcards**: Upload camera photos or multi-page gallery scans of handwritten chemistry notes to automatically transcribe formulas, correct OCR mixups, and synthesize active-recall flashcards.
             - **ChemDraw Intelligence Suite**: Fixed SMILES generation with two-pass DFS ring closure, reactant addition (+) markers, touch zoom/pan, eraser tool, and expanded MSc template library.
             - **UI & Stability Polish**: Resolved bottom navigation bar hiding under keyboard and upgraded chemistry notifications with witty quips.
