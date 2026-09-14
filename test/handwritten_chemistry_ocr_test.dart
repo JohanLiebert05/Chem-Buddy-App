@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:chem_buddy/data/models/smart_flashcard.dart';
-import 'package:chem_buddy/data/services/gemini_flashcard_service.dart';
 import 'package:chem_buddy/data/services/ocr/chemistry_ocr_normalizer.dart';
 
 void main() {
