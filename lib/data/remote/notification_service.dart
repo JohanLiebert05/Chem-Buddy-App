@@ -419,10 +419,33 @@ class NotificationService {
         ? tz.TZDateTime.from(event.dueDate, tz.local).subtract(const Duration(hours: 2))
         : when.add(const Duration(hours: 9));
     if (fire.isBefore(now)) return;
+
+    final dueStr =
+        '${event.dueDate.day}/${event.dueDate.month}/${event.dueDate.year}';
+    final String body;
+    if (event.type == EventType.test) {
+      final quips = [
+        'Exam due $dueStr! Review those mechanisms — electron arrows wait for no one. ⚡',
+        'Test on $dueStr. Your Gibbs energy of anxiety is rising. Channel it into revision! 🧠',
+        'Tomorrow\'s exam is today\'s panic if you don\'t study NOW. Due $dueStr. 📚',
+        'The exam doesn\'t care about Le Chatelier\'s principle — pressure only increases. Due $dueStr. ⚗️',
+      ];
+      body = quips[event.title.hashCode.abs() % quips.length];
+    } else if (event.type == EventType.assignment) {
+      final quips = [
+        'Assignment due $dueStr. Like a reaction without a catalyst, it won\'t complete itself. ⏳',
+        'Submit by $dueStr or face the irreversible reaction of a late penalty. 😬',
+        'Your assignment has a half-life of $dueStr — act before it decays! ☢️',
+      ];
+      body = quips[event.title.hashCode.abs() % quips.length];
+    } else {
+      body = 'Coming up on $dueStr. Don\'t let this slip through like a volatile solvent! 💨';
+    }
+
     await _plugin.zonedSchedule(
       event.id.hashCode,
       '${event.type.name.toUpperCase()}: ${event.title}',
-      'Due ${event.dueDate.year}-${event.dueDate.month.toString().padLeft(2, '0')}-${event.dueDate.day.toString().padLeft(2, '0')}',
+      body,
       fire,
       const NotificationDetails(android: deadlineChannel, iOS: DarwinNotificationDetails()),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -437,12 +460,59 @@ class NotificationService {
     await _plugin.zonedSchedule(
       reminder.id.hashCode,
       reminder.title,
-      reminder.kind.toUpperCase(),
+      _friendlyReminderBody(reminder),
       fire,
       const NotificationDetails(android: deadlineChannel, iOS: DarwinNotificationDetails()),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
+  }
+
+  /// Converts a reminder's kind into a witty, human-friendly notification body.
+  String _friendlyReminderBody(AppReminder reminder) {
+    final kind = reminder.kind.toLowerCase().trim();
+    final title = reminder.title.trim();
+    if (kind.contains('exam') || kind.contains('test') || kind.contains('viva')) {
+      final quips = [
+        'Your neurons won\'t fire themselves. Time to crack open those notes! ⚗️',
+        'The periodic table isn\'t going to memorise itself. Get studying! 🧪',
+        'Exam incoming! Remember: thermodynamics only goes one way—towards success. 📈',
+        'Open your books before the examiner opens yours. 🔬',
+      ];
+      return quips[title.hashCode.abs() % quips.length];
+    } else if (kind.contains('assignment') || kind.contains('submission')) {
+      final quips = [
+        'Deadline approaching at activation-energy speed—sprint! ⚡',
+        'Submit now or face the wrath of the HOD. Your call. 😬',
+        'That assignment won\'t submit itself. Unlike methane, it doesn\'t spontaneously combust. 💨',
+        'Procrastination has a higher energy barrier than the assignment itself. Just do it. 🎯',
+      ];
+      return quips[title.hashCode.abs() % quips.length];
+    } else if (kind.contains('study') || kind.contains('revision') || kind.contains('review')) {
+      final quips = [
+        'Your hippocampus is begging you to revise before the long-term potentiation fades. 🧠',
+        'Even Le Chatelier shifts equilibrium when you study more. Get to it! ⚖️',
+        'Study session time! The Gibbs free energy of ignorance is very positive. ❌',
+        'Knowledge has zero half-life only if you keep reviewing it. Time to refresh! ♻️',
+      ];
+      return quips[title.hashCode.abs() % quips.length];
+    } else if (kind.contains('lab') || kind.contains('practical')) {
+      final quips = [
+        'Safety goggles on, brain engaged, lab coat ready. Let\'s synthesise some knowledge! 🥼',
+        'Lab time! Remember: fume hood ON, coffee cup away from reagents. ☕❌',
+        'Practical session ahead. May your yields be high and your errors be systematic. 📊',
+      ];
+      return quips[title.hashCode.abs() % quips.length];
+    } else {
+      // Generic reminder — still witty
+      final quips = [
+        'You set this reminder for a reason. Your past self was smarter than you think. 🎓',
+        'Don\'t ghost your own reminder. Your future exam marks are watching. 👀',
+        'Ding! Your studious inner chemist is summoning you. Answer the call. 🔔',
+        'This reminder is more urgent than a nucleophile attacking a carbonyl. Act fast! ⚡',
+      ];
+      return quips[title.hashCode.abs() % quips.length];
+    }
   }
 
   Future<void> cancel(String id) => _plugin.cancel(id.hashCode);

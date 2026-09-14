@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       sourceText.slice(0, 3000).toLowerCase().trim(),
       String(count),
       topic.toLowerCase().trim(),
-      "flashcards_v2",
+      "flashcards_v3",
     ]);
 
     if (supabaseUrl && supabaseServiceKey) {
@@ -117,34 +117,82 @@ Deno.serve(async (req) => {
       }
     }
 
-    const clipped = sourceText.length > 12000 ? sourceText.slice(0, 12000) : sourceText;
+    const isHandwritten = Boolean(body.is_handwritten ?? false);
+    const images: string[] = Array.isArray(body.images) ? body.images : [];
+    const clipped = sourceText.length > 14000 ? sourceText.slice(0, 14000) : sourceText;
 
-    const prompt = `You are an expert MSc Chemistry academic tutor creating rigorous, exam-quality active-recall flashcards based strictly on the uploaded document.
+    const prompt = `You are a distinguished MSc Chemistry university professor and academic tutor creating rigorous, exam-quality active-recall flashcards from student study materials.
+${isHandwritten ? "NOTE: This material originates from student HANDWRITTEN CHEMISTRY NOTES (photographs/scans/OCR)." : "NOTE: This material originates from an academic chemistry document/textbook."}
 
-Target Subject/Document: ${topic}
+Target Subject/Topic: ${topic}
+Requested Flashcard Count: ${count}
 
-CRITICAL RULES:
-1. STRICT PDF GROUNDING: Use ONLY the supplied document content as the source of factual information and question content. Do not introduce facts, reactions, examples, definitions, mechanisms, named reactions, or questions that are absent from the supplied document.
-2. QUESTION COUNT: Generate up to ${count} high-quality cards strictly supported by the text.
-3. QUESTION FORMAT: Formulate standalone, high-yield conceptual interrogative questions (e.g., reaction mechanisms, stereochemistry, regioselectivity, rate laws, analytical parameters, instrumentation, and thermodynamic principles).
-4. FORBIDDEN: NEVER quote verbatim snippets with trailing ellipses. Every question must be a complete, standalone question.
-5. ANSWER FORMAT: Provide accurate, comprehensive explanations with clean chemical equations and inline LaTeX notation ($...$) where applicable.
-6. KEY TERMS: For each card, provide 3 to 5 mandatory chemical concepts or keywords.
-7. CITATIONS: Include page number and source snippet whenever available.
+ACADEMIC EXTRACTION & PRIORITIZATION:
+1. PRIORITIZE HIGH-YIELD MSC CONCEPTS:
+   - Precise scientific definitions and key principles/laws.
+   - Organic reaction mechanisms, curved electron-pushing logic, nucleophile/electrophile roles, intermediates (carbocations, carbanions, radicals, enolates).
+   - Named reactions with exact reagents, catalysts, solvents, and conditions (e.g. PCC, DIBAL-H, LDA, LiAlH4, NaBH4, KMnO4, H2SO4, NBS, mCPBA).
+   - Chemical equations and equilibrium expressions.
+   - Physical chemistry formulas and quantitative relationships (e.g. Gibbs ΔG = ΔH - TΔS, Arrhenius k = A e^(-Ea/RT), Beer-Lambert A = εbc, Nernst equation).
+   - Coordination chemistry complexes, oxidation states, d-orbital splitting, CFSE, spectrochemical series.
+   - Differences, comparisons, and stereochemical outcomes (syn/anti, Markovnikov/anti-Markovnikov, enantiomers/diastereomers).
 
-Study Notes:
+2. FILTER OUT NOISE & UNIMPORTANT CONTENT:
+   - IGNORE personal greetings, dates, page numbers, random student annotations, doodles, or marginal comments.
+   - DO NOT create flashcards from incomplete fragments or ambiguous handwriting.
+   - DO NOT hallucinate chemical formulas or reactions not supported by the notes.
+
+3. CLEAN CHEMISTRY FORMATTING (NO RAW LATEX / PROGRAMMING ARTIFACTS):
+   - Display chemical formulas with standard Unicode subscripts and superscripts:
+     Use H₂SO₄ (NOT $H_2SO_4$), CH₃COOH (NOT $CH_3COOH$), [Fe(CN)₆]⁴⁻, KMnO₄, CO₂, H₂O.
+   - Use proper chemical arrows: → for reactions, ⇌ for equilibria, ↔ for resonance.
+   - Use clean scientific units: °C, kJ·mol⁻¹, cm⁻¹, mol·L⁻¹, 10⁻³ M, pH, pKa.
+   - Never output raw programming tokens like "\\rightarrow", "\\frac", "$...$", or "\\text{}".
+
+4. ACTIVE RECALL QUESTION DESIGN:
+   - Each card must ask a focused, specific interrogative question testing ONE core concept.
+   - Answers must be structured and comprehensive (key concept, mechanism/rationale, conditions/equation).
+   - Provide 3 to 5 mandatory chemical key terms per card.
+
+5. CANDIDATE RANKING:
+   - Rank and return the top ${count} most valuable, exam-relevant flashcards based strictly on the content.
+
+Study Material Content:
 ${clipped}`;
 
-    const model = Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash";
+    const model = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
+
+    // Build multimodal content parts
+    const contentParts: any[] = [{ text: prompt }];
+
+    // If base64 images are provided for handwritten notes, add them as inlineData parts
+    if (images.length > 0) {
+      for (const imgData of images.slice(0, 5)) {
+        let cleanBase64 = imgData;
+        let mimeType = "image/jpeg";
+        if (imgData.includes(";base64,")) {
+          const split = imgData.split(";base64,");
+          const mimeMatch = split[0].match(/data:(.*?)$/);
+          if (mimeMatch && mimeMatch[1]) mimeType = mimeMatch[1];
+          cleanBase64 = split[1];
+        }
+        if (cleanBase64.length > 50) {
+          contentParts.push({
+            inlineData: {
+              mimeType,
+              data: cleanBase64,
+            },
+          });
+        }
+      }
+    }
+
     const requestPayload = {
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: [{ parts: contentParts }],
       generationConfig: {
         temperature: 0.2,
         maxOutputTokens: 8192,
         responseMimeType: "application/json",
-        thinkingConfig: {
-          thinkingLevel: "low",
-        },
         responseSchema: {
           type: "OBJECT",
           properties: {

@@ -1199,49 +1199,134 @@
 
       function generateSmiles() {
         if (state.atoms.length === 0) return '';
-        const visited = new Set();
-        const smilesParts = [];
 
-        function visit(atomId, parentId) {
-          visited.add(atomId);
-          const atom = state.atoms.find(a => a.id === atomId);
-          if (!atom) return '';
-          let s = atom.element;
-          if (s !== 'C' && s !== 'N' && s !== 'O' && s !== 'S' && s !== 'P' && s !== 'F' && s !== 'Cl' && s !== 'Br' && s !== 'I') {
-            s = `[${s}]`;
-          }
-          const neighborBonds = state.bonds.filter(b => b.atom1 === atomId || b.atom2 === atomId);
-          const branches = [];
-          for (const b of neighborBonds) {
-            const nextId = (b.atom1 === atomId) ? b.atom2 : b.atom1;
-            if (nextId === parentId) continue;
-            if (visited.has(nextId)) {
-              s += '1';
-              continue;
-            }
-            let bondPrefix = '';
-            if (b.order === 2 || b.order === 'double') bondPrefix = '=';
-            else if (b.order === 3 || b.order === 'triple') bondPrefix = '#';
-            const branchStr = bondPrefix + visit(nextId, atomId);
-            branches.push(branchStr);
-          }
-          if (branches.length === 1) {
-            s += branches[0];
-          } else if (branches.length > 1) {
-            for (let i = 0; i < branches.length - 1; i++) {
-              s += `(${branches[i]})`;
-            }
-            s += branches[branches.length - 1];
-          }
-          return s;
+        // Build adjacency list
+        const adj = {};
+        for (const a of state.atoms) adj[a.id] = [];
+        for (const b of state.bonds) {
+          adj[b.atom1].push({ neighbor: b.atom2, bond: b });
+          adj[b.atom2].push({ neighbor: b.atom1, bond: b });
         }
 
+        // Atom symbol helper
+        function atomSym(el) {
+          const organic = ['B','C','N','O','P','S','F','Cl','Br','I'];
+          return organic.includes(el) ? el : `[${el}]`;
+        }
+
+        // Bond prefix helper
+        function bondPfx(order) {
+          if (order === 2 || order === 'double') return '=';
+          if (order === 3 || order === 'triple') return '#';
+          if (order === 'wedge') return '/';
+          if (order === 'dash') return '\\';
+          return '';
+        }
+
+        // DFS to build SMILES with proper ring-closure tracking
+        function dfsSmiles(startId) {
+          const visited = new Set();
+          const ringOpen = {};    // atomId -> list of ring closure numbers opened here
+          const ringClose = {};   // atomId -> list of {num, bondPfx} that close back-edges to this atom
+          let ringCounter = 1;
+
+          // First pass: find all back-edges using DFS tree
+          const backEdges = [];
+          const inStack = new Set();
+          function dfs1(id, parentId) {
+            visited.add(id);
+            inStack.add(id);
+            for (const { neighbor, bond } of adj[id]) {
+              if (neighbor === parentId) continue;
+              if (visited.has(neighbor)) {
+                if (inStack.has(neighbor)) {
+                  // Only record each back-edge once
+                  const key = [Math.min(id, neighbor), Math.max(id, neighbor)].join('-');
+                  if (!backEdges.find(e => e.key === key)) {
+                    backEdges.push({ key, from: id, to: neighbor, bond });
+                  }
+                }
+              } else {
+                dfs1(neighbor, id);
+              }
+            }
+            inStack.delete(id);
+          }
+          visited.clear();
+          dfs1(startId, -1);
+
+          // Assign ring closure numbers to back-edges
+          for (const be of backEdges) {
+            const num = ringCounter++;
+            if (!ringOpen[be.from]) ringOpen[be.from] = [];
+            ringOpen[be.from].push({ num, pfx: bondPfx(be.bond.order) });
+            if (!ringClose[be.to]) ringClose[be.to] = [];
+            ringClose[be.to].push({ num, pfx: bondPfx(be.bond.order) });
+          }
+
+          // Second pass: build SMILES string via DFS
+          visited.clear();
+          function dfs2(id, parentId, parentBond) {
+            visited.add(id);
+            const atom = state.atoms.find(a => a.id === id);
+            if (!atom) return '';
+
+            let s = atomSym(atom.element);
+
+            // Ring closures that open here
+            for (const rc of (ringOpen[id] || [])) {
+              s += rc.pfx + rc.num;
+            }
+            // Ring closures that close here (back-edge arrives)
+            for (const rc of (ringClose[id] || [])) {
+              s += rc.pfx + rc.num;
+            }
+
+            // Children (non-parent, non-back-edge-target neighbors)
+            const children = [];
+            for (const { neighbor, bond } of adj[id]) {
+              if (neighbor === parentId) continue;
+              if (visited.has(neighbor)) continue;
+              children.push({ id: neighbor, bond });
+            }
+
+            if (children.length === 0) return s;
+            if (children.length === 1) {
+              return s + bondPfx(children[0].bond.order) + dfs2(children[0].id, id, children[0].bond);
+            }
+            // Multiple children: all but last are branches
+            let result = s;
+            for (let i = 0; i < children.length - 1; i++) {
+              result += `(${bondPfx(children[i].bond.order)}${dfs2(children[i].id, id, children[i].bond)})`;
+            }
+            const last = children[children.length - 1];
+            result += bondPfx(last.bond.order) + dfs2(last.id, id, last.bond);
+            return result;
+          }
+
+          visited.clear();
+          return dfs2(startId, -1, null);
+        }
+
+        // Handle disconnected fragments (dot-separated)
+        const visited = new Set();
+        const parts = [];
         for (const atom of state.atoms) {
           if (!visited.has(atom.id)) {
-            smilesParts.push(visit(atom.id, null));
+            const frag = dfsSmiles(atom.id);
+            parts.push(frag);
+            // Mark all atoms in this fragment as visited
+            const q = [atom.id];
+            visited.add(atom.id);
+            while (q.length > 0) {
+              const cur = q.shift();
+              for (const { neighbor } of adj[cur]) {
+                if (!visited.has(neighbor)) { visited.add(neighbor); q.push(neighbor); }
+              }
+            }
           }
         }
-        return smilesParts.join('.');
+        return parts.join('.');
       }
 
       function generateMolfile() {

@@ -153,7 +153,7 @@ class GeminiOrchestrator {
 
       try {
         final uri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=$apiKey',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey',
         );
         final client = HttpClient()..connectionTimeout = const Duration(seconds: 12);
         final request = await client.postUrl(uri);
@@ -171,7 +171,7 @@ class GeminiOrchestrator {
             },
           'generationConfig': {
             'temperature': temperature,
-            'maxOutputTokens': 2048,
+            'maxOutputTokens': 8192,
           }
         };
 
@@ -190,7 +190,7 @@ class GeminiOrchestrator {
               if (text.isNotEmpty) {
                 return (
                   text: text,
-                  model: 'gemini-3.6-flash',
+                  model: 'gemini-2.5-flash',
                   keyIndexUsed: idx + 1,
                   totalKeys: keys.length,
                 );
@@ -207,7 +207,7 @@ class GeminiOrchestrator {
 
     return (
       text: 'Error: All Gemini keys exhausted or rate-limited. Please try again in a moment.',
-      model: 'gemini-3.6-flash-exhausted',
+      model: 'gemini-2.5-flash-exhausted',
       keyIndexUsed: 1,
       totalKeys: keys.length,
     );

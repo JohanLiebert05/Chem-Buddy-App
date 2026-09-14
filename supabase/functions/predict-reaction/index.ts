@@ -106,7 +106,7 @@ serve(async (req: Request) => {
       );
     }
 
-    const modelName = Deno.env.get("GEMINI_MODEL") || "gemini-3.6-flash";
+    const modelName = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
 
     if (isFullMechanism) {
       // Dynamic conditions string

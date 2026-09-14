@@ -74,12 +74,10 @@ class _MainShellState extends ConsumerState<MainShell> {
           ),
         ),
         extendBody: true,
-        bottomNavigationBar: (View.of(context).viewInsets.bottom > 0)
-            ? null
-            : _ModernBottomNav(
-                selectedIndex: safeIndex,
-                onTabSelected: _goTo,
-              ),
+        bottomNavigationBar: _ModernBottomNav(
+            selectedIndex: safeIndex,
+            onTabSelected: _goTo,
+          ),
       ),
     );
   }

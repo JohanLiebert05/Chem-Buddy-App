@@ -23,17 +23,19 @@ class GeminiFlashcardService {
     required int count,
     String topic = 'Chemistry',
     DocumentOcrBundle? bundle,
+    bool isHandwritten = false,
+    List<String> imagePaths = const [],
   }) async {
     // 1. Text payload validation & pre-checks
     final cleaned = cleanupExtractedText(sourceText);
     if (cleaned.length < 30) {
       throw StateError(
-        'The selected PDF contains very little readable text or appears to be a scanned image without OCR. Please use a text-based PDF or paste notes.',
+        'The selected notes contain very little readable text or appears to be a faint scan. Please provide clearer notes or photographs.',
       );
     }
 
     final targetCount = count.clamp(5, 30);
-    final cacheKey = '${topic}_${targetCount}_${sourceText.length}';
+    final cacheKey = '${topic}_${targetCount}_${sourceText.length}_${isHandwritten ? "hw" : "typed"}';
     if (_memoryCache.containsKey(cacheKey) && _memoryCache[cacheKey]!.length >= targetCount) {
       debugPrint('[GeminiFlashcardService] Fast memory cache hit for $topic');
       return _memoryCache[cacheKey]!.take(targetCount).toList();
@@ -67,6 +69,8 @@ class GeminiFlashcardService {
         count: targetCount,
         topic: topic,
         bundle: bundle,
+        isHandwritten: isHandwritten,
+        imagePaths: imagePaths,
       );
 
       for (final card in batch) {
@@ -83,6 +87,8 @@ class GeminiFlashcardService {
         count: half,
         topic: topic,
         bundle: bundle,
+        isHandwritten: isHandwritten,
+        imagePaths: imagePaths,
       ));
 
       final results = await Future.wait(futures);
@@ -95,9 +101,10 @@ class GeminiFlashcardService {
       }
     }
 
-    // 2. If AI call yielded cards, return them
+    // 2. If AI call yielded cards, rank and return them
     if (allCards.isNotEmpty) {
-      final finalCards = allCards.take(targetCount).toList();
+      final ranked = _rankCandidateCards(allCards, topic);
+      final finalCards = ranked.take(targetCount).toList();
       _memoryCache[cacheKey] = finalCards;
       return finalCards;
     }
@@ -106,11 +113,13 @@ class GeminiFlashcardService {
     debugPrint('[GeminiFlashcardService] Invoking Academic Chemistry Fallback Synthesis strictly from document text...');
     final fallback = _synthesizeLocalChemistryCards(promptText, targetCount, topic, bundle: bundle);
     if (fallback.isNotEmpty) {
-      _memoryCache[cacheKey] = fallback;
-      return fallback;
+      final ranked = _rankCandidateCards(fallback, topic);
+      final finalCards = ranked.take(targetCount).toList();
+      _memoryCache[cacheKey] = finalCards;
+      return finalCards;
     }
 
-    throw StateError('Could not synthesize chemistry flashcards from the provided document.');
+    throw StateError('Could not synthesize chemistry flashcards from the provided notes.');
   }
 
   /// Dispatches the request with exponential backoff (up to 2 retries) and 45s timeout.
@@ -119,12 +128,32 @@ class GeminiFlashcardService {
     required int count,
     required String topic,
     DocumentOcrBundle? bundle,
+    bool isHandwritten = false,
+    List<String> imagePaths = const [],
   }) async {
     Object? lastError;
 
     // Check if cloud backend is available
     if (_remote.configured) {
       final clipped = sourceText.length > 14000 ? sourceText.substring(0, 14000) : sourceText;
+
+      // Prepare optional base64 images if handwritten notes mode
+      List<String> base64Images = [];
+      if (isHandwritten && imagePaths.isNotEmpty) {
+        try {
+          for (final p in imagePaths.take(3)) {
+            final f = File(p);
+            if (await f.exists()) {
+              final bytes = await f.readAsBytes();
+              if (bytes.length < 3 * 1024 * 1024) {
+                base64Images.add(base64Encode(bytes));
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('[GeminiFlashcardService] Base64 image preparation skipped: $e');
+        }
+      }
 
       // Primary: dedicated generate-flashcards Edge Function
       for (var attempt = 0; attempt <= 2; attempt++) {
@@ -134,13 +163,17 @@ class GeminiFlashcardService {
         }
 
         try {
+          final payload = <String, dynamic>{
+            'sourceText': clipped,
+            'count': count,
+            'topic': topic,
+            'is_handwritten': isHandwritten,
+            if (base64Images.isNotEmpty) 'images': base64Images,
+          };
+
           final raw = await _remote.invokeFunction(
             'generate-flashcards',
-            {
-              'sourceText': clipped,
-              'count': count,
-              'topic': topic,
-            },
+            payload,
             timeout: const Duration(seconds: 45),
           );
 
@@ -731,6 +764,53 @@ class GeminiFlashcardService {
     }
 
     return terms.take(5).toList();
+  }
+
+  /// Evaluates and ranks candidate flashcards by academic quality, exam relevance,
+  /// chemical formula precision, and conceptual density.
+  static List<GeneratedCard> _rankCandidateCards(List<GeneratedCard> cards, String topic) {
+    if (cards.length <= 1) return cards;
+
+    // Deduplicate first
+    final seenNorm = <String>{};
+    final unique = <GeneratedCard>[];
+    for (final c in cards) {
+      final norm = c.question.toLowerCase().replaceAll(RegExp(r'[^\w]'), '');
+      if (seenNorm.add(norm)) {
+        unique.add(c);
+      }
+    }
+
+    // Score each card
+    final scored = unique.map((card) {
+      double score = 10.0;
+      final full = '${card.question} ${card.answer}';
+
+      // Presence of chemical formulas / subscripts (e.g. H₂SO₄, Fe³⁺, etc.)
+      if (RegExp(r'[₀-₉]|[⁰-⁹]').hasMatch(full)) score += 5.0;
+
+      // Presence of reaction arrows / equilibrium
+      if (full.contains('→') || full.contains('⇌') || full.contains('↔')) score += 5.0;
+
+      // Higher weight for mechanisms and named reactions
+      if (card.cardType == FlashcardType.mechanism) score += 6.0;
+      if (card.cardType == FlashcardType.examQuestion) score += 4.0;
+      if (card.cardType == FlashcardType.comparison) score += 4.0;
+
+      // Structured answer bonus
+      if (card.answer.contains('Key idea:') || card.answer.contains('Why / Mechanism:')) score += 3.0;
+
+      // Rich key terms bonus
+      score += (card.keyTerms.length.clamp(0, 5) * 1.5);
+
+      // Penalize excessively short or vague answers
+      if (card.answer.length < 30) score -= 8.0;
+
+      return (card: card, score: score);
+    }).toList();
+
+    scored.sort((a, b) => b.score.compareTo(a.score));
+    return scored.map((s) => s.card).toList();
   }
 }
 

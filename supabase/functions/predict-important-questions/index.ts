@@ -120,17 +120,25 @@ Deno.serve(async (req) => {
     }
 
     // 3. Build prompt and schema
-    const prompt = `You are an expert MSc Chemistry examination analyst and university professor.
-You have been provided with the combined text from ${paperCount} previous year question papers for the subject: "${subjectName}" (${universityName}${yearRange ? `, years: ${yearRange}` : ""}).
+    const prompt = `You are a distinguished MSc Chemistry examiner with 20+ years of university examination setting experience. You have been provided with the combined raw text from ${paperCount} previous year question papers for the subject: "${subjectName}" (${universityName}${yearRange ? `, years: ${yearRange}` : ""}).
 
-Your task:
-1. Identify which topics, concepts, and reaction mechanisms appeared MOST FREQUENTLY across all papers.
-2. Predict the questions MOST LIKELY to appear in the upcoming examination based on recurring patterns.
-3. Categorize predictions by marks weightage (2-Mark short conceptual, 5-Mark explanatory, 10-Mark comprehensive / reaction mechanism).
-4. Provide structured model answer hints for each question to guide the student's preparation.
+ANALYSIS OBJECTIVE:
+1. Identify which topics, reaction mechanisms, concepts, and numerical problem types appeared MOST FREQUENTLY across all papers (track exact recurrence count per topic).
+2. Predict the questions MOST LIKELY to appear in the upcoming examination. Base predictions ONLY on pattern evidence from the provided papers — do NOT fabricate topics not evidenced in the text.
+3. Categorise predictions by marks (2-mark: short conceptual/definition; 5-mark: explanatory with mechanism outline; 10-mark: comprehensive mechanism, derivation, or numerical problem).
+4. Provide structured model answer hints highlighting key terms, equations, mechanisms, or steps required for full marks at MSc level.
+
+STRICT QUALITY RULES:
+- All questions MUST be scientifically accurate and phrased in proper academic examination language.
+- Do NOT generate vague filler questions like "Explain the importance of chemistry."
+- Reaction mechanism questions MUST name the mechanism (e.g., SN2, E2, Aldol, Grignard) and specify reagents/conditions.
+- Numerical questions MUST include relevant formula references in the hints (e.g., ΔG = ΔH - TΔS).
+- Short questions MUST test precise knowledge (e.g., IUPAC names, specific values, exact definitions).
+- Use MSc-level terminology throughout — not undergraduate simplifications.
+- Each predicted question MUST have a clear rationale (reason field) explaining WHY it is likely, citing evidence from the papers.
 
 PREVIOUS YEAR PAPERS COMBINED CONTENT:
-${combinedText.slice(0, 16000)}`;
+${combinedText.slice(0, 18000)}`;
 
     const responseSchema = {
       type: "OBJECT",
@@ -161,7 +169,7 @@ ${combinedText.slice(0, 16000)}`;
               reason: { type: "STRING" },
               model_answer_hints: { type: "ARRAY", items: { type: "STRING" } },
             },
-            required: ["question", "marks", "question_type", "topic", "importance", "model_answer_hints"],
+            required: ["question", "marks", "question_type", "topic", "importance", "reason", "model_answer_hints"],
           },
         },
         topic_frequency_summary: {
@@ -186,18 +194,15 @@ ${combinedText.slice(0, 16000)}`;
       ],
     };
 
-    const model = Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash";
+    const model = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
     const aiRes = await fetchGeminiWithRotation(
       `models/${model}:generateContent`,
       {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.25,
+          temperature: 0.2,
           maxOutputTokens: 8192,
           responseMimeType: "application/json",
-          thinkingConfig: {
-            thinkingLevel: "low",
-          },
           responseSchema,
         },
       }
@@ -235,7 +240,7 @@ ${combinedText.slice(0, 16000)}`;
         body: JSON.stringify({
           cache_key: cacheKey,
           feature: "predict_questions",
-          prompt_version: "v2",
+          prompt_version: "v3",
           response: result,
           user_id: userId,
           source_id: subjectName,
