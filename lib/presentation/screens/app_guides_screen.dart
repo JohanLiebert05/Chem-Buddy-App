@@ -42,6 +42,19 @@ class AppGuidesScreen extends StatelessWidget {
             ),
 
             _GuideCard(
+              icon: Icons.draw_rounded,
+              title: 'ChemDraw Smart Canvas & Reaction Predictor',
+              subtitle: 'Interactive 2D chemical sketcher, templates, and reaction AI',
+              bullets: [
+                'Use the bottom or top toolbar to select bonds (single, double, triple, wedge, dash).',
+                'Tap ring templates for Benzene, Cyclohexane, Naphthalene, Indole, and Ferrocene.',
+                'Single-tap to insert functional groups (—OH, —NH₂, —COOH, —CHO, —NO₂, —CN).',
+                'Draw reaction arrows (→) between molecules to predict reaction products with AI.',
+                'Export structures as SMILES, Molfile, or vector SVG for lab records and research.',
+              ],
+            ),
+
+            _GuideCard(
               icon: Icons.how_to_reg_rounded,
               title: 'Attendance Tracker & Safe Bunks',
               subtitle: 'Calculating safety margins and remaining leaves',

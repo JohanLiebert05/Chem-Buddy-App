@@ -191,7 +191,7 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
   @override
   void initState() {
     super.initState();
-    _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..forward();
+    _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..forward();
   }
 
   @override
@@ -202,72 +202,97 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
-    final fade = CurvedAnimation(parent: _intro, curve: Curves.easeInOutCubic);
-    final slide = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(fade);
+    final fade = CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic);
+    final slide = Tween<Offset>(begin: const Offset(0, 0.04), end: Offset.zero).animate(fade);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: FadeTransition(
         opacity: fade,
         child: SlideTransition(
           position: slide,
           child: Column(
             children: [
-              const Spacer(),
-              const ChemBuddyMascot(size: MascotSize.large, state: MascotState.idle),
-              const SizedBox(height: 20),
-              const ChemBuddyWordmark(fontSize: 32, showTag: false),
+              const SizedBox(height: 12),
+              const ChemBuddyMascot(size: MascotSize.medium, state: MascotState.idle),
+              const SizedBox(height: 12),
+              const ChemBuddyWordmark(fontSize: 28, showTag: false),
               const SizedBox(height: 4),
               Text(
                 'BY PRAJWAL A KAMBAR',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 2.5,
+                  letterSpacing: 2.2,
                   color: AppColors.textMuted,
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.purple.withValues(alpha: 0.18),
+                  color: AppColors.purple.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4), width: 1),
+                  border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.35), width: 1),
                 ),
                 child: const Text(
-                  '✨ YOUR MSc CHEMISTRY COMPANION',
+                  '✨ MSc CHEMISTRY INTELLIGENCE',
                   style: TextStyle(
                     color: AppColors.purpleBright,
                     fontWeight: FontWeight.w800,
-                    fontSize: 11,
-                    letterSpacing: 1.2,
+                    fontSize: 10.5,
+                    letterSpacing: 1.1,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               const Text(
-                'ChemBuddy is built specifically for MSc Chemistry students — your intelligent companion for AI problem-solving, reaction mechanisms, active-recall smart flashcards, interactive quizzes, and university exam preparation.',
+                'Everything you need for your postgraduate chemistry journey.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.textSecondary,
-                  fontSize: 13.5,
-                  height: 1.5,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w500,
+                  height: 1.35,
                 ),
               ),
-              const SizedBox(height: 16),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
-                children: const [
-                  _FeaturePill(icon: '⚗️', label: 'Reaction Mechanisms'),
-                  _FeaturePill(icon: '🧠', label: 'Spaced Repetition'),
-                  _FeaturePill(icon: '📝', label: 'AI Quizzes'),
-                  _FeaturePill(icon: '📊', label: 'Attendance & Timetable'),
-                ],
+              const SizedBox(height: 14),
+              Expanded(
+                child: ListView(
+                  physics: const BouncingScrollPhysics(),
+                  children: const [
+                    _FeatureRow(
+                      icon: Icons.draw_rounded,
+                      iconColor: Color(0xFF06B6D4),
+                      title: 'ChemDraw Smart Canvas',
+                      subtitle: 'Interactive 2D structure sketching, ring templates & reaction prediction.',
+                      badge: 'NEW',
+                    ),
+                    SizedBox(height: 8),
+                    _FeatureRow(
+                      icon: Icons.auto_awesome_rounded,
+                      iconColor: Color(0xFFA855F7),
+                      title: 'Live ChemBuddy AI',
+                      subtitle: 'Google Gemini tutor for reaction mechanisms, spectroscopy & exams.',
+                      badge: 'AI',
+                    ),
+                    SizedBox(height: 8),
+                    _FeatureRow(
+                      icon: Icons.document_scanner_rounded,
+                      iconColor: Color(0xFF3B82F6),
+                      title: 'Notes to Smart Flashcards',
+                      subtitle: 'Snap photos of handwritten notes into active recall flashcard sets.',
+                      badge: 'OCR',
+                    ),
+                    SizedBox(height: 8),
+                    _FeatureRow(
+                      icon: Icons.how_to_reg_rounded,
+                      iconColor: Color(0xFF10B981),
+                      title: 'Smart Attendance & Safe Bunks',
+                      subtitle: 'Live buffer calculation above 75%, timetable alerts & lecture schedules.',
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(flex: 2),
             ],
           ),
         ),
@@ -276,26 +301,94 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
   }
 }
 
-class _FeaturePill extends StatelessWidget {
-  const _FeaturePill({required this.icon, required this.label});
-  final String icon;
-  final String label;
+class _FeatureRow extends StatelessWidget {
+  const _FeatureRow({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    this.badge,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white10),
+        color: AppColors.surfaceElevated.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 12)),
-          const SizedBox(width: 5),
-          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: iconColor.withValues(alpha: 0.3)),
+            ),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        title,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    if (badge != null) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: iconColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: iconColor.withValues(alpha: 0.4), width: 0.8),
+                        ),
+                        child: Text(
+                          badge!,
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w900,
+                            color: iconColor,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -478,9 +571,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final registerNumber = TextEditingController();
   final password = TextEditingController();
   final name = TextEditingController();
-  bool signUp = true;
+  bool signUp = false;
   bool loading = false;
+  bool obscurePassword = true;
   String? error;
+
+  @override
+  void dispose() {
+    registerNumber.dispose();
+    password.dispose();
+    name.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -488,32 +590,147 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             children: [
-              Text(signUp ? 'Create your account' : 'Welcome back', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              // Minimalist Segmented Switcher
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceElevated,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _AuthTabButton(
+                        label: 'Sign In',
+                        active: !signUp,
+                        onTap: () => setState(() {
+                          signUp = false;
+                          error = null;
+                        }),
+                      ),
+                    ),
+                    Expanded(
+                      child: _AuthTabButton(
+                        label: 'Create Account',
+                        active: signUp,
+                        onTap: () => setState(() {
+                          signUp = true;
+                          error = null;
+                        }),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Title & Minimalist Subtitle
+              Text(
+                signUp ? 'Create Account' : 'Welcome Back',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.3,
+                ),
+              ),
               const SizedBox(height: 6),
-              const Text('Sign in with your name, register number, and a password.', style: TextStyle(color: AppColors.textSecondary)),
-              const SizedBox(height: 20),
-              TextField(controller: name, decoration: const InputDecoration(hintText: 'Full name')),
-              const SizedBox(height: 10),
-              TextField(controller: registerNumber, decoration: const InputDecoration(hintText: 'Register Number (e.g. 2024MSC001)')),
-              const SizedBox(height: 10),
-              TextField(controller: password, obscureText: true, decoration: const InputDecoration(hintText: 'Password')),
-              if (error != null) ...[
-                const SizedBox(height: 10),
-                Text(error!, style: const TextStyle(color: AppColors.danger)),
+              Text(
+                signUp
+                    ? 'Join ChemBuddy with your student register number.'
+                    : 'Sign in to access your notes, attendance, and AI.',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Full Name (Only for Sign Up)
+              if (signUp) ...[
+                _buildField(
+                  controller: name,
+                  hintText: 'Full Name',
+                  icon: Icons.person_outline_rounded,
+                ),
+                const SizedBox(height: 12),
               ],
-              const SizedBox(height: 16),
+
+              // Register Number
+              _buildField(
+                controller: registerNumber,
+                hintText: 'Register Number (e.g. 2024MSC001)',
+                icon: Icons.badge_outlined,
+              ),
+              const SizedBox(height: 12),
+
+              // Password
+              _buildField(
+                controller: password,
+                hintText: 'Password',
+                icon: Icons.lock_outline_rounded,
+                obscureText: obscurePassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    color: AppColors.textMuted,
+                    size: 20,
+                  ),
+                  onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                ),
+              ),
+
+              // Error Banner
+              if (error != null) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline_rounded, color: AppColors.danger, size: 18),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          error!,
+                          style: const TextStyle(
+                            color: AppColors.danger,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 24),
+
+              // Submit Button
               PrimaryButton(
-                label: signUp ? 'Create account' : 'Log in',
+                label: signUp ? 'Create Account' : 'Sign In',
                 loading: loading,
                 onPressed: () async {
                   final regNum = registerNumber.text.trim();
                   final pwd = password.text;
                   final fullName = name.text.trim();
-                  
+
+                  if (signUp && fullName.isEmpty) {
+                    setState(() => error = 'Please enter your full name');
+                    return;
+                  }
                   if (regNum.isEmpty) {
-                    setState(() => error = 'Register number cannot be empty');
+                    setState(() => error = 'Please enter your register number');
                     return;
                   }
                   if (pwd.length < 6) {
@@ -525,14 +742,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     loading = true;
                     error = null;
                   });
-                  
+
                   if (signUp) {
                     final exists = await SupabaseService.instance.registerNumberExists(regNum);
                     if (exists) {
                       if (!mounted) return;
                       setState(() {
                         loading = false;
-                        error = 'Register number already exists';
+                        error = 'Register number already registered';
                       });
                       return;
                     }
@@ -551,21 +768,108 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   });
                 },
               ),
-              TextButton(
-                onPressed: () => setState(() {
-                  signUp = !signUp;
-                  error = null;
-                }),
-                child: Text(signUp ? 'Already have an account? Log in' : 'New here? Create an account'),
+
+              const SizedBox(height: 16),
+
+              // Bottom Toggle
+              Center(
+                child: TextButton(
+                  onPressed: () => setState(() {
+                    signUp = !signUp;
+                    error = null;
+                  }),
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+                      children: [
+                        TextSpan(text: signUp ? 'Already have an account? ' : 'First time here? '),
+                        TextSpan(
+                          text: signUp ? 'Sign In' : 'Create Account',
+                          style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
         const Padding(
-          padding: EdgeInsets.fromLTRB(20, 8, 20, 20),
-          child: AppByPrajwal(large: true),
+          padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: AppByPrajwal(large: false),
         ),
       ],
+    );
+  }
+
+  Widget _buildField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+          prefixIcon: Icon(icon, color: AppColors.textMuted, size: 20),
+          suffixIcon: suffixIcon,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthTabButton extends StatelessWidget {
+  const _AuthTabButton({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: active ? AppColors.purple.withValues(alpha: 0.3) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: active
+              ? Border.all(color: AppColors.purpleBright.withValues(alpha: 0.5), width: 1)
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+              color: active ? Colors.white : AppColors.textMuted,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

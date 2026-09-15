@@ -48,14 +48,14 @@ jobs:
 
       - name: Copy Named APK
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.4.3-Release.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.4.4-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-v3.4.3-apk
-          path: ChemBuddy-v3.4.3-Release.apk
+          name: chem-buddy-v3.4.4-apk
+          path: ChemBuddy-v3.4.4-Release.apk
           retention-days: 30
 
       - name: Create GitHub Release (Tags only)
@@ -63,17 +63,21 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ChemBuddy-v3.4.3-Release.apk
+            ChemBuddy-v3.4.4-Release.apk
             Chem-Buddy-MSc-Release.apk
           name: ChemBuddy Release ${{ github.ref_name }}
           body: |
-            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.4.3)
+            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.4.4)
             
-            ### 🔬 What's Fixed & Upgraded in v3.4.3:
-            - **Attendance Tracker Layout Crash Fix**: Resolved the RenderFlex overflow ("Render Hiccup Encountered") occurring on standard and compact mobile viewports (e.g. iPhone/Android 360px–393px) in the timetable reference photo header. All dynamic text rows now utilize constrained `Expanded` layout with ellipsis handling.
-            - **Attendance Embedded Error Boundary**: Wrapped the embedded Attendance tab in `ClassesHubScreen` within an isolated `AppErrorBoundary` to prevent any sub-component layout issues from replacing the entire screen with an error card.
-            - **ChemBuddy General AI Mode & Live Internet Access**: Transparent multi-model failover (`gemini-3-flash-preview`, `gemini-flash-latest`, `gemini-3.6-flash`, `text-embedding-004`) across 4 Google Gemini API keys.
-            - **ChemDraw Canvas Restored**: Full touch drawing, smart auto-benzene placement, and functional group palette.
-            - **Handwritten Notes → OCR → Flashcards**: Multi-page gallery scans and camera captures synthesized directly into study flashcards.
-            - **Passing Automated Tests**: 100% test suite parity across automated unit, widget, and integration tests.
+            ### 🔬 What's New & Upgraded in v3.4.4:
+            - **Minimalist, Clean Login Page**: Completely redesigned login and signup with crisp typography, a sleek segmented `[ Sign In ] | [ Create Account ]` switcher, context-aware fields (Full Name shown only when creating an account), password visibility toggle, and minimalist sentence phrasing.
+            - **Intelligent Starting Info Tour**: Upgraded the interactive 7-step tour to showcase ChemBuddy's flagship capabilities:
+              1. **ChemDraw Smart Canvas**: Interactive 2D sketcher, aromatic fused ring templates (Benzene, Cyclohexane, Naphthalene, Indole, Ferrocene), functional group palette, and reaction arrows with AI prediction.
+              2. **Live ChemBuddy AI**: Google Gemini reasoning for mechanisms, spectroscopy interpretation, and the new ✨ General AI mode.
+              3. **Handwritten Notes to Flashcards**: Multi-page camera & gallery OCR extraction for active recall study sets.
+              4. **Attendance Intelligence**: Real-time 75% safe-margin buffer ("Can Skip" counts) & recovery roadmaps.
+              5. **Smart Timetable**: Instant department presets (Organic & Inorganic) with pinch-to-zoom photo references.
+              6. **5-Step Academic Workflow**: Proven daily student routine for top marks in university exams.
+            - **App Guides Update**: Added dedicated ChemDraw guide card accessible anytime from settings.
+            - **100% Passing Automated Tests & Clean Lints**: All unit, widget, and layout tests pass with 0 analyzer issues.
 

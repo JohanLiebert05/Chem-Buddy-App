@@ -135,12 +135,12 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
                 onPageChanged: (i) => setState(() => _step = i),
                 children: [
                   _buildStep1Welcome(),
-                  _buildStep2Home(),
-                  _buildStep3Timetable(),
-                  _buildStep4Attendance(),
-                  _buildStep5PdfLibrary(),
-                  _buildStep6StudyWithAi(),
-                  _buildStep7StudyRoutine(),
+                  _buildStep2ChemDraw(),
+                  _buildStep3GeminiAi(),
+                  _buildStep4HandwrittenNotes(),
+                  _buildStep5Attendance(),
+                  _buildStep6Timetable(),
+                  _buildStep7StudyWorkflow(),
                 ],
               ),
             ),
@@ -195,262 +195,268 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          const SizedBox(height: 10),
-          const AtomLogo(size: 80, animated: true),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          const AtomLogo(size: 72, animated: true),
+          const SizedBox(height: 14),
           Text(
             'Welcome to ChemBuddy 🧪',
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 22,
+              fontSize: 21,
               fontWeight: FontWeight.w800,
               color: Colors.white,
             ),
           ),
           const SizedBox(height: 6),
           const Text(
-            'Your academic companion for MSc Chemistry.',
+            'MSc Chemistry, Supercharged with AI.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: AppColors.purpleBright,
-              fontSize: 13.5,
-              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           const GlowCard(
             padding: EdgeInsets.all(14),
             child: Text(
-              'ChemBuddy is designed specifically for MSc Chemistry coursework. It helps you track classes, maintain safe attendance, organize subject notes, and study efficiently with grounded AI.',
+              'Your all-in-one companion for postgraduate chemistry. Master reaction mechanisms, study with live Google Gemini, and track coursework in one unified workspace.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.45),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.45),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 2. HOME SCREEN
-  Widget _buildStep2Home() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _badge('HOME SCREEN', Icons.home_rounded),
-          const SizedBox(height: 10),
-          const Text(
-            'Your Daily Command Center',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Colors.white),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Your Home screen gives you everything important for today — upcoming classes, attendance health, study progress, and quick access to your chemistry resources.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 16),
-          GlowCard(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.purple.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.school, color: AppColors.purpleBright, size: 22),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Next Class Alert', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                      Text('Organic Spectroscopy · Room 204', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 3. TIMETABLE
-  Widget _buildStep3Timetable() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _badge('TIMETABLE & OCR', Icons.calendar_month_rounded),
-          const SizedBox(height: 10),
-          const Text(
-            'Organize Classes & Reminders',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Colors.white),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Upload your timetable photo or enter classes manually. ChemBuddy uses it to organize your daily schedule and alert you before lectures.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
           ),
           const SizedBox(height: 14),
-          GlowCard(
-            padding: const EdgeInsets.all(12),
-            borderColor: AppColors.blue.withValues(alpha: 0.4),
-            child: Row(
-              children: [
-                const Icon(Icons.document_scanner_rounded, color: AppColors.blue, size: 24),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('AI Timetable OCR Scanner', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                      SizedBox(height: 2),
-                      Text('Snap a photo of your printed timetable and ChemBuddy reads it into editable slots automatically.', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.3)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: const [
+              _FeatureChip(icon: '🎨', label: 'ChemDraw Canvas'),
+              _FeatureChip(icon: '⚡', label: 'Gemini AI Tutor'),
+              _FeatureChip(icon: '📸', label: 'Notes to Flashcards'),
+              _FeatureChip(icon: '📊', label: 'Attendance & Safe Bunk'),
+            ],
           ),
         ],
       ),
     );
   }
 
-  // 4. ATTENDANCE
-  Widget _buildStep4Attendance() {
+  // 2. CHEMDRAW CANVAS (NEW FEATURE)
+  Widget _buildStep2ChemDraw() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _badge('ATTENDANCE TRACKER', Icons.how_to_reg_rounded),
+          _badge('NEW · CHEMDRAW CANVAS', Icons.draw_rounded, color: const Color(0xFF06B6D4)),
           const SizedBox(height: 10),
           const Text(
-            'Stay Safe Above 75%',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Colors.white),
+            'Interactive Chemical Sketcher 🎨',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           const Text(
-            'Mark your attendance after each class. ChemBuddy calculates your overall percentage and attendance risk in real time.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 14),
-          GlowCard(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text('82%', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w900, fontSize: 20)),
-                ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Safe to Bunk 🟢', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 13)),
-                      SizedBox(height: 2),
-                      Text('You can skip 3 more classes while staying safely above the 75% requirement.', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.3)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 5. PDF LIBRARY
-  Widget _buildStep5PdfLibrary() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _badge('PDF LIBRARY', Icons.menu_book_rounded),
-          const SizedBox(height: 10),
-          const Text(
-            'Chemistry Notes & Textbooks',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Colors.white),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Store your chemistry PDFs, syllabus notes, and reference books here. Organize them by subject folders so you can find material in seconds.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 14),
-          GlowCard(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                const Icon(Icons.folder_special, color: AppColors.purpleBright, size: 24),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Organic / Inorganic / Physical Folders', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                      Text('Offline local storage with quick-search and bookmarking.', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 6. STUDY WITH AI
-  Widget _buildStep6StudyWithAi() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _badge('STUDY WITH AI', Icons.auto_awesome_rounded),
-          const SizedBox(height: 10),
-          const Text(
-            'Upload Notes & Let AI Guide You',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Colors.white),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Upload any chemistry PDF and ChemBuddy breaks it down into an intelligent study routine:',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.35),
+            'Draw molecules and reaction mechanisms with a touch-first canvas.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceElevated,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
-            ),
-            child: const Column(
-              children: [
-                _FlowStep(label: '1. Summary', desc: 'Academic overview, formulas & key definitions'),
-                _FlowStep(label: '2. Important Topics', desc: '🔥 Ranked priorities based on depth & exams'),
-                _FlowStep(label: '3. Ask ChemBuddy', desc: 'Grounded tutor attached to your notes'),
-                _FlowStep(label: '4. Smart Flashcards', desc: '10/20/30 cards for active spaced recall'),
-                _FlowStep(label: '5. Practice Quiz', desc: 'Exam questions with weak-area diagnostics', isLast: true),
-              ],
-            ),
+          const _TourCard(
+            icon: Icons.hexagon_outlined,
+            iconColor: Color(0xFF06B6D4),
+            title: 'Ring Templates & Fused Systems',
+            description: 'One-tap insertion for Benzene, Cyclohexane, Naphthalene, Indole, Ferrocene, and crown ethers.',
+          ),
+          const SizedBox(height: 8),
+          const _TourCard(
+            icon: Icons.hub_rounded,
+            iconColor: Color(0xFF06B6D4),
+            title: 'Functional Groups & Smart Snapping',
+            description: 'Quick-insert palette (—OH, —COOH, —NO₂, —CHO) with automatic magnetic bond snapping.',
+          ),
+          const SizedBox(height: 8),
+          const _TourCard(
+            icon: Icons.arrow_forward_rounded,
+            iconColor: Color(0xFF06B6D4),
+            title: 'Reaction Arrows & Predictor',
+            description: 'Draw multi-reactant reactions with "+" symbols, mechanism arrows, and instant AI reaction prediction.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 3. GEMINI AI TUTOR
+  Widget _buildStep3GeminiAi() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _badge('LIVE GOOGLE GEMINI', Icons.auto_awesome_rounded, color: const Color(0xFFA855F7)),
+          const SizedBox(height: 10),
+          const Text(
+            'Intelligent Academic Tutor ⚡',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Powered by live Google Gemini with dedicated modes for MSc studies.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+          ),
+          const SizedBox(height: 12),
+          const _TourCard(
+            icon: Icons.psychology_rounded,
+            iconColor: Color(0xFFA855F7),
+            title: '✨ General AI & Internet Access',
+            description: 'Ask any chemistry, scientific, or research question with live internet intelligence and multi-key failover.',
+          ),
+          const SizedBox(height: 8),
+          const _TourCard(
+            icon: Icons.compare_arrows_rounded,
+            iconColor: Color(0xFFA855F7),
+            title: 'Step-by-Step Reaction Mechanisms',
+            description: 'Arrow-pushing, reaction intermediates, stereochemistry, and transition states explained clearly.',
+          ),
+          const SizedBox(height: 8),
+          const _TourCard(
+            icon: Icons.graphic_eq_rounded,
+            iconColor: Color(0xFFA855F7),
+            title: 'Spectroscopy Deciphering',
+            description: 'Decode NMR proton splits, IR absorption bands, and mass spectrometry fragmentation effortlessly.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 4. NOTES TO FLASHCARDS (OCR)
+  Widget _buildStep4HandwrittenNotes() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _badge('AI OCR & FLASHCARDS', Icons.document_scanner_rounded, color: const Color(0xFF3B82F6)),
+          const SizedBox(height: 10),
+          const Text(
+            'Handwritten Notes → Flashcards 📸',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Convert classroom notes and blackboard photos into study sets in seconds.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+          ),
+          const SizedBox(height: 12),
+          const _TourCard(
+            icon: Icons.camera_alt_rounded,
+            iconColor: Color(0xFF3B82F6),
+            title: 'Multi-Page Photo Scanning',
+            description: 'Snap photos with your camera or select multiple notebook pages directly from your gallery.',
+          ),
+          const SizedBox(height: 8),
+          const _TourCard(
+            icon: Icons.spellcheck_rounded,
+            iconColor: Color(0xFF3B82F6),
+            title: 'Chemistry Formula OCR',
+            description: 'Advanced vision AI extracts molecular formulas, synthesis steps, and reaction conditions accurately.',
+          ),
+          const SizedBox(height: 8),
+          const _TourCard(
+            icon: Icons.style_rounded,
+            iconColor: Color(0xFF3B82F6),
+            title: 'Active Spaced Repetition',
+            description: 'Review cards with self-grading (Easy, Difficult, Skip) to lock difficult mechanisms into long-term memory.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 5. ATTENDANCE & SAFE BUNKS
+  Widget _buildStep5Attendance() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _badge('ATTENDANCE INTELLIGENCE', Icons.how_to_reg_rounded, color: const Color(0xFF10B981)),
+          const SizedBox(height: 10),
+          const Text(
+            'Stay Confidently Above 75% 📊',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Real-time calculations so you never risk university attendance shortages.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+          ),
+          const SizedBox(height: 12),
+          const _TourCard(
+            icon: Icons.check_circle_outline_rounded,
+            iconColor: Color(0xFF10B981),
+            title: 'Live "Can Skip" Buffer',
+            description: 'Knows exactly how many lectures you can miss while staying safely above the 75% requirement.',
+          ),
+          const SizedBox(height: 8),
+          const _TourCard(
+            icon: Icons.trending_up_rounded,
+            iconColor: Color(0xFF10B981),
+            title: 'Recovery Roadmap',
+            description: 'In the warning zone? ChemBuddy calculates the exact number of consecutive classes needed to recover.',
+          ),
+          const SizedBox(height: 8),
+          const _TourCard(
+            icon: Icons.filter_list_rounded,
+            iconColor: Color(0xFF10B981),
+            title: 'Multi-Target Buffers',
+            description: 'Target 75%, 80%, 85%, or 90% with full Excused and On-Duty attendance preservation.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 6. TIMETABLE & SCHEDULE
+  Widget _buildStep6Timetable() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _badge('SMART TIMETABLE', Icons.calendar_month_rounded, color: const Color(0xFFF59E0B)),
+          const SizedBox(height: 10),
+          const Text(
+            'Your Daily Command Center 📅',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Your day at a glance. Class timings, room locations, and lecture alerts.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+          ),
+          const SizedBox(height: 12),
+          const _TourCard(
+            icon: Icons.school_rounded,
+            iconColor: Color(0xFFF59E0B),
+            title: 'MSc Timetable Presets',
+            description: 'Pre-loaded schedules for Organic and Inorganic MSc chemistry streams with faculty mapping.',
+          ),
+          const SizedBox(height: 8),
+          const _TourCard(
+            icon: Icons.photo_size_select_actual_rounded,
+            iconColor: Color(0xFFF59E0B),
+            title: 'Pinch-to-Zoom Reference Photo',
+            description: 'Keep your official printed department schedule handy with instant pinch-to-zoom access.',
+          ),
+          const SizedBox(height: 8),
+          const _TourCard(
+            icon: Icons.notifications_active_rounded,
+            iconColor: Color(0xFFF59E0B),
+            title: 'Lecture Reminders',
+            description: 'Automated notifications before each class so you always reach the right lecture hall on time.',
           ),
         ],
       ),
@@ -458,31 +464,33 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
   }
 
   // 7. STUDY ROUTINE
-  Widget _buildStep7StudyRoutine() {
+  Widget _buildStep7StudyWorkflow() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _badge('STUDY ROUTINE', Icons.psychology_rounded),
+          _badge('STUDY ROUTINE', Icons.rocket_launch_rounded, color: const Color(0xFFA855F7)),
           const SizedBox(height: 10),
           const Text(
-            'Your Recommended Workflow',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Colors.white),
+            'The 5-Step Academic Routine 🚀',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
+          const Text(
+            'Proven daily routine for top marks in university exams.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+          ),
+          const SizedBox(height: 12),
           const GlowCard(
             padding: EdgeInsets.all(12),
             child: Column(
               children: [
-                _RoutineRow(num: '1', text: 'Check today\'s classes & room numbers'),
-                _RoutineRow(num: '2', text: 'Mark attendance right after lecture'),
-                _RoutineRow(num: '3', text: 'Upload or open course notes in PDF Library'),
-                _RoutineRow(num: '4', text: 'Identify High Priority topics with AI'),
-                _RoutineRow(num: '5', text: 'Ask ChemBuddy about difficult mechanisms'),
-                _RoutineRow(num: '6', text: 'Generate 10 flashcards for active recall'),
-                _RoutineRow(num: '7', text: 'Take a practice quiz before tests'),
-                _RoutineRow(num: '8', text: 'Review weak topics highlighted in results', isLast: true),
+                _RoutineRow(num: '1', title: 'Morning Schedule', text: 'Check today\'s classes, timings, and lecture halls.'),
+                _RoutineRow(num: '2', title: 'Mark Attendance', text: 'Tap Present right after each lecture to update your safe bunk buffer.'),
+                _RoutineRow(num: '3', title: 'Sketch & Scan', text: 'Draw structures in ChemDraw or snap photos of lecture notes.'),
+                _RoutineRow(num: '4', title: 'Active Recall', text: 'Review 10 flashcards daily to cement reaction mechanisms.'),
+                _RoutineRow(num: '5', title: 'Exam Readiness', text: 'Test yourself with AI quizzes and review weak topic diagnostics.', isLast: true),
               ],
             ),
           ),
@@ -491,25 +499,26 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
     );
   }
 
-  Widget _badge(String title, IconData icon) {
+  Widget _badge(String title, IconData icon, {Color? color}) {
+    final c = color ?? AppColors.purpleBright;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.purple.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.purple.withValues(alpha: 0.35)),
+        color: c.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: c.withValues(alpha: 0.35)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppColors.purpleBright, size: 14),
+          Icon(icon, color: c, size: 14),
           const SizedBox(width: 6),
           Text(
             title,
-            style: const TextStyle(
-              color: AppColors.purpleBright,
+            style: TextStyle(
+              color: c,
               fontWeight: FontWeight.w800,
-              fontSize: 11,
+              fontSize: 10.5,
               letterSpacing: 0.8,
             ),
           ),
@@ -519,10 +528,103 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
   }
 }
 
-class _FlowStep extends StatelessWidget {
-  const _FlowStep({required this.label, required this.desc, this.isLast = false});
+class _TourCard extends StatelessWidget {
+  const _TourCard({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.description,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: iconColor.withValues(alpha: 0.3)),
+            ),
+            child: Icon(icon, color: iconColor, size: 16),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeatureChip extends StatelessWidget {
+  const _FeatureChip({required this.icon, required this.label});
+  final String icon;
   final String label;
-  final String desc;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoutineRow extends StatelessWidget {
+  const _RoutineRow({
+    required this.num,
+    required this.title,
+    required this.text,
+    this.isLast = false,
+  });
+
+  final String num;
+  final String title;
+  final String text;
   final bool isLast;
 
   @override
@@ -533,50 +635,13 @@ class _FlowStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 8,
-            height: 8,
-            margin: const EdgeInsets.only(top: 4, right: 8),
-            decoration: const BoxDecoration(
-              color: AppColors.purpleBright,
-              shape: BoxShape.circle,
-            ),
-          ),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                children: [
-                  TextSpan(text: '$label: ', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                  TextSpan(text: desc),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RoutineRow extends StatelessWidget {
-  const _RoutineRow({required this.num, required this.text, this.isLast = false});
-  final String num;
-  final String text;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 6),
-      child: Row(
-        children: [
-          Container(
-            width: 20,
-            height: 20,
+            width: 22,
+            height: 22,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppColors.purple.withValues(alpha: 0.2),
               shape: BoxShape.circle,
+              border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
             ),
             child: Text(
               num,
@@ -585,9 +650,19 @@ class _RoutineRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: Colors.white),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  text,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.3),
+                ),
+              ],
             ),
           ),
         ],
