@@ -4,6 +4,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTheme {
+  static const PageTransitionsTheme pageTransitionsTheme = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.iOS: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+    },
+  );
+
   static ThemeData get dark {
     final base = ThemeData(
       brightness: Brightness.dark,
@@ -142,15 +152,7 @@ class AppTheme {
     return base.copyWith(
       textTheme: textTheme,
       splashFactory: InkSparkle.splashFactory,
-      pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: _SmoothPageTransitionsBuilder(),
-          TargetPlatform.iOS: _SmoothPageTransitionsBuilder(),
-          TargetPlatform.windows: _SmoothPageTransitionsBuilder(),
-          TargetPlatform.macOS: _SmoothPageTransitionsBuilder(),
-          TargetPlatform.linux: _SmoothPageTransitionsBuilder(),
-        },
-      ),
+      pageTransitionsTheme: pageTransitionsTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -237,28 +239,6 @@ class AppTheme {
           borderRadius: BorderRadius.circular(14),
           side: const BorderSide(color: AppColors.borderHighlight, width: 0.8),
         ),
-      ),
-    );
-  }
-}
-
-class _SmoothPageTransitionsBuilder extends PageTransitionsBuilder {
-  const _SmoothPageTransitionsBuilder();
-
-  @override
-  Widget buildTransitions<T>(
-    PageRoute<T> route,
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget child,
-  ) {
-    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-    return FadeTransition(
-      opacity: curved,
-      child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0.05, 0), end: Offset.zero).animate(curved),
-        child: child,
       ),
     );
   }

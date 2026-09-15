@@ -655,7 +655,10 @@ class _PredictImportantQuestionsScreenState
                   selectedColor: AppColors.brandPrimary,
                   backgroundColor: AppColors.bg2,
                   onSelected: (val) {
-                    if (val) setState(() => _selectedFilter = f);
+                    if (val) {
+                      AppHaptics.selection();
+                      setState(() => _selectedFilter = f);
+                    }
                   },
                 ),
               );
@@ -751,15 +754,19 @@ class _PredictedQuestionCardState extends State<_PredictedQuestionCard> {
           ),
           if (q.reason.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(
-              'Trend rationale: ${q.reason}',
-              style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.textSecondary),
+            ChemistryMarkdownView(
+              text: '*Trend rationale:* ${q.reason}',
+              textStyle: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.textSecondary),
+              selectable: false,
             ),
           ],
           if (q.modelAnswerHints.isNotEmpty) ...[
             const SizedBox(height: 10),
             InkWell(
-              onTap: () => setState(() => _expanded = !_expanded),
+              onTap: () {
+                AppHaptics.selection();
+                setState(() => _expanded = !_expanded);
+              },
               child: Row(
                 children: [
                   Icon(

@@ -45,7 +45,11 @@ class _MainShellState extends ConsumerState<MainShell> {
       debugPrint('[MainShell] Tab $clamped is already active; ignoring redundant tap');
       return;
     }
-    AppHaptics.selection();
+    if (clamped == 2) {
+      AppHaptics.confirm();
+    } else {
+      AppHaptics.selection();
+    }
     ref.read(shellTabProvider.notifier).state = clamped;
   }
 
@@ -62,7 +66,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         backgroundColor: Colors.transparent,
         body: SafeArea(
           bottom: false,
-          child: IndexedStack(
+          child: _AnimatedFadeIndexedStack(
             index: safeIndex,
             children: [
               for (var i = 0; i < _tabs.length; i++)
@@ -231,10 +235,7 @@ class _ModernBottomNav extends StatelessWidget {
   Widget _buildElevatedAiButton() {
     final isSelected = selectedIndex == 2;
     return GestureDetector(
-      onTap: () {
-        AppHaptics.confirm();
-        onTabSelected(2);
-      },
+      onTap: () => onTabSelected(2),
       child: AnimatedScale(
         scale: isSelected ? 1.06 : 1.0,
         duration: const Duration(milliseconds: 220),
@@ -283,6 +284,78 @@ class _ModernBottomNav extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Fluid, state-preserving animated switcher that transitions between tabs
+/// using Google Pixel Material 3 expressive easing and subtle forward scale,
+/// while keeping underlying widget state and scroll positions completely intact.
+class _AnimatedFadeIndexedStack extends StatefulWidget {
+  final int index;
+  final List<Widget> children;
+
+  const _AnimatedFadeIndexedStack({
+    required this.index,
+    required this.children,
+  });
+
+  @override
+  State<_AnimatedFadeIndexedStack> createState() => _AnimatedFadeIndexedStackState();
+}
+
+class _AnimatedFadeIndexedStackState extends State<_AnimatedFadeIndexedStack>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  int _activeChildIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _activeChildIndex = widget.index;
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.35, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    _scaleAnimation = Tween<double>(begin: 0.985, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    _controller.value = 1.0;
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedFadeIndexedStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.index != _activeChildIndex) {
+      setState(() {
+        _activeChildIndex = widget.index;
+      });
+      _controller.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: IndexedStack(
+          index: _activeChildIndex,
+          children: widget.children,
         ),
       ),
     );

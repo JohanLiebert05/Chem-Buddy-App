@@ -48,14 +48,14 @@ jobs:
 
       - name: Copy Named APK
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.4.4-Release.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.4.5-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-v3.4.4-apk
-          path: ChemBuddy-v3.4.4-Release.apk
+          name: chem-buddy-v3.4.5-apk
+          path: ChemBuddy-v3.4.5-Release.apk
           retention-days: 30
 
       - name: Create GitHub Release (Tags only)
@@ -63,21 +63,25 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ChemBuddy-v3.4.4-Release.apk
+            ChemBuddy-v3.4.5-Release.apk
             Chem-Buddy-MSc-Release.apk
           name: ChemBuddy Release ${{ github.ref_name }}
           body: |
-            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.4.4)
+            ## ChemBuddy Release ${{ github.ref_name }} (Version 3.4.5)
             
-            ### 🔬 What's New & Upgraded in v3.4.4:
-            - **Minimalist, Clean Login Page**: Completely redesigned login and signup with crisp typography, a sleek segmented `[ Sign In ] | [ Create Account ]` switcher, context-aware fields (Full Name shown only when creating an account), password visibility toggle, and minimalist sentence phrasing.
-            - **Intelligent Starting Info Tour**: Upgraded the interactive 7-step tour to showcase ChemBuddy's flagship capabilities:
-              1. **ChemDraw Smart Canvas**: Interactive 2D sketcher, aromatic fused ring templates (Benzene, Cyclohexane, Naphthalene, Indole, Ferrocene), functional group palette, and reaction arrows with AI prediction.
-              2. **Live ChemBuddy AI**: Google Gemini reasoning for mechanisms, spectroscopy interpretation, and the new ✨ General AI mode.
-              3. **Handwritten Notes to Flashcards**: Multi-page camera & gallery OCR extraction for active recall study sets.
-              4. **Attendance Intelligence**: Real-time 75% safe-margin buffer ("Can Skip" counts) & recovery roadmaps.
-              5. **Smart Timetable**: Instant department presets (Organic & Inorganic) with pinch-to-zoom photo references.
-              6. **5-Step Academic Workflow**: Proven daily student routine for top marks in university exams.
-            - **App Guides Update**: Added dedicated ChemDraw guide card accessible anytime from settings.
-            - **100% Passing Automated Tests & Clean Lints**: All unit, widget, and layout tests pass with 0 analyzer issues.
+            ### ✨ What's New & Upgraded in v3.4.5:
+            - **Google Pixel-Grade Material 3 Expressive Motion**:
+              - **Fluid, State-Preserving Tab Switching**: Implemented `_AnimatedFadeIndexedStack` in `MainShell` using `Curves.easeOutCubic` and subtle forward scaling (`0.985` → `1.0`, 220ms). Eliminates abrupt cuts while preserving 100% of underlying tab state, scroll positions, and sketcher canvases.
+              - **FadeForwards Page Transitions**: Configured `AppTheme.dark` with `FadeForwardsPageTransitionsBuilder` across routes for smooth, native Android 14/15 Pixel-style page navigation.
+            - **120Hz High Refresh Rate Native Optimization**:
+              - Updated `MainActivity.kt` with Android API 23+ window attributes querying `supportedModes` and requesting `preferredDisplayModeId` for maximum available refresh rate (90Hz / 120Hz / 144Hz).
+              - Replaced stiff scrolling physics across Exam Mode and Hub lists with fluid `BouncingScrollPhysics()` tuned for 120fps display performance.
+            - **Tactile Smart Haptics**:
+              - Guarded all haptic feedback calls in `AppHaptics` with exception handling to prevent crashes across all devices and platforms.
+              - Cleaned up tab switching haptics: crisp `selection()` on flat tabs and affirming `confirm()` on the central floating Ask AI button with no redundant double clicks.
+            - **Exam Mode: Zero Raw Text**:
+              - Converted all Exam Mode question titles, examiner tips, marking breakdown points, self-assessment criteria, pitfalls, and feedback notes to full `ChemistryMarkdownView` rendering.
+              - Full native support for LaTeX equations, sub/superscript chemical formulas (`H₂SO₄`, `[CoCl₄]²⁻`), and structured academic tables.
+            - **Automated Verification**:
+              - 100% pass rate across entire test suite with 0 analyzer issues or warnings.
 

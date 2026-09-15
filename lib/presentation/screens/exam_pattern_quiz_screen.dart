@@ -207,9 +207,10 @@ class _ExamPatternQuizScreenState extends ConsumerState<ExamPatternQuizScreen> {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.25)),
                 ),
-                child: Text(
-                  q.examTips.isNotEmpty ? q.examTips : 'Always draw clean chemical structures, state conditions (temperature, catalyst, solvent), and write step-by-step mechanisms.',
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 12.5, height: 1.45),
+                child: ChemistryMarkdownView(
+                  text: q.examTips.isNotEmpty ? q.examTips : 'Always draw clean chemical structures, state conditions (temperature, catalyst, solvent), and write step-by-step mechanisms.',
+                  textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 12.5, height: 1.45),
+                  selectable: false,
                 ),
               ),
               const SizedBox(height: 14),
@@ -221,7 +222,13 @@ class _ExamPatternQuizScreenState extends ConsumerState<ExamPatternQuizScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('✓ ', style: TextStyle(color: AppColors.statusSuccess, fontWeight: FontWeight.w800, fontSize: 12)),
-                    Expanded(child: Text(r, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12))),
+                    Expanded(
+                      child: ChemistryMarkdownView(
+                        text: r,
+                        textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        selectable: false,
+                      ),
+                    ),
                   ],
                 ),
               )),

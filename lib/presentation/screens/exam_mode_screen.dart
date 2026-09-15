@@ -222,6 +222,20 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
     );
   }
 
+  String _formatSectionBadge(String section, int marks) {
+    if (section.toLowerCase().contains('part a') || section.toLowerCase().contains('section a')) {
+      return 'Part A · ${marks}M';
+    }
+    if (section.toLowerCase().contains('part b') || section.toLowerCase().contains('section b')) {
+      return 'Part B · ${marks}M';
+    }
+    if (section.toLowerCase().contains('part c') || section.toLowerCase().contains('section c')) {
+      return 'Part C · ${marks}M';
+    }
+    final clean = section.split('—').first.trim();
+    return clean.isNotEmpty ? '$clean · ${marks}M' : '${marks}M';
+  }
+
   // ==========================================
   // TAB 1: BLUEPRINT PAPER PRACTICE
   // ==========================================
@@ -267,6 +281,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                       fontSize: 12,
                     ),
                     onSelected: (_) {
+                      AppHaptics.selection();
                       setState(() => _selectedBranch = b);
                       _loadBlueprint();
                     },
@@ -285,43 +300,53 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
           ),
           child: Row(
             children: [
-              // Section Filter Chips
-              Wrap(
-                spacing: 6,
-                children: [
-                  ('All', 'All'),
-                  ('Part A (2M)', 'Part A'),
-                  ('Part B (5M)', 'Part B'),
-                  ('Part C (10M)', 'Part C'),
-                ].map((sec) {
-                  final label = sec.$1;
-                  final code = sec.$2;
-                  final isSel = _selectedSection == code;
-                  return InkWell(
-                    onTap: () => setState(() => _selectedSection = code),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isSel ? AppColors.brandPrimary.withValues(alpha: 0.2) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: isSel ? AppColors.brandBright : AppColors.borderSubtle,
+              // Section Filter Chips (Horizontally scrollable for responsiveness)
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      ('All', 'All'),
+                      ('Part A (2M)', 'Part A'),
+                      ('Part B (5M)', 'Part B'),
+                      ('Part C (10M)', 'Part C'),
+                    ].map((sec) {
+                      final label = sec.$1;
+                      final code = sec.$2;
+                      final isSel = _selectedSection == code;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: InkWell(
+                          onTap: () {
+                            AppHaptics.selection();
+                            setState(() => _selectedSection = code);
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isSel ? AppColors.brandPrimary.withValues(alpha: 0.2) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSel ? AppColors.brandBright : AppColors.borderSubtle,
+                              ),
+                            ),
+                            child: Text(
+                              label,
+                              style: TextStyle(
+                                color: isSel ? AppColors.brandBright : AppColors.textMuted,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          color: isSel ? AppColors.brandBright : AppColors.textMuted,
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+                      );
+                    }).toList(),
+                  ),
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               // Score badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -348,6 +373,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
           child: _isLoadingBlueprint
               ? const Center(child: CircularProgressIndicator(color: AppColors.purpleBright))
               : ListView.builder(
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
@@ -371,7 +397,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
-                                    '${item.section} · ${item.marks} Marks',
+                                    _formatSectionBadge(item.section, item.marks),
                                     style: const TextStyle(
                                       color: AppColors.purpleBright,
                                       fontSize: 11,
@@ -380,19 +406,23 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surfaceElevated,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    item.frequency,
-                                    style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surfaceElevated,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      item.frequency,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
+                                    ),
                                   ),
                                 ),
-                                const Spacer(),
-                                if (awarded > 0)
+                                if (awarded > 0) ...[
+                                  const SizedBox(width: 8),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
@@ -408,19 +438,21 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                                       ),
                                     ),
                                   ),
+                                ],
                               ],
                             ),
                             const SizedBox(height: 10),
 
                             // Question Title
-                            Text(
-                              item.question,
-                              style: const TextStyle(
+                            ChemistryMarkdownView(
+                              text: item.question,
+                              textStyle: const TextStyle(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 14.5,
                                 color: Colors.white,
                                 height: 1.35,
                               ),
+                              selectable: false,
                             ),
                             const SizedBox(height: 6),
 
@@ -438,9 +470,10 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                                     const Icon(Icons.lightbulb_outline, size: 14, color: AppColors.accentGold),
                                     const SizedBox(width: 6),
                                     Expanded(
-                                      child: Text(
-                                        item.examTips,
-                                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5, height: 1.3),
+                                      child: ChemistryMarkdownView(
+                                        text: item.examTips,
+                                        textStyle: const TextStyle(color: AppColors.textMuted, fontSize: 11.5, height: 1.3),
+                                        selectable: false,
                                       ),
                                     ),
                                   ],
@@ -685,9 +718,10 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                                         children: [
                                           const Text('• ', style: TextStyle(color: AppColors.accentGold)),
                                           Expanded(
-                                            child: Text(
-                                              r,
-                                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                            child: ChemistryMarkdownView(
+                                              text: r,
+                                              textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                              selectable: false,
                                             ),
                                           ),
                                         ],
@@ -889,12 +923,13 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                     ),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(
-                        rb.criterion,
-                        style: TextStyle(
+                      child: ChemistryMarkdownView(
+                        text: rb.criterion,
+                        textStyle: TextStyle(
                           color: rb.met ? Colors.white : AppColors.textMuted,
                           fontSize: 11.5,
                         ),
+                        selectable: false,
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -942,9 +977,10 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                   const SizedBox(height: 4),
                   ...result.detectedPitfalls.map((p) => Padding(
                         padding: const EdgeInsets.only(top: 2),
-                        child: Text(
-                          '• $p',
-                          style: const TextStyle(color: Colors.white, fontSize: 11.5),
+                        child: ChemistryMarkdownView(
+                          text: '• $p',
+                          textStyle: const TextStyle(color: Colors.white, fontSize: 11.5),
+                          selectable: false,
                         ),
                       )),
                 ],
@@ -967,9 +1003,10 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
             const SizedBox(height: 4),
             Padding(
               padding: const EdgeInsets.only(bottom: 2),
-              child: Text(
-                result.feedback,
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.3),
+              child: ChemistryMarkdownView(
+                text: result.feedback,
+                textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.3),
+                selectable: false,
               ),
             ),
           ],
@@ -983,6 +1020,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
   // ==========================================
   Widget _buildGeneratorTab() {
     return ListView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 80),
       children: [
         const GlowCard(
@@ -1205,6 +1243,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
     }
 
     return ListView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 80),
       children: [
         const GlowCard(

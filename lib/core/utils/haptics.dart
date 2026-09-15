@@ -3,35 +3,63 @@ import 'package:flutter/services.dart';
 /// Light tactile feedback for Chem Buddy interactions.
 class AppHaptics {
   static Future<void> selection() async {
-    await HapticFeedback.selectionClick();
+    try {
+      await HapticFeedback.selectionClick();
+    } catch (_) {}
   }
 
   static Future<void> lightTap() async {
-    await HapticFeedback.selectionClick();
+    try {
+      await HapticFeedback.selectionClick();
+    } catch (_) {}
   }
 
   static Future<void> tap() async {
-    await HapticFeedback.lightImpact();
+    try {
+      await HapticFeedback.lightImpact();
+    } catch (_) {}
   }
 
   static Future<void> confirm() async {
-    await HapticFeedback.mediumImpact();
+    try {
+      await HapticFeedback.mediumImpact();
+    } catch (_) {}
   }
 
   static Future<void> success() async {
-    await HapticFeedback.mediumImpact();
+    try {
+      await HapticFeedback.mediumImpact();
+    } catch (_) {}
   }
 
   static Future<void> error() async {
-    await HapticFeedback.heavyImpact();
+    try {
+      await HapticFeedback.heavyImpact();
+    } catch (_) {}
+  }
+
+  static Future<void> heavy() async {
+    try {
+      await HapticFeedback.heavyImpact();
+    } catch (_) {}
   }
 
   static Future<void> warn() async {
-    await HapticFeedback.heavyImpact();
+    try {
+      await HapticFeedback.heavyImpact();
+    } catch (_) {}
   }
 
   static Future<void> warning() async {
-    await HapticFeedback.heavyImpact();
+    try {
+      await HapticFeedback.heavyImpact();
+    } catch (_) {}
+  }
+
+  static Future<void> vibrate() async {
+    try {
+      await HapticFeedback.vibrate();
+    } catch (_) {}
   }
 }
 
