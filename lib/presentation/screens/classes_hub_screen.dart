@@ -228,23 +228,31 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
 
         // Active Content Body
         Expanded(
-          child: mainTab == 1
-              ? AppErrorBoundary(
-                  screenName: 'Attendance',
-                  onRetry: () => setState(() {}),
-                  child: const AttendanceScreen(embedded: true),
-                )
-              : timetableTab == 2
-                  ? const CalendarScreen(embedded: true)
-                  : timetableTab == 3
-                      ? ListView(padding: const EdgeInsets.fromLTRB(20, 0, 20, 100), children: const [TimetableScannerCard()])
-                      : ListView(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                          children: [
-                            _buildPresetSelector(entries),
-                            ..._list(entries, todayOnly: timetableTab == 0),
-                          ],
-                        ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: KeyedSubtree(
+              key: ValueKey('classes_hub_${mainTab}_$timetableTab'),
+              child: mainTab == 1
+                  ? AppErrorBoundary(
+                      screenName: 'Attendance',
+                      onRetry: () => setState(() {}),
+                      child: const AttendanceScreen(embedded: true),
+                    )
+                  : timetableTab == 2
+                      ? const CalendarScreen(embedded: true)
+                      : timetableTab == 3
+                          ? ListView(padding: const EdgeInsets.fromLTRB(20, 0, 20, 100), children: const [TimetableScannerCard()])
+                          : ListView(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                              children: [
+                                _buildPresetSelector(entries),
+                                ..._list(entries, todayOnly: timetableTab == 0),
+                              ],
+                            ),
+            ),
+          ),
         ),
       ],
     );

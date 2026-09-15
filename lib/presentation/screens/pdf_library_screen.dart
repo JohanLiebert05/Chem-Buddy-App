@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/haptics.dart';
 import '../../core/widgets/branding/chembuddy_mascot.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/library_models.dart';
@@ -61,7 +62,10 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
               ChoiceChip(
                 label: Text(item.value),
                 selected: filter == item.key,
-                onSelected: (_) => setState(() => filter = item.key),
+                onSelected: (_) {
+                  AppHaptics.selection();
+                  setState(() => filter = item.key);
+                },
               ),
           ],
         ),

@@ -38,6 +38,7 @@ class ChemBuddyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       themeMode: ThemeMode.dark,
+      scrollBehavior: AppTheme.scrollBehavior,
       home: AppErrorBoundary(
         screenName: 'ChemBuddy Home',
         child: home,

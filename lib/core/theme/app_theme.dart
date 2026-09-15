@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTheme {
+  static const ChemBuddyScrollBehavior scrollBehavior = ChemBuddyScrollBehavior();
+
   static const PageTransitionsTheme pageTransitionsTheme = PageTransitionsTheme(
     builders: {
       TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
@@ -240,6 +242,48 @@ class AppTheme {
           side: const BorderSide(color: AppColors.borderHighlight, width: 0.8),
         ),
       ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          splashFactory: InkSparkle.splashFactory,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          splashFactory: InkSparkle.splashFactory,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          splashFactory: InkSparkle.splashFactory,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          splashFactory: InkSparkle.splashFactory,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      ),
     );
+  }
+}
+
+/// Global 120Hz smooth bouncing scroll behavior for all lists, grids, and screens
+class ChemBuddyScrollBehavior extends MaterialScrollBehavior {
+  const ChemBuddyScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+  }
+
+  @override
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) {
+    // Return child directly to disable harsh glow/stretch and maintain clean Pixel/iOS rubber-banding
+    return child;
   }
 }
