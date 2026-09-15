@@ -1147,23 +1147,13 @@ Total electrons on metal + electrons from ligands = EAN (noble gas configuration
     final topicHint = subject != null ? ' in $subject' : '';
     return '''### **$query**
 
-I don't have a pre-built answer for this specific topic$topicHint in my offline knowledge base.
+📡 **Offline Mode (Zero Internet Detected)**
+ChemBuddy AI is currently running offline and couldn't find a pre-built answer for this specific topic$topicHint in the local offline dictionary.
 
-### How to Get the Full Answer
-
-**Option 1 — Ask Chem AI** (recommended):
-Tap the **Ask PDF AI** tab or use the **ChemBuddy AI** chat. Your question will be sent to Gemini AI which has comprehensive chemistry knowledge and will give you a detailed, accurate answer.
-
-**Option 2 — Upload Your Notes**:
-Upload your study PDF and ask this question — ChemBuddy will answer directly from your notes.
-
-**Option 3 — Try a More Specific Question**:
-Rephrase with specific terms like:
-- *"Explain the mechanism of ..."*
-- *"What is the difference between ... and ...?"*
-- *"State and explain the law of ..."*
-
-> **Note**: ChemBuddy AI (powered by Gemini) covers all MSc chemistry topics including thermodynamics, organic mechanisms, spectroscopy, coordination chemistry, quantum chemistry, and more.''';
+### How to Get Full AI Answers:
+1. **Connect to the Internet**: ChemBuddy AI will automatically activate Google Gemini intelligence to explain any topic with deep pedagogical insight, step-by-step mechanisms, or mathematical formulas.
+2. **Upload Notes / PDF**: You can attach a study PDF or photo of notes, and ChemBuddy will analyze and answer questions directly from it.
+3. **Common Exam Topics Available Offline**: Topics like *SN1 vs SN2*, *Beer-Lambert Law*, *Gibbs Free Energy*, *Hückel 4n+2 Rule*, *Diels-Alder Reaction*, *¹H NMR*, *E1 vs E2*, and *Normality/Molarity* are pre-cached and accessible without internet.''';
   }
 
   // =========================================================================

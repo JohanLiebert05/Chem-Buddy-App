@@ -4,13 +4,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // 1. Verify authentication
+    // 1. Verify authentication (optional - guest queries supported)
     const auth = req.headers.get("Authorization") ?? "";
-    if (!auth.toLowerCase().startsWith("bearer ")) {
-      return json({ error: "Sign in required to ask ChemBuddy." }, 401);
-    }
-
-    const userId = getUserIdFromToken(auth);
+    const userId = auth.toLowerCase().startsWith("bearer ") ? getUserIdFromToken(auth) : null;
 
     // 2. Parse request
     const body = await req.json();
@@ -306,6 +302,12 @@ RULES — FOLLOW EXACTLY:
 4. NEVER supplement the answer with outside chemistry knowledge absent from the document.
 5. NEVER invent page numbers, reactions, or definitions not present in the provided text.
 6. Accuracy over fluency — a short correct answer is better than a long hallucinated one.`;
+    } else if (mode === "general") {
+      modeInstructions = `ANSWER MODE: GENERAL INTELLIGENT AI (✨)
+You are functioning as an expert, all-knowing general AI tutor (like Google Gemini).
+- Answer any question clearly, comprehensively, intelligently, and accurately, whether it is chemistry, general science, university academics, or broad knowledge.
+- Provide step-by-step explanations, real-world examples, and precise answers without artificial constraints.
+- Format chemical formulas, equations, or scientific laws with clean notation.`;
     } else {
       // DEFAULT QUICK ANSWER MODE
       modeInstructions = `DEFAULT MODE: QUICK & DIRECT ANSWER (⚡)
@@ -359,22 +361,38 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
       parts: [{ text: question }],
     });
 
-    // 9. Generate answer with Gemini multi-key rotation
-    const chatModel = Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash";
-    const chatRes = await fetchGeminiWithRotation(
-      `models/${chatModel}:generateContent`,
-      {
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents,
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 1500,
-          thinkingConfig: {
-            thinkingLevel: "low",
+    // 9. Generate answer with Gemini multi-key rotation and multi-model fallback
+    const candidateChatModels = [
+      Deno.env.get("GEMINI_MODEL") || "gemini-3-flash-preview",
+      "gemini-flash-latest",
+      "gemini-3.6-flash",
+    ].filter((m, i, arr) => arr.indexOf(m) === i);
+
+    let chatRes: { ok: boolean; status: number; data?: any; errorText?: string } = {
+      ok: false,
+      status: 500,
+      errorText: "No model attempted.",
+    };
+    let modelUsed = candidateChatModels[0];
+
+    for (const modelCandidate of candidateChatModels) {
+      modelUsed = modelCandidate;
+      chatRes = await fetchGeminiWithRotation(
+        `models/${modelCandidate}:generateContent`,
+        {
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents,
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 2500,
+            thinkingConfig: {
+              thinkingLevel: "low",
+            },
           },
-        },
-      }
-    );
+        }
+      );
+      if (chatRes.ok && chatRes.data) break;
+    }
 
     if (!chatRes.ok || !chatRes.data) {
       return json({ error: "ChemBuddy could not generate an answer right now.", detail: chatRes.errorText }, 502);
@@ -389,7 +407,7 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
     answer = answer.replace(/___?DISPLAY_MATH[0-9₀-₉_]*___?/g, "");
     answer = answer.replace(/DISPLAY_MATH[0-9₀-₉_]+/g, "");
 
-    const model = chatModel;
+    const model = modelUsed;
     const responseData = {
       answer,
       mode: typeof mode !== "undefined" ? mode : "default",

@@ -194,7 +194,7 @@ ${combinedText.slice(0, 18000)}`;
       ],
     };
 
-    const model = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
+    const model = Deno.env.get("GEMINI_MODEL") || "gemini-3-flash-preview";
     const aiRes = await fetchGeminiWithRotation(
       `models/${model}:generateContent`,
       {

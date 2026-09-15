@@ -30,6 +30,7 @@ import 'smart_flashcards_study_screen.dart';
 
 enum ChemBuddyAiMode {
   normal,
+  general,
   simple,
   exam2M,
   exam5M,
@@ -200,6 +201,9 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
       modeString = 'quick';
       // Default Quick Answer Mode: concise, direct, intelligent response
       modelPrompt = null;
+    } else if (_currentMode == ChemBuddyAiMode.general) {
+      modeString = 'general';
+      modelPrompt = '[General Intelligent AI Mode: Answer this question with high intelligence, clarity, step-by-step logic, and accurate knowledge like Google Gemini.]: $rawText';
     } else if (_currentMode == ChemBuddyAiMode.simple) {
       modeString = 'simple';
       modelPrompt = '[Simple Explanation Mode: Explain this in plain, easy-to-understand language as if talking to someone who is new to chemistry. Avoid jargon where possible. Use an analogy if it helps. Keep it short and clear.]: $rawText';
@@ -263,6 +267,13 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
               label: '⚡ Quick Answer',
               selected: _currentMode == ChemBuddyAiMode.normal,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.normal),
+            ),
+            const SizedBox(width: 8),
+            _AiModeChip(
+              icon: Icons.auto_awesome_rounded,
+              label: '✨ General AI',
+              selected: _currentMode == ChemBuddyAiMode.general,
+              onTap: () => setState(() => _currentMode = ChemBuddyAiMode.general),
             ),
             const SizedBox(width: 8),
             _AiModeChip(
@@ -630,6 +641,11 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                             _SuggestionTile(
                               text: 'How does Hückel\'s rule (4n+2) determine aromaticity?',
                               onTap: () => _sendMessage('How does Hückel\'s rule (4n+2) determine aromaticity?'),
+                            ),
+                            const SizedBox(height: 6),
+                            _SuggestionTile(
+                              text: '✨ Ask Gemini AI: What are the principles of Green Chemistry and atomic economy?',
+                              onTap: () => _sendMessage('What are the principles of Green Chemistry and atomic economy?'),
                             ),
                             const SizedBox(height: 6),
                             _SuggestionTile(

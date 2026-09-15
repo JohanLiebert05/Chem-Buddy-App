@@ -4,6 +4,7 @@ import '../models/pdf_ocr_models.dart';
 import '../remote/supabase_service.dart';
 import '../models/rag_models.dart';
 import 'chemistry_knowledge_engine.dart';
+import 'gemini_orchestrator.dart';
 
 
 class RagService {
@@ -32,9 +33,9 @@ class RagService {
           'document_name': ?documentName,
           // Pass document_id for scoped RAG retrieval
           'document_id': ?documentId,
-          // Use pdf_grounded mode when a document is attached
+          // Use pdf_grounded mode when a document is attached and not in general mode
           'mode': documentText != null && documentText.isNotEmpty
-              ? (mode == 'simple' ? mode : 'pdf_grounded')
+              ? (mode == 'simple' || mode == 'general' ? mode : 'pdf_grounded')
               : (mode ?? 'quick'),
           if (history != null) 'history': history.map((e) => e.toJson()).toList(),
         });
@@ -42,15 +43,65 @@ class RagService {
           return RagResponse.fromJson(response);
         }
       } catch (e) {
-        final msg = e.toString().toLowerCase();
-        if (msg.contains('sign in') || msg.contains('401')) {
-          rethrow;
-        }
-        debugPrint('[RAG] Cloud ask failed, using local engine: $e');
+        debugPrint('[RAG] Cloud ask-chembuddy failed, trying direct Gemini Orchestrator: $e');
       }
     }
 
-    // 2. Authoritative MSc Chemistry Knowledge Engine fallback
+    // 2. Direct Internet Access via Google Gemini Orchestrator
+    try {
+      String? systemInstruction;
+
+      if (mode == 'general') {
+        systemInstruction = 'You are ChemBuddy AI, an expert, all-knowing general AI tutor powered by Google Gemini.\n'
+            'Answer any question comprehensively, clearly, accurately, and intelligently.\n'
+            'Provide structured insights, logical explanations, and correct scientific/mathematical notation where applicable.';
+      } else if (mode == '2m') {
+        systemInstruction = 'Format as a high-scoring 2-Mark university short answer: 1) Crisp definition/answer, 2) Essential points, 3) Balanced reaction or formula. Strictly under 150 words.';
+      } else if (mode == '5m') {
+        systemInstruction = 'Format as a structured 5-Mark MSc chemistry examination rubric with principle, balanced reactions, mechanism, and applications.';
+      } else if (mode == '10m') {
+        systemInstruction = 'Format as an exhaustive 10-Mark comprehensive MSc university answer with full theory, mechanisms, stereochemistry, and applications.';
+      } else if (mode == 'mscConcept') {
+        systemInstruction = 'Focus on deep physical-chemical MSc understanding: molecular orbitals, thermodynamics vs kinetics, Curtin-Hammett, and rigorous notation.';
+      } else if (mode == 'mechanisms') {
+        systemInstruction = 'Explain the full stepwise reaction mechanism with curved-arrow electron displacement, intermediate structures, and thermodynamic driving forces.';
+      } else if (mode == 'fromMyPdf' || (documentText != null && documentText.isNotEmpty && mode != 'general')) {
+        systemInstruction = 'Strict Document Grounding Mode: Answer ONLY from the provided study material. Cite the page or section. If the topic is not in the text, clearly state that it is not present in the uploaded document.';
+      }
+
+      final geminiRes = await GeminiOrchestrator.instance.ask(
+        prompt: question,
+        category: subject ?? 'chemistry',
+        systemInstruction: systemInstruction,
+        history: history,
+        documentContext: documentText,
+        mode: mode,
+      );
+
+      if (geminiRes.text.isNotEmpty && !geminiRes.text.startsWith('Error: All Gemini keys exhausted') && !geminiRes.text.startsWith('Error: No active Gemini API keys')) {
+        return RagResponse(
+          answer: geminiRes.text,
+          sources: documentName != null
+              ? [
+                  RagSource(
+                    documentTitle: documentName,
+                    fileName: documentName,
+                    pageNumber: 1,
+                    subject: subject ?? 'Attached Material',
+                    topic: 'Uploaded Study Notes',
+                    similarity: 1.0,
+                  )
+                ]
+              : const [],
+          hasContext: documentText != null && documentText.isNotEmpty,
+          chunksUsed: documentText != null ? 1 : 0,
+        );
+      }
+    } catch (geminiErr) {
+      debugPrint('[RAG] Direct Gemini Orchestrator failed: $geminiErr');
+    }
+
+    // 3. Zero-connectivity / Airplane Mode: ChemistryKnowledgeEngine
     return ChemistryKnowledgeEngine.generateAcademicResponse(
       question: question,
       subject: subject,

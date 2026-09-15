@@ -95,8 +95,24 @@ serve(async (req: Request) => {
       return jsonResponse({ error: "No Gemini API keys configured on server." }, 500);
     }
 
-    const modelName = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
-    const result = await executeGeminiWithRotation(keys, modelName, payload);
+    const candidateModels = [
+      Deno.env.get("GEMINI_MODEL") || "gemini-3-flash-preview",
+      "gemini-flash-latest",
+      "gemini-3.6-flash",
+    ].filter((m, i, arr) => arr.indexOf(m) === i);
+
+    let result: { ok: boolean; data?: any; status?: number; error?: string; keyIndexUsed?: number; modelUsed?: string } = {
+      ok: false,
+      status: 500,
+      error: "No model attempted",
+    };
+
+    let modelName = candidateModels[0];
+    for (const m of candidateModels) {
+      modelName = m;
+      result = await executeGeminiWithRotation(keys, m, payload);
+      if (result.ok) break;
+    }
 
     if (!result.ok) {
       return jsonResponse(
