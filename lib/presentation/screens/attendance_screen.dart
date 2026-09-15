@@ -318,13 +318,18 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              isTodaySelected
-                  ? 'Schedule & Attendance (Today)'
-                  : 'Schedule & Attendance (${DateFormat('EEE, MMM d').format(_selectedDate)})',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5),
+            Expanded(
+              child: Text(
+                isTodaySelected
+                    ? 'Schedule & Attendance (Today)'
+                    : 'Schedule & Attendance (${DateFormat('EEE, MMM d').format(_selectedDate)})',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5),
+              ),
             ),
-            if (slots.isNotEmpty)
+            if (slots.isNotEmpty) ...[
+              const SizedBox(width: 8),
               TextButton.icon(
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -334,6 +339,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 icon: const Icon(Icons.done_all, size: 16),
                 label: const Text('Mark All Present', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
               ),
+            ],
           ],
         ),
         const SizedBox(height: 8),
@@ -595,7 +601,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (v, _) {
-                        final day = DateTime.now().subtract(Duration(days: 6 - v.toInt()));
+                        final idx = v.toInt();
+                        if (idx < 0 || idx >= 7 || (v - idx).abs() > 0.001) {
+                          return const SizedBox.shrink();
+                        }
+                        final day = DateTime.now().subtract(Duration(days: 6 - idx));
                         return Text(DateFormat('E').format(day), style: const TextStyle(fontSize: 10, color: AppColors.textMuted));
                       },
                     ),
@@ -664,7 +674,14 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       Expanded(
                         child: Row(
                           children: [
-                            Flexible(child: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5))),
+                            Flexible(
+                              child: Text(
+                                s.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
+                              ),
+                            ),
                             const SizedBox(width: 8),
                             _buildRiskBadge(stats.riskTier(_targetPercent)),
                           ],
@@ -786,7 +803,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             children: [
               Expanded(
                 child: ChoiceChip(
-                  label: const Text('🧪 Organic Timetable'),
+                  label: const Center(child: Text('🧪 Organic')),
                   selected: _selectedPhotoPreset == TimetablePreset.organic,
                   labelStyle: TextStyle(
                     fontSize: 11.5,
@@ -807,7 +824,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: ChoiceChip(
-                  label: const Text('🧬 Inorganic Timetable'),
+                  label: const Center(child: Text('🧬 Inorganic')),
                   selected: _selectedPhotoPreset == TimetablePreset.inorganic,
                   labelStyle: TextStyle(
                     fontSize: 11.5,
@@ -875,11 +892,15 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       children: [
                         Row(
                           children: [
-                            Text(
-                              _selectedPhotoPreset.title,
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                            Expanded(
+                              child: Text(
+                                _selectedPhotoPreset.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                              ),
                             ),
-                            const Spacer(),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
@@ -1039,7 +1060,14 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                     const Text('UPCOMING LECTURE',
                         style: TextStyle(color: AppColors.brandBright, fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                     const SizedBox(width: 6),
-                    Text('• ${nextSlot.timeLabel}', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                    Expanded(
+                      child: Text(
+                        '• ${nextSlot.timeLabel}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                      ),
+                    ),
                   ],
                 ),
                 Text(

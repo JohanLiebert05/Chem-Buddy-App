@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/app_error_boundary.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/timetable_entry.dart';
 import '../../data/services/timetable_parser_service.dart';
@@ -228,7 +229,11 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
         // Active Content Body
         Expanded(
           child: mainTab == 1
-              ? const AttendanceScreen(embedded: true)
+              ? AppErrorBoundary(
+                  screenName: 'Attendance',
+                  onRetry: () => setState(() {}),
+                  child: const AttendanceScreen(embedded: true),
+                )
               : timetableTab == 2
                   ? const CalendarScreen(embedded: true)
                   : timetableTab == 3
