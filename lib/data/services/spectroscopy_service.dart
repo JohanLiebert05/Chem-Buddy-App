@@ -1241,17 +1241,21 @@ class SpectroscopyService {
       yAxisPhysicalMeaning: 'Instantaneous detector response proportional to the rate of solute mass exiting the column. Peak area (integral of y over dt) is directly proportional to the relative mass concentration (%) of the compound in the injected mixture.',
       fundamentalPrinciple: 'Separation of thermally stable volatile compounds based on vapor pressure (boiling point) and differential partitioning between an inert mobile gas phase (He or N2) and a high-boiling liquid stationary phase coated on the capillary inner wall.',
       howToRead: [
-        'Baseline: Smooth horizontal line representing zero solute elution. Drift indicates column bleed or temperature ramp.',
-        'Peak Identification: Compare retention time (t_R) or Kovats Retention Index (I) with authentic reference standards run under identical conditions.',
-        'Quantitative Area %: Calculate Area % = [Area_i / Sum(Area_all)] * 100%. Peak area gives exact percentage composition.',
-        'Column Efficiency: Peak width (W) reflects theoretical plates N = 16 * (t_R / W)^2. Narrower peaks represent higher chromatographic resolution.',
-        'Split vs Splitless: Split injection prevents detector overload for concentrated samples; splitless is used for trace ppm/ppb analysis.'
+        '**Baseline**: Smooth horizontal line representing zero solute elution. Baseline drift indicates stationary phase bleed or temperature programming ramp.',
+        r'''**Peak Identification**: Compare retention time ($t_R$) or Kováts Retention Index ($I$) with authentic reference standards run under identical column temperature and carrier flow.''',
+        r'''**Quantitative Area %**: Relative composition $\text{Area}\% = \frac{\text{Area}_i}{\sum \text{Area}_j} \times 100\%$. Peak area corresponds directly to solute mass concentration.''',
+        r'''**Column Efficiency**: Peak width ($W$) dictates theoretical plate count $N = 16\left(\frac{t_R}{W}\right)^2$. Higher $N$ produces sharper, narrower peaks and higher resolution ($R_s$).''',
+        '**Split vs Splitless**: Split mode prevents capillary overloading for high concentrations; splitless concentrates trace analyte on-column for ppm/ppb limits.'
       ],
       keyFormulas: [
-        'Retention Factor: k\' = (t_R - t_0) / t_0',
-        'Resolution: R_s = 2 * (t_R2 - t_R1) / (W_1 + W_2)',
-        'Kovats Index: I = 100 * [n + (log t\'R(x) - log t\'R(n)) / (log t\'R(n+1) - log t\'R(n))]',
-        'Theoretical Plates: N = 16 * (t_R / W)^2 = 5.54 * (t_R / W_0.5)^2'
+        r'''### Retention Factor ($k'$)
+        $$k' = \frac{t_R - t_0}{t_0}$$''',
+        r'''### Chromatographic Resolution ($R_s$)
+        $$R_s = \frac{2(t_{R2} - t_{R1})}{W_1 + W_2} = \frac{1.18(t_{R2} - t_{R1})}{W_{0.5,1} + W_{0.5,2}}$$''',
+        r'''### Theoretical Plate Count ($N$)
+        $$N = 16\left(\frac{t_R}{W}\right)^2 = 5.54\left(\frac{t_R}{W_{0.5}}\right)^2$$''',
+        r'''### Kováts Retention Index ($I$)
+        $$I = 100 \left[ n + \frac{\log t'_{R(x)} - \log t'_{R(n)}}{\log t'_{R(n+1)} - \log t'_{R(n)}} \right]$$''',
       ],
       examples: [
         SpectrogramExample(
@@ -1296,16 +1300,20 @@ class SpectroscopyService {
       yAxisPhysicalMeaning: 'UV-Vis absorbance recorded by the photodiode array (PDA / DAD) flow cell. Directly obeys Beer-Lambert law: peak area is proportional to chromophore molar absorptivity and solute concentration.',
       fundamentalPrinciple: 'Differential partition of non-volatile or thermally labile liquid solutes between a pressurized liquid mobile phase and microscopic silica particles chemically functionalized with octadecylsilane chains (C18 / ODS).',
       howToRead: [
-        'Void Time (t_0): The earliest baseline disruption marking elution of completely unretained solvent front.',
-        'Polarity Rule (RP-HPLC): Most polar compound has highest affinity for polar aqueous mobile phase and elutes FIRST. Most nonpolar compound partitions into nonpolar C18 chains and elutes LAST.',
-        'Isocratic vs Gradient: Isocratic uses constant solvent composition; gradient increases organic modifier (e.g. 20% to 90% ACN) to speed up late-eluting hydrophobic compounds.',
-        'Tailing Factor (T_f): Measures peak asymmetry at 5% peak height. T_f = (a + b) / (2a). Ideal peak has T_f between 0.9 and 1.2.'
+        r'''**Void Time ($t_0$)**: Earliest baseline disruption indicating elution of unretained mobile phase or solvent front (dead volume).''',
+        '**RP-HPLC Polarity Rule**: Polar solutes partition preferentially into the polar mobile phase and elute FIRST. Nonpolar solutes partition into hydrophobic C₁₈ octadecyl chains and elute LAST.',
+        '**Isocratic vs Gradient**: Isocratic elutes with constant solvent ratio; gradient linearly ramps organic modifier (e.g., 20% to 90% Acetonitrile) to accelerate strongly retained hydrophobic analytes.',
+        r'''**Tailing Factor ($T_f$)**: Quantifies peak asymmetry at 5% peak height. Symmetric Gaussian peaks show $T_f = 1.00$. Tailing ($T_f > 1.2$) indicates silanol secondary interactions.'''
       ],
       keyFormulas: [
-        'Retention Factor: k\' = (t_R - t_0) / t_0 (optimal range 1 < k\' < 10)',
-        'Separation Factor: alpha = k\'_2 / k\'_1 (alpha >= 1.05 for baseline separation)',
-        'Peak Tailing Factor: T_f = W_0.05 / (2 * f)',
-        'Linear Flow Velocity: u = L / t_0'
+        r'''### Capacity / Retention Factor ($k'$)
+        $$k' = \frac{t_R - t_0}{t_0} \quad (1 < k' < 10)$$''',
+        r'''### Selectivity / Separation Factor ($\alpha$)
+        $$\alpha = \frac{k'_2}{k'_1} = \frac{t_{R2} - t_0}{t_{R1} - t_0} \quad (\alpha \ge 1.05)$$''',
+        r'''### Peak Tailing Factor ($T_f$)
+        $$T_f = \frac{W_{0.05}}{2f} \quad (0.9 \le T_f \le 1.2)$$''',
+        r'''### Mobile Phase Linear Velocity ($u$)
+        $$u = \frac{L}{t_0}$$''',
       ],
       examples: [
         SpectrogramExample(
@@ -1349,16 +1357,19 @@ class SpectroscopyService {
       yAxisPhysicalMeaning: 'Ratio of solute migration distance to mobile phase solvent front distance. On normal-phase silica gel (polar SiO2), polar compounds bind strongly via hydrogen bonding (low R_f), while nonpolar compounds migrate higher (high R_f).',
       fundamentalPrinciple: 'Capillary action draws liquid mobile phase (e.g. Hexane/EtOAc) up a thin layer of silica gel adsorbent. Solutes partition between the polar stationary silanol groups (Si-OH) and the moving solvent.',
       howToRead: [
-        'Origin Line: Baseline penciled 1.0 cm above bottom edge. Solutes must never be submerged below solvent pool.',
-        'Solvent Front: Top line where the liquid solvent stopped. Marked immediately upon removal from developing chamber.',
-        'R_f Calculation: R_f = d_spot / d_front. Always between 0.00 and 1.00.',
-        'Visualization: Non-fluorescent UV 254 nm indicator (F254 green background with dark quenching spots); iodine staining for unsaturations; ninhydrin for amines; vanillin for terpenes and alcohols.',
-        'Reaction Monitoring: Complete disappearance of reactant spot in reaction lane confirms reaction completion.'
+        '**Origin Line**: Pencil reference mark drawn 1.0 cm above plate bottom. Spot must be applied above the developing solvent pool.',
+        '**Solvent Front**: Maximum height reached by developing solvent, marked immediately upon plate removal.',
+        r'''**$R_f$ Calculation**: Ratio of spot travel distance to solvent front travel distance ($R_f = \frac{d_{\text{spot}}}{d_{\text{front}}}$). Always between 0.00 and 1.00.''',
+        r'''**Visualization**: UV 254 nm fluorescence quenching ($F_{254}$ green background with dark aromatic spots); iodine vapor staining for unsaturated compounds; ninhydrin for primary/secondary amines.''',
+        '**Reaction Monitoring**: Complete disappearance of starting reactant spot in the reaction lane confirms chemical conversion.'
       ],
       keyFormulas: [
-        'Retention Factor: R_f = d_compound / d_solvent_front',
-        'Optimal R_f Window for Flash Column Chromatography: 0.20 < R_f < 0.35',
-        'Relative Retardation: R_st = R_f(sample) / R_f(standard)'
+        r'''### Retention Factor ($R_f$)
+        $$R_f = \frac{d_{\text{spot}}}{d_{\text{solvent front}}} \quad (0.00 \le R_f \le 1.00)$$''',
+        r'''### Flash Column Target Window
+        $$0.20 \le R_f \le 0.35$$''',
+        r'''### Relative Retardation ($R_{st}$)
+        $$R_{st} = \frac{R_f(\text{sample})}{R_f(\text{standard})}$$''',
       ],
       examples: [
         SpectrogramExample(
@@ -1400,17 +1411,21 @@ class SpectroscopyService {
       yAxisPhysicalMeaning: 'Intensity of ion current detected for each m/z species, normalized to the most abundant, most thermodynamically stable ionic species (Base Peak = 100%).',
       fundamentalPrinciple: 'High-energy electron bombardment (70 eV) ejects a valence electron from gas-phase molecules to produce a radical cation [M]+•. Unimolecular fragmentation through alpha-cleavage, inductive cleavage, or McLafferty rearrangement yields characteristic daughter ions.',
       howToRead: [
-        'Molecular Ion [M]+•: Highest m/z intact cation. Directly gives compound molecular weight. Even MW indicates even number of nitrogens (Nitrogen Rule).',
-        'Base Peak: Tallest peak in the spectrum (set to 100%). Represents the most stable carbocation or resonance-stabilized acylium/tropylium fragment.',
-        'M+1 Peak: Abundance of 13C natural isotope (approx 1.1% per carbon atom). Number of carbons ~ [Intensity(M+1) / Intensity(M)] / 0.011.',
-        'M+2 Isotope Signatures: 3:1 doublet indicates 1x Chlorine; 1:1 doublet indicates 1x Bromine; 4% indicates 1x Sulfur.',
-        'McLafferty Rearrangement: Six-membered cyclic transition state transferring gamma-hydrogen to carbonyl oxygen with beta-cleavage of neutral alkene.'
+        r'''**Molecular Ion ($[M]^{+\bullet}$)**: Highest $m/z$ radical cation formed by direct electron loss. Yields exact molecular weight. Even MW indicates even number of nitrogens (Nitrogen Rule).''',
+        '**Base Peak**: Most intense peak in the spectrum (normalized to 100% relative abundance). Represents the most thermodynamically stable carbocation or acylium/tropylium fragment.',
+        r'''**Isotope Peak ($M+1$)**: Natural abundance of ¹³C (~1.1% per carbon). Number of carbon atoms $n_C \approx \frac{I_{M+1}}{I_M \times 0.011}$.''',
+        r'''**Halogen Signatures ($M+2$)**: 3:1 intensity doublet reveals one Chlorine (³⁵Cl / ³⁷Cl); 1:1 doublet reveals one Bromine (⁷⁹Br / ⁸¹Br); 4% indicates Sulfur (³⁴S).''',
+        r'''**McLafferty Rearrangement**: Six-membered cyclic intermediate transferring $\gamma$-hydrogen to carbonyl oxygen followed by $\beta$-cleavage of neutral alkene.'''
       ],
       keyFormulas: [
-        'Nitrogen Rule: Organic molecule with even MW contains 0 or even number of Nitrogens; odd MW contains odd number of Nitrogens',
-        'McLafferty Mass Loss: m/z = [M - C_n H_2n]+• (e.g. loss of C2H4 -28, C3H6 -42)',
-        'Rings Plus Double Bonds (r+d): r+d = C - H/2 + N/2 + 1',
-        'Carbon Estimation from M+1: n_C = [I_(M+1) / I_M] * (100 / 1.11)'
+        r'''### Degree of Unsaturation (DBE / $r+d$)
+        $$\text{DBE} = C + 1 - \frac{H}{2} - \frac{X}{2} + \frac{N}{2}$$''',
+        r'''### Nitrogen Rule
+        $$\text{Even MW} \implies 0 \text{ or even } N; \quad \text{Odd MW} \implies \text{odd } N$$''',
+        r'''### McLafferty Rearrangement Mass Loss
+        $$[M]^{+\bullet} \xrightarrow{\gamma\text{-H migration}} [M - \text{C}_n\text{H}_{2n}]^{+\bullet} + \text{alkene}$$''',
+        r'''### Carbon Atom Count from $M+1$
+        $$n_C = \frac{I_{M+1}}{I_M} \times \frac{100}{1.11}$$''',
       ],
       examples: [
         SpectrogramExample(
@@ -1453,17 +1468,25 @@ class SpectroscopyService {
       yAxisPhysicalMeaning: 'Peak area (integral curve step height) is directly proportional to the relative number of chemically and magnetically equivalent protons contributing to the resonance.',
       fundamentalPrinciple: '1H nuclei (spin I = 1/2) precess in an external magnetic field B0. Radiofrequency pulse induces transition between alpha and beta spin states. Chemical shift is governed by local diamagnetic shielding (sigma) and magnetic anisotropy.',
       howToRead: [
-        'Chemical Shift (delta): Identifies electronic environment (aliphatic 0.8-1.8 ppm, alpha-carbonyl 2.0-2.5 ppm, alkoxy/halide 3.3-4.5 ppm, alkene 4.5-6.5 ppm, aromatic 6.5-8.5 ppm, aldehyde 9-10 ppm, carboxylic acid 11-13 ppm).',
-        'Multiplicity (n+1 Rule): Splitting pattern reveals the number of neighboring non-equivalent protons (n): Singlet (n=0), Doublet (n=1), Triplet (n=2), Quartet (n=3).',
-        'Coupling Constant (J in Hz): Spacing between multiplet sub-peaks. Independent of magnetic field strength. Protons that couple to each other share identical J values.',
-        'Integration: Area under each signal represents relative proton stoichiometry (e.g. 3H methyl vs 2H methylene).',
-        'D2O Shake: Addition of heavy water eliminates exchangeable protons (-OH, -NH2, -COOH) by deuterium exchange.'
+        r'''**Chemical Shift ($\delta$)**: Identifies local electronic shielding (aliphatic $\delta$ 0.8–1.8, $\alpha$-carbonyl $\delta$ 2.0–2.5, alkoxy/halide $\delta$ 3.3–4.5, alkene $\delta$ 4.5–6.5, aromatic $\delta$ 6.5–8.5, aldehyde $\delta$ 9.0–10.0, carboxylic acid $\delta$ 11.0–13.0 ppm).''',
+        r'''**Multiplicity ($n+1$ Rule)**: Spin-spin coupling splitting reveals number of neighboring non-equivalent vicinal protons ($n$): Singlet ($n=0$), Doublet ($n=1$), Triplet ($n=2$), Quartet ($n=3$).''',
+        r'''**Coupling Constant ($J$ in Hz)**: Spacing between multiplet lines ($J = \Delta\delta \times \text{MHz}$). Field-independent. Mutually coupled nuclei display identical $J$ values.''',
+        '**Integration Curve**: Step height across each signal corresponds to relative proton stoichiometry (e.g., 3H methyl vs 2H methylene).',
+        '**D₂O Exchange**: Addition of heavy water collapses exchangeable heteroatom protons (-OH, -NH₂, -COOH) through rapid deuterium exchange.'
       ],
       keyFormulas: [
-        'Chemical Shift: delta (ppm) = [(nu_sample - nu_TMS) in Hz] / [Spectrometer Frequency in MHz]',
-        'Multiplicity Rule: N_lines = 2 * n * I + 1 (for 1H where I=1/2, N = n + 1)',
-        'Larmor Frequency: nu = (gamma / 2*pi) * B_0 * (1 - sigma)',
-        'Coupling Constant: J (Hz) = delta_ppm * Spectrometer_MHz'
+        r'''### Chemical Shift ($\delta$)
+        $$\delta = \frac{
+        u_{\text{sample}} - 
+        u_{\text{TMS}}}{\text{Spectrometer Frequency (MHz)}} \quad (\text{ppm})$$''',
+        r'''### Multiplicity Splitting Rule ($n+1$)
+        $$N_{\text{lines}} = 2nI + 1 \implies n + 1 \quad (\text{for } ^1\text{H where } I = 1/2)$$''',
+        r'''### Larmor Precession Frequency ($
+        u$)
+        $$
+        u = \frac{\gamma}{2\pi} B_0 (1 - \sigma)$$''',
+        r'''### Scalar Coupling Constant ($J$)
+        $$J \text{ (Hz)} = \Delta\delta \text{ (ppm)} \times \text{Spectrometer MHz}$$''',
       ],
       examples: [
         SpectrogramExample(
@@ -1504,17 +1527,21 @@ class SpectroscopyService {
       yAxisPhysicalMeaning: 'In DEPT-135, polarization transfer from proton spins encodes the number of directly attached hydrogens as positive or negative signal phase.',
       fundamentalPrinciple: '13C isotope has natural abundance 1.1% (spin I = 1/2). Standard 1H-decoupling collapses all C-H J coupling into sharp singlets with Nuclear Overhauser Enhancement (NOE). DEPT (Distortionless Enhancement by Polarization Transfer) selectively decodes carbon multiplicity.',
       howToRead: [
-        'Broadband 1H-Decoupled Spectrum: Shows each distinct chemical carbon environment as a sharp singlet. Peak count reveals molecular symmetry.',
-        'DEPT-135 Phase Interpretation: Methyl (-CH3) and Methine (-CH) point UP (+); Methylene (-CH2-) points DOWN (-); Quaternary carbons (C_q) DISAPPEAR.',
-        'DEPT-90 Verification: Shows ONLY Methine (-CH) carbons upright. All others absent.',
-        'DEPT-45 Verification: Shows ALL protonated carbons (CH3, CH2, CH) upright. Quaternary carbons absent.',
-        'Carbonyl Discrimination: Ketones resonate at 200–220 ppm; aldehydes at 190–205 ppm; esters, carboxylic acids, and amides resonate at 160–185 ppm.'
+        r'''**Broadband $^1\text{H}$-Decoupled Spectrum**: Each distinct chemical carbon environment appears as a sharp singlet. Total peak count reflects skeletal molecular symmetry.''',
+        r'''**DEPT-135 Multiplicity Editing**: Methyl (-\text{CH}_3) and Methine (-\text{CH}) point UP (+); Methylene (-\text{CH}_2-) points DOWN (-); Quaternary carbons ($C_q$) DISAPPEAR.''',
+        '**DEPT-90 Verification**: Retains ONLY Methine (-\\text{CH}) carbons upright; all other carbons are suppressed.',
+        '**DEPT-45 Verification**: Retains ALL protonated carbons (\\text{CH}_3, \\text{CH}_2, \\text{CH}) upright; quaternary carbons are absent.',
+        r'''**Carbonyl Region Diagnostic**: Ketones ($\,\delta\,$ 200–220 ppm); aldehydes ($\,\delta\,$ 190–205 ppm); esters, carboxylic acids, and amides ($\,\delta\,$ 160–185 ppm).'''
       ],
       keyFormulas: [
-        'DEPT-135 Rule: I_CH3 > 0 (+), I_CH > 0 (+), I_CH2 < 0 (-), I_Cq = 0',
-        'DEPT-90 Rule: I_CH > 0 (+), I_CH3 = I_CH2 = I_Cq = 0',
-        'DEPT-45 Rule: I_CH3 > 0, I_CH2 > 0, I_CH > 0, I_Cq = 0',
-        'Total Carbons Formula: N_total = N_CH3 + N_CH2 + N_CH + N_Cq'
+        r'''### DEPT-135 Phase Equations
+        $$I_{\text{CH}_3} > 0 \,(+), \quad I_{\text{CH}} > 0 \,(+), \quad I_{\text{CH}_2} < 0 \,(-), \quad I_{C_q} = 0$$''',
+        r'''### DEPT-90 Phase Rule
+        $$I_{\text{CH}} > 0 \,(+), \quad I_{\text{CH}_3} = I_{\text{CH}_2} = I_{C_q} = 0$$''',
+        r'''### DEPT-45 Phase Rule
+        $$I_{\text{CH}_3} > 0, \quad I_{\text{CH}_2} > 0, \quad I_{\text{CH}} > 0, \quad I_{C_q} = 0$$''',
+        r'''### Total Carbon Stoichiometry
+        $$N_{\text{total}} = N_{\text{CH}_3} + N_{\text{CH}_2} + N_{\text{CH}} + N_{C_q}$$''',
       ],
       examples: [
         SpectrogramExample(
@@ -1555,16 +1582,20 @@ class SpectroscopyService {
       yAxisPhysicalMeaning: 'Ratio of transmitted infrared intensity to incident intensity (I / I0 * 100%). Strong vibrational absorption dips downward toward 0% Transmittance.',
       fundamentalPrinciple: 'Infrared radiation excites molecular vibrational modes (stretching, bending, rocking). A vibrational transition is IR-active only if it produces a net change in molecular dipole moment (d_mu / d_r != 0).',
       howToRead: [
-        'Diagnostic Region (4000–1500 cm⁻¹): Dedicated to functional group identification (O-H/N-H 3600-3200 cm⁻¹, C-H 3100-2850 cm⁻¹, triple bonds 2260-2100 cm⁻¹, carbonyl C=O 1800-1650 cm⁻¹).',
-        'Fingerprint Region (1500–400 cm⁻¹): Highly complex single-bond stretching and skeletal bending; unique to every molecule like a human fingerprint.',
-        'Carbonyl Precision: Anhydride (1820 & 1760 cm⁻¹ doublet), Acid Chloride (1800 cm⁻¹), Ester (1740 cm⁻¹), Aldehyde (1725 cm⁻¹ with 2720/2820 cm⁻¹ Fermi doublet), Ketone (1715 cm⁻¹), Carboxylic acid (1710 cm⁻¹ with broad 2500–3300 cm⁻¹ envelope), Amide (1680–1650 cm⁻¹).',
-        'Conjugation Effect: Alpha,beta-conjugation with alkene or benzene ring lowers carbonyl stretching frequency by 20–40 cm⁻¹ due to increased single-bond character.',
-        'Ring Strain Effect: Decreasing ring size increases carbonyl frequency (cyclooctanone 1705 cm⁻¹ -> cyclohexanone 1715 cm⁻¹ -> cyclopentanone 1745 cm⁻¹ -> cyclobutanone 1780 cm⁻¹).'
+        '**Diagnostic Region (4000–1500 cm⁻¹)**: Dedicated to functional group identification (O-H/N-H 3600–3200 cm⁻¹, C-H 3100–2850 cm⁻¹, triple bonds 2260–2100 cm⁻¹, carbonyl C=O 1800–1650 cm⁻¹).',
+        '**Fingerprint Region (1500–400 cm⁻¹)**: Highly complex single-bond stretching and skeletal bending; unique to each compound like a human fingerprint.',
+        '**Carbonyl Precision Hierarchy**: Anhydride (1820 & 1760 cm⁻¹ doublet), Acid Chloride (1800 cm⁻¹), Ester (1740 cm⁻¹), Aldehyde (1725 cm⁻¹ with 2720/2820 cm⁻¹ Fermi doublet), Ketone (1715 cm⁻¹), Carboxylic acid (1710 cm⁻¹ with broad 2500–3300 cm⁻¹ envelope), Amide (1680–1650 cm⁻¹).',
+        r'''**Conjugation Red-Shift**: $\alpha,\beta$-conjugation with an alkene or aromatic ring lowers carbonyl stretching frequency by 20–40 cm⁻¹ due to increased single-bond character ($C=O \leftrightarrow C^+-O^-$).''',
+        r'''**Ring Strain Effect**: Decreasing ring size increases carbonyl frequency (cyclooctanone 1705 cm⁻¹ $\to$ cyclohexanone 1715 cm⁻¹ $\to$ cyclopentanone 1745 cm⁻¹ $\to$ cyclobutanone 1780 cm⁻¹).'''
       ],
       keyFormulas: [
-        'Hooke\'s Law: nu_bar = (1 / 2*pi*c) * sqrt(k / mu)',
-        'Reduced Mass: mu = (m_1 * m_2) / (m_1 + m_2)',
-        'Absorbance vs Transmittance: A = -log10(T) = log10(100 / %T)'
+        r'''### Hooke's Law for Vibrational Frequency
+        $$\bar{
+        u} = \frac{1}{2\pi c} \sqrt{\frac{k}{\mu}}$$''',
+        r'''### Vibrational Reduced Mass ($\mu$)
+        $$\mu = \frac{m_1 m_2}{m_1 + m_2}$$''',
+        r'''### Transmittance to Absorbance Conversion
+        $$A = -\log_{10}(T) = \log_{10}\left(\frac{100}{\%T}\right)$$''',
       ],
       examples: [
         SpectrogramExample(
@@ -1608,16 +1639,19 @@ class SpectroscopyService {
       yAxisPhysicalMeaning: 'Logarithmic attenuation of light beam transmitted through 1 cm quartz cuvette. Follows Beer-Lambert law: A = epsilon * c * l.',
       fundamentalPrinciple: 'Absorption of UV-Vis photons promotes an electron from a bonding (sigma, pi) or non-bonding (n) orbital into an antibonding orbital (pi*, sigma*). Conjugation dramatically narrows the HOMO-LUMO gap, shifting lambda_max to longer wavelengths.',
       howToRead: [
-        'lambda_max (Absorption Maximum): Wavelength of peak absorbance. Characteristic of chromophore extent of conjugation.',
-        'Molar Absorptivity (epsilon): Indicates transition probability. Allowed pi -> pi* transitions have epsilon > 10,000 L/(mol*cm); forbidden n -> pi* have epsilon < 100.',
-        'Woodward-Fieser Rules: Predicts lambda_max for conjugated dienes (base butadiene = 217 nm, homoannular = 253 nm, heteroannular = 214 nm, +30 nm per extended conjugation).',
-        'Bathochromic Shift (Red Shift): Shift of lambda_max to longer wavelength (lower energy) caused by extended conjugation or polar solvents.',
-        'Hypsochromic Shift (Blue Shift): Shift of lambda_max to shorter wavelength (higher energy).'
+        r'''**$\lambda_{\max}$ (Absorption Maximum)**: Peak absorbance wavelength indicating chromophore electronic structure and extent of $\pi$-conjugation.''',
+        r'''**Molar Absorptivity ($\epsilon$)**: Transition probability metric. Fully allowed $\pi \to \pi^*$ transitions exhibit $\epsilon > 10,000\text{ L/(mol}\cdot\text{cm)}$; symmetry-forbidden $n \to \pi^*$ transitions exhibit $\epsilon < 100$.''',
+        r'''**Woodward-Fieser Empirical Rules**: Predicts $\lambda_{\max}$ for conjugated dienes (base butadiene = 217 nm, homoannular = 253 nm, heteroannular = 214 nm, +30 nm per extended double bond).''',
+        r'''**Bathochromic Shift (Red Shift)**: Displacement of $\lambda_{\max}$ to longer wavelength (lower photon energy $\Delta E$) due to extended conjugation or polar auxochrome substitution.''',
+        r'''**Hypsochromic Shift (Blue Shift)**: Displacement of $\lambda_{\max}$ to shorter wavelength (higher photon energy $\Delta E$).'''
       ],
       keyFormulas: [
-        'Beer-Lambert Law: A = epsilon * c * l (l = cuvette path length = 1.0 cm)',
-        'Photon Energy: Delta E = h * c / lambda',
-        'Woodward-Fieser Base Dienes: Acyclic = 217 nm, Heteroannular = 214 nm, Homoannular = 253 nm'
+        r'''### Beer-Lambert Law of Light Absorption
+        $$A = \epsilon \cdot c \cdot l = -\log_{10}\left(\frac{I}{I_0}\right)$$''',
+        r'''### Photon Transition Energy
+        $$\Delta E = \frac{h \cdot c}{\lambda}$$''',
+        r'''### Woodward-Fieser Base Values for Dienes
+        $$\lambda_{\text{acyclic}} = 217\text{ nm}, \quad \lambda_{\text{heteroannular}} = 214\text{ nm}, \quad \lambda_{\text{homoannular}} = 253\text{ nm}$$''',
       ],
       examples: [
         SpectrogramExample(
@@ -1749,6 +1783,100 @@ class AnalyticalTechniqueInfo {
     required this.keyFormulas,
     required this.examples,
   });
+}
+
+extension AnalyticalTechniqueMetadata on AnalyticalTechniqueInfo {
+  String get fullInstrumentTitle {
+    switch (id) {
+      case 'gc':
+        return 'Capillary Gas Chromatogram (GC-FID)';
+      case 'hplc':
+        return 'Reverse-Phase HPLC Chromatogram (RP-C18)';
+      case 'tlc':
+        return 'Normal-Phase Silica TLC Plate (TLC F₂₅₄)';
+      case 'ms':
+        return '70 eV Electron Ionization Mass Spectrum (EI-MS)';
+      case '1h_nmr':
+        return '500 MHz ¹H NMR Resonance Spectrum';
+      case '13c_nmr':
+        return '¹³C Broadband Decoupled & DEPT-135 Spectrum';
+      case 'ftir':
+        return 'FT-IR Infrared Transmittance Spectrum';
+      case 'uv_vis':
+        return 'UV-Visible Electronic Absorption Spectrum';
+      default:
+        return title;
+    }
+  }
+
+  String get instrumentIcon {
+    switch (id) {
+      case 'gc':
+        return '🔬';
+      case 'hplc':
+        return '🧪';
+      case 'tlc':
+        return '📜';
+      case 'ms':
+        return '💥';
+      case '1h_nmr':
+        return '🧲';
+      case '13c_nmr':
+        return '🧲';
+      case 'ftir':
+        return '📈';
+      case 'uv_vis':
+        return '🌈';
+      default:
+        return '📊';
+    }
+  }
+
+  String get domainDescription {
+    switch (id) {
+      case 'gc':
+        return 'Gas-Liquid Partition Chromatography';
+      case 'hplc':
+        return 'Liquid-Solid Partition Chromatography (RP-C18)';
+      case 'tlc':
+        return 'Planar Liquid-Solid Adsorption Chromatography';
+      case 'ms':
+        return 'Mass Spectrometry & Gas-Phase Ionization';
+      case '1h_nmr':
+        return 'Nuclear Magnetic Resonance Spectroscopy (Proton)';
+      case '13c_nmr':
+        return 'Nuclear Magnetic Resonance & Polarization Transfer';
+      case 'ftir':
+        return 'Vibrational Infrared Absorption Spectroscopy';
+      case 'uv_vis':
+        return 'Electronic UV-Visible Absorption Spectroscopy';
+      default:
+        return category;
+    }
+  }
+
+  String get instrumentParameters {
+    switch (id) {
+      case 'gc':
+        return 'DB-5 Capillary Column (30 m × 0.25 mm) • Carrier: He • FID Detector (250 °C)';
+      case 'hplc':
+        return 'C18 Octadecylsilane (250 × 4.6 mm, 5 μm) • Mobile: MeCN/H₂O • DAD @ 254 nm';
+      case 'tlc':
+        return 'Silica Gel 60 F₂₅₄ Glass Plate • Mobile: EtOAc/Hexanes • Visualization: UV 254 nm';
+      case 'ms':
+        return 'Ionization: 70 eV Electron Ionization • Analyzer: Quadrupole Filter • Base Peak: 100%';
+      case '1h_nmr':
+        return 'Spectrometer: 500 MHz FT-NMR • Solvent: CDCl₃ • Reference: TMS (δ 0.00 ppm)';
+      case '13c_nmr':
+        return 'Spectrometer: 125 MHz ¹³C • Decoupling: ¹H WALTZ-16 • DEPT-135 Multiplicity Editing';
+      case 'ftir':
+        return 'Optics: Michelson Interferometer • Sample: KBr Matrix Pellet • Scan: 4000 to 400 cm⁻¹';
+      case 'uv_vis':
+        return 'Double-Beam Spectrophotometer • Cell: 1.00 cm Quartz Cuvette • Range: 200 to 800 nm';
+      default:
+        return category;
+    }
+  }
 }
 
 class SpectrogramExample {

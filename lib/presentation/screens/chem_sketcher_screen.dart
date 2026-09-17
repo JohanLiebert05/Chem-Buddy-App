@@ -891,172 +891,137 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF111827),
+          backgroundColor: const Color(0xFF0F172A),
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
             onPressed: () => Navigator.pop(context, _currentSmiles),
           ),
-          title: Row(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.brandPrimary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.gesture_rounded, color: AppColors.brandBright, size: 18),
+              const Text(
+                'ChemDraw Pro',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
               ),
-              const SizedBox(width: 10),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ChemDraw Mobile Canvas',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
-                  ),
-                  Text(
-                    'Touch-Optimized • Smart Canvas • RDKit',
-                    style: TextStyle(fontSize: 10, color: AppColors.textMuted),
-                  ),
-                ],
+              Text(
+                _currentSmiles.isNotEmpty
+                    ? '$_atomCount Atoms • $_bondCount Bonds • $_currentSmiles'
+                    : '$_atomCount Atoms • $_bondCount Bonds • Smart Canvas',
+                style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
           actions: [
-            if (_currentSmiles.isNotEmpty)
-              TextButton(
-                onPressed: () => Navigator.pop(context, _currentSmiles),
-                child: const Text(
-                  'Use',
-                  style: TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.w800, fontSize: 13),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                  foregroundColor: const Color(0xFFA78BFA),
+                  side: const BorderSide(color: Color(0xFFA78BFA), width: 1),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: _isPredicting ? null : _predictMajorProduct,
+                icon: _isPredicting
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFA78BFA)),
+                      )
+                    : const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFFA78BFA)),
+                label: const Text(
+                  'Predict',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
                 ),
               ),
-            Switch(
-              value: _multiReactantMode,
-              onChanged: (val) {
-                setState(() => _multiReactantMode = val);
-                AppHaptics.selection();
-              },
-              activeThumbColor: AppColors.accentCyan,
-            ),
-            IconButton(
-              icon: _isPredicting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentCyan),
-                    )
-                  : const Icon(Icons.auto_awesome_rounded, color: Color(0xFFA78BFA), size: 21),
-              tooltip: 'Predict Major Product ⚡',
-              onPressed: _isPredicting ? null : _predictMajorProduct,
-            ),
-            IconButton(
-              icon: const Icon(Icons.file_upload_outlined, color: AppColors.accentCyan, size: 20),
-              tooltip: 'Export SMILES / Molfile',
-              onPressed: _showExportDialog,
             ),
             IconButton(
               icon: const Icon(Icons.help_outline_rounded, color: AppColors.accentCyan, size: 21),
-              tooltip: 'ChemDraw Guide & Tutorial 💡',
+              tooltip: 'ChemDraw Guide & Masterclass 💡',
               onPressed: () => ChemDrawGuideDialog.show(context, onLoadExample: _loadSmiles),
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert_rounded, color: Colors.white70, size: 22),
+              color: const Color(0xFF1E293B),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              onSelected: (val) {
+                AppHaptics.selection();
+                switch (val) {
+                  case 'load_smiles':
+                    _showLoadSmilesDialog();
+                    break;
+                  case 'export':
+                    _showExportDialog();
+                    break;
+                  case 'rdkit':
+                    _analyzeWithRdkit();
+                    break;
+                  case 'multi_reactant':
+                    setState(() => _multiReactantMode = !_multiReactantMode);
+                    break;
+                  case 'use':
+                    Navigator.pop(context, _currentSmiles);
+                    break;
+                }
+              },
+              itemBuilder: (ctx) => [
+                const PopupMenuItem(
+                  value: 'load_smiles',
+                  child: Row(
+                    children: [
+                      Icon(Icons.paste_rounded, color: AppColors.accentCyan, size: 18),
+                      SizedBox(width: 10),
+                      Text('Load from SMILES...', style: TextStyle(color: Colors.white, fontSize: 13)),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'export',
+                  child: Row(
+                    children: [
+                      Icon(Icons.file_upload_outlined, color: AppColors.brandBright, size: 18),
+                      SizedBox(width: 10),
+                      Text('Export SMILES / Molfile', style: TextStyle(color: Colors.white, fontSize: 13)),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'rdkit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.analytics_outlined, color: AppColors.accentGold, size: 18),
+                      SizedBox(width: 10),
+                      Text('RDKit Descriptors & Lipinski', style: TextStyle(color: Colors.white, fontSize: 13)),
+                    ],
+                  ),
+                ),
+                CheckedPopupMenuItem(
+                  value: 'multi_reactant',
+                  checked: _multiReactantMode,
+                  child: const Text('Multi-Reactant Mode', style: TextStyle(color: Colors.white, fontSize: 13)),
+                ),
+                if (_currentSmiles.isNotEmpty)
+                  const PopupMenuItem(
+                    value: 'use',
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline_rounded, color: AppColors.present, size: 18),
+                        SizedBox(width: 10),
+                        Text('Use / Return Structure', style: TextStyle(color: AppColors.present, fontSize: 13, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
         body: Column(
           children: [
-            // Top Status Strip
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: const Color(0xFF0F172A),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.bubble_chart_outlined, color: AppColors.accentCyan, size: 16),
-                      const SizedBox(width: 6),
-                      Text(
-                        '$_atomCount Atoms • $_bondCount Bonds',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
-                      ),
-                      if (_multiReactantMode) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.brandPrimary.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: AppColors.brandPrimary),
-                          ),
-                          child: const Text(
-                            'Multi-Reactant',
-                            style: TextStyle(color: AppColors.brandBright, fontSize: 9, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      if (_currentSmiles.isNotEmpty)
-                        Container(
-                          constraints: const BoxConstraints(maxWidth: 150),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.brandPrimary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            _currentSmiles,
-                            style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontFamily: 'monospace'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      IconButton(
-                        icon: const Icon(Icons.paste_rounded, color: AppColors.accentCyan, size: 18),
-                        tooltip: 'Load from SMILES',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        onPressed: _showLoadSmilesDialog,
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () {
-                          _controller.runJavaScript("document.getElementById('btn-plus').click();");
-                          AppHaptics.confirm();
-                        },
-                        borderRadius: BorderRadius.circular(6),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentCyan.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: AppColors.accentCyan, width: 1.2),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.add, color: AppColors.accentCyan, size: 14),
-                              SizedBox(width: 2),
-                              Text(
-                                'Reactant',
-                                style: TextStyle(
-                                  color: AppColors.accentCyan,
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
             // Sketcher WebView Canvas
             Expanded(
               child: Stack(

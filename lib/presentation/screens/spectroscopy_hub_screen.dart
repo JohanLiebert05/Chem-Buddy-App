@@ -34,6 +34,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
   bool _showFullReport = false;
 
   // Chromatograms & Spectrograms Tab State
+  String _selectedTechniqueCategory = 'All';
   int _selectedTechniqueIndex = 0;
   SpectralPeakAnnotation? _selectedPeak;
 
@@ -554,47 +555,80 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
   }
 
   // ----------------------------------------------------
-  // 2. Chromatograms & Spectrograms Tab
+  // 2. Chromatograms & Spectrograms Tab (Interactive Lab Sim)
   // ----------------------------------------------------
   Widget _buildChromatogramsTab() {
-    final techniques = SpectroscopyService.analyticalTechniques;
-    final currentTech = techniques[_selectedTechniqueIndex.clamp(0, techniques.length - 1)];
+    final allTechniques = SpectroscopyService.analyticalTechniques;
+    final filteredTechniques = _selectedTechniqueCategory == 'All'
+        ? allTechniques
+        : allTechniques.where((t) => t.category == _selectedTechniqueCategory).toList();
+
+    final currentTech = filteredTechniques.isNotEmpty
+        ? filteredTechniques[_selectedTechniqueIndex.clamp(0, filteredTechniques.length - 1)]
+        : allTechniques.first;
     final currentEx = currentTech.examples.isNotEmpty ? currentTech.examples.first : null;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Horizontal Technique Selector
+        // Category Filter Chips (All, Chromatography, Spectroscopy)
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: List.generate(techniques.length, (index) {
+            children: [
+              _buildCategoryFilterChip('All', 'All (${allTechniques.length})', Icons.auto_awesome_mosaic_rounded),
+              const SizedBox(width: 8),
+              _buildCategoryFilterChip('Chromatography', '🧪 Chromatography (3)', Icons.biotech_rounded),
+              const SizedBox(width: 8),
+              _buildCategoryFilterChip('Spectroscopy', '🧲 Spectroscopy (5)', Icons.waves_rounded),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Horizontal Technique Selector with Icons & Subtitles
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: List.generate(filteredTechniques.length, (index) {
               final isSel = _selectedTechniqueIndex == index;
-              final t = techniques[index];
+              final t = filteredTechniques[index];
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
                   label: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        t.acronym,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          color: isSel ? Colors.white : AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '(${t.category == 'Chromatography' ? 'Chrom' : 'Spec'})',
-                        style: TextStyle(fontSize: 10, color: isSel ? Colors.white70 : AppColors.textMuted),
+                      Text(t.instrumentIcon, style: const TextStyle(fontSize: 14)),
+                      const SizedBox(width: 6),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            t.acronym,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: isSel ? Colors.white : AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            t.category == 'Chromatography' ? 'Chromatogram' : 'Spectrogram',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              color: isSel ? Colors.white70 : AppColors.textMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   selected: isSel,
                   selectedColor: AppColors.brandPrimary,
                   backgroundColor: const Color(0xFF0F172A),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   side: BorderSide(
                     color: isSel ? AppColors.brandBright : Colors.white12,
                     width: 1.2,
@@ -615,6 +649,133 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
         ),
         const SizedBox(height: 14),
 
+        // Prominent Technique Type Banner Card
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.18),
+                const Color(0xFF0F172A),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.55),
+              width: 1.4,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.black38,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Text(
+                      currentTech.instrumentIcon,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                              decoration: BoxDecoration(
+                                color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.25),
+                                borderRadius: BorderRadius.circular(5),
+                                border: Border.all(
+                                  color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.6),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Text(
+                                'INSTRUMENT: ${currentTech.category.toUpperCase()}',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                currentTech.domainDescription,
+                                style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          currentTech.fullInstrumentTitle,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF090E17),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.settings_input_component_rounded, size: 14, color: AppColors.accentGold),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        currentTech.instrumentParameters,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
         // Principle Header Card
         GlowCard(
           padding: const EdgeInsets.all(16),
@@ -625,34 +786,27 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
+                  const Expanded(
                     child: Text(
-                      currentTech.title,
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white),
+                      'Fundamental Working Principle',
+                      style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: Colors.white),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.2),
+                      color: AppColors.accentCyan.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.4)),
+                      border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.3)),
                     ),
-                    child: Text(
-                      currentTech.category.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright,
-                      ),
-                    ),
+                    child: const Text('Theory', style: TextStyle(color: AppColors.accentCyan, fontSize: 10, fontWeight: FontWeight.w700)),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
-                currentTech.fundamentalPrinciple,
-                style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.4),
+              ChemistryMarkdownView(
+                text: currentTech.fundamentalPrinciple,
+                textStyle: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.45),
               ),
             ],
           ),
@@ -715,21 +869,18 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                     style: const TextStyle(color: AppColors.textMuted, fontSize: 11, height: 1.35),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
-                // Chart Canvas
+                // Zoomable & Pannable Chart Canvas with Interactive Viewer
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 16, 12),
-                  child: SizedBox(
-                    height: 220,
-                    width: double.infinity,
-                    child: CustomPaint(
-                      painter: _InteractiveSpectrogramChartPainter(
-                        example: currentEx,
-                        technique: currentTech,
-                        selectedPeak: _selectedPeak,
-                      ),
-                    ),
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  child: _ZoomableSpectrogramChart(
+                    example: currentEx,
+                    technique: currentTech,
+                    selectedPeak: _selectedPeak,
+                    onPeakSelected: (peak) {
+                      setState(() => _selectedPeak = peak);
+                    },
                   ),
                 ),
 
@@ -809,9 +960,9 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          _selectedPeak!.explanation,
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35),
+                        ChemistryMarkdownView(
+                          text: _selectedPeak!.explanation,
+                          textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35),
                         ),
                       ],
                     ),
@@ -847,7 +998,10 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                     const SizedBox(height: 4),
                     Text('Direction: ${currentTech.xAxisDirection}', style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontStyle: FontStyle.italic)),
                     const Divider(color: AppColors.borderSubtle, height: 14),
-                    Text(currentTech.xAxisPhysicalMeaning, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35)),
+                    ChemistryMarkdownView(
+                      text: currentTech.xAxisPhysicalMeaning,
+                      textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35),
+                    ),
                   ],
                 ),
               ),
@@ -873,7 +1027,10 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                     const SizedBox(height: 4),
                     Text('Direction: ${currentTech.yAxisDirection}', style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontStyle: FontStyle.italic)),
                     const Divider(color: AppColors.borderSubtle, height: 14),
-                    Text(currentTech.yAxisPhysicalMeaning, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35)),
+                    ChemistryMarkdownView(
+                      text: currentTech.yAxisPhysicalMeaning,
+                      textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35),
+                    ),
                   ],
                 ),
               ),
@@ -890,21 +1047,28 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
             children: [
               const Row(
                 children: [
-                  Icon(Icons.checklist_rounded, color: AppColors.statusSuccess, size: 18),
+                  Icon(Icons.checklist_rounded, color: AppColors.statusSuccess, size: 20),
                   SizedBox(width: 8),
-                  Text('How to Read & Interpret this Instrument', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14)),
+                  Text('How to Read & Interpret this Instrument', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14.5)),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               ...currentTech.howToRead.map((item) {
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: 10),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('• ', style: TextStyle(color: AppColors.accentCyan, fontSize: 14, fontWeight: FontWeight.w800)),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 2),
+                        child: Icon(Icons.arrow_right_rounded, color: AppColors.accentCyan, size: 18),
+                      ),
+                      const SizedBox(width: 6),
                       Expanded(
-                        child: Text(item, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35)),
+                        child: ChemistryMarkdownView(
+                          text: item,
+                          textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.4),
+                        ),
                       ),
                     ],
                   ),
@@ -921,34 +1085,40 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.functions_rounded, color: AppColors.accentGold, size: 18),
-                  SizedBox(width: 8),
-                  Text('Core Mathematical Equations & Rules', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14)),
+                  const Row(
+                    children: [
+                      Icon(Icons.functions_rounded, color: AppColors.accentGold, size: 20),
+                      SizedBox(width: 8),
+                      Text('Core Mathematical Equations & Rules', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14.5)),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentGold.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
+                    ),
+                    child: const Text('KaTeX LaTeX', style: TextStyle(color: AppColors.accentGold, fontSize: 10, fontWeight: FontWeight.w700)),
+                  ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               ...currentTech.keyFormulas.map((formula) {
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F172A),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.25)),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.code_rounded, size: 14, color: AppColors.accentGold),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          formula,
-                          style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'monospace', fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
+                  child: ChemistryMarkdownView(
+                    text: formula,
+                    textStyle: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4),
                   ),
                 );
               }),
@@ -956,6 +1126,47 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCategoryFilterChip(String categoryKey, String label, IconData icon) {
+    final isSelected = _selectedTechniqueCategory == categoryKey;
+    return InkWell(
+      onTap: () {
+        AppHaptics.selection();
+        setState(() {
+          _selectedTechniqueCategory = categoryKey;
+          _selectedTechniqueIndex = 0;
+          _selectedPeak = null;
+        });
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.brandPrimary : const Color(0xFF0F172A),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? AppColors.brandBright : Colors.white12,
+            width: 1.2,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: isSelected ? Colors.white : AppColors.textMuted),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
@@ -1930,6 +2141,281 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
 
 }
 
+// ----------------------------------------------------
+// Zoomable & Pannable Spectrogram / Chromatogram Widget
+// ----------------------------------------------------
+class _ZoomableSpectrogramChart extends StatefulWidget {
+  final SpectrogramExample example;
+  final AnalyticalTechniqueInfo technique;
+  final SpectralPeakAnnotation? selectedPeak;
+  final ValueChanged<SpectralPeakAnnotation?> onPeakSelected;
+
+  const _ZoomableSpectrogramChart({
+    required this.example,
+    required this.technique,
+    required this.selectedPeak,
+    required this.onPeakSelected,
+  });
+
+  @override
+  State<_ZoomableSpectrogramChart> createState() => _ZoomableSpectrogramChartState();
+}
+
+class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
+  late TransformationController _transformController;
+  double _currentScale = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _transformController = TransformationController();
+    _transformController.addListener(_onTransformationChanged);
+  }
+
+  void _onTransformationChanged() {
+    final scale = _transformController.value.getMaxScaleOnAxis();
+    if ((scale - _currentScale).abs() > 0.05) {
+      setState(() {
+        _currentScale = scale;
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _ZoomableSpectrogramChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.example != widget.example || oldWidget.technique != widget.technique) {
+      _resetZoom();
+    }
+  }
+
+  @override
+  void dispose() {
+    _transformController.removeListener(_onTransformationChanged);
+    _transformController.dispose();
+    super.dispose();
+  }
+
+  void _zoomIn() {
+    AppHaptics.selection();
+    final matrix = _transformController.value.clone();
+    matrix.multiply(Matrix4.diagonal3Values(1.25, 1.25, 1.0));
+    _transformController.value = matrix;
+  }
+
+  void _zoomOut() {
+    AppHaptics.selection();
+    if (_currentScale <= 1.1) {
+      _resetZoom();
+      return;
+    }
+    final matrix = _transformController.value.clone();
+    matrix.multiply(Matrix4.diagonal3Values(1 / 1.25, 1 / 1.25, 1.0));
+    _transformController.value = matrix;
+  }
+
+  void _resetZoom() {
+    AppHaptics.selection();
+    _transformController.value = Matrix4.identity();
+    setState(() {
+      _currentScale = 1.0;
+    });
+  }
+
+  void _handleTap(Offset localPos, Size size) {
+    const leftPad = 48.0;
+    const rightPad = 24.0;
+    const topPad = 24.0;
+    const bottomPad = 32.0;
+
+    final plotWidth = size.width - leftPad - rightPad;
+    final plotHeight = size.height - topPad - bottomPad;
+    if (plotWidth <= 0 || plotHeight <= 0) return;
+
+    final xMin = widget.example.xMin;
+    final xMax = widget.example.xMax;
+    final yMin = widget.example.yMin;
+    final yMax = widget.example.yMax;
+    final isInvertedX = widget.technique.xAxisDirection.contains('Decreasing') ||
+        widget.technique.xAxisDirection.contains('Inverted');
+
+    double mapX(double x) {
+      final norm = (x - xMin) / (xMax - xMin);
+      if (isInvertedX) {
+        return leftPad + (1.0 - norm) * plotWidth;
+      }
+      return leftPad + norm * plotWidth;
+    }
+
+    double mapY(double y) {
+      final norm = (y - yMin) / (yMax - yMin);
+      return (topPad + plotHeight) - norm * plotHeight;
+    }
+
+    SpectralPeakAnnotation? closest;
+    double minDistance = 35.0; // 35 logical pixels touch radius
+
+    for (final peak in widget.example.peaks) {
+      final px = mapX(peak.x);
+      final py = mapY(peak.y);
+      final dist = math.sqrt(math.pow(px - localPos.dx, 2) + math.pow(py - localPos.dy, 2));
+      if (dist < minDistance) {
+        minDistance = dist;
+        closest = peak;
+      }
+    }
+
+    if (closest != null) {
+      AppHaptics.selection();
+      if (widget.selectedPeak == closest) {
+        widget.onPeakSelected(null);
+      } else {
+        widget.onPeakSelected(closest);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Zoom toolbar header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: const BoxDecoration(
+            color: Color(0xFF0F172A),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            border: Border(
+              bottom: BorderSide(color: Colors.white10),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.zoom_in_rounded, size: 16, color: AppColors.accentCyan),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: (_currentScale > 1.05 ? AppColors.accentGold : AppColors.brandBright).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${_currentScale.toStringAsFixed(1)}x Zoom',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: _currentScale > 1.05 ? AppColors.accentGold : AppColors.brandBright,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '🤏 Pinch & Pan',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_currentScale > 1.05)
+                    InkWell(
+                      onTap: _resetZoom,
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        margin: const EdgeInsets.only(right: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.bg2,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.restart_alt_rounded, size: 12, color: Colors.white70),
+                            SizedBox(width: 3),
+                            Text('Reset', style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  InkWell(
+                    onTap: _zoomOut,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.bg2,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.white12),
+                      ),
+                      child: const Icon(Icons.remove_rounded, size: 16, color: Colors.white70),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: _zoomIn,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandPrimary,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.5)),
+                      ),
+                      child: const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Zoomable Canvas Viewport
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+          child: Container(
+            color: const Color(0xFF070D18),
+            height: 240,
+            width: double.infinity,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final chartSize = Size(constraints.maxWidth, 240);
+                return InteractiveViewer(
+                  transformationController: _transformController,
+                  minScale: 1.0,
+                  maxScale: 5.0,
+                  panEnabled: true,
+                  scaleEnabled: true,
+                  clipBehavior: Clip.hardEdge,
+                  child: GestureDetector(
+                    onTapUp: (details) => _handleTap(details.localPosition, chartSize),
+                    child: SizedBox(
+                      width: constraints.maxWidth,
+                      height: 240,
+                      child: CustomPaint(
+                        size: chartSize,
+                        painter: _InteractiveSpectrogramChartPainter(
+                          example: widget.example,
+                          technique: widget.technique,
+                          selectedPeak: widget.selectedPeak,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 // ----------------------------------------------------
 // Interactive Spectrogram & Chromatogram Chart Painter

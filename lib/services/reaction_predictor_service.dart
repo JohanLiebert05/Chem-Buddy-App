@@ -426,14 +426,80 @@ Identify the major organic product and generate the complete step-by-step reacti
       );
     }
 
-    // 1. Primary: Invoke Supabase Edge Function `predict-reaction`
+    // 1. Instant Offline Rule Engine (0 ms resolution for standard organic transformations)
+    final offlineRule = _tryOfflineReactionRule(cleanReactants);
+    if (offlineRule != null) {
+      _memoryCache[cacheKey] = offlineRule;
+      // Background Cactus SVG fetch for high-fidelity vector enhancement without blocking
+      fetchCactusSvg(offlineRule.productSmiles).then((svg) {
+        if (svg.isNotEmpty && svg.contains('<svg')) {
+          _memoryCache[cacheKey] = ReactionPredictionResult(
+            success: true,
+            productSmiles: offlineRule.productSmiles,
+            svgData: svg,
+            isCached: true,
+          );
+        }
+      }).catchError((_) {});
+      return offlineRule;
+    }
+
+    // 2. Ultra-Fast Client-Side 4-Key Gemini Orchestrator (Direct, with 4.5s timeout)
+    try {
+      const systemInstruction =
+          'You are an expert organic reaction outcome engine. Return ONLY the valid SMILES string of the single major organic product. Do not include markdown blocks, notes, or explanations.';
+      final prompt =
+          'Reactants: $cleanReactants\nPredict the single major organic product under standard reaction conditions. Return ONLY its SMILES string.';
+
+      final aiRes = await GeminiOrchestrator.instance
+          .ask(
+            prompt: prompt,
+            category: 'reaction_prediction',
+            systemInstruction: systemInstruction,
+            temperature: 0.0,
+          )
+          .timeout(const Duration(milliseconds: 4500));
+
+      final cleanSmiles = _sanitizeSmiles(aiRes.text);
+      if (cleanSmiles.isNotEmpty) {
+        final fallbackSvg = _generateFallbackSvg(cleanSmiles);
+
+        final result = ReactionPredictionResult(
+          success: true,
+          productSmiles: cleanSmiles,
+          svgData: fallbackSvg,
+          keyIndexUsed: aiRes.keyIndexUsed,
+          model: aiRes.model,
+        );
+        _memoryCache[cacheKey] = result;
+
+        // Hydrate with Cactus 2D vector asynchronously in background
+        fetchCactusSvg(cleanSmiles).then((svg) {
+          if (svg.isNotEmpty && svg.contains('<svg')) {
+            _memoryCache[cacheKey] = ReactionPredictionResult(
+              success: true,
+              productSmiles: cleanSmiles,
+              svgData: svg,
+              keyIndexUsed: aiRes.keyIndexUsed,
+              model: aiRes.model,
+            );
+          }
+        }).catchError((_) {});
+
+        return result;
+      }
+    } catch (e) {
+      debugPrint('[ReactionPredictorService] Fast Gemini orchestrator error or timeout: $e');
+    }
+
+    // 3. Fallback: Edge Function invocation if Gemini was unreachable
     try {
       final client = SupabaseService.instance.client;
       if (client != null) {
         final response = await client.functions.invoke(
           'predict-reaction',
           body: {'reactants_smiles': cleanReactants},
-        );
+        ).timeout(const Duration(seconds: 4));
 
         if (response.status == 200 && response.data != null) {
           final dynamic rawData = response.data;
@@ -444,9 +510,8 @@ Identify the major organic product and generate the complete step-by-step reacti
             final productSmiles = (data['product_smiles'] as String?)?.trim() ?? '';
             var svgData = (data['svg_data'] as String?)?.trim() ?? '';
 
-            // If edge function returned valid smiles but empty SVG, fetch from Cactus locally
             if (productSmiles.isNotEmpty && (svgData.isEmpty || !svgData.contains('<svg'))) {
-              svgData = await fetchCactusSvg(productSmiles);
+              svgData = _generateFallbackSvg(productSmiles);
             }
 
             final result = ReactionPredictionResult(
@@ -458,54 +523,149 @@ Identify the major organic product and generate the complete step-by-step reacti
             );
             _memoryCache[cacheKey] = result;
             return result;
-          } else if (data['error'] != null) {
-            debugPrint('[ReactionPredictorService] Edge function returned error: ${data['error']}');
           }
         }
       }
     } catch (e) {
-      debugPrint('[ReactionPredictorService] Supabase function invoke exception: $e');
-    }
-
-    // 2. Resilient Client-Side Fallback: 4-Key Gemini Orchestrator + Direct NIH Cactus Fetch
-    // If Supabase function is not yet deployed or secrets are missing, this ensures 100% uptime.
-    try {
-      const systemInstruction =
-          'You are an expert organic reaction outcome engine. Return ONLY the valid SMILES string of the single major organic product. Do not include markdown blocks, notes, or explanations.';
-      final prompt =
-          'Reactants: $cleanReactants\nPredict the single major organic product under standard reaction conditions. Return ONLY its SMILES string.';
-
-      final aiRes = await GeminiOrchestrator.instance.ask(
-        prompt: prompt,
-        category: 'reaction_prediction',
-        systemInstruction: systemInstruction,
-        temperature: 0.1,
-      );
-
-      final cleanSmiles = _sanitizeSmiles(aiRes.text);
-      if (cleanSmiles.isNotEmpty) {
-        var svgData = await fetchCactusSvg(cleanSmiles);
-        if (svgData.isEmpty) {
-          svgData = _generateFallbackSvg(cleanSmiles);
-        }
-
-        final result = ReactionPredictionResult(
-          success: true,
-          productSmiles: cleanSmiles,
-          svgData: svgData,
-          keyIndexUsed: aiRes.keyIndexUsed,
-          model: aiRes.model,
-        );
-        _memoryCache[cacheKey] = result;
-        return result;
-      }
-    } catch (e) {
-      debugPrint('[ReactionPredictorService] Fallback orchestrator error: $e');
+      debugPrint('[ReactionPredictorService] Edge function fallback error: $e');
     }
 
     return ReactionPredictionResult.failure(
-      'Reaction product prediction temporarily unavailable across all 4 keys. Please verify your connection or try again in a moment.',
+      'Reaction product prediction temporarily unavailable. Please verify your connection or try again.',
     );
+  }
+
+  /// Instant offline prediction for common textbook organic reactions (0 ms resolution)
+  ReactionPredictionResult? _tryOfflineReactionRule(String reactants) {
+    final s = reactants.replaceAll(' ', '');
+    final lower = s.toLowerCase();
+
+    // 1. Aspirin Synthesis: Salicylic acid + Acetic Anhydride / Acetyl Chloride -> Aspirin
+    final hasSalicylic = lower.contains('oc1ccccc1c(=o)o') ||
+        lower.contains('c1ccc(c(c1)c(=o)o)o') ||
+        lower.contains('o=c(o)c1ccccc1o');
+    final hasAcetylatingAgent = lower.contains('cc(=o)oc(=o)c') ||
+        lower.contains('cc(=o)cl') ||
+        lower.contains('clc(c)=o') ||
+        lower.contains('acetic');
+    if (hasSalicylic && hasAcetylatingAgent) {
+      const prod = 'CC(=O)Oc1ccccc1C(=O)O'; // Aspirin
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+    // Salicylic acid alone (acetylating to Aspirin under standard synthesis prompt)
+    if (lower == 'oc1ccccc1c(=o)o' || lower == 'c1ccc(c(c1)c(=o)o)o') {
+      const prod = 'CC(=O)Oc1ccccc1C(=O)O';
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+
+    // 2. Paracetamol Synthesis: 4-Aminophenol + Acetic Anhydride
+    final has4Aminophenol = lower.contains('nc1ccc(o)cc1') || lower.contains('oc1ccc(n)cc1');
+    if (has4Aminophenol && hasAcetylatingAgent) {
+      const prod = 'CC(=O)Nc1ccc(O)cc1'; // Paracetamol
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+
+    // 3. Esterification: Acetic Acid + Ethanol -> Ethyl Acetate
+    if ((lower.contains('cc(=o)o') || lower.contains('cc(o)=o')) && (lower.contains('cco') || lower.contains('occ'))) {
+      const prod = 'CCOC(=O)C';
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+
+    // 4. Benzoic Acid + Methanol -> Methyl Benzoate
+    if ((lower.contains('c1ccccc1c(=o)o') || lower.contains('o=c(o)c1ccccc1')) && (lower.contains('.co') || lower.contains('co.'))) {
+      const prod = 'COC(=O)c1ccccc1';
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+
+    // 5. Electrophilic Aromatic Substitution: Benzene
+    final isBenzene = lower == 'c1ccccc1' || lower == 'c1=cc=cc=c1';
+    if (isBenzene) {
+      const prod = 'c1ccc(cc1)[N+](=O)[O-]'; // Nitrobenzene
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+    if ((lower.contains('c1ccccc1') || lower.contains('c1=cc=cc=c1')) && (lower.contains('br') || lower.contains('brom'))) {
+      const prod = 'c1ccc(cc1)Br'; // Bromobenzene
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+    if ((lower.contains('c1ccccc1') || lower.contains('c1=cc=cc=c1')) && (lower.contains('cc(=o)cl') || lower.contains('clc(c)=o'))) {
+      const prod = 'CC(=O)c1ccccc1'; // Acetophenone (Friedel-Crafts)
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+
+    // 6. Aniline + Acetyl chloride -> Acetanilide
+    if (lower.contains('nc1ccccc1') && hasAcetylatingAgent) {
+      const prod = 'CC(=O)Nc1ccccc1';
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+
+    // 7. Alkene Halogenation: Ethene + Br2 -> 1,2-Dibromoethane
+    if ((lower == 'c=c' || lower == 'c=c.brbr' || lower.contains('c=c.br')) && lower.contains('br')) {
+      const prod = 'BrCCBr';
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+
+    // 8. Cyclohexene + Br2 -> 1,2-Dibromocyclohexane
+    if (lower.contains('c1=ccccc1') && lower.contains('br')) {
+      const prod = 'BrC1CCCCC1Br';
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prod,
+        svgData: _generateFallbackSvg(prod),
+        isCached: true,
+      );
+    }
+
+    return null;
   }
 
   /// Fetches 2D vector SVG directly from NIH Cactus Cheminformatics API
