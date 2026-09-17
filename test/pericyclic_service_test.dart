@@ -58,5 +58,34 @@ void main() {
       );
       expect(twoPlusTwo.allowedMode, contains('[2s+2s]'));
     });
+    test('3D Examples: All 5 pericyclic 3D systems have valid coordinates and lobes', () {
+      final examples = PericyclicService.threeDExamples;
+      expect(examples.length, equals(5));
+
+      for (final ex in examples) {
+        expect(ex.title.isNotEmpty, isTrue);
+        expect(ex.academicExplanation.isNotEmpty, isTrue);
+        expect(ex.system.atoms.isNotEmpty, isTrue);
+        expect(ex.system.bonds.isNotEmpty, isTrue);
+        expect(ex.system.orbitals.isNotEmpty, isTrue);
+        for (final orb in ex.system.orbitals) {
+          expect(orb.lobes.every((l) => l.sign == 1 || l.sign == -1), isTrue);
+        }
+      }
+    });
+
+    test('Diels-Alder [4+2] 3D example includes Endo secondary orbital interaction', () {
+      final da = PericyclicService.threeDExamples.firstWhere((e) => e.id == 'diels_alder_endo');
+      expect(da.secondaryOrbitalNotes, isNotNull);
+      expect(da.secondaryOrbitalNotes, contains('Secondary orbital overlap'));
+      expect(da.system.atoms.any((a) => a.label.contains('Diene')), isTrue);
+      expect(da.system.atoms.any((a) => a.label.contains('Dienophile')), isTrue);
+    });
+
+    test('FMO Regioselectivity 3D example highlights largest coefficients', () {
+      final regio = PericyclicService.threeDExamples.firstWhere((e) => e.id == 'regioselectivity_fmo');
+      expect(regio.title, contains('Regioselectivity'));
+      expect(regio.stereochemicalRule, contains('Largest HOMO coefficient pairs with Largest LUMO coefficient'));
+    });
   });
 }

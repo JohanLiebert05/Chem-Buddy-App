@@ -1,18 +1,29 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:uuid/uuid.dart';
 
 import '../../core/utils/attendance_math.dart';
+import '../local/local_store.dart';
 import '../models/library_models.dart';
 import '../models/models.dart';
 import '../models/smart_flashcard.dart';
 import '../models/timetable_entry.dart';
 
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse details) {
+  NotificationService.handleAttendanceAction(details);
+}
+
 class NotificationService {
   NotificationService._();
   static final instance = NotificationService._();
+
+  static VoidCallback? onAttendanceMarked;
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool ready = false;
@@ -59,8 +70,30 @@ class NotificationService {
     }
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    final darwin = DarwinInitializationSettings(
+      notificationCategories: [
+        DarwinNotificationCategory(
+          'attendance_actions',
+          actions: <DarwinNotificationAction>[
+            DarwinNotificationAction.plain(
+              'mark_present',
+              'Present ✅',
+            ),
+            DarwinNotificationAction.plain(
+              'mark_absent',
+              'Absent ❌',
+              options: <DarwinNotificationActionOption>{
+                DarwinNotificationActionOption.destructive,
+              },
+            ),
+          ],
+        ),
+      ],
+    );
     await _plugin.initialize(
-      const InitializationSettings(android: android, iOS: DarwinInitializationSettings()),
+      InitializationSettings(android: android, iOS: darwin),
+      onDidReceiveNotificationResponse: NotificationService.handleAttendanceAction,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
     final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
@@ -111,7 +144,102 @@ class NotificationService {
     return granted;
   }
 
-  Future<void> sendTestNotification({SubjectAttendanceStats? stats}) async {
+  static Future<void> handleAttendanceAction(NotificationResponse details) async {
+    final action = details.actionId;
+    if (action != 'mark_present' && action != 'mark_absent') return;
+    final payload = details.payload;
+    if (payload == null || payload.isEmpty) return;
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(payload) as Map<String, dynamic>;
+    } catch (_) {
+      return;
+    }
+
+    final subjectId = data['subjectId'] as String?;
+    final subjectName = data['subjectName'] as String? ?? 'Class';
+    final slotId = data['slotId'] as String?;
+    if (subjectId == null || subjectId.isEmpty) return;
+
+    final status = action == 'mark_present' ? AttendanceStatus.present : AttendanceStatus.absent;
+
+    try {
+      await HiveBoxes.openAll();
+    } catch (_) {}
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    final box = Hive.box(HiveBoxes.attendance);
+    String? existingId;
+    for (final key in box.keys) {
+      final raw = box.get(key);
+      if (raw is Map) {
+        final d = raw['date'] as String?;
+        final sId = raw['subjectId'] as String?;
+        final slot = raw['slotId'] as String?;
+        if (sId == subjectId && slot == slotId && (d?.startsWith(todayStr) ?? false)) {
+          existingId = key.toString();
+          break;
+        }
+      }
+    }
+
+    final recordId = existingId ?? const Uuid().v4();
+    final record = AttendanceRecord(
+      id: recordId,
+      subjectId: subjectId,
+      date: today,
+      status: status,
+      slotId: slotId,
+      markedAt: now,
+      note: 'Marked via notification (${status == AttendanceStatus.present ? "Present" : "Absent"})',
+    );
+
+    await box.put(recordId, record.toJson());
+
+    try {
+      onAttendanceMarked?.call();
+    } catch (e) {
+      debugPrint('[NotificationService] onAttendanceMarked error: $e');
+    }
+
+    // Instant confirmation feedback notification
+    final isPresent = status == AttendanceStatus.present;
+    final confirmTitle = isPresent ? '✅ Marked Present!' : '❌ Marked Absent';
+    final confirmBody = isPresent
+        ? 'Attendance logged for $subjectName. Keep up the high yield!'
+        : 'Logged absent for $subjectName. Don\'t let the percentage drop!';
+
+    try {
+      await instance._plugin.show(
+        99000 + (slotId?.hashCode.abs() ?? subjectId.hashCode.abs()) % 1000,
+        confirmTitle,
+        confirmBody,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'chem_buddy_classes',
+            'Class reminders',
+            channelDescription: 'Upcoming lecture and lab reminders',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[NotificationService] Error showing confirmation: $e');
+    }
+  }
+
+  Future<void> sendTestNotification({
+    SubjectAttendanceStats? stats,
+    String? testSubjectId,
+    String? testSubjectName,
+  }) async {
     if (!ready) await init();
     debugPrint('[NotificationService] Triggering test notification');
     const androidDetails = AndroidNotificationDetails(
@@ -121,18 +249,47 @@ class NotificationService {
       importance: Importance.max,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'mark_present',
+          'Present ✅',
+          showsUserInterface: false,
+          cancelNotification: true,
+        ),
+        AndroidNotificationAction(
+          'mark_absent',
+          'Absent ❌',
+          showsUserInterface: false,
+          cancelNotification: true,
+        ),
+      ],
     );
-    const details = NotificationDetails(android: androidDetails, iOS: DarwinNotificationDetails());
-    
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(categoryIdentifier: 'attendance_actions'),
+    );
+
     final pctStr = stats != null && stats.counted > 0
         ? '${stats.percent.toStringAsFixed(1)}%'
         : '68.4%'; // Playful demo percentage if no logs yet
 
+    final subId = testSubjectId ?? 'test_organic_chem';
+    final subName = testSubjectName ?? 'Organic Chemistry';
+
+    final payload = jsonEncode({
+      'type': 'attendance_prompt',
+      'subjectId': subId,
+      'subjectName': subName,
+      'slotId': 'test_slot_0',
+      'dayOfWeek': DateTime.now().weekday,
+    });
+
     await _plugin.show(
       99999,
-      '🧪 ChemBuddy Alert Engine: Armed & Dangerous!',
-      'Attendance tracker online ($pctStr in Organic Chem)! Expect witty banter, urgent attendance alerts, and zero excuses to bunk.',
+      '🧪 $subName starts now! ($pctStr)',
+      'ChemBuddy Action Shade: Tap "Present ✅" or "Absent ❌" below to log attendance instantly without opening the app!',
       details,
+      payload: payload,
     );
   }
 
@@ -141,6 +298,7 @@ class NotificationService {
     required List<TimetableEntry> entries,
     required List<AcademicEvent> events,
     required List<AppReminder> reminders,
+    List<Subject>? subjects,
     List<SmartFlashcardSet>? flashcardSets,
     List<SmartFlashcard>? smartCards,
     Map<String, SubjectAttendanceStats>? subjectStats,
@@ -155,19 +313,38 @@ class NotificationService {
 
     int scheduledCount = 0;
 
-    if (prefs.classReminders) {
+    if (prefs.classReminders || prefs.attendancePromptAtClassStart) {
       for (final entry in entries) {
         // Resolve subject stats by code, name, or id
         final stats = subjectStats?[entry.subjectCode.trim().toUpperCase()] ??
             subjectStats?[entry.subject.trim().toUpperCase()] ??
             subjectStats?[entry.id];
-        await _scheduleClass(entry, prefs.defaultMinutesBefore, stats: stats);
+
+        final matchedSubject = subjects?.where((s) {
+          final codeMatch = s.code.trim().isNotEmpty &&
+              s.code.trim().toUpperCase() == entry.subjectCode.trim().toUpperCase();
+          final nameMatch = s.name.trim().isNotEmpty &&
+              s.name.trim().toUpperCase() == entry.subject.trim().toUpperCase();
+          final idMatch = s.id == entry.subjectCode || s.id == entry.id;
+          return codeMatch || nameMatch || idMatch;
+        }).firstOrNull;
+
+        final resolvedSubjectId = matchedSubject?.id ?? entry.subjectCode;
+
+        await _scheduleClass(
+          entry,
+          prefs.defaultMinutesBefore,
+          stats: stats,
+          subjectId: resolvedSubjectId,
+          scheduleReminder: prefs.classReminders,
+          scheduleAttendancePrompt: prefs.attendancePromptAtClassStart,
+        );
         scheduledCount++;
       }
     }
     if (prefs.dailyTimetable) {
       await _scheduleDaily(entries, overallStats: overallStats);
-      scheduledCount++;
+      scheduledCount += 7;
     }
     if (prefs.assignmentReminders || prefs.examReminders) {
       for (final event in events.where((e) => !e.completed)) {
@@ -318,87 +495,230 @@ class NotificationService {
     TimetableEntry entry,
     int minutesBefore, {
     SubjectAttendanceStats? stats,
+    String? subjectId,
+    bool scheduleReminder = true,
+    bool scheduleAttendancePrompt = true,
   }) async {
-    final start = entry.startMinutes;
-    var hour = start ~/ 60;
-    var minute = start % 60 - minutesBefore;
-    while (minute < 0) {
-      minute += 60;
-      hour -= 1;
-    }
-    if (hour < 0) return;
-    final next = _nextWeekday(entry.weekdayNumber, hour, minute);
     final title = entry.displayName.isEmpty ? 'Chemistry Class' : entry.displayName;
 
-    final banter = _buildClassBanter(
-      subjectName: title,
-      minutesBefore: minutesBefore,
-      room: entry.room,
-      type: entry.type,
-      stats: stats,
-    );
+    // 1. Advance reminder before class
+    if (scheduleReminder) {
+      final start = entry.startMinutes;
+      var hour = start ~/ 60;
+      var minute = start % 60 - minutesBefore;
+      while (minute < 0) {
+        minute += 60;
+        hour -= 1;
+      }
+      if (hour >= 0) {
+        final next = _nextWeekday(entry.weekdayNumber, hour, minute);
+        final banter = _buildClassBanter(
+          subjectName: title,
+          minutesBefore: minutesBefore,
+          room: entry.room,
+          type: entry.type,
+          stats: stats,
+        );
 
-    await _plugin.zonedSchedule(
-      entry.id.hashCode,
-      banter.title,
-      banter.body,
-      next,
-      const NotificationDetails(android: classChannel, iOS: DarwinNotificationDetails()),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-    );
+        await _plugin.zonedSchedule(
+          entry.id.hashCode,
+          banter.title,
+          banter.body,
+          next,
+          const NotificationDetails(android: classChannel, iOS: DarwinNotificationDetails()),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        );
+      }
+    }
+
+    // 2. Class-time attendance prompt (at exact class start) with direct 1-tap Present / Absent actions
+    if (scheduleAttendancePrompt) {
+      final startHour = entry.startMinutes ~/ 60;
+      final startMinute = entry.startMinutes % 60;
+      final classStart = _nextWeekday(entry.weekdayNumber, startHour, startMinute);
+
+      final pct = stats != null && stats.counted > 0 ? ' (${stats.percent.toStringAsFixed(1)}%)' : '';
+      final quips = [
+        'Are you seated in class$pct or planning a stealth bunk? Tap to mark attendance:',
+        'Class is starting! Tap Present ✅ or Absent ❌ right here—no excuses:',
+        'Equilibrium shift time! Are you in lecture$pct? Tap to log:',
+        'Synthesizing attendance points! Tap Present ✅ or Absent ❌:',
+      ];
+      final promptBody = quips[entry.displayName.hashCode.abs() % quips.length];
+
+      final payload = jsonEncode({
+        'type': 'attendance_prompt',
+        'subjectId': subjectId ?? entry.subjectCode,
+        'subjectName': title,
+        'slotId': entry.id,
+        'dayOfWeek': entry.weekdayNumber,
+      });
+
+      const androidAttendance = AndroidNotificationDetails(
+        'chem_buddy_classes',
+        'Class reminders',
+        channelDescription: 'Upcoming lecture and lab reminders',
+        importance: Importance.max,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+        actions: <AndroidNotificationAction>[
+          AndroidNotificationAction(
+            'mark_present',
+            'Present ✅',
+            showsUserInterface: false,
+            cancelNotification: true,
+          ),
+          AndroidNotificationAction(
+            'mark_absent',
+            'Absent ❌',
+            showsUserInterface: false,
+            cancelNotification: true,
+          ),
+        ],
+      );
+
+      const iosAttendance = DarwinNotificationDetails(
+        categoryIdentifier: 'attendance_actions',
+      );
+
+      await _plugin.zonedSchedule(
+        80000 + (entry.id.hashCode.abs() % 10000),
+        '🧪 $title is starting now!',
+        promptBody,
+        classStart,
+        const NotificationDetails(android: androidAttendance, iOS: iosAttendance),
+        payload: payload,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      );
+    }
+  }
+
+  static String _weekdayName(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'Monday';
+      case DateTime.tuesday:
+        return 'Tuesday';
+      case DateTime.wednesday:
+        return 'Wednesday';
+      case DateTime.thursday:
+        return 'Thursday';
+      case DateTime.friday:
+        return 'Friday';
+      case DateTime.saturday:
+        return 'Saturday';
+      case DateTime.sunday:
+        return 'Sunday';
+      default:
+        return 'Day';
+    }
+  }
+
+  static ({String title, String body}) _buildDailyBriefing({
+    required int weekday,
+    required String dayName,
+    required List<TimetableEntry> entries,
+    String? overallPctStr,
+  }) {
+    if (entries.isEmpty) {
+      if (weekday == DateTime.saturday || weekday == DateTime.sunday) {
+        return (
+          title: '☕ $dayName Equilibrium · No classes today!',
+          body: overallPctStr != null
+              ? 'Overall attendance: $overallPctStr. Lab is dark and reagents are resting. Recharge your synapses!'
+              : 'Lab is quiet and beakers are resting. Recharge your synapses for the week ahead!',
+        );
+      }
+      return (
+        title: '🎉 Free Day ($dayName) · Zero classes scheduled',
+        body: overallPctStr != null
+            ? 'Overall attendance sitting at $overallPctStr. Sleep in or catch up on chemistry research!'
+            : 'Zero lectures on the books today. Sleep in or dive into your chemistry projects!',
+      );
+    }
+
+    final count = entries.length;
+    final scheduleLines = entries
+        .map((e) => '• ${e.startTime} ${e.displayName}${e.room.trim().isNotEmpty ? " (${e.room.trim()})" : ""}')
+        .join('\n');
+
+    final pctInfo = overallPctStr != null ? ' · $overallPctStr' : '';
+
+    if (overallPctStr != null) {
+      final pctNum = double.tryParse(overallPctStr.replaceAll('%', '').trim()) ?? 100.0;
+      if (pctNum < 75.0) {
+        return (
+          title: '🚨 $dayName Alert: $count class(es) today · $overallPctStr',
+          body: 'Attendance danger zone! Zero bunks permitted today. Class timetable:\n$scheduleLines',
+        );
+      } else if (pctNum >= 85.0) {
+        return (
+          title: '🌟 $dayName Briefing: $count class(es) today$pctInfo',
+          body: 'High yield academic weapon! Let\'s keep that streak alive:\n$scheduleLines',
+        );
+      }
+    }
+
+    switch (weekday) {
+      case DateTime.monday:
+        return (
+          title: '⚗️ Monday Kickoff: $count class(es) today$pctInfo',
+          body: 'Synthesize that morning momentum! Activation energy is high, but passing is better:\n$scheduleLines',
+        );
+      case DateTime.wednesday:
+        return (
+          title: '⚡ Midweek Reaction: $count class(es) today$pctInfo',
+          body: 'Transition state reached! Keep driving the equilibrium forward:\n$scheduleLines',
+        );
+      case DateTime.friday:
+        return (
+          title: '🎉 Friday Sprint: $count class(es) today$pctInfo',
+          body: 'Final reaction cycle before the weekend! Knock these out:\n$scheduleLines',
+        );
+      default:
+        return (
+          title: '🌅 $dayName Briefing: $count class(es) today$pctInfo',
+          body: 'Your bed has high entropy, but lectures build stability. Today\'s lineup:\n$scheduleLines',
+        );
+    }
   }
 
   Future<void> _scheduleDaily(
     List<TimetableEntry> entries, {
     SubjectAttendanceStats? overallStats,
   }) async {
-    final now = tz.TZDateTime.now(tz.local);
-    var fire = tz.TZDateTime(tz.local, now.year, now.month, now.day, 7, 30);
-    if (fire.isBefore(now)) fire = fire.add(const Duration(days: 1));
-    final weekday = fire.weekday;
-    final today = entries.where((e) => e.weekdayNumber == weekday).toList()
-      ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+    final pctStr = overallStats != null && overallStats.counted > 0
+        ? '${overallStats.percent.toStringAsFixed(1)}%'
+        : null;
 
-    String title;
-    String body;
+    for (int weekday = 1; weekday <= 7; weekday++) {
+      final next = _nextWeekday(weekday, 8, 30);
+      final dayEntries = entries.where((e) => e.weekdayNumber == weekday).toList()
+        ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
 
-    if (today.isEmpty) {
-      title = '☕ Zero classes today! Rest day.';
-      body = overallStats != null && overallStats.counted > 0
-          ? 'Overall attendance sitting at ${overallStats.percent.toStringAsFixed(1)}%. Recharge those synapses!'
-          : 'No classes on schedule. Sleep in or catch up on chemistry research!';
-    } else {
-      final count = today.length;
-      final classList = today.map((e) => '• ${e.startTime} ${e.displayName}').join('\n');
+      final dayName = _weekdayName(weekday);
+      final briefing = _buildDailyBriefing(
+        weekday: weekday,
+        dayName: dayName,
+        entries: dayEntries,
+        overallPctStr: pctStr,
+      );
 
-      if (overallStats != null && overallStats.counted > 0) {
-        final pct = overallStats.percent;
-        final pctStr = '${pct.toStringAsFixed(1)}%';
-        if (pct < 75.0) {
-          title = '🚨 Wake up! $count class(es) today · Overall: $pctStr';
-          body = 'Your overall attendance is in the danger zone ($pctStr). No bunking allowed today!\n$classList';
-        } else {
-          title = '🌅 Rise & Shine! $count class(es) today · Overall: $pctStr';
-          body = 'Overall attendance is solid at $pctStr. Let\'s keep the momentum going!\n$classList';
-        }
-      } else {
-        title = '🌅 Rise & Shine! $count class(es) today';
-        body = 'Your bed is comfortable, but passing your semester is better. Today\'s lineup:\n$classList';
-      }
+      await _plugin.zonedSchedule(
+        71000 + weekday,
+        briefing.title,
+        briefing.body,
+        next,
+        const NotificationDetails(android: dailyChannel, iOS: DarwinNotificationDetails()),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      );
     }
-
-    await _plugin.zonedSchedule(
-      71001,
-      title,
-      body,
-      fire,
-      const NotificationDetails(android: dailyChannel, iOS: DarwinNotificationDetails()),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
   }
 
   tz.TZDateTime _nextWeekday(int weekday, int hour, int minute) {

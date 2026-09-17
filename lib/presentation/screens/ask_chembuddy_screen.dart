@@ -199,11 +199,12 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
     String modeString = 'quick';
     if (_currentMode == ChemBuddyAiMode.normal) {
       modeString = 'quick';
-      // Default Quick Answer Mode: concise, direct, intelligent response
+      // Default Quick Answer Mode: specialized strictly for science and chemistry
       modelPrompt = null;
     } else if (_currentMode == ChemBuddyAiMode.general) {
       modeString = 'general';
-      modelPrompt = '[General Intelligent AI Mode: Answer this question with high intelligence, clarity, step-by-step logic, and accurate knowledge like Google Gemini.]: $rawText';
+      // General AI Mode: general purpose like normal Google Gemini AI
+      modelPrompt = null;
     } else if (_currentMode == ChemBuddyAiMode.simple) {
       modeString = 'simple';
       modelPrompt = '[Simple Explanation Mode: Explain this in plain, easy-to-understand language as if talking to someone who is new to chemistry. Avoid jargon where possible. Use an analogy if it helps. Keep it short and clear.]: $rawText';
@@ -264,7 +265,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
           children: [
             _AiModeChip(
               icon: Icons.bolt_rounded,
-              label: '⚡ Quick Answer',
+              label: '⚡ Quick Answer (Science)',
               selected: _currentMode == ChemBuddyAiMode.normal,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.normal),
             ),

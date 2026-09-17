@@ -209,19 +209,20 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           ),
           const SizedBox(height: 6),
           const Text(
-            'MSc Chemistry, Supercharged with AI.',
+            'Chem Buddy by Prajwal A Kambar\nattendance, tests, and notes for MSc Chemistry students.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: AppColors.purpleBright,
-              fontSize: 13,
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
+              height: 1.35,
             ),
           ),
           const SizedBox(height: 14),
           const GlowCard(
             padding: EdgeInsets.all(14),
             child: Text(
-              'Your all-in-one companion for postgraduate chemistry. Master reaction mechanisms, study with live Google Gemini, and track coursework in one unified workspace.',
+              'Your all-in-one companion for postgraduate chemistry. Calculate attendance & safe bunk limits, switch Organic & Inorganic timetables, study reference PDFs, sketch molecules in ChemDraw, and master mechanisms with Google Gemini AI.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.45),
             ),
@@ -232,10 +233,13 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
             runSpacing: 8,
             alignment: WrapAlignment.center,
             children: const [
+              _FeatureChip(icon: '📊', label: 'Attendance & Safe Bunks'),
+              _FeatureChip(icon: '📅', label: 'Timetable Presets'),
+              _FeatureChip(icon: '📖', label: 'PDF Library & Notes'),
               _FeatureChip(icon: '🎨', label: 'ChemDraw Canvas'),
               _FeatureChip(icon: '⚡', label: 'Gemini AI Tutor'),
               _FeatureChip(icon: '📸', label: 'Notes to Flashcards'),
-              _FeatureChip(icon: '📊', label: 'Attendance & Safe Bunk'),
+              _FeatureChip(icon: '📝', label: 'Tests & Quizzes'),
             ],
           ),
         ],

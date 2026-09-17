@@ -42,7 +42,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           backgroundColor: connected ? AppColors.success : AppColors.surfaceElevated,
           content: Text(
             connected
-                ? '🟢 Connected to Supabase Cloud! Sync is active.'
+                ? '🟢 Connected to Cloud Storage! Sync is active.'
                 : '⚪ Offline Local Mode active. Your notes, attendance & timetable remain safe on this device.',
           ),
           duration: const Duration(seconds: 4),
@@ -526,7 +526,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isConfigured ? 'Cloud Sync: Active (Supabase)' : 'Local Storage: Active (Offline)',
+                      isConfigured ? 'Cloud Sync: Active' : 'Local Storage: Active (Offline)',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: isConfigured ? AppColors.success : Colors.white,

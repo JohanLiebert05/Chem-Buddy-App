@@ -478,10 +478,23 @@ class ChemRepository {
 
   Future<void> loginLocal({required String registerNumber, required String name, String role = 'student'}) async {
     final current = profile();
+    String resolvedName = name.trim();
+    bool isRollNumber(String s) =>
+        RegExp(r'^[0-9A-Za-z]{2,4}\d{2,8}$').hasMatch(s) || RegExp(r'^\d+$').hasMatch(s);
+
+    if (resolvedName.isEmpty || isRollNumber(resolvedName)) {
+      if (current.fullName.trim().isNotEmpty &&
+          !isRollNumber(current.fullName.trim()) &&
+          current.fullName.trim() != registerNumber.trim()) {
+        resolvedName = current.fullName.trim();
+      } else {
+        resolvedName = isRollNumber(name.trim()) ? '' : name.trim();
+      }
+    }
     await saveProfile(
       current.copyWith(
         registerNumber: registerNumber,
-        fullName: name.isEmpty ? registerNumber : name,
+        fullName: resolvedName,
         role: role,
         loggedIn: true,
         onboarded: true,
@@ -503,12 +516,19 @@ class ChemRepository {
       }
       
       String role = 'student';
+      String resolvedName = name.trim();
       final remoteProfile = await remote.fetchProfile();
-      if (remoteProfile != null && remoteProfile['role'] != null) {
-        role = remoteProfile['role'] as String;
+      if (remoteProfile != null) {
+        if (remoteProfile['role'] != null) {
+          role = remoteProfile['role'] as String;
+        }
+        if (resolvedName.isEmpty && remoteProfile['full_name'] != null) {
+          final rName = (remoteProfile['full_name'] as String).trim();
+          if (rName.isNotEmpty) resolvedName = rName;
+        }
       }
       
-      await loginLocal(registerNumber: registerNumber, name: name, role: role);
+      await loginLocal(registerNumber: registerNumber, name: resolvedName, role: role);
       return null;
     } catch (e) {
       return e.toString();

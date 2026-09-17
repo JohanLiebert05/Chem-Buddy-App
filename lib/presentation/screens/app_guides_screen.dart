@@ -130,7 +130,7 @@ class AppGuidesScreen extends StatelessWidget {
               subtitle: 'Keeping your notes and data completely safe',
               bullets: [
                 'All attendance, timetable entries, and flashcards are automatically saved locally on your device in Hive.',
-                'Cloud Sync connects with Supabase to back up your records securely across device upgrades.',
+                'Cloud Sync backs up your records securely across device upgrades.',
                 'You can use ChemBuddy completely offline without losing any records.',
               ],
             ),

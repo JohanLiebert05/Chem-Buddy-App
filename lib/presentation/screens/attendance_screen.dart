@@ -46,10 +46,15 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   }
 
   TimetablePreset _detectActivePreset(List<TimetableEntry> entries) {
-    final hasInorganic = entries.any((e) =>
+    final inorgCount = entries.where((e) =>
+        e.id.startsWith('inorg_') ||
         e.subjectCode.toUpperCase().contains('ICH') ||
-        e.subject.toUpperCase().contains('INORGANIC'));
-    return hasInorganic ? TimetablePreset.inorganic : TimetablePreset.organic;
+        e.subject.toUpperCase().contains('INORGANIC')).length;
+    final orgCount = entries.where((e) =>
+        e.id.startsWith('org_') ||
+        e.subjectCode.toUpperCase().contains('OCH') ||
+        e.subject.toUpperCase().contains('ORGANIC')).length;
+    return inorgCount > orgCount ? TimetablePreset.inorganic : TimetablePreset.organic;
   }
 
   void _showTimetablePhotoDialog(BuildContext context, TimetablePreset preset) {
@@ -798,13 +803,16 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Preset Selection Chips
+          // Preset Selection Chips & Active Stream Indicator
           Row(
             children: [
               Expanded(
                 child: ChoiceChip(
-                  label: const Center(child: Text('🧪 Organic')),
+                  label: const Center(child: Text('⚗️ Organic')),
                   selected: _selectedPhotoPreset == TimetablePreset.organic,
+                  avatar: activePreset == TimetablePreset.organic
+                      ? const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.present)
+                      : null,
                   labelStyle: TextStyle(
                     fontSize: 11.5,
                     fontWeight: _selectedPhotoPreset == TimetablePreset.organic ? FontWeight.w800 : FontWeight.w600,
@@ -824,8 +832,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: ChoiceChip(
-                  label: const Center(child: Text('🧬 Inorganic')),
+                  label: const Center(child: Text('🧪 Inorganic')),
                   selected: _selectedPhotoPreset == TimetablePreset.inorganic,
+                  avatar: activePreset == TimetablePreset.inorganic
+                      ? const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.present)
+                      : null,
                   labelStyle: TextStyle(
                     fontSize: 11.5,
                     fontWeight: _selectedPhotoPreset == TimetablePreset.inorganic ? FontWeight.w800 : FontWeight.w600,
@@ -928,33 +939,71 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             ),
           ),
 
-          if (activePreset != _selectedPhotoPreset) ...[
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.brandBright,
-                  side: const BorderSide(color: AppColors.brandBright),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () {
-                  AppHaptics.confirm();
-                  ref.read(appControllerProvider.notifier).applyPresetTimetable(_selectedPhotoPreset);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Switched timetable to ${_selectedPhotoPreset.title}'),
-                      backgroundColor: AppColors.surfaceElevated,
-                      duration: const Duration(seconds: 2),
+          const SizedBox(height: 10),
+
+          // Bidirectional Timetable Stream Switcher Button
+          SizedBox(
+            width: double.infinity,
+            child: activePreset != _selectedPhotoPreset
+                ? ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.brandPrimary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.sync_alt, size: 16),
-                label: Text('Set ${_selectedPhotoPreset.title} as Active Schedule', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-              ),
-            ),
-          ],
+                    onPressed: () async {
+                      AppHaptics.confirm();
+                      await ref.read(appControllerProvider.notifier).applyPresetTimetable(_selectedPhotoPreset);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('✓ Switched timetable to ${_selectedPhotoPreset.title}!'),
+                            backgroundColor: AppColors.surfaceElevated,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.sync_alt, size: 16),
+                    label: Text(
+                      'Activate ${_selectedPhotoPreset.title} Schedule',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                  )
+                : OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.brandBright,
+                      side: const BorderSide(color: AppColors.borderHighlight),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () async {
+                      AppHaptics.confirm();
+                      final next = activePreset == TimetablePreset.organic
+                          ? TimetablePreset.inorganic
+                          : TimetablePreset.organic;
+                      await ref.read(appControllerProvider.notifier).applyPresetTimetable(next);
+                      setState(() => _selectedPhotoPreset = next);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('✓ Switched timetable to ${next.title}!'),
+                            backgroundColor: AppColors.surfaceElevated,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                    label: Text(
+                      activePreset == TimetablePreset.organic
+                          ? 'Switch to Inorganic Timetable 🧪'
+                          : 'Switch to Organic Timetable ⚗️',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+          ),
         ],
       ),
     );

@@ -40,8 +40,15 @@ class NotificationSettingsScreen extends ConsumerWidget {
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
+                    title: const Text('Class-time attendance prompt'),
+                    subtitle: const Text('Mark Present or Absent directly from the notification'),
+                    value: prefs.attendancePromptAtClassStart,
+                    onChanged: (v) => _save(ref, prefs.copyWith(attendancePromptAtClassStart: v)),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
                     title: const Text('Daily timetable'),
-                    subtitle: const Text('Morning overview at 7:30 AM'),
+                    subtitle: const Text('Morning overview at 8:30 AM with timetable & witty briefing'),
                     value: prefs.dailyTimetable,
                     onChanged: (v) => _save(ref, prefs.copyWith(dailyTimetable: v)),
                   ),
@@ -123,11 +130,16 @@ class NotificationSettingsScreen extends ConsumerWidget {
             onPressed: () async {
               final repo = ref.read(chemRepositoryProvider);
               final stats = repo.overallStats();
-              await NotificationService.instance.sendTestNotification(stats: stats);
+              final firstSub = repo.subjects().firstOrNull;
+              await NotificationService.instance.sendTestNotification(
+                stats: stats,
+                testSubjectId: firstSub?.id,
+                testSubjectName: firstSub?.name,
+              );
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Test notification dispatched! Check your system notification shade.'),
+                  content: Text('Test notification dispatched! Check your notification shade to test 1-tap Present / Absent.'),
                   backgroundColor: AppColors.statusSuccess,
                 ),
               );

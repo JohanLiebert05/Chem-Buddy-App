@@ -173,7 +173,8 @@ class NotificationPrefs {
   const NotificationPrefs({
     this.enabled = true,
     this.classReminders = true,
-    this.dailyTimetable = false,
+    this.dailyTimetable = true,
+    this.attendancePromptAtClassStart = true,
     this.assignmentReminders = true,
     this.examReminders = true,
     this.studyReminders = true,
@@ -183,6 +184,7 @@ class NotificationPrefs {
   final bool enabled;
   final bool classReminders;
   final bool dailyTimetable;
+  final bool attendancePromptAtClassStart;
   final bool assignmentReminders;
   final bool examReminders;
   final bool studyReminders;
@@ -192,6 +194,7 @@ class NotificationPrefs {
     bool? enabled,
     bool? classReminders,
     bool? dailyTimetable,
+    bool? attendancePromptAtClassStart,
     bool? assignmentReminders,
     bool? examReminders,
     bool? studyReminders,
@@ -201,6 +204,8 @@ class NotificationPrefs {
       enabled: enabled ?? this.enabled,
       classReminders: classReminders ?? this.classReminders,
       dailyTimetable: dailyTimetable ?? this.dailyTimetable,
+      attendancePromptAtClassStart:
+          attendancePromptAtClassStart ?? this.attendancePromptAtClassStart,
       assignmentReminders: assignmentReminders ?? this.assignmentReminders,
       examReminders: examReminders ?? this.examReminders,
       studyReminders: studyReminders ?? this.studyReminders,
@@ -212,6 +217,7 @@ class NotificationPrefs {
         'enabled': enabled,
         'classReminders': classReminders,
         'dailyTimetable': dailyTimetable,
+        'attendancePromptAtClassStart': attendancePromptAtClassStart,
         'assignmentReminders': assignmentReminders,
         'examReminders': examReminders,
         'studyReminders': studyReminders,
@@ -223,7 +229,9 @@ class NotificationPrefs {
     return NotificationPrefs(
       enabled: json['enabled'] as bool? ?? true,
       classReminders: json['classReminders'] as bool? ?? true,
-      dailyTimetable: json['dailyTimetable'] as bool? ?? false,
+      dailyTimetable: json['dailyTimetable'] as bool? ?? true,
+      attendancePromptAtClassStart:
+          json['attendancePromptAtClassStart'] as bool? ?? true,
       assignmentReminders: json['assignmentReminders'] as bool? ?? true,
       examReminders: json['examReminders'] as bool? ?? true,
       studyReminders: json['studyReminders'] as bool? ?? true,

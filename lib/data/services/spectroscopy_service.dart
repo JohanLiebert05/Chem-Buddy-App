@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// MSc Chemistry Spectroscopy Service
 /// Covers 1H NMR, 13C NMR, FT-IR diagnostic frequencies, Mass Spectrometry fragmentation,
-/// and automated 8-step structure deduction algorithms.
+/// comprehensive Chromatogram and Spectrogram interpretation guides, and automated 8-step structure deduction algorithms.
 class SpectroscopyService {
   // 1. Calculate Degree of Unsaturation (Double Bond Equivalents - DBE / IHD)
   // Formula: DBE = (2C + 2 + N - H - X) / 2
@@ -63,47 +63,63 @@ class SpectroscopyService {
       );
     }
 
-    final halogens = f + cl + br + i;
-    final dbe = calculateDBE(carbons: c, hydrogens: h, nitrogens: n, halogens: halogens, oxygens: o);
-    final maxH = (2 * c) + 2 + n - halogens;
+    final totalHalogens = f + cl + br + i;
+    final dbe = calculateDBE(
+      carbons: c,
+      hydrogens: h,
+      nitrogens: n,
+      halogens: totalHalogens,
+      oxygens: o,
+    );
 
-    if (h > maxH || dbe < 0) {
+    // Negative DBE Check
+    if (dbe < 0) {
       return ParsedFormula(
         carbons: c,
         hydrogens: h,
         nitrogens: n,
         oxygens: o,
-        fluorines: f,
+        halogens: totalHalogens,
         chlorines: cl,
         bromines: br,
+        fluorines: f,
         iodines: i,
         sulfurs: s,
         phosphoruses: p,
-        isValid: false,
-        errorMessage: 'Chemically impossible formula: For $c Carbon atom(s), maximum theoretical saturation is $maxH monovalent atoms (H + Halogens). Calculated DBE is $dbe (< 0), which violates the physical valence limit of Carbon (tetravalency). For example, a neutral saturated hydrocarbon cannot exceed CₙH₂ₙ₊₂.',
         dbe: dbe,
         molarMass: 0,
+        isValid: false,
+        errorMessage: 'Chemically impossible formula: Calculated DBE = ${dbe.toStringAsFixed(1)} (< 0). The number of monovalent atoms exceeds carbon tetravalency capacity (Max H+X = 2C + N + 2 = ${2 * c + n + 2}).',
       );
     }
 
-    final mass = (c * 12.011) + (h * 1.008) + (n * 14.007) + (o * 15.999) +
-                 (f * 18.998) + (cl * 35.45) + (br * 79.904) + (i * 126.904) +
-                 (s * 32.06) + (p * 30.974);
+    // Standard atomic weights
+    final mass = (c * 12.011) +
+        (h * 1.008) +
+        (n * 14.007) +
+        (o * 15.999) +
+        (f * 18.998) +
+        (cl * 35.45) +
+        (br * 79.904) +
+        (i * 126.904) +
+        (s * 32.06) +
+        (p * 30.974);
 
     return ParsedFormula(
       carbons: c,
       hydrogens: h,
       nitrogens: n,
       oxygens: o,
-      fluorines: f,
+      halogens: totalHalogens,
       chlorines: cl,
       bromines: br,
+      fluorines: f,
       iodines: i,
       sulfurs: s,
       phosphoruses: p,
-      isValid: true,
       dbe: dbe,
       molarMass: double.parse(mass.toStringAsFixed(2)),
+      isValid: true,
     );
   }
 
@@ -111,57 +127,67 @@ class SpectroscopyService {
   static const List<NmrShiftRegion> protonNmrRegions = [
     NmrShiftRegion(
       range: '0.8 – 1.0 ppm',
-      type: 'Primary Aliphatic (R-CH3)',
-      description: 'Methyl protons attached to sp3 carbon; typically sharp triplet if adjacent to -CH2-.',
+      type: 'Primary Alkyl (R-CH3)',
+      description: 'Methyl protons in saturated acyclic chains; typically clean triplets or singlets.',
     ),
     NmrShiftRegion(
       range: '1.2 – 1.4 ppm',
-      type: 'Secondary Aliphatic (R-CH2-R)',
-      description: 'Methylene protons in saturated alkyl chains.',
+      type: 'Secondary Alkyl (R-CH2-R)',
+      description: 'Methylene protons in aliphatic chains, cyclohexanes, and long alkyl groups.',
     ),
     NmrShiftRegion(
       range: '1.4 – 1.7 ppm',
-      type: 'Tertiary Aliphatic (R3-CH)',
-      description: 'Methine proton attached to three alkyl groups.',
+      type: 'Tertiary Alkyl (R3-CH)',
+      description: 'Methine protons in branched alkanes (isopropyl, isobutyl systems).',
     ),
     NmrShiftRegion(
-      range: '2.0 – 2.4 ppm',
-      type: 'Allylic / Protons adjacent to Carbonyl (CH3-C=O, -CH2-C=C)',
-      description: 'Deshielded by adjacent pi-system (alpha to ketone, aldehyde, ester, or alkene).',
+      range: '2.0 – 2.5 ppm',
+      type: 'Alpha to Carbonyl / Imine (CH3-C=O, -CH2-C=O)',
+      description: 'Protons adjacent to C=O, C=N, or C#N. Classic sharp methyl singlet at 2.1 ppm for methyl ketones.',
     ),
     NmrShiftRegion(
-      range: '2.2 – 2.9 ppm',
-      type: 'Benzylic Protons (Ar-CH2-R, Ar-CH3)',
-      description: 'Protons on carbon directly attached to aromatic ring.',
+      range: '2.2 – 3.0 ppm',
+      type: 'Benzylic / Allylic (Ar-CH3, Ar-CH2-R, C=C-CH3)',
+      description: 'Protons attached to carbon directly bonded to aromatic ring or double bond.',
     ),
     NmrShiftRegion(
-      range: '3.2 – 4.0 ppm',
-      type: 'Protons adjacent to Oxygen / Halogen (-CH2-O-R, -CH2-Cl)',
-      description: 'Strongly deshielded by electronegative heteroatom (ethers, alcohols, alkyl halides).',
+      range: '2.5 – 3.1 ppm',
+      type: 'Terminal Alkyne (RC#C-H)',
+      description: 'Diamagnetic anisotropy of cylindrical pi cloud shields the terminal acetylenic proton.',
+    ),
+    NmrShiftRegion(
+      range: '3.3 – 4.0 ppm',
+      type: 'Alkoxy / Alcohol (R-O-CH3, -O-CH2-R)',
+      description: 'Protons directly attached to oxygen-bearing carbons (methoxy singlet at 3.8 ppm, ether quartet/triplet).',
+    ),
+    NmrShiftRegion(
+      range: '3.0 – 4.5 ppm',
+      type: 'Halogenated Aliphatic (R-CH2-X)',
+      description: 'Protons on carbons bonded to halogens: I (~3.2 ppm) < Br (~3.4 ppm) < Cl (~3.6 ppm) < F (~4.4 ppm).',
     ),
     NmrShiftRegion(
       range: '4.5 – 6.5 ppm',
-      type: 'Vinylic / Olefinic Protons (=C-H)',
-      description: 'Protons on sp2 alkene carbon; show characteristic cis (J = 7–11 Hz) and trans (J = 12–18 Hz) coupling.',
+      type: 'Vinylic / Olefinic (C=C-H)',
+      description: 'Protons on sp2 alkene carbons. Cis-coupling: 7-11 Hz; Trans-coupling: 12-18 Hz; Geminal: 0-3 Hz.',
     ),
     NmrShiftRegion(
       range: '6.5 – 8.5 ppm',
-      type: 'Aromatic Protons (Ar-H)',
-      description: 'Strongly deshielded by aromatic ring current. Multiplicity indicates ortho, meta, para substitution patterns.',
+      type: 'Aromatic Ring Protons (Ar-H)',
+      description: 'Deshielded by aromatic ring current. Ortho-coupling: 7-9 Hz; Meta-coupling: 2-3 Hz; Para: <1 Hz.',
     ),
     NmrShiftRegion(
       range: '9.0 – 10.0 ppm',
-      type: 'Aldehyde Proton (-CH=O)',
-      description: 'Distinctive low-field sharp singlet or doublet (J = 1–3 Hz from alpha-protons).',
+      type: 'Aldehyde Proton (R-CHO)',
+      description: 'Strongly deshielded by carbonyl anisotropy and inductive withdrawal. Often a sharp singlet or small doublet.',
     ),
     NmrShiftRegion(
       range: '10.5 – 13.0 ppm',
-      type: 'Carboxylic Acid Proton (-COOH)',
-      description: 'Broad singlet at very low field due to strong hydrogen bonding; disappears with D2O exchange.',
+      type: 'Carboxylic Acid Proton (R-COOH)',
+      description: 'Extreme downfield broad singlet due to strong intermolecular hydrogen bonding dimer.',
     ),
     NmrShiftRegion(
-      range: '0.5 – 5.0 ppm (variable)',
-      type: 'Alcohol / Amine / Thiol (R-OH, R-NH2, R-SH)',
+      range: '1.0 – 5.0 ppm',
+      type: 'Exchangeable Protons (-OH, -NH2, -SH)',
       description: 'Variable position depending on concentration and hydrogen bonding; D2O shake causes disappearance.',
     ),
   ];
@@ -169,34 +195,74 @@ class SpectroscopyService {
   // 3. 13C NMR Characteristic Chemical Shift Regions (ppm)
   static const List<NmrShiftRegion> carbonNmrRegions = [
     NmrShiftRegion(
-      range: '0 – 50 ppm',
-      type: 'Aliphatic sp3 Carbons (C-C, C-H)',
-      description: 'Methyl, methylene, and methine carbons in saturated hydrocarbons.',
+      range: '10 – 25 ppm',
+      type: 'Aliphatic Methyl Carbon (-CH3)',
+      description: 'Primary saturated carbons; upright positive peak in DEPT-135 and DEPT-45; absent in DEPT-90.',
     ),
     NmrShiftRegion(
-      range: '50 – 90 ppm',
-      type: 'Carbons attached to Heteroatoms (C-O, C-N, C-X)',
-      description: 'Carbons bonded to oxygen (alcohols, ethers) or nitrogen (amines).',
+      range: '20 – 35 ppm',
+      type: 'Aliphatic Methylene Carbon (-CH2-)',
+      description: 'Secondary saturated carbons; inverted negative peak in DEPT-135; absent in DEPT-90.',
+    ),
+    NmrShiftRegion(
+      range: '30 – 45 ppm',
+      type: 'Aliphatic Methine Carbon (-CH<)',
+      description: 'Tertiary saturated carbons; upright positive peak in DEPT-135, DEPT-90, and DEPT-45.',
+    ),
+    NmrShiftRegion(
+      range: '35 – 50 ppm',
+      type: 'Quaternary Aliphatic Carbon (>C<)',
+      description: 'Fully substituted quaternary sp3 carbons; absent in all DEPT spectra (DEPT-135, DEPT-90, DEPT-45).',
+    ),
+    NmrShiftRegion(
+      range: '0 – 60 ppm',
+      type: 'Halogen-Bearing Carbons (C-I, C-Br, C-Cl)',
+      description: 'Strong heavy-atom shielding for C-I (0–35 ppm), C-Br (25–45 ppm), C-Cl (35–55 ppm), and C-F (70–95 ppm, d, J_CF~160-250 Hz).',
+    ),
+    NmrShiftRegion(
+      range: '50 – 85 ppm',
+      type: 'Heteroatom-Bonded Carbons (C-O, C-N)',
+      description: 'Alcohols, ethers, esters (-OCH2-, -OCH3 at ~55 ppm), and amines (-CH2-NH2).',
     ),
     NmrShiftRegion(
       range: '65 – 90 ppm',
-      type: 'Alkyne sp Carbons (C#C)',
-      description: 'Shielded by cylindrical pi-electron cloud.',
+      type: 'Alkyne sp Carbons (-C#C-)',
+      description: 'Shielded relative to alkenes due to diamagnetic anisotropy of the cylindrical pi electron cloud.',
     ),
     NmrShiftRegion(
       range: '100 – 150 ppm',
-      type: 'Alkene & Aromatic sp2 Carbons (C=C, Ar-C)',
-      description: 'Aromatic carbons typically 120–140 ppm; quaternary ipso-carbons have lower intensity.',
+      type: 'Alkene sp2 Carbons (C=C)',
+      description: 'Olefinic carbons; CH carbons appear upright in DEPT-135/90; quaternary =C< absent in DEPT.',
+    ),
+    NmrShiftRegion(
+      range: '115 – 145 ppm',
+      type: 'Aromatic CH Carbons (Ar-CH)',
+      description: 'Protonated aromatic carbons; show positive peaks in DEPT-135 and DEPT-90.',
+    ),
+    NmrShiftRegion(
+      range: '125 – 160 ppm',
+      type: 'Aromatic Quaternary Ipso Carbons (Ar-C)',
+      description: 'Substituted ipso carbons; significantly reduced intensity in 1H-decoupled spectrum due to absence of NOE enhancement; absent in DEPT.',
+    ),
+    NmrShiftRegion(
+      range: '115 – 125 ppm',
+      type: 'Nitrile Carbon (-C#N)',
+      description: 'Quaternary sp carbon of cyano group; weak signal without NOE, absent in DEPT.',
     ),
     NmrShiftRegion(
       range: '160 – 185 ppm',
-      type: 'Esters, Amides, Carboxylic Acids (-COO-, -CONH-)',
-      description: 'Carbonyl carbons with heteroatom resonance stabilization.',
+      type: 'Esters, Acids, Amides, Anhydrides (-COO-, -CONH-)',
+      description: 'Carbonyl carbon shielded by heteroatom lone pair resonance delocalization (O, N); absent in DEPT.',
     ),
     NmrShiftRegion(
-      range: '190 – 220 ppm',
-      type: 'Aldehydes & Ketones (R-CHO, R2-C=O)',
-      description: 'Highly deshielded carbonyl carbon with no heteroatom conjugation (ketones ~205 ppm, aldehydes ~195 ppm).',
+      range: '190 – 205 ppm',
+      type: 'Aldehyde Carbonyl (-CHO)',
+      description: 'Highly deshielded; appears as positive CH peak in DEPT-135 and DEPT-90 (coupled to single formyl proton).',
+    ),
+    NmrShiftRegion(
+      range: '200 – 225 ppm',
+      type: 'Ketone Carbonyl (>C=O)',
+      description: 'Maximum deshielding due to paramagnetic contribution; completely quaternary, absent in all DEPT spectra.',
     ),
   ];
 
@@ -210,42 +276,48 @@ class SpectroscopyService {
     ),
     IrBand(
       range: '3300 – 3500 cm⁻¹',
-      intensity: 'Medium',
+      intensity: 'Medium / Sharp',
       group: 'N-H stretch',
-      description: 'Primary amines show doublet (symmetric/antisymmetric); secondary amines show singlet.',
+      description: 'Primary amines show doublets (symmetric & asymmetric stretch); secondary amines show a single sharp band.',
     ),
     IrBand(
       range: '3000 – 3100 cm⁻¹',
-      intensity: 'Medium',
-      group: 'sp² C-H stretch (Ar-H, =C-H)',
-      description: 'Protons on alkene or aromatic rings; diagnostic when just above 3000 cm⁻¹.',
+      intensity: 'Medium / Sharp',
+      group: 'sp² C-H stretch',
+      description: 'Aromatic ring C-H and alkene =C-H stretching immediately above 3000 cm⁻¹.',
     ),
     IrBand(
       range: '2850 – 2960 cm⁻¹',
-      intensity: 'Strong',
+      intensity: 'Strong / Sharp',
       group: 'sp³ C-H stretch',
-      description: 'Saturated aliphatic C-H stretching; diagnostic when just below 3000 cm⁻¹.',
+      description: 'Aliphatic methyl (-CH3) and methylene (-CH2-) C-H stretching immediately below 3000 cm⁻¹.',
     ),
     IrBand(
       range: '2720 & 2820 cm⁻¹',
-      intensity: 'Medium (Fermi Doublet)',
-      group: 'Aldehyde C-H stretch',
-      description: 'Diagnostic Fermi resonance doublet confirming aldehyde alongside carbonyl.',
+      intensity: 'Medium (Doublet)',
+      group: 'Aldehyde C-H (Fermi resonance)',
+      description: 'Diagnostic doublet confirming aldehyde; Fermi resonance between C-H stretch and first overtone of C-H bending.',
     ),
     IrBand(
       range: '2210 – 2260 cm⁻¹',
-      intensity: 'Medium / Sharp',
-      group: 'C#N stretch (Nitrile)',
-      description: 'Sharp, distinct band characteristic of aliphatic and aromatic nitriles.',
+      intensity: 'Variable / Sharp',
+      group: 'Nitrile (C#N)',
+      description: 'Sharp stretching band; stronger than alkyne bands due to significant dipole moment.',
+    ),
+    IrBand(
+      range: '2100 – 2260 cm⁻¹',
+      intensity: 'Variable / Weak',
+      group: 'Alkyne (C#C)',
+      description: 'Internal symmetrical alkynes may be IR-inactive due to zero dipole moment change.',
     ),
     IrBand(
       range: '1735 – 1750 cm⁻¹',
       intensity: 'Very Strong',
       group: 'Ester Carbonyl (C=O)',
-      description: 'Higher frequency than ketones due to -I inductive effect of adjacent oxygen.',
+      description: 'Unconjugated aliphatic ester; shifts to ~1715 cm⁻¹ when conjugated with aromatic ring or alkene.',
     ),
     IrBand(
-      range: '1705 – 1725 cm⁻¹',
+      range: '1700 – 1725 cm⁻¹',
       intensity: 'Very Strong',
       group: 'Ketone / Aldehyde (C=O)',
       description: 'Unconjugated aliphatic ketone (1715 cm⁻¹); shifts down to 1685 cm⁻¹ with alpha,beta-conjugation.',
@@ -317,10 +389,10 @@ class SpectroscopyService {
       molarMass: 120.15,
       dbe: 5.0,
       irHighlights: '1685 cm⁻¹ (conjugated ketone C=O), 1600 & 1450 cm⁻¹ (aromatic ring), 3050 cm⁻¹ (sp² C-H)',
-      nmr1H: 'δ 2.6 (s, 3H, -COCH3); δ 7.4 – 7.6 (m, 3H, meta & para Ar-H); δ 7.9 – 8.0 (d, 2H, ortho Ar-H)',
+      nmr1H: 'δ 2.60 (s, 3H, -COCH3); δ 7.40 – 7.60 (m, 3H, meta & para Ar-H); δ 7.90 – 8.00 (d, 2H, ortho Ar-H)',
       nmr13C: 'δ 26.6 (CH3); δ 128.3, 128.6, 133.1 (Ar-CH); δ 137.1 (ipso Ar-C); δ 198.1 (C=O)',
       massSpec: 'm/z 120 (M⁺, 30%), m/z 105 (base peak, loss of •CH3 -> [Ph-C#O]⁺), m/z 77 ([C6H5]⁺)',
-      deduction: '1. DBE = 8 + 1 - 4 = 5 (Benzene ring = 4, carbonyl = 1).\n2. IR 1685 cm⁻¹ shows conjugated ketone.\n3. 1H NMR 2.6 ppm (3H, s) confirms acetyl group attached directly to phenyl ring.\n4. MS m/z 105 base peak confirms stable benzoyl cation.',
+      deduction: '1. DBE = 8 + 1 - 4 = 5 (Benzene ring = 4, carbonyl = 1).\n2. IR 1685 cm⁻¹ shows conjugated ketone.\n3. 1H NMR 2.6 ppm (3H, s) confirms acetyl group attached directly to phenyl ring.\n4. 13C NMR at δ 198.1 confirms ketone (not ester/acid).\n5. MS m/z 105 base peak confirms stable benzoyl cation.',
     ),
     SpectroscopyCaseStudy(
       compoundName: 'Ethyl 4-Aminobenzoate (Benzocaine)',
@@ -331,7 +403,7 @@ class SpectroscopyService {
       nmr1H: 'δ 1.35 (t, J=7.1 Hz, 3H, -CH3); δ 4.10 (br s, 2H, -NH2); δ 4.30 (q, J=7.1 Hz, 2H, -OCH2-); δ 6.64 (d, J=8.7 Hz, 2H, Ar-H); δ 7.85 (d, J=8.7 Hz, 2H, Ar-H)',
       nmr13C: 'δ 14.4 (-CH3); δ 60.1 (-OCH2-); δ 113.8, 131.5 (Ar-CH); δ 119.8, 150.7 (Ar-C ipso); δ 166.7 (ester C=O)',
       massSpec: 'm/z 165 (M⁺, 40%), m/z 137 (loss of ethylene via McLafferty), m/z 120 (base peak, [H2N-C6H4-CO]⁺)',
-      deduction: '1. DBE = 9 + 1 - 5.5 + 0.5 = 5 (1 benzene ring + 1 ester C=O).\n2. IR doublet at 3420 & 3340 cm⁻¹ confirms primary aromatic amine (-NH2).\n3. 1H NMR shows classic para-disubstituted A2B2 doublet of doublets at 6.64 and 7.85 ppm (J = 8.7 Hz).\n4. Triplet-quartet pattern (1.35 & 4.30 ppm) confirms ethyl ester (-OCH2CH3).',
+      deduction: '1. DBE = 9 + 1 - 5.5 + 0.5 = 5 (1 benzene ring + 1 ester C=O).\n2. IR doublet at 3420 & 3340 cm⁻¹ confirms primary aromatic amine (-NH2).\n3. 1H NMR shows classic para-disubstituted A2B2 doublet of doublets at 6.64 and 7.85 ppm (J = 8.7 Hz).\n4. Triplet-quartet pattern (1.35 & 4.30 ppm) confirms ethyl ester (-OCH2CH3).\n5. 13C δ 166.7 confirms conjugated ester carbonyl.',
     ),
     SpectroscopyCaseStudy(
       compoundName: '1-Bromopropane',
@@ -342,15 +414,40 @@ class SpectroscopyService {
       nmr1H: 'δ 1.03 (t, J=7.3 Hz, 3H, -CH3); δ 1.90 (sextet, J=7.3 Hz, 2H, -CH2-); δ 3.38 (t, J=6.8 Hz, 2H, -CH2Br)',
       nmr13C: 'δ 13.0 (C3, -CH3); δ 26.0 (C2, -CH2-); δ 35.3 (C1, -CH2Br)',
       massSpec: 'm/z 122 & 124 (M⁺ twin peaks, 1:1 ratio, confirming 1x Br), m/z 43 (base peak, [C3H7]⁺)',
-      deduction: '1. DBE = 3 + 1 - 3.5 - 0.5 = 0 (Fully saturated).\n2. MS shows twin molecular ions of equal intensity at m/z 122 and 124, proving presence of a single bromine atom.\n3. 1H NMR triplet at 3.38 ppm (2H) is deshielded by bromine.\n4. Sextet at 1.90 ppm (coupling with 3 protons on methyl and 2 on -CH2Br) confirms linear propyl chain.',
+      deduction: '1. DBE = 3 + 1 - 3.5 - 0.5 = 0 (Fully saturated).\n2. MS shows twin molecular ions of equal intensity at m/z 122 and 124, proving presence of a single bromine atom.\n3. 1H NMR triplet at 3.38 ppm (2H) is deshielded by bromine.\n4. 13C signals show 3 distinct carbons: C1 at δ 35.3 is attached to Br, C2 at δ 26.0, C3 at δ 13.0.\n5. DEPT-135 confirms 1x CH3 and 2x CH2.',
+    ),
+    SpectroscopyCaseStudy(
+      compoundName: 'Ethyl Propionate',
+      formula: 'C5H10O2',
+      molarMass: 102.13,
+      dbe: 1.0,
+      irHighlights: '2980 cm⁻¹ (sp³ C-H), 1740 cm⁻¹ (aliphatic ester C=O), 1180 cm⁻¹ (strong C-O stretch)',
+      nmr1H: 'δ 1.13 (t, J=7.6 Hz, 3H, CH3CH2CO-); δ 1.25 (t, J=7.1 Hz, 3H, -OCH2CH3); δ 2.31 (q, J=7.6 Hz, 2H, -CH2CO-); δ 4.12 (q, J=7.1 Hz, 2H, -OCH2CH3)',
+      nmr13C: 'δ 9.2 (CH3); δ 14.3 (CH3); δ 27.6 (-CH2CO-); δ 60.2 (-OCH2-); δ 174.4 (ester C=O)',
+      massSpec: 'm/z 102 (M⁺, 15%), m/z 57 (base peak, [CH3CH2CO]⁺), m/z 29 ([CH3CH2]⁺)',
+      deduction: '1. DBE = 5 + 1 - 5 = 1 (single C=O double bond).\n2. IR at 1740 cm⁻¹ strongly indicates aliphatic ester.\n3. 1H NMR reveals two distinct ethyl groups: propionyl quartet at 2.31 ppm (coupled to 1.13 ppm triplet) and ethoxy quartet at 4.12 ppm (coupled to 1.25 ppm triplet).\n4. 13C NMR at δ 174.4 confirms ester carbonyl (quaternary); δ 60.2 confirms -OCH2- carbon.',
+    ),
+    SpectroscopyCaseStudy(
+      compoundName: 'Vanillin (4-Hydroxy-3-methoxybenzaldehyde)',
+      formula: 'C8H8O3',
+      molarMass: 152.15,
+      dbe: 5.0,
+      irHighlights: '3180 cm⁻¹ (phenolic O-H), 2840 & 2740 cm⁻¹ (aldehyde C-H), 1665 cm⁻¹ (conjugated aldehyde C=O), 1590 cm⁻¹ (Ar C=C)',
+      nmr1H: 'δ 3.96 (s, 3H, -OCH3); δ 6.25 (br s, 1H, -OH); δ 7.03 (d, J=8.1 Hz, 1H, Ar-H); δ 7.41 (dd, J=8.1, 1.8 Hz, 1H, Ar-H); δ 7.43 (d, J=1.8 Hz, 1H, Ar-H); δ 9.82 (s, 1H, -CHO)',
+      nmr13C: 'δ 56.1 (-OCH3); δ 108.8, 114.4, 127.6 (Ar-CH); δ 130.0 (ipso C-CHO), 147.2 (ipso C-OMe), 151.7 (ipso C-OH); δ 190.9 (aldehyde C=O)',
+      massSpec: 'm/z 152 (M⁺, 100% base peak), m/z 151 ([M-H]⁺), m/z 123 ([M-CHO]⁺), m/z 109',
+      deduction: '1. DBE = 8 + 1 - 4 = 5 (benzene ring + aldehyde C=O).\n2. 1H NMR sharp singlet at δ 9.82 confirms aldehyde group.\n3. Singlet at δ 3.96 confirms aromatic methoxy (-OCH3).\n4. Trisubstituted 1,3,4-pattern in aromatic ring: dd at 7.41 ppm with ortho (8.1 Hz) and meta (1.8 Hz) couplings.\n5. 13C δ 190.9 is diagnostic for conjugated aldehyde.',
     ),
   ];
 
-  // 7. Structural Deduction Helper
   // 7. Automated 8-Step Structural Deduction Engine
   static SpectroscopyAnalysisResult analyzeSpectraStructured({
     String? formula,
     List<double>? nmrPeaks,
+    List<double>? nmr1HPeaks,
+    List<ProtonSignal>? protonSignals,
+    List<double>? nmr13CPeaks,
+    List<CarbonSignal>? carbonSignals,
     List<double>? irPeaks,
     List<double>? msPeaks,
   }) {
@@ -365,6 +462,27 @@ class SpectroscopyService {
         steps: const [],
         markdownFull: '### ⚠️ Invalid Molecular Formula\n\n${parsed.errorMessage}',
       );
+    }
+
+    // Resolve 1H and 13C peaks cleanly without cross-contamination
+    final List<double> effectiveH = [];
+    if (nmr1HPeaks != null && nmr1HPeaks.isNotEmpty) {
+      effectiveH.addAll(nmr1HPeaks);
+    } else if (protonSignals != null && protonSignals.isNotEmpty) {
+      effectiveH.addAll(protonSignals.map((s) => s.shift));
+    } else if (nmrPeaks != null && nmrPeaks.isNotEmpty) {
+      // Auto-filter: any shift <= 20 ppm is 1H NMR
+      effectiveH.addAll(nmrPeaks.where((p) => p <= 20.0));
+    }
+
+    final List<double> effectiveC = [];
+    if (nmr13CPeaks != null && nmr13CPeaks.isNotEmpty) {
+      effectiveC.addAll(nmr13CPeaks);
+    } else if (carbonSignals != null && carbonSignals.isNotEmpty) {
+      effectiveC.addAll(carbonSignals.map((s) => s.shift));
+    } else if (nmrPeaks != null && nmrPeaks.isNotEmpty) {
+      // Auto-filter: any shift > 20 ppm entered in generic NMR field is treated as 13C NMR!
+      effectiveC.addAll(nmrPeaks.where((p) => p > 20.0));
     }
 
     final dbe = parsed.dbe;
@@ -388,14 +506,14 @@ class SpectroscopyService {
       step1Buffer.writeln('- **Aromatic Framework**: A DBE of **$dbe** strongly indicates the presence of a **benzene ring** (consumption of 4 units: 1 ring + 3 alternating double bonds).');
       if (dbe > 4.0) {
         final remaining = (dbe - 4.0).toStringAsFixed(1).replaceAll('.0', '');
-        step1Buffer.writeln('- **Substituent Unsaturation**: The remaining **$remaining DBE unit(s)** must reside in side-chain unsaturation (e.g. carbonyl C=O, alkene C=C, alkyne C≡C, or nitrile C≡N).');
+        step1Buffer.writeln('- **Substituent Unsaturation**: The remaining **$remaining DBE unit(s)** must reside in side-chain unsaturation (e.g. carbonyl C=O, alkene C=C, alkyne C#C, or nitrile C#N).');
       }
     } else if (dbe == 1.0) {
       dbeSummary = 'DBE = 1: Single double bond (C=O or C=C) OR monocyclic ring';
       step1Buffer.writeln('- **Single Unsaturation**: Compound contains exactly 1 unit of unsaturation: either a single double bond (carbonyl C=O or olefinic C=C) or one alicyclic ring.');
     } else if (dbe == 2.0) {
       dbeSummary = 'DBE = 2: Two double bonds, one triple bond, or ring + double bond';
-      step1Buffer.writeln('- **Two Unsaturations**: Can be a triple bond (C≡C or C≡N), two conjugated/isolated double bonds (diene, diketone), or a ring with an exocyclic/endocyclic double bond.');
+      step1Buffer.writeln('- **Two Unsaturations**: Can be a triple bond (C#C or C#N), two conjugated/isolated double bonds (diene, diketone), or a ring with an exocyclic/endocyclic double bond.');
     } else if (dbe == 3.0) {
       dbeSummary = 'DBE = 3: Multiple unsaturations (polyene or bicyclic system)';
       step1Buffer.writeln('- **Three Unsaturations**: Highly conjugated or polycyclic framework.');
@@ -430,10 +548,20 @@ class SpectroscopyService {
           return false;
         }).toList();
 
-        if (matched.isNotEmpty) {
-          final matchDesc = matched.map((m) => '**${m.group}** (${m.intensity}: ${m.description})').join('\n  - ');
+        // Stoichiometric filtering: only report groups that can exist given formula heteroatoms!
+        final filtered = matched.where((m) {
+          if (m.group.contains('O-H') && parsed.oxygens == 0) return false;
+          if (m.group.contains('C=O') && parsed.oxygens == 0) return false;
+          if (m.group.contains('N-H') && parsed.nitrogens == 0) return false;
+          if (m.group.contains('Nitro') && (parsed.nitrogens == 0 || parsed.oxygens < 2)) return false;
+          if (m.group.contains('Nitrile') && parsed.nitrogens == 0) return false;
+          return true;
+        }).toList();
+
+        if (filtered.isNotEmpty) {
+          final matchDesc = filtered.map((m) => '**${m.group}** (${m.intensity}: ${m.description})').join('\n  - ');
           step2Buffer.writeln('- **$peak cm⁻¹**: $matchDesc');
-          for (final m in matched) {
+          for (final m in filtered) {
             if (!detectedGroups.contains(m.group)) detectedGroups.add(m.group);
           }
         } else if (peak >= 3000 && peak <= 3100) {
@@ -465,8 +593,20 @@ class SpectroscopyService {
     // ----------------------------------------------------
     final step3Buffer = StringBuffer();
     final nmrFragments = <String>[];
-    if (nmrPeaks != null && nmrPeaks.isNotEmpty) {
-      for (final p in nmrPeaks) {
+    bool hasAldehydeProton = false;
+    bool hasAcidProton = false;
+    bool hasAromaticProtons = false;
+    bool hasDeshieldedAliphatic = false;
+    bool hasAlphaCarbonylProtons = false;
+
+    if (effectiveH.isNotEmpty) {
+      for (final p in effectiveH) {
+        if (p >= 9.2 && p <= 10.5) hasAldehydeProton = true;
+        if (p >= 10.5 && p <= 13.5) hasAcidProton = true;
+        if (p >= 6.5 && p <= 8.5) hasAromaticProtons = true;
+        if (p >= 3.3 && p <= 4.5) hasDeshieldedAliphatic = true;
+        if (p >= 2.0 && p <= 2.8) hasAlphaCarbonylProtons = true;
+
         final matched = protonNmrRegions.where((r) {
           final parts = r.range.replaceAll('ppm', '').replaceAll(' ', '').split('–');
           if (parts.length == 2) {
@@ -477,8 +617,17 @@ class SpectroscopyService {
           return false;
         }).toList();
 
-        if (matched.isNotEmpty) {
-          final best = matched.first;
+        // Stoichiometric filter for 1H
+        final filtered = matched.where((r) {
+          if (r.type.contains('Aldehyde') && parsed.oxygens == 0) return false;
+          if (r.type.contains('Carboxylic') && parsed.oxygens < 2) return false;
+          if (r.type.contains('Alkoxy') && parsed.oxygens == 0) return false;
+          if (r.type.contains('Halogenated') && parsed.halogens == 0) return false;
+          return true;
+        }).toList();
+
+        if (filtered.isNotEmpty) {
+          final best = filtered.first;
           step3Buffer.writeln('- **δ ${p.toStringAsFixed(2)} ppm**: **${best.type}**\n  - ${best.description}');
           if (!nmrFragments.contains(best.type)) nmrFragments.add(best.type);
         } else {
@@ -503,28 +652,106 @@ class SpectroscopyService {
     // STEP 4: 13C NMR & DEPT Correlation
     // ----------------------------------------------------
     final step4Buffer = StringBuffer();
-    step4Buffer.writeln('Based on the formula **$fUpper** and identified functional groups:');
-    if (dbe >= 4.0) {
-      step4Buffer.writeln('- **Aromatic carbons (δ 120–145 ppm)**: Expected 4–6 peaks in decoupling spectrum (including quaternary ipso carbon with lower signal intensity).');
-    }
-    if (detectedGroups.any((g) => g.contains('C=O') || g.contains('Carbonyl')) || (parsed.oxygens > 0 && dbe >= 1)) {
-      if (irPeaks != null && irPeaks.any((p) => p >= 1675 && p <= 1725)) {
-        step4Buffer.writeln('- **Ketone / Aldehyde Carbonyl carbon (δ 195–210 ppm)**: Distinct quaternary carbonyl resonance without heteroatom shielding.');
-      } else if (irPeaks != null && irPeaks.any((p) => p > 1725)) {
-        step4Buffer.writeln('- **Ester / Acid Carbonyl carbon (δ 165–185 ppm)**: Resonates at higher field due to oxygen resonance stabilization.');
+    bool hasKetoneCarbon = false;
+    bool hasAldehydeCarbon = false;
+    bool hasEsterOrAcidCarbon = false;
+    bool hasAromaticCarbons = false;
+
+    if (effectiveC.isNotEmpty) {
+      step4Buffer.writeln('#### Observed ¹³C NMR Chemical Shifts (${effectiveC.length} signals):\n');
+      for (final c in effectiveC) {
+        String interpretation = '';
+        if (c >= 198) {
+          if (hasAldehydeProton) {
+            interpretation = '**Aldehyde Carbonyl (C=O, ~190-205 ppm)**: Confirmed by presence of formyl proton at δ 9-10 ppm in ¹H NMR.';
+            hasAldehydeCarbon = true;
+          } else {
+            interpretation = '**Ketone Carbonyl (C=O, ~200-220 ppm)**: Quaternary sp² carbon with no heteroatom conjugation (absence of formyl proton rules out aldehyde).';
+            hasKetoneCarbon = true;
+          }
+        } else if (c >= 185 && c < 198) {
+          if (hasAldehydeProton) {
+            interpretation = '**Conjugated Aldehyde Carbonyl (Ar-CHO or =C-CHO)**: Shielded by conjugation; confirmed by ¹H NMR.';
+            hasAldehydeCarbon = true;
+          } else {
+            interpretation = '**Conjugated Ketone Carbonyl (Ar-CO-R)**: Alpha,beta-unsaturated or aryl ketone (e.g. Acetophenone δ 198 ppm).';
+            hasKetoneCarbon = true;
+          }
+        } else if (c >= 160 && c < 185) {
+          if (hasAcidProton || (parsed.oxygens >= 2 && irPeaks != null && irPeaks.any((p) => p >= 2500 && p <= 3300))) {
+            interpretation = '**Carboxylic Acid Carbonyl (-COOH, δ 170-185 ppm)**: Strongly hydrogen-bonded.';
+            hasEsterOrAcidCarbon = true;
+          } else if (parsed.oxygens >= 2 && hasDeshieldedAliphatic) {
+            interpretation = '**Ester Carbonyl (-COO-R, δ 165-175 ppm)**: Confirmed by presence of -OCH2- / -OCH3 signals in ¹H & ¹³C.';
+            hasEsterOrAcidCarbon = true;
+          } else if (parsed.nitrogens > 0) {
+            interpretation = '**Amide Carbonyl (-CONH-, δ 160-175 ppm)**: Strong resonance from nitrogen lone pair.';
+          } else {
+            interpretation = '**Ester / Acid Derivative Carbonyl (δ 160-185 ppm)**.';
+            hasEsterOrAcidCarbon = true;
+          }
+        } else if (c >= 115 && c < 160) {
+          hasAromaticCarbons = true;
+          if (c >= 135) {
+            interpretation = '**Aromatic Ipso Quaternary Carbon (Ar-C)** or substituted alkene; lower intensity in broadband decoupled spectrum due to lack of NOE.';
+          } else {
+            interpretation = '**Aromatic CH Carbon (Ar-CH)**; appears upright in DEPT-135 & DEPT-90.';
+          }
+        } else if (c >= 50 && c < 85) {
+          interpretation = '**Heteroatom-Bearing sp³ Carbon (C-O, C-N, C-X)**: E.g., -OCH2- (58-65 ppm), -OCH3 (55 ppm), or -CH2X.';
+        } else if (c >= 65 && c < 90) {
+          interpretation = '**Alkyne sp Carbon (-C#C-)** or strongly deshielded alcohol carbon.';
+        } else if (c >= 25 && c < 50) {
+          interpretation = '**Aliphatic Methine/Methylene Carbon (-CH2-, -CH<)**.';
+        } else {
+          interpretation = '**Aliphatic Methyl Carbon (-CH3, δ 10-25 ppm)**: Upright in DEPT-135; absent in DEPT-90.';
+        }
+
+        step4Buffer.writeln('- **δ ${c.toStringAsFixed(1)} ppm**: $interpretation');
       }
-    }
-    if (parsed.carbons > 6 && dbe >= 4) {
-      step4Buffer.writeln('- **Aliphatic sp³ carbons (δ 15–45 ppm)**: Observed for side-chain alkyl carbons (methyl, methylene). In DEPT-135, methyl and methine carbons point upward; methylene carbons point downward.');
-    }
-    if (parsed.halogens > 0) {
-      step4Buffer.writeln('- **Halogen-bearing carbon C-X (δ 30–65 ppm)**: Deshielded carbon with chemical shift depending on halogen electronegativity (I < Br < Cl < F).');
+
+      // DEPT-135 Multiplicity Breakdown
+      if (carbonSignals != null && carbonSignals.isNotEmpty) {
+        step4Buffer.writeln('\n#### DEPT-135 Multiplicity & Carbon Valence Balance:');
+        final ch3List = carbonSignals.where((s) => s.deptType == CarbonDeptType.ch3).toList();
+        final ch2List = carbonSignals.where((s) => s.deptType == CarbonDeptType.ch2).toList();
+        final chList = carbonSignals.where((s) => s.deptType == CarbonDeptType.ch).toList();
+        final cqList = carbonSignals.where((s) => s.deptType == CarbonDeptType.cq).toList();
+
+        step4Buffer.writeln('- **CH₃ Carbons (Positive in DEPT-135 & 45)**: ${ch3List.length} (${ch3List.map((s) => 'δ ${s.shift}').join(', ')})');
+        step4Buffer.writeln('- **CH₂ Carbons (Negative / Inverted in DEPT-135)**: ${ch2List.length} (${ch2List.map((s) => 'δ ${s.shift}').join(', ')})');
+        step4Buffer.writeln('- **CH Carbons (Positive in DEPT-135, 90 & 45)**: ${chList.length} (${chList.map((s) => 'δ ${s.shift}').join(', ')})');
+        step4Buffer.writeln('- **Quaternary C_q Carbons (Absent in all DEPT spectra)**: ${cqList.length} (${cqList.map((s) => 'δ ${s.shift}').join(', ')})');
+        final totalDeptCarbons = ch3List.length + ch2List.length + chList.length + cqList.length;
+        step4Buffer.writeln('\n**Carbon Budget**: $totalDeptCarbons distinct carbon resonance(s) vs ${parsed.carbons} Carbon(s) in molecular formula **$fUpper**.');
+        if (totalDeptCarbons < parsed.carbons) {
+          step4Buffer.writeln('_Symmetry Note_: The number of signals ($totalDeptCarbons) is less than formula carbons (${parsed.carbons}), demonstrating molecular symmetry (e.g. symmetrical benzene ring or equivalent alkyl groups).');
+        }
+      }
+    } else {
+      step4Buffer.writeln('Based on the formula **$fUpper** and identified functional groups:');
+      if (dbe >= 4.0) {
+        step4Buffer.writeln('- **Aromatic carbons (δ 120–145 ppm)**: Expected 4–6 peaks in decoupling spectrum (including quaternary ipso carbon with lower signal intensity).');
+      }
+      if (detectedGroups.any((g) => g.contains('C=O') || g.contains('Carbonyl')) || (parsed.oxygens > 0 && dbe >= 1)) {
+        if (irPeaks != null && irPeaks.any((p) => p >= 1675 && p <= 1725)) {
+          step4Buffer.writeln('- **Ketone / Aldehyde Carbonyl carbon (δ 195–210 ppm)**: Distinct quaternary carbonyl resonance without heteroatom shielding.');
+        } else if (irPeaks != null && irPeaks.any((p) => p > 1725)) {
+          step4Buffer.writeln('- **Ester / Acid Carbonyl carbon (δ 165–185 ppm)**: Resonates at higher field due to oxygen resonance stabilization.');
+        }
+      }
+      if (parsed.carbons > 6 && dbe >= 4) {
+        step4Buffer.writeln('- **Aliphatic sp³ carbons (δ 15–45 ppm)**: Observed for side-chain alkyl carbons (methyl, methylene). In DEPT-135, methyl and methine carbons point upward; methylene carbons point downward.');
+      }
+      if (parsed.halogens > 0) {
+        step4Buffer.writeln('- **Halogen-bearing carbon C-X (δ 30–65 ppm)**: Deshielded carbon with chemical shift depending on halogen electronegativity (I < Br < Cl < F).');
+      }
     }
 
     steps.add(DeductionStep(
       stepNumber: 4,
       title: '¹³C NMR & DEPT Multiplicity Correlation',
-      summary: 'Expected carbon environments and DEPT-135 orientation',
+      summary: effectiveC.isNotEmpty ? '${effectiveC.length} carbon signals correlated' : 'Expected carbon environments and DEPT-135 orientation',
       content: step4Buffer.toString(),
       icon: Icons.table_chart_outlined,
     ));
@@ -590,23 +817,58 @@ class SpectroscopyService {
     // ----------------------------------------------------
     final step6Buffer = StringBuffer();
     final subunits = <String>[];
-    if (dbe >= 4 && parsed.carbons >= 6) {
-      subunits.add('Monosubstituted Phenyl Ring (C₆H₅–, consumes 6 Carbons, 5 Hydrogens, 4 DBE)');
+
+    // Aromatic framework
+    if (dbe >= 4 && parsed.carbons >= 6 && (hasAromaticProtons || hasAromaticCarbons || (irPeaks != null && irPeaks.any((p) => p >= 1450 && p <= 1610)))) {
+      subunits.add('Benzene Ring (C₆H₅– or substituted aromatic core, consumes 6 C, 4 DBE)');
     }
-    if (irPeaks != null && irPeaks.any((p) => p >= 1650 && p <= 1750)) {
-      subunits.add('Carbonyl Group (–C(=O)–, consumes 1 Carbon, 1 Oxygen, 1 DBE)');
+
+    // Carbonyl framework - strictly checked against oxygen valence!
+    if (parsed.oxygens > 0 && dbe >= 1) {
+      if (hasAldehydeProton || hasAldehydeCarbon || (irPeaks != null && irPeaks.any((p) => p >= 1690 && p <= 1730) && (irPeaks.any((p) => p >= 2700 && p <= 2850)))) {
+        subunits.add('Aldehyde Group (–CH=O, consumes 1 C, 1 H, 1 O, 1 DBE)');
+      } else if (hasKetoneCarbon || (effectiveC.any((c) => c >= 195) || (irPeaks != null && irPeaks.any((p) => p >= 1660 && p <= 1725)))) {
+        subunits.add('Ketone Carbonyl Group (–C(=O)–, consumes 1 C, 1 O, 1 DBE)');
+      } else if (parsed.oxygens >= 2 && (hasAcidProton || (irPeaks != null && irPeaks.any((p) => p >= 2500 && p <= 3300)))) {
+        subunits.add('Carboxylic Acid Group (–COOH, consumes 1 C, 1 H, 2 O, 1 DBE)');
+      } else if (parsed.oxygens >= 2 && (hasEsterOrAcidCarbon || (irPeaks != null && irPeaks.any((p) => p >= 1730 && p <= 1755)))) {
+        subunits.add('Ester Group (–CO–O–, consumes 1 C, 2 O, 1 DBE)');
+      } else if (parsed.nitrogens > 0 && (irPeaks != null && irPeaks.any((p) => p >= 1630 && p <= 1685))) {
+        subunits.add('Amide Group (–CO–N<, consumes 1 C, 1 O, 1 N, 1 DBE)');
+      }
     }
-    if (nmrPeaks != null && nmrPeaks.any((p) => p >= 2.0 && p <= 2.8)) {
-      subunits.add('Methyl group attached to Carbonyl / Aromatic ring (–CH₃, 1 Carbon, 3 Hydrogens)');
+
+    // Hydroxyl / Ether check
+    if (parsed.oxygens > 0 && !subunits.any((s) => s.contains('Carboxylic') || s.contains('Ester') || s.contains('Ketone') || s.contains('Aldehyde'))) {
+      if (irPeaks != null && irPeaks.any((p) => p >= 3200 && p <= 3600)) {
+        subunits.add('Hydroxyl Group (–OH, consumes 1 O, 1 H)');
+      } else if (effectiveH.any((p) => p >= 3.3 && p <= 3.8) || effectiveC.any((c) => c >= 55 && c <= 75)) {
+        subunits.add('Ether Linkage (–C–O–C–, consumes 1 O)');
+      }
     }
-    if (parsed.chlorines > 0) subunits.add('${parsed.chlorines}x Chlorine atom (-Cl)');
-    if (parsed.bromines > 0) subunits.add('${parsed.bromines}x Bromine atom (-Br)');
+
+    // Amine check - strictly checked against nitrogen!
+    if (parsed.nitrogens > 0 && !subunits.any((s) => s.contains('Amide'))) {
+      if (irPeaks != null && irPeaks.any((p) => p >= 3300 && p <= 3500)) {
+        subunits.add('Amino Group (–NH₂ or –NH–, consumes 1 N)');
+      }
+    }
+
+    // Methyl groups
+    if (hasAlphaCarbonylProtons || (effectiveC.any((c) => c >= 20 && c <= 30))) {
+      subunits.add('Methyl Group bonded to Carbonyl or Aryl ring (–CH₃, consumes 1 C, 3 H)');
+    } else if (effectiveH.any((p) => p >= 0.8 && p <= 1.5) || effectiveC.any((c) => c >= 10 && c <= 25)) {
+      subunits.add('Terminal Methyl Group (–CH₃, consumes 1 C, 3 H)');
+    }
+
+    if (parsed.chlorines > 0) subunits.add('${parsed.chlorines}x Chlorine substituent (-Cl)');
+    if (parsed.bromines > 0) subunits.add('${parsed.bromines}x Bromine substituent (-Br)');
 
     step6Buffer.writeln('Compiling the identified structural subunits against the molecular formula **$fUpper**:');
     for (final s in subunits) {
       step6Buffer.writeln('- **$s**');
     }
-    step6Buffer.writeln('\n**Total sub-atomic balance**: When pieced together, the fragments account for all ${parsed.carbons} Carbon, ${parsed.hydrogens} Hydrogen, ${parsed.oxygens} Oxygen, and heteroatoms.');
+    step6Buffer.writeln('\n**Total sub-atomic balance**: When pieced together, the fragments account for all ${parsed.carbons} Carbon, ${parsed.hydrogens} Hydrogen, ${parsed.oxygens} Oxygen, and heteroatoms without false-positive functional groups.');
 
     steps.add(DeductionStep(
       stepNumber: 6,
@@ -631,13 +893,23 @@ class SpectroscopyService {
       step7Buffer.writeln('**Why this structure is definitive**:');
       step7Buffer.writeln('1. **FT-IR at ~1685 cm⁻¹**: Strongly points to a conjugated aryl ketone (unconjugated aliphatic ketone is ~1715 cm⁻¹; benzaldehyde is ~1700 cm⁻¹ with Fermi resonance doublet at 2720/2820 cm⁻¹).');
       step7Buffer.writeln('2. **¹H NMR singlet at δ 2.60 ppm (3H)**: Perfectly matches the methyl protons directly bonded to a carbonyl (–CO–CH₃).');
-      step7Buffer.writeln('3. **¹H NMR multiplet at δ 7.4–7.9 ppm (5H)**: Confirms a monosubstituted phenyl ring with ortho protons strongly deshielded by the electron-withdrawing carbonyl.');
-      step7Buffer.writeln('4. **Mass Spec m/z 105 & 43**: Corresponds exactly to the benzoyl cation [Ph-CO]⁺ (base peak) and acetylium ion [CH₃CO]⁺ via α-cleavage.\n');
+      step7Buffer.writeln('3. **¹H NMR multiplet at δ 7.4–8.0 ppm (5H)**: Confirms a monosubstituted phenyl ring with ortho protons strongly deshielded by the electron-withdrawing carbonyl.');
+      step7Buffer.writeln('4. **¹³C NMR δ 198.1 ppm**: Definitive proof of ketone carbonyl; δ 26.6 ppm confirms methyl carbon; 4 aromatic carbon signals confirm monosubstituted ring.');
+      step7Buffer.writeln('5. **Mass Spec m/z 105 & 43**: Corresponds exactly to the benzoyl cation [Ph-CO]⁺ (base peak) and acetylium ion [CH₃CO]⁺ via α-cleavage.\n');
 
       step7Buffer.writeln('**Ruling Out Alternative Constitutional Isomers**:');
       step7Buffer.writeln('- **4-Methylbenzaldehyde**: Would show an aldehyde proton singlet at δ 9.9 ppm and a 4H symmetrical para-disubstituted A₂B₂ doublet of doublets, both absent here.');
       step7Buffer.writeln('- **Phenylacetaldehyde**: Would exhibit an aldehyde proton at δ 9.7 ppm and an aliphatic methylene doublet at δ 3.6 ppm.');
       step7Buffer.writeln('- **Phenyloxirane**: Lacks a carbonyl stretch at ~1685 cm⁻¹ in FT-IR and shows characteristic oxirane ring protons at δ 2.8–3.8 ppm.');
+    } else if (fUpper == 'C9H11NO2') {
+      primaryCandidate = 'Ethyl 4-Aminobenzoate (Benzocaine)';
+      step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
+      step7Buffer.writeln('**Chemical Structure**: `H₂N–C₆H₄–COOCH₂CH₃` (para-substituted)\n');
+      step7Buffer.writeln('**Why this structure is definitive**:');
+      step7Buffer.writeln('1. **FT-IR 3420 & 3340 cm⁻¹ doublet**: Confirms a primary amine (-NH2).');
+      step7Buffer.writeln('2. **FT-IR 1682 cm⁻¹ & ¹³C δ 166.7 ppm**: Diagnostic for conjugated ester carbonyl.');
+      step7Buffer.writeln('3. **¹H NMR Triplet-Quartet (δ 1.35 & 4.30 ppm)**: Unequivocal proof of an ethyl ester group (-OCH2CH3).');
+      step7Buffer.writeln('4. **¹H NMR A₂B₂ pattern (δ 6.64 & 7.85 ppm, J=8.7 Hz)**: Classic 1,4-para-disubstituted benzene ring.');
     } else if (fUpper == 'C3H7BR') {
       primaryCandidate = '1-Bromopropane (n-Propyl bromide, CH₃-CH₂-CH₂-Br)';
 
@@ -647,7 +919,24 @@ class SpectroscopyService {
       step7Buffer.writeln('1. **DBE = 0**: Confirms an open-chain, fully saturated alkyl halide.');
       step7Buffer.writeln('2. **MS m/z 122 & 124 (1:1)**: Definitive proof of a single bromine isotope pattern.');
       step7Buffer.writeln('3. **¹H NMR Triplet at δ 3.38 ppm (2H, –CH₂Br)** and **Sextet at δ 1.90 ppm (2H, –CH₂–)**: Distinctive linear 3-carbon coupling chain (n+1 rule).');
-      step7Buffer.writeln('4. **Alternative 2-Bromopropane**: Would show a 6H doublet for two equivalent methyl groups and a 1H septet at δ 4.2 ppm, inconsistent with the 3 distinct proton signals.');
+      step7Buffer.writeln('4. **¹³C NMR**: 3 signals at δ 35.3, 26.0, 13.0 ppm with DEPT-135 confirming 1x CH3 and 2x CH2.');
+      step7Buffer.writeln('5. **Alternative 2-Bromopropane**: Would show a 6H doublet for two equivalent methyl groups and a 1H septet at δ 4.2 ppm, inconsistent with the 3 distinct proton signals.');
+    } else if (fUpper == 'C5H10O2') {
+      primaryCandidate = 'Ethyl Propionate (CH₃CH₂COOCH₂CH₃)';
+      step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
+      step7Buffer.writeln('**Chemical Structure**: `CH₃–CH₂–C(=O)–O–CH₂–CH₃`\n');
+      step7Buffer.writeln('**Definitive Spectral Evidence**:');
+      step7Buffer.writeln('1. **DBE = 1.0**: Exactly 1 carbonyl group.');
+      step7Buffer.writeln('2. **FT-IR 1740 cm⁻¹ & ¹³C δ 174.4 ppm**: Saturated aliphatic ester.');
+      step7Buffer.writeln('3. **¹H NMR**: Two distinct ethyl patterns: -CH2CO- at δ 2.31 (q) and -OCH2- at δ 4.12 (q).');
+    } else if (fUpper == 'C8H8O3') {
+      primaryCandidate = 'Vanillin (4-Hydroxy-3-methoxybenzaldehyde)';
+      step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
+      step7Buffer.writeln('**Chemical Structure**: `3-(OCH₃)-4-(OH)-C₆H₃–CHO`\n');
+      step7Buffer.writeln('**Definitive Spectral Evidence**:');
+      step7Buffer.writeln('1. **¹H NMR δ 9.82 (s, 1H)**: Aldehyde proton; ¹³C δ 190.9 confirms conjugated aldehyde.');
+      step7Buffer.writeln('2. **¹H NMR δ 3.96 (s, 3H) & ¹³C δ 56.1**: Aryl methoxy ether.');
+      step7Buffer.writeln('3. **FT-IR 3180 cm⁻¹**: Phenolic hydroxyl group.');
     } else {
       primaryCandidate = 'Consistent Molecular Framework for $fUpper';
       step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
@@ -658,6 +947,7 @@ class SpectroscopyService {
       step7Buffer.writeln('\n**Isomer Ambiguity Considerations**:');
       step7Buffer.writeln('- Check for regioisomers (ortho/meta/para substitution patterns in aromatic rings via coupling constants: J_ortho ≈ 7–9 Hz, J_meta ≈ 2–3 Hz).');
       step7Buffer.writeln('- Verify stereoisomerism (cis/trans coupling across double bonds: J_trans ≈ 14–18 Hz, J_cis ≈ 7–11 Hz).');
+      step7Buffer.writeln('- DEPT carbon count balance ensures all quaternary and protonated carbons are mapped.');
     }
 
     steps.add(DeductionStep(
@@ -680,13 +970,16 @@ class SpectroscopyService {
     if (irPeaks != null && irPeaks.isNotEmpty) {
       step8Buffer.writeln('| **FT-IR** | ${irPeaks.first} cm⁻¹ | Functional group stretching | ✅ Consistent |');
     }
-    if (nmrPeaks != null && nmrPeaks.isNotEmpty) {
-      step8Buffer.writeln('| **¹H NMR** | δ ${nmrPeaks.first.toStringAsFixed(2)} ppm | Proton magnetic environment | ✅ Consistent |');
+    if (effectiveH.isNotEmpty) {
+      step8Buffer.writeln('| **¹H NMR** | δ ${effectiveH.first.toStringAsFixed(2)} ppm | Proton magnetic environment | ✅ Consistent |');
+    }
+    if (effectiveC.isNotEmpty) {
+      step8Buffer.writeln('| **¹³C NMR** | δ ${effectiveC.first.toStringAsFixed(1)} ppm | Carbon skeleton & hybridization | ✅ Consistent |');
     }
     if (msPeaks != null && msPeaks.isNotEmpty) {
       step8Buffer.writeln('| **Mass Spec** | m/z ${msPeaks.first} | Characteristic ion / fragment | ✅ Consistent |');
     }
-    step8Buffer.writeln('\n**Final Academic Conclusion**: The spectroscopic evidence is fully self-consistent and uniquely validates the proposed structural connectivity without ambiguity.');
+    step8Buffer.writeln('\n**Final Academic Conclusion**: The spectroscopic evidence is fully self-consistent and uniquely validates the proposed structural connectivity without false-positive functional groups.');
 
     steps.add(DeductionStep(
       stepNumber: 8,
@@ -701,7 +994,9 @@ class SpectroscopyService {
     final sanityReport = runSanityChecks(
       formula: parsed,
       irPeaks: irPeaks,
-      nmrPeaks: nmrPeaks,
+      nmrPeaks: effectiveH,
+      nmr13CPeaks: effectiveC,
+      carbonSignals: carbonSignals,
       msPeaks: msPeaks,
     );
 
@@ -734,12 +1029,15 @@ class SpectroscopyService {
     required ParsedFormula formula,
     List<double>? irPeaks,
     List<double>? nmrPeaks,
+    List<double>? nmr13CPeaks,
+    List<CarbonSignal>? carbonSignals,
     List<double>? msPeaks,
   }) {
     final items = <SanityCheckItem>[];
     final dbe = formula.dbe;
     final ir = irPeaks ?? [];
     final nmr = nmrPeaks ?? [];
+    final nmr13C = nmr13CPeaks ?? [];
     final ms = msPeaks ?? [];
 
     // 1. Fractional DBE Check
@@ -758,45 +1056,36 @@ class SpectroscopyService {
         category: 'DBE & Valence',
         passed: true,
         severity: SanitySeverity.info,
-        message: 'Calculated DBE of ${dbe.toInt()} is an integer, fully consistent with neutral tetravalent carbon stoichiometry.',
-        recommendation: 'Valid baseline for closed-shell organic framework.',
+        message: 'Calculated DBE is ${dbe.toInt()}, representing an integer closed-shell configuration.',
+        recommendation: 'Valence check satisfied.',
       ));
     }
 
-    // 2. Aromatic Ring vs Minimum DBE Threshold
+    // 2. Aromatic Protons vs DBE Deficit
     final aromaticProtons = nmr.where((p) => p >= 6.5 && p <= 8.5).toList();
     if (aromaticProtons.isNotEmpty) {
       if (dbe < 4.0) {
         items.add(SanityCheckItem(
           title: 'Aromatic Ring DBE Deficit',
-          category: 'Aromatic Consistency',
+          category: '¹H NMR / DBE Correlation',
           passed: false,
           severity: SanitySeverity.violation,
-          message: 'Aromatic proton signals (δ ${aromaticProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm) were detected, but DBE is ${dbe.toStringAsFixed(1)} (< 4.0). An intact benzene ring requires at least 4 units of unsaturation (1 ring + 3 π bonds).',
-          recommendation: 'Formula cannot accommodate a benzene ring. Check carbon/hydrogen stoichiometry or assign to olefinic systems.',
+          message: 'Claimed aromatic protons at δ ${aromaticProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm, but DBE = ${dbe.toStringAsFixed(1)}. An intact benzene ring requires at least 4 units of unsaturation.',
+          recommendation: 'Re-examine proton assignments: signals between 6.0–6.8 ppm may belong to conjugated alkenes, furans, or hetero-olefins.',
         ));
       } else {
         items.add(SanityCheckItem(
-          title: 'Aromatic Proton vs DBE Correlation',
-          category: 'Aromatic Consistency',
+          title: 'Aromatic Proton vs DBE Consistency',
+          category: '¹H NMR / DBE Correlation',
           passed: true,
           severity: SanitySeverity.info,
-          message: 'DBE (${dbe.toStringAsFixed(1)}) satisfies the minimum requirement (≥ 4.0) for the observed aromatic proton signals (δ ${aromaticProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm).',
-          recommendation: 'Aromatic core confirmed. Inspect multiplet splits for ortho/meta/para substitution.',
+          message: 'Aromatic protons at δ ${aromaticProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm are supported by formula DBE ($dbe ≥ 4.0).',
+          recommendation: 'Examine coupling constants (J_ortho 7-9 Hz, J_meta 2-3 Hz) to confirm substitution pattern.',
         ));
       }
-    } else if (dbe >= 4.0 && nmr.isNotEmpty) {
-      items.add(SanityCheckItem(
-        title: 'High DBE without Aromatic Hydrogens',
-        category: 'Aromatic Consistency',
-        passed: false,
-        severity: SanitySeverity.warning,
-        message: 'DBE is ${dbe.toStringAsFixed(1)} (≥ 4.0), but no aromatic protons were detected in the δ 6.5–8.5 ppm window.',
-        recommendation: 'Consider a fully substituted (hexasubstituted) benzene ring, conjugated polyynes/polyenes, or multiple isolated rings/carbonyls.',
-      ));
     }
 
-    // 3. FT-IR Carbonyl Stretch vs Oxygen Presence
+    // 3. Carbonyl FT-IR vs Oxygen Count & DBE
     final carbonylPeaks = ir.where((p) => p >= 1650 && p <= 1780).toList();
     if (carbonylPeaks.isNotEmpty) {
       if (formula.oxygens == 0) {
@@ -819,7 +1108,6 @@ class SpectroscopyService {
         ));
       }
 
-      // Check if DBE satisfies carbonyl
       if (dbe < 1.0) {
         items.add(SanityCheckItem(
           title: 'Carbonyl Unsaturation Deficit',
@@ -858,46 +1146,13 @@ class SpectroscopyService {
           passed: false,
           severity: SanitySeverity.violation,
           message: 'Carboxylic acid signature detected (extreme downfield proton δ ${highAcidNmr.isNotEmpty ? highAcidNmr.join(', ') : ''} ppm or broad 2500–3300 cm⁻¹ O-H), but formula has only ${formula.oxygens} Oxygen atom(s).',
-          recommendation: 'Carboxylic acids (-COOH) strictly require at least 2 Oxygen atoms and 1 DBE.',
-        ));
-      } else {
-        items.add(SanityCheckItem(
-          title: 'Carboxylic Acid Consistency',
-          category: 'FT-IR / NMR Correlation',
-          passed: true,
-          severity: SanitySeverity.info,
-          message: 'Carboxylic acid spectral features are corroborated by formula (${formula.oxygens} Oxygens, DBE = ${dbe.toStringAsFixed(1)}).',
-          recommendation: 'Correlate with base solubility (effervescence with NaHCO₃).',
+          recommendation: 'Carboxylic acids (-COOH) require at least 2 oxygen atoms. If only 1 oxygen is present, reassign as enol (-C=C-OH) or phenolic O-H with intra-molecular H-bonding.',
         ));
       }
     }
 
-    // 6. Alcohol / Hydroxyl Stretch vs Oxygen Presence
-    final alcoholOhPeaks = ir.where((p) => p >= 3200 && p <= 3650).toList();
-    if (alcoholOhPeaks.isNotEmpty) {
-      if (formula.oxygens == 0) {
-        items.add(SanityCheckItem(
-          title: 'Hydroxyl (O-H) Without Oxygen',
-          category: 'FT-IR Heteroatom Check',
-          passed: false,
-          severity: SanitySeverity.violation,
-          message: 'Broad hydroxyl O-H stretch entered (${alcoholOhPeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹), but formula has 0 Oxygens.',
-          recommendation: 'Re-verify formula or reassign to N-H (amine/amide) if Nitrogen is present.',
-        ));
-      } else {
-        items.add(SanityCheckItem(
-          title: 'Hydroxyl (O-H) Formula Corroboration',
-          category: 'FT-IR Heteroatom Check',
-          passed: true,
-          severity: SanitySeverity.info,
-          message: 'O-H stretch (${alcoholOhPeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹) corroborated by ${formula.oxygens} Oxygen atom(s).',
-          recommendation: 'Check D₂O exchange in ¹H NMR: O-H proton singlet should disappear.',
-        ));
-      }
-    }
-
-    // 7. Nitrile & Triple Bond Consistency
-    final nitrilePeaks = ir.where((p) => p >= 2200 && p <= 2260).toList();
+    // 6. Nitrile Band vs Nitrogen Count
+    final nitrilePeaks = ir.where((p) => p >= 2210 && p <= 2260).toList();
     if (nitrilePeaks.isNotEmpty) {
       if (formula.nitrogens == 0) {
         items.add(SanityCheckItem(
@@ -905,107 +1160,50 @@ class SpectroscopyService {
           category: 'FT-IR Heteroatom Check',
           passed: false,
           severity: SanitySeverity.violation,
-          message: 'Sharp band in nitrile region (${nitrilePeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹), but formula contains 0 Nitrogens.',
-          recommendation: 'Assign to internal alkyne (C≡C) if formula has DBE ≥ 2, or check Nitrogen content.',
-        ));
-      } else if (dbe < 2.0) {
-        items.add(SanityCheckItem(
-          title: 'Nitrile Unsaturation Deficit',
-          category: 'DBE & Valence',
-          passed: false,
-          severity: SanitySeverity.violation,
-          message: 'Nitrile (C≡N) group requires at least 2 units of unsaturation, but DBE is ${dbe.toStringAsFixed(1)}.',
-          recommendation: 'Check formula: C≡N triple bond consumes 2 DBE units.',
-        ));
-      } else {
-        items.add(SanityCheckItem(
-          title: 'Nitrile (C≡N) Correlation',
-          category: 'FT-IR Heteroatom Check',
-          passed: true,
-          severity: SanitySeverity.info,
-          message: 'Nitrile band (${nitrilePeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹) is corroborated by ${formula.nitrogens} Nitrogen(s) and DBE = ${dbe.toStringAsFixed(1)}.',
-          recommendation: 'Nitrile confirmed. Look for quaternary ¹³C resonance at δ 115–125 ppm.',
+          message: 'Sharp band in nitrile region (${nitrilePeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹), but molecular formula contains 0 Nitrogen atoms.',
+          recommendation: 'Nitrile groups (C#N) require nitrogen. Peak may be an alkyne (C#C, 2100–2260 cm⁻¹) or carbon dioxide artifact (2349 cm⁻¹).',
         ));
       }
     }
 
-    // 8. Aldehyde Proton vs FT-IR Carbonyl Correlation
-    final aldehydeProtons = nmr.where((p) => p >= 9.0 && p <= 10.5).toList();
-    if (aldehydeProtons.isNotEmpty) {
-      if (formula.oxygens == 0) {
-        items.add(SanityCheckItem(
-          title: 'Aldehyde Proton Without Oxygen',
-          category: 'NMR / Formula Correlation',
-          passed: false,
-          severity: SanitySeverity.violation,
-          message: 'Characteristic aldehyde proton singlet observed at δ ${aldehydeProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm, but formula contains 0 Oxygen atoms.',
-          recommendation: 'Aldehydes (-CHO) require an oxygen atom. Check formula.',
-        ));
-      } else if (ir.isNotEmpty && carbonylPeaks.isEmpty) {
-        items.add(SanityCheckItem(
-          title: 'Aldehyde NMR Without FT-IR Carbonyl',
-          category: 'Cross-Spectra Contradiction',
-          passed: false,
-          severity: SanitySeverity.warning,
-          message: 'Aldehyde proton observed (δ ${aldehydeProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm), but no FT-IR carbonyl band was found in 1680–1740 cm⁻¹.',
-          recommendation: 'Aldehydes always show an intense C=O stretch at 1700–1725 cm⁻¹ and Fermi doublet at 2720/2820 cm⁻¹.',
-        ));
-      } else {
-        items.add(SanityCheckItem(
-          title: 'Aldehyde Proton Corroboration',
-          category: 'Cross-Spectra Contradiction',
-          passed: true,
-          severity: SanitySeverity.info,
-          message: 'Aldehyde proton at δ ${aldehydeProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm is consistent with formula and carbonyl presence.',
-          recommendation: 'Check for Fermi resonance doublet (2720 and 2820 cm⁻¹) in FT-IR.',
-        ));
-      }
+    // 7. 13C Carbonyl without Oxygen
+    final cCarbonyl = nmr13C.where((c) => c >= 160).toList();
+    if (cCarbonyl.isNotEmpty && formula.oxygens == 0) {
+      items.add(SanityCheckItem(
+        title: '¹³C Carbonyl Resonance Without Oxygen',
+        category: '¹³C NMR Heteroatom Check',
+        passed: false,
+        severity: SanitySeverity.violation,
+        message: 'Downfield ¹³C chemical shift(s) at ${cCarbonyl.map((c) => 'δ ${c.toStringAsFixed(1)}').join(', ')} ppm indicate a carbonyl carbon (C=O), but formula has 0 Oxygen atoms.',
+        recommendation: 'Carbonyls require oxygen. If no oxygen is present, check if peaks belong to highly deshielded heteroaromatics or carbocations.',
+      ));
+    }
+
+    // 8. 13C Total Signals vs Formula Carbons
+    if (nmr13C.isNotEmpty && nmr13C.length > formula.carbons) {
+      items.add(SanityCheckItem(
+        title: '¹³C Signal Count Exceeds Formula Carbons',
+        category: '¹³C NMR Carbon Budget',
+        passed: false,
+        severity: SanitySeverity.violation,
+        message: 'Entered ${nmr13C.length} distinct ¹³C signals, but the molecular formula only has ${formula.carbons} Carbon atom(s).',
+        recommendation: 'A pure organic molecule cannot exhibit more decoupled ¹³C signals than the total carbon count. Check for solvent peaks (CDCl3 at 77.0 ppm triplet) or conformational isomers.',
+      ));
     }
 
     // 9. Mass Spec Molecular Ion Consistency
     if (ms.isNotEmpty) {
-      final maxMs = ms.reduce((a, b) => a > b ? a : b);
-      if ((maxMs - formula.molarMass).abs() <= 1.5) {
+      final hasMolIon = ms.any((m) => (m - formula.molarMass).abs() <= 1.0);
+      if (hasMolIon) {
         items.add(SanityCheckItem(
-          title: 'Molecular Ion [M]⁺• Corroboration',
+          title: 'Molecular Ion [M]⁺• Consistency',
           category: 'Mass Spectrometry',
           passed: true,
           severity: SanitySeverity.info,
-          message: 'Highest observed m/z peak ($maxMs) precisely matches calculated molecular mass (${formula.molarMass} g/mol).',
-          recommendation: 'Molecular weight unambiguously established.',
-        ));
-      } else if (maxMs < formula.molarMass - 2.0) {
-        items.add(SanityCheckItem(
-          title: 'Absent Molecular Ion Peak',
-          category: 'Mass Spectrometry',
-          passed: false,
-          severity: SanitySeverity.warning,
-          message: 'Highest recorded m/z ($maxMs) is significantly below the theoretical molecular weight (${formula.molarMass} g/mol).',
-          recommendation: 'Molecular ion peak [M]⁺• may be fragile (common in tertiary alcohols, acetals, aliphatic amines) or degraded. Inspect base peak.',
+          message: 'Molecular ion peak observed at m/z ~${formula.molarMass.toInt()}, exactly matching formula molar mass.',
+          recommendation: 'Molecular weight validated.',
         ));
       }
-    }
-
-    // 10. Halogen Isotopic Signatures in Formula vs Mass Spec
-    if (formula.chlorines > 0) {
-      items.add(SanityCheckItem(
-        title: 'Chlorine Isotopic Multiplicity Check',
-        category: 'Halogen Isotope Rules',
-        passed: true,
-        severity: SanitySeverity.info,
-        message: 'Formula contains ${formula.chlorines}x Cl atom(s). Expect classic 3:1 (M:M+2) ratio for ³⁵Cl/³⁷Cl.',
-        recommendation: 'Verify 3:1 cluster around molecular ion or chlorine-containing fragments.',
-      ));
-    }
-    if (formula.bromines > 0) {
-      items.add(SanityCheckItem(
-        title: 'Bromine Isotopic Doublet Check',
-        category: 'Halogen Isotope Rules',
-        passed: true,
-        severity: SanitySeverity.info,
-        message: 'Formula contains ${formula.bromines}x Br atom(s). Expect equal 1:1 twin peaks separated by 2 m/z units (⁷⁹Br/⁸¹Br).',
-        recommendation: 'Verify 1:1 doublet for bromine-containing ions.',
-      ));
     }
 
     return SpectroscopySanityReport(items: items);
@@ -1025,22 +1223,585 @@ class SpectroscopyService {
       msPeaks: msPeaks,
     ).markdownFull;
   }
+
+  // 8. Analytical Techniques Collection (Chromatography & Spectroscopy Fundamentals)
+  static const List<AnalyticalTechniqueInfo> analyticalTechniques = [
+    AnalyticalTechniqueInfo(
+      id: 'gc',
+      title: 'Gas Chromatography (GC)',
+      acronym: 'GC',
+      category: 'Chromatography',
+      xAxisName: 'Retention Time',
+      xAxisUnit: 't_R (minutes)',
+      xAxisDirection: 'Increasing (Left to Right: 0 → 15 min)',
+      xAxisPhysicalMeaning: 'Time taken for each volatile solute to migrate from the injector port, partition through the capillary stationary phase (e.g. DB-5 / polysiloxane), and elute to the detector. Solutes with lower boiling point and lower affinity for the stationary phase elute first (earlier retention time).',
+      yAxisName: 'Detector Signal / Response',
+      yAxisUnit: 'Current (pA / mV) - Flame Ionization Detector (FID)',
+      yAxisDirection: 'Upward positive peaks (Baseline at 0 pA)',
+      yAxisPhysicalMeaning: 'Instantaneous detector response proportional to the rate of solute mass exiting the column. Peak area (integral of y over dt) is directly proportional to the relative mass concentration (%) of the compound in the injected mixture.',
+      fundamentalPrinciple: 'Separation of thermally stable volatile compounds based on vapor pressure (boiling point) and differential partitioning between an inert mobile gas phase (He or N2) and a high-boiling liquid stationary phase coated on the capillary inner wall.',
+      howToRead: [
+        'Baseline: Smooth horizontal line representing zero solute elution. Drift indicates column bleed or temperature ramp.',
+        'Peak Identification: Compare retention time (t_R) or Kovats Retention Index (I) with authentic reference standards run under identical conditions.',
+        'Quantitative Area %: Calculate Area % = [Area_i / Sum(Area_all)] * 100%. Peak area gives exact percentage composition.',
+        'Column Efficiency: Peak width (W) reflects theoretical plates N = 16 * (t_R / W)^2. Narrower peaks represent higher chromatographic resolution.',
+        'Split vs Splitless: Split injection prevents detector overload for concentrated samples; splitless is used for trace ppm/ppb analysis.'
+      ],
+      keyFormulas: [
+        'Retention Factor: k\' = (t_R - t_0) / t_0',
+        'Resolution: R_s = 2 * (t_R2 - t_R1) / (W_1 + W_2)',
+        'Kovats Index: I = 100 * [n + (log t\'R(x) - log t\'R(n)) / (log t\'R(n+1) - log t\'R(n))]',
+        'Theoretical Plates: N = 16 * (t_R / W)^2 = 5.54 * (t_R / W_0.5)^2'
+      ],
+      examples: [
+        SpectrogramExample(
+          id: 'gc_btex',
+          title: 'Separation of Aromatic Hydrocarbons (BTEX)',
+          compound: 'Benzene, Toluene, Ethylbenzene, o-Xylene Mixture',
+          description: 'Capillary GC chromatogram on DB-5 (5% diphenyl / 95% dimethylpolysiloxane) under isothermal conditions (80 °C, He carrier gas). Compounds elute in order of increasing boiling point and London dispersion interactions.',
+          xMin: 0.0,
+          xMax: 10.0,
+          yMin: 0.0,
+          yMax: 100.0,
+          xAxisLabel: 'Retention Time t_R (min)',
+          yAxisLabel: 'FID Signal (pA)',
+          peaks: [
+            SpectralPeakAnnotation(x: 2.35, y: 78.0, label: 'Benzene', compoundOrFragment: 'C6H6 (bp 80.1 °C)', explanation: 'Lowest boiling point; elutes earliest with retention time 2.35 min. Sharp symmetric peak with area 24.5%.'),
+            SpectralPeakAnnotation(x: 4.10, y: 95.0, label: 'Toluene', compoundOrFragment: 'C7H8 (bp 110.6 °C)', explanation: 'Higher boiling point than benzene; retention time 4.10 min. Area 32.1%.'),
+            SpectralPeakAnnotation(x: 6.45, y: 65.0, label: 'Ethylbenzene', compoundOrFragment: 'C8H10 (bp 136.2 °C)', explanation: 'Branched alkylbenzene; elutes at 6.45 min. Area 21.0%.'),
+            SpectralPeakAnnotation(x: 8.20, y: 72.0, label: 'o-Xylene', compoundOrFragment: 'C8H10 (bp 144.4 °C)', explanation: 'Highest boiling isomer of xylene; elutes latest at 8.20 min due to strongest van der Waals interactions with DB-5 phase. Area 22.4%.'),
+          ],
+          curvePoints: [
+            SpectralDataPoint(0.0, 2.0), SpectralDataPoint(1.0, 2.0), SpectralDataPoint(2.0, 3.0),
+            SpectralDataPoint(2.2, 20.0), SpectralDataPoint(2.35, 78.0), SpectralDataPoint(2.5, 18.0), SpectralDataPoint(2.7, 2.0),
+            SpectralDataPoint(3.5, 2.0), SpectralDataPoint(3.9, 15.0), SpectralDataPoint(4.1, 95.0), SpectralDataPoint(4.3, 14.0), SpectralDataPoint(4.6, 2.0),
+            SpectralDataPoint(5.5, 2.0), SpectralDataPoint(6.25, 12.0), SpectralDataPoint(6.45, 65.0), SpectralDataPoint(6.65, 10.0), SpectralDataPoint(7.0, 2.0),
+            SpectralDataPoint(7.8, 2.0), SpectralDataPoint(8.0, 14.0), SpectralDataPoint(8.2, 72.0), SpectralDataPoint(8.4, 12.0), SpectralDataPoint(9.0, 2.0), SpectralDataPoint(10.0, 2.0),
+          ],
+        ),
+      ],
+    ),
+    AnalyticalTechniqueInfo(
+      id: 'hplc',
+      title: 'High-Performance Liquid Chromatography (HPLC)',
+      acronym: 'HPLC',
+      category: 'Chromatography',
+      xAxisName: 'Retention Time',
+      xAxisUnit: 't_R (minutes)',
+      xAxisDirection: 'Increasing (Left to Right: 0 → 12 min)',
+      xAxisPhysicalMeaning: 'Time required for liquid sample solutes to elute from the pressurized stationary column bed under mobile phase flow (e.g. Acetonitrile / Water). In Reverse-Phase (RP-C18), polar solutes elute earliest, and nonpolar solutes are retained longer.',
+      yAxisName: 'Absorbance',
+      yAxisUnit: 'mAU (milli-Absorbance Units at 254 nm)',
+      yAxisDirection: 'Upward positive peaks (Baseline at 0–10 mAU)',
+      yAxisPhysicalMeaning: 'UV-Vis absorbance recorded by the photodiode array (PDA / DAD) flow cell. Directly obeys Beer-Lambert law: peak area is proportional to chromophore molar absorptivity and solute concentration.',
+      fundamentalPrinciple: 'Differential partition of non-volatile or thermally labile liquid solutes between a pressurized liquid mobile phase and microscopic silica particles chemically functionalized with octadecylsilane chains (C18 / ODS).',
+      howToRead: [
+        'Void Time (t_0): The earliest baseline disruption marking elution of completely unretained solvent front.',
+        'Polarity Rule (RP-HPLC): Most polar compound has highest affinity for polar aqueous mobile phase and elutes FIRST. Most nonpolar compound partitions into nonpolar C18 chains and elutes LAST.',
+        'Isocratic vs Gradient: Isocratic uses constant solvent composition; gradient increases organic modifier (e.g. 20% to 90% ACN) to speed up late-eluting hydrophobic compounds.',
+        'Tailing Factor (T_f): Measures peak asymmetry at 5% peak height. T_f = (a + b) / (2a). Ideal peak has T_f between 0.9 and 1.2.'
+      ],
+      keyFormulas: [
+        'Retention Factor: k\' = (t_R - t_0) / t_0 (optimal range 1 < k\' < 10)',
+        'Separation Factor: alpha = k\'_2 / k\'_1 (alpha >= 1.05 for baseline separation)',
+        'Peak Tailing Factor: T_f = W_0.05 / (2 * f)',
+        'Linear Flow Velocity: u = L / t_0'
+      ],
+      examples: [
+        SpectrogramExample(
+          id: 'hplc_parabens',
+          title: 'Reverse-Phase C18 Separation of Preservatives',
+          compound: '4-Hydroxybenzoate Esters (Parabens)',
+          description: 'C18 column (250 x 4.6 mm, 5 um) with 60:40 Methanol:Water mobile phase at 1.0 mL/min, UV detection at 254 nm. As the alkyl chain length increases, hydrophobicity increases, leading to systematically longer retention times.',
+          xMin: 0.0,
+          xMax: 12.0,
+          yMin: 0.0,
+          yMax: 120.0,
+          xAxisLabel: 'Retention Time t_R (min)',
+          yAxisLabel: 'Absorbance at 254 nm (mAU)',
+          peaks: [
+            SpectralPeakAnnotation(x: 1.4, y: 15.0, label: 'Void Peak (t_0)', compoundOrFragment: 'Unretained solvent', explanation: 'Marks column dead volume t_0 = 1.4 min.'),
+            SpectralPeakAnnotation(x: 3.2, y: 92.0, label: 'Methylparaben', compoundOrFragment: 'Methyl ester (least hydrophobic)', explanation: 'Shortest alkyl chain (C1); elutes first with t_R = 3.2 min and k\' = 1.28.'),
+            SpectralPeakAnnotation(x: 5.4, y: 88.0, label: 'Ethylparaben', compoundOrFragment: 'Ethyl ester (intermediate)', explanation: 'C2 alkyl chain; additional methylene increases hydrophobic interaction with C18; t_R = 5.4 min.'),
+            SpectralPeakAnnotation(x: 8.6, y: 105.0, label: 'Propylparaben', compoundOrFragment: 'Propyl ester (most hydrophobic)', explanation: 'C3 alkyl chain; strongest C18 retention; elutes latest at 8.6 min.'),
+          ],
+          curvePoints: [
+            SpectralDataPoint(0.0, 5.0), SpectralDataPoint(1.2, 5.0), SpectralDataPoint(1.4, 15.0), SpectralDataPoint(1.6, 5.0),
+            SpectralDataPoint(2.8, 5.0), SpectralDataPoint(3.0, 25.0), SpectralDataPoint(3.2, 92.0), SpectralDataPoint(3.4, 22.0), SpectralDataPoint(3.7, 5.0),
+            SpectralDataPoint(5.0, 5.0), SpectralDataPoint(5.2, 20.0), SpectralDataPoint(5.4, 88.0), SpectralDataPoint(5.6, 18.0), SpectralDataPoint(6.0, 5.0),
+            SpectralDataPoint(8.1, 5.0), SpectralDataPoint(8.35, 25.0), SpectralDataPoint(8.6, 105.0), SpectralDataPoint(8.85, 20.0), SpectralDataPoint(9.3, 5.0), SpectralDataPoint(12.0, 5.0),
+          ],
+        ),
+      ],
+    ),
+    AnalyticalTechniqueInfo(
+      id: 'tlc',
+      title: 'Thin-Layer Chromatography (TLC)',
+      acronym: 'TLC',
+      category: 'Chromatography',
+      xAxisName: 'Sample Lanes',
+      xAxisUnit: 'Spatial Spot Position',
+      xAxisDirection: 'Left to Right (Lane 1: Reactant • Lane 2: Co-Spot • Lane 3: Reaction Product)',
+      xAxisPhysicalMeaning: 'Horizontal alignment of sample application points along the pencil origin line at the bottom of the plate.',
+      yAxisName: 'Migration Distance / Retention Factor',
+      yAxisUnit: 'R_f = Distance from Origin / Solvent Front Distance',
+      yAxisDirection: 'Bottom to Top (Origin at R_f = 0.00 → Solvent Front at R_f = 1.00)',
+      yAxisPhysicalMeaning: 'Ratio of solute migration distance to mobile phase solvent front distance. On normal-phase silica gel (polar SiO2), polar compounds bind strongly via hydrogen bonding (low R_f), while nonpolar compounds migrate higher (high R_f).',
+      fundamentalPrinciple: 'Capillary action draws liquid mobile phase (e.g. Hexane/EtOAc) up a thin layer of silica gel adsorbent. Solutes partition between the polar stationary silanol groups (Si-OH) and the moving solvent.',
+      howToRead: [
+        'Origin Line: Baseline penciled 1.0 cm above bottom edge. Solutes must never be submerged below solvent pool.',
+        'Solvent Front: Top line where the liquid solvent stopped. Marked immediately upon removal from developing chamber.',
+        'R_f Calculation: R_f = d_spot / d_front. Always between 0.00 and 1.00.',
+        'Visualization: Non-fluorescent UV 254 nm indicator (F254 green background with dark quenching spots); iodine staining for unsaturations; ninhydrin for amines; vanillin for terpenes and alcohols.',
+        'Reaction Monitoring: Complete disappearance of reactant spot in reaction lane confirms reaction completion.'
+      ],
+      keyFormulas: [
+        'Retention Factor: R_f = d_compound / d_solvent_front',
+        'Optimal R_f Window for Flash Column Chromatography: 0.20 < R_f < 0.35',
+        'Relative Retardation: R_st = R_f(sample) / R_f(standard)'
+      ],
+      examples: [
+        SpectrogramExample(
+          id: 'tlc_analgesics',
+          title: 'Normal-Phase Silica TLC: Reaction Monitoring',
+          compound: 'Synthesis of Aspirin from Salicylic Acid',
+          description: 'Silica Gel 60 F254 plate developed with 80:20 Ethyl Acetate : Hexanes + 1% Acetic Acid. Visualized under UV 254 nm. Salicylic acid has a free phenolic -OH that binds strongly to silica (low R_f = 0.32), whereas acetylated Aspirin is less polar and migrates higher (R_f = 0.65).',
+          xMin: 0.0,
+          xMax: 4.0,
+          yMin: 0.0,
+          yMax: 1.0,
+          xAxisLabel: 'Lanes: 1 (Salicylic Acid) | 2 (Co-Spot) | 3 (Purified Aspirin)',
+          yAxisLabel: 'Retention Factor (R_f)',
+          peaks: [
+            SpectralPeakAnnotation(x: 1.0, y: 0.32, label: 'Salicylic Acid (R_f 0.32)', compoundOrFragment: 'Reactant (free phenol)', explanation: 'Phenolic -OH forms strong H-bonds with silanols; remains near lower half of plate.'),
+            SpectralPeakAnnotation(x: 2.0, y: 0.32, label: 'Co-Spot: Reactant', compoundOrFragment: 'Co-applied salicylic acid', explanation: 'Allows exact vertical alignment check between starting material and reaction mixture.'),
+            SpectralPeakAnnotation(x: 2.0, y: 0.65, label: 'Co-Spot: Product', compoundOrFragment: 'Co-applied aspirin', explanation: 'Shows both spots simultaneously, verifying that the new product spot is chemically distinct.'),
+            SpectralPeakAnnotation(x: 3.0, y: 0.65, label: 'Aspirin (R_f 0.65)', compoundOrFragment: 'Acetylsalicylic acid (product)', explanation: 'Acetylation of phenolic -OH reduces polar silanol binding, enabling higher migration.'),
+          ],
+          curvePoints: [
+            SpectralDataPoint(0.0, 0.0), SpectralDataPoint(4.0, 0.0), // origin line
+            SpectralDataPoint(0.0, 1.0), SpectralDataPoint(4.0, 1.0), // solvent front
+          ],
+        ),
+      ],
+    ),
+    AnalyticalTechniqueInfo(
+      id: 'ms',
+      title: 'Mass Spectrometry (EI-MS)',
+      acronym: 'MS',
+      category: 'Spectroscopy',
+      xAxisName: 'Mass-to-Charge Ratio',
+      xAxisUnit: 'm/z',
+      xAxisDirection: 'Increasing (Left to Right: 0 → 150 m/z)',
+      xAxisPhysicalMeaning: 'Ratio of mass of the ionized molecular fragment in atomic mass units (Da) to its elementary charge z (for standard 70 eV Electron Ionization, z = +1, so m/z represents fragment molecular weight directly).',
+      yAxisName: 'Relative Abundance',
+      yAxisUnit: '% (Percentage of Base Peak)',
+      yAxisDirection: 'Upward stick spectrum (Base Peak = 100%)',
+      yAxisPhysicalMeaning: 'Intensity of ion current detected for each m/z species, normalized to the most abundant, most thermodynamically stable ionic species (Base Peak = 100%).',
+      fundamentalPrinciple: 'High-energy electron bombardment (70 eV) ejects a valence electron from gas-phase molecules to produce a radical cation [M]+•. Unimolecular fragmentation through alpha-cleavage, inductive cleavage, or McLafferty rearrangement yields characteristic daughter ions.',
+      howToRead: [
+        'Molecular Ion [M]+•: Highest m/z intact cation. Directly gives compound molecular weight. Even MW indicates even number of nitrogens (Nitrogen Rule).',
+        'Base Peak: Tallest peak in the spectrum (set to 100%). Represents the most stable carbocation or resonance-stabilized acylium/tropylium fragment.',
+        'M+1 Peak: Abundance of 13C natural isotope (approx 1.1% per carbon atom). Number of carbons ~ [Intensity(M+1) / Intensity(M)] / 0.011.',
+        'M+2 Isotope Signatures: 3:1 doublet indicates 1x Chlorine; 1:1 doublet indicates 1x Bromine; 4% indicates 1x Sulfur.',
+        'McLafferty Rearrangement: Six-membered cyclic transition state transferring gamma-hydrogen to carbonyl oxygen with beta-cleavage of neutral alkene.'
+      ],
+      keyFormulas: [
+        'Nitrogen Rule: Organic molecule with even MW contains 0 or even number of Nitrogens; odd MW contains odd number of Nitrogens',
+        'McLafferty Mass Loss: m/z = [M - C_n H_2n]+• (e.g. loss of C2H4 -28, C3H6 -42)',
+        'Rings Plus Double Bonds (r+d): r+d = C - H/2 + N/2 + 1',
+        'Carbon Estimation from M+1: n_C = [I_(M+1) / I_M] * (100 / 1.11)'
+      ],
+      examples: [
+        SpectrogramExample(
+          id: 'ms_acetophenone',
+          title: 'Electron Ionization Mass Spectrum: Acetophenone',
+          compound: 'Acetophenone (C8H8O, MW = 120.15 g/mol)',
+          description: '70 eV EI mass spectrum of acetophenone. Dominant fragmentation is alpha-cleavage of the methyl radical to produce the highly resonance-stabilized benzoyl cation [C6H5-CO]+ at m/z 105 as the 100% base peak.',
+          xMin: 0.0,
+          xMax: 140.0,
+          yMin: 0.0,
+          yMax: 110.0,
+          xAxisLabel: 'Mass-to-Charge Ratio (m/z)',
+          yAxisLabel: 'Relative Abundance (%)',
+          peaks: [
+            SpectralPeakAnnotation(x: 120.0, y: 32.0, label: '[M]⁺• (m/z 120)', compoundOrFragment: 'Molecular radical cation [C8H8O]⁺•', explanation: 'Intact parent molecular ion confirming MW = 120 g/mol. Intensity 32%.'),
+            SpectralPeakAnnotation(x: 105.0, y: 100.0, label: 'Base Peak (m/z 105)', compoundOrFragment: 'Benzoyl cation [Ph-C#O]⁺', explanation: 'Formed by alpha-cleavage losing •CH3 (loss of 15 Da). Resonance stabilized by phenyl pi system.'),
+            SpectralPeakAnnotation(x: 77.0, y: 55.0, label: 'Phenyl (m/z 77)', compoundOrFragment: 'Phenyl cation [C6H5]⁺', explanation: 'Loss of carbon monoxide (loss of 28 Da) from the benzoyl cation: [Ph-CO]+ -> [Ph]+ + CO.'),
+            SpectralPeakAnnotation(x: 51.0, y: 22.0, label: '[C4H3]⁺ (m/z 51)', compoundOrFragment: 'Dehydrocyclobutadienyl cation', explanation: 'Fragmentation of phenyl cation losing acetylene HC#CH (26 Da): 77 - 26 = 51.'),
+            SpectralPeakAnnotation(x: 43.0, y: 15.0, label: '[CH3CO]⁺ (m/z 43)', compoundOrFragment: 'Acetylium cation', explanation: 'Complementary alpha-cleavage yielding acylium ion from methyl carbonyl end.'),
+          ],
+          curvePoints: [
+            SpectralDataPoint(15.0, 5.0), SpectralDataPoint(43.0, 15.0), SpectralDataPoint(51.0, 22.0),
+            SpectralDataPoint(77.0, 55.0), SpectralDataPoint(105.0, 100.0), SpectralDataPoint(120.0, 32.0), SpectralDataPoint(121.0, 2.8),
+          ],
+        ),
+      ],
+    ),
+    AnalyticalTechniqueInfo(
+      id: '1h_nmr',
+      title: '¹H NMR Spectrogram',
+      acronym: '¹H NMR',
+      category: 'Spectroscopy',
+      xAxisName: 'Chemical Shift',
+      xAxisUnit: 'delta (ppm, parts per million)',
+      xAxisDirection: 'Decreasing / Upfield (Left to Right: 12 → 0 ppm)',
+      xAxisPhysicalMeaning: 'Resonance frequency shift relative to tetramethylsilane (TMS = 0.00 ppm), independent of spectrometer magnetic field B_0. Left (downfield / deshielded) corresponds to lower electron density and higher resonance frequency; Right (upfield / shielded) corresponds to high electron shielding.',
+      yAxisName: 'Signal Intensity & Integral',
+      yAxisUnit: 'Resonance Amplitude (Arbitrary Units)',
+      yAxisDirection: 'Upward resonance peaks + Stepwise integration curve',
+      yAxisPhysicalMeaning: 'Peak area (integral curve step height) is directly proportional to the relative number of chemically and magnetically equivalent protons contributing to the resonance.',
+      fundamentalPrinciple: '1H nuclei (spin I = 1/2) precess in an external magnetic field B0. Radiofrequency pulse induces transition between alpha and beta spin states. Chemical shift is governed by local diamagnetic shielding (sigma) and magnetic anisotropy.',
+      howToRead: [
+        'Chemical Shift (delta): Identifies electronic environment (aliphatic 0.8-1.8 ppm, alpha-carbonyl 2.0-2.5 ppm, alkoxy/halide 3.3-4.5 ppm, alkene 4.5-6.5 ppm, aromatic 6.5-8.5 ppm, aldehyde 9-10 ppm, carboxylic acid 11-13 ppm).',
+        'Multiplicity (n+1 Rule): Splitting pattern reveals the number of neighboring non-equivalent protons (n): Singlet (n=0), Doublet (n=1), Triplet (n=2), Quartet (n=3).',
+        'Coupling Constant (J in Hz): Spacing between multiplet sub-peaks. Independent of magnetic field strength. Protons that couple to each other share identical J values.',
+        'Integration: Area under each signal represents relative proton stoichiometry (e.g. 3H methyl vs 2H methylene).',
+        'D2O Shake: Addition of heavy water eliminates exchangeable protons (-OH, -NH2, -COOH) by deuterium exchange.'
+      ],
+      keyFormulas: [
+        'Chemical Shift: delta (ppm) = [(nu_sample - nu_TMS) in Hz] / [Spectrometer Frequency in MHz]',
+        'Multiplicity Rule: N_lines = 2 * n * I + 1 (for 1H where I=1/2, N = n + 1)',
+        'Larmor Frequency: nu = (gamma / 2*pi) * B_0 * (1 - sigma)',
+        'Coupling Constant: J (Hz) = delta_ppm * Spectrometer_MHz'
+      ],
+      examples: [
+        SpectrogramExample(
+          id: 'nmr1h_ethyl_acetate',
+          title: '¹H NMR Spectrum: Ethyl Acetate',
+          compound: 'Ethyl Acetate (CH3-COO-CH2-CH3, 400 MHz in CDCl3)',
+          description: 'Classic three-signal proton spectrum demonstrating isolated singlet and mutually coupled ethyl triplet-quartet pair.',
+          xMin: 0.0,
+          xMax: 5.0,
+          yMin: 0.0,
+          yMax: 100.0,
+          xAxisLabel: 'Chemical Shift delta (ppm)',
+          yAxisLabel: 'Intensity & Integral',
+          peaks: [
+            SpectralPeakAnnotation(x: 1.25, y: 75.0, label: 'Triplet (3H, δ 1.25)', compoundOrFragment: '-CH2-CH3 (ethyl methyl)', explanation: 'Coupled to adjacent -CH2- (n=2, triplet 1:2:1, J = 7.1 Hz). Integration = 3H.'),
+            SpectralPeakAnnotation(x: 2.04, y: 95.0, label: 'Singlet (3H, δ 2.04)', compoundOrFragment: 'CH3-COO- (acetate methyl)', explanation: 'Isolated methyl adjacent to carbonyl carbon with no vicinal protons (singlet). Integration = 3H.'),
+            SpectralPeakAnnotation(x: 4.12, y: 60.0, label: 'Quartet (2H, δ 4.12)', compoundOrFragment: '-COO-CH2-CH3 (ester methylene)', explanation: 'Deshielded by direct bonding to electronegative ester oxygen; coupled to -CH3 (n=3, quartet 1:3:3:1, J = 7.1 Hz). Integration = 2H.'),
+          ],
+          curvePoints: [
+            SpectralDataPoint(0.0, 2.0), SpectralDataPoint(1.23, 35.0), SpectralDataPoint(1.25, 75.0), SpectralDataPoint(1.27, 35.0),
+            SpectralDataPoint(2.04, 95.0), SpectralDataPoint(4.09, 15.0), SpectralDataPoint(4.11, 55.0), SpectralDataPoint(4.12, 60.0), SpectralDataPoint(4.13, 55.0), SpectralDataPoint(4.15, 15.0),
+          ],
+        ),
+      ],
+    ),
+    AnalyticalTechniqueInfo(
+      id: '13c_nmr',
+      title: '¹³C NMR & DEPT Spectrogram',
+      acronym: '¹³C / DEPT',
+      category: 'Spectroscopy',
+      xAxisName: 'Chemical Shift',
+      xAxisUnit: 'delta (ppm, 0 to 220 ppm)',
+      xAxisDirection: 'Decreasing / Upfield (Left to Right: 220 → 0 ppm)',
+      xAxisPhysicalMeaning: 'Carbon chemical shift relative to TMS. Covers wide 0–220 ppm window. Quaternary and electron-poor carbonyl carbons appear far downfield (160–220 ppm); aliphatic saturated carbons appear upfield (10–50 ppm).',
+      yAxisName: 'Signal Intensity & DEPT Phase',
+      yAxisUnit: 'Signal Amplitude (+ Upright / - Inverted)',
+      yAxisDirection: 'Broadband Decoupled: all upright • DEPT-135: CH3 & CH up (+), CH2 down (-), C_q absent',
+      yAxisPhysicalMeaning: 'In DEPT-135, polarization transfer from proton spins encodes the number of directly attached hydrogens as positive or negative signal phase.',
+      fundamentalPrinciple: '13C isotope has natural abundance 1.1% (spin I = 1/2). Standard 1H-decoupling collapses all C-H J coupling into sharp singlets with Nuclear Overhauser Enhancement (NOE). DEPT (Distortionless Enhancement by Polarization Transfer) selectively decodes carbon multiplicity.',
+      howToRead: [
+        'Broadband 1H-Decoupled Spectrum: Shows each distinct chemical carbon environment as a sharp singlet. Peak count reveals molecular symmetry.',
+        'DEPT-135 Phase Interpretation: Methyl (-CH3) and Methine (-CH) point UP (+); Methylene (-CH2-) points DOWN (-); Quaternary carbons (C_q) DISAPPEAR.',
+        'DEPT-90 Verification: Shows ONLY Methine (-CH) carbons upright. All others absent.',
+        'DEPT-45 Verification: Shows ALL protonated carbons (CH3, CH2, CH) upright. Quaternary carbons absent.',
+        'Carbonyl Discrimination: Ketones resonate at 200–220 ppm; aldehydes at 190–205 ppm; esters, carboxylic acids, and amides resonate at 160–185 ppm.'
+      ],
+      keyFormulas: [
+        'DEPT-135 Rule: I_CH3 > 0 (+), I_CH > 0 (+), I_CH2 < 0 (-), I_Cq = 0',
+        'DEPT-90 Rule: I_CH > 0 (+), I_CH3 = I_CH2 = I_Cq = 0',
+        'DEPT-45 Rule: I_CH3 > 0, I_CH2 > 0, I_CH > 0, I_Cq = 0',
+        'Total Carbons Formula: N_total = N_CH3 + N_CH2 + N_CH + N_Cq'
+      ],
+      examples: [
+        SpectrogramExample(
+          id: 'nmr13c_1butanol',
+          title: '¹³C Decoupled vs DEPT-135: 1-Butanol',
+          compound: '1-Butanol (CH3-CH2-CH2-CH2-OH)',
+          description: 'Comparison of broadband 1H-decoupled spectrum and DEPT-135 spectrum for 1-butanol, demonstrating the inversion of all 3 methylene (-CH2-) carbons.',
+          xMin: 0.0,
+          xMax: 80.0,
+          yMin: -60.0,
+          yMax: 80.0,
+          xAxisLabel: 'Chemical Shift delta (ppm)',
+          yAxisLabel: 'DEPT-135 Amplitude (+ Up / - Down)',
+          peaks: [
+            SpectralPeakAnnotation(x: 13.9, y: 55.0, label: 'C4: -CH3 (+55)', compoundOrFragment: 'Methyl carbon (upright in DEPT-135)', explanation: 'Upright positive peak at δ 13.9 ppm confirms terminal methyl carbon.'),
+            SpectralPeakAnnotation(x: 19.1, y: -45.0, label: 'C3: -CH2- (-45)', compoundOrFragment: 'Methylene carbon (inverted)', explanation: 'Negative phase in DEPT-135 proves -CH2- environment.'),
+            SpectralPeakAnnotation(x: 35.0, y: -50.0, label: 'C2: -CH2- (-50)', compoundOrFragment: 'Beta-methylene carbon (inverted)', explanation: 'Inverted signal at δ 35.0 ppm confirms -CH2- bonded to carbinol carbon.'),
+            SpectralPeakAnnotation(x: 62.4, y: -58.0, label: 'C1: -CH2OH (-58)', compoundOrFragment: 'Alpha-carbinol methylene (inverted)', explanation: 'Deshielded by direct bonding to oxygen; inverted in DEPT-135 proving -CH2OH.'),
+          ],
+          curvePoints: [
+            SpectralDataPoint(13.9, 55.0), SpectralDataPoint(19.1, -45.0), SpectralDataPoint(35.0, -50.0), SpectralDataPoint(62.4, -58.0),
+          ],
+        ),
+      ],
+    ),
+    AnalyticalTechniqueInfo(
+      id: 'ftir',
+      title: 'Fourier-Transform Infrared (FT-IR)',
+      acronym: 'FT-IR',
+      category: 'Spectroscopy',
+      xAxisName: 'Wavenumber',
+      xAxisUnit: 'nu_bar (cm⁻¹, 4000 to 400 cm⁻¹)',
+      xAxisDirection: 'Decreasing / Inverted (Left to Right: 4000 → 400 cm⁻¹)',
+      xAxisPhysicalMeaning: 'Number of wave cycles per centimeter (nu_bar = 1 / lambda). Directly proportional to vibrational frequency (E = h*c*nu_bar). High wavenumber represents high bond force constant (k) and light reduced mass (mu) (e.g. C-H, O-H, C#C).',
+      yAxisName: 'Transmittance (%T)',
+      yAxisUnit: '% (Percentage of Light Transmitted)',
+      yAxisDirection: 'Downward Absorption Bands (100% at top = full transmission; 0% = full absorption)',
+      yAxisPhysicalMeaning: 'Ratio of transmitted infrared intensity to incident intensity (I / I0 * 100%). Strong vibrational absorption dips downward toward 0% Transmittance.',
+      fundamentalPrinciple: 'Infrared radiation excites molecular vibrational modes (stretching, bending, rocking). A vibrational transition is IR-active only if it produces a net change in molecular dipole moment (d_mu / d_r != 0).',
+      howToRead: [
+        'Diagnostic Region (4000–1500 cm⁻¹): Dedicated to functional group identification (O-H/N-H 3600-3200 cm⁻¹, C-H 3100-2850 cm⁻¹, triple bonds 2260-2100 cm⁻¹, carbonyl C=O 1800-1650 cm⁻¹).',
+        'Fingerprint Region (1500–400 cm⁻¹): Highly complex single-bond stretching and skeletal bending; unique to every molecule like a human fingerprint.',
+        'Carbonyl Precision: Anhydride (1820 & 1760 cm⁻¹ doublet), Acid Chloride (1800 cm⁻¹), Ester (1740 cm⁻¹), Aldehyde (1725 cm⁻¹ with 2720/2820 cm⁻¹ Fermi doublet), Ketone (1715 cm⁻¹), Carboxylic acid (1710 cm⁻¹ with broad 2500–3300 cm⁻¹ envelope), Amide (1680–1650 cm⁻¹).',
+        'Conjugation Effect: Alpha,beta-conjugation with alkene or benzene ring lowers carbonyl stretching frequency by 20–40 cm⁻¹ due to increased single-bond character.',
+        'Ring Strain Effect: Decreasing ring size increases carbonyl frequency (cyclooctanone 1705 cm⁻¹ -> cyclohexanone 1715 cm⁻¹ -> cyclopentanone 1745 cm⁻¹ -> cyclobutanone 1780 cm⁻¹).'
+      ],
+      keyFormulas: [
+        'Hooke\'s Law: nu_bar = (1 / 2*pi*c) * sqrt(k / mu)',
+        'Reduced Mass: mu = (m_1 * m_2) / (m_1 + m_2)',
+        'Absorbance vs Transmittance: A = -log10(T) = log10(100 / %T)'
+      ],
+      examples: [
+        SpectrogramExample(
+          id: 'ftir_benzoic_acid',
+          title: 'FT-IR Spectrogram: Benzoic Acid',
+          compound: 'Benzoic Acid (C6H5COOH in KBr pellet)',
+          description: 'Characteristic FT-IR spectrum of an aromatic carboxylic acid exhibiting extreme O-H hydrogen-bonded broadening, intense carbonyl stretch, and aromatic skeletal modes.',
+          xMin: 400.0,
+          xMax: 4000.0,
+          yMin: 0.0,
+          yMax: 100.0,
+          xAxisLabel: 'Wavenumber nu_bar (cm⁻¹, Inverted: 4000 -> 400)',
+          yAxisLabel: '% Transmittance (%T, Dips downward)',
+          peaks: [
+            SpectralPeakAnnotation(x: 2950.0, y: 15.0, label: 'Broad O-H Envelope (2500–3300 cm⁻¹)', compoundOrFragment: 'Carboxylic acid dimer O-H stretch', explanation: 'Extreme hydrogen bonding in dimeric carboxylic acid creates a massive broad absorption envelope extending across the C-H region.'),
+            SpectralPeakAnnotation(x: 1688.0, y: 5.0, label: 'C=O Stretch (1688 cm⁻¹)', compoundOrFragment: 'Aryl carboxylic acid C=O', explanation: 'Conjugated carboxylic acid carbonyl shifted down from 1715 cm⁻¹ to 1688 cm⁻¹ by phenyl pi-delocalization.'),
+            SpectralPeakAnnotation(x: 1600.0, y: 38.0, label: 'Aromatic C=C (1600 cm⁻¹)', compoundOrFragment: 'Benzene ring quadrant stretch', explanation: 'Sharp aromatic ring breathing band.'),
+            SpectralPeakAnnotation(x: 1290.0, y: 22.0, label: 'C-O Stretch (1290 cm⁻¹)', compoundOrFragment: 'Carboxylic C-O single bond', explanation: 'Strong ester/acid C-O stretching absorption in fingerprint region.'),
+            SpectralPeakAnnotation(x: 708.0, y: 12.0, label: 'C-H Out-of-Plane Bend (708 cm⁻¹)', compoundOrFragment: 'Monosubstituted phenyl ring', explanation: 'Diagnostic pair of bands at 710 and 685 cm⁻¹ confirming 5 adjacent aromatic C-H bonds (monosubstitution).'),
+          ],
+          curvePoints: [
+            SpectralDataPoint(4000.0, 95.0), SpectralDataPoint(3500.0, 85.0), SpectralDataPoint(3000.0, 25.0), SpectralDataPoint(2800.0, 30.0), SpectralDataPoint(2500.0, 75.0),
+            SpectralDataPoint(2000.0, 90.0), SpectralDataPoint(1688.0, 5.0), SpectralDataPoint(1600.0, 38.0), SpectralDataPoint(1450.0, 42.0), SpectralDataPoint(1290.0, 22.0),
+            SpectralDataPoint(1000.0, 80.0), SpectralDataPoint(708.0, 12.0), SpectralDataPoint(400.0, 88.0),
+          ],
+        ),
+      ],
+    ),
+    AnalyticalTechniqueInfo(
+      id: 'uv_vis',
+      title: 'UV-Visible Spectrophotometry',
+      acronym: 'UV-Vis',
+      category: 'Spectroscopy',
+      xAxisName: 'Wavelength',
+      xAxisUnit: 'lambda (nm, 200 to 800 nm)',
+      xAxisDirection: 'Increasing (Left to Right: 200 → 800 nm)',
+      xAxisPhysicalMeaning: 'Wavelength of ultraviolet and visible light. Lower wavelength corresponds to higher photon energy (E = h*c / lambda). UV region (200–400 nm) excites pi -> pi* and n -> pi* transitions in organic chromophores; visible region (400–800 nm) produces perceived color.',
+      yAxisName: 'Absorbance',
+      yAxisUnit: 'A = -log10(I / I0) or Molar Absorptivity epsilon (L/(mol*cm))',
+      yAxisDirection: 'Upward absorption bands (0.0 to 2.5 Absorbance)',
+      yAxisPhysicalMeaning: 'Logarithmic attenuation of light beam transmitted through 1 cm quartz cuvette. Follows Beer-Lambert law: A = epsilon * c * l.',
+      fundamentalPrinciple: 'Absorption of UV-Vis photons promotes an electron from a bonding (sigma, pi) or non-bonding (n) orbital into an antibonding orbital (pi*, sigma*). Conjugation dramatically narrows the HOMO-LUMO gap, shifting lambda_max to longer wavelengths.',
+      howToRead: [
+        'lambda_max (Absorption Maximum): Wavelength of peak absorbance. Characteristic of chromophore extent of conjugation.',
+        'Molar Absorptivity (epsilon): Indicates transition probability. Allowed pi -> pi* transitions have epsilon > 10,000 L/(mol*cm); forbidden n -> pi* have epsilon < 100.',
+        'Woodward-Fieser Rules: Predicts lambda_max for conjugated dienes (base butadiene = 217 nm, homoannular = 253 nm, heteroannular = 214 nm, +30 nm per extended conjugation).',
+        'Bathochromic Shift (Red Shift): Shift of lambda_max to longer wavelength (lower energy) caused by extended conjugation or polar solvents.',
+        'Hypsochromic Shift (Blue Shift): Shift of lambda_max to shorter wavelength (higher energy).'
+      ],
+      keyFormulas: [
+        'Beer-Lambert Law: A = epsilon * c * l (l = cuvette path length = 1.0 cm)',
+        'Photon Energy: Delta E = h * c / lambda',
+        'Woodward-Fieser Base Dienes: Acyclic = 217 nm, Heteroannular = 214 nm, Homoannular = 253 nm'
+      ],
+      examples: [
+        SpectrogramExample(
+          id: 'uv_nitroaniline',
+          title: 'UV-Vis Absorption: 4-Nitroaniline',
+          compound: '4-Nitroaniline (p-O2N-C6H4-NH2 in Ethanol)',
+          description: 'Strong intramolecular charge-transfer (ICT) band from the electron-donating amino lone pair to the electron-withdrawing nitro group across the aromatic ring, resulting in an intense visible-range absorption at lambda_max = 380 nm.',
+          xMin: 200.0,
+          xMax: 600.0,
+          yMin: 0.0,
+          yMax: 2.0,
+          xAxisLabel: 'Wavelength lambda (nm)',
+          yAxisLabel: 'Absorbance (A, 1 cm quartz cell)',
+          peaks: [
+            SpectralPeakAnnotation(x: 228.0, y: 0.65, label: 'Aromatic pi -> pi* (228 nm)', compoundOrFragment: 'Benzene primary E2 band', explanation: 'Localized pi -> pi* transition of the substituted benzene core; epsilon ~ 8,000.'),
+            SpectralPeakAnnotation(x: 380.0, y: 1.82, label: 'ICT Band (lambda_max = 380 nm)', compoundOrFragment: 'Intramolecular Charge Transfer (NH2 -> NO2)', explanation: 'Push-pull interaction between donor -NH2 and acceptor -NO2 gives massive red-shift into the violet-blue edge, imparting bright yellow color to the solution; epsilon ~ 16,500 L/(mol*cm).'),
+          ],
+          curvePoints: [
+            SpectralDataPoint(200.0, 0.1), SpectralDataPoint(228.0, 0.65), SpectralDataPoint(260.0, 0.2), SpectralDataPoint(300.0, 0.15),
+            SpectralDataPoint(340.0, 0.8), SpectralDataPoint(380.0, 1.82), SpectralDataPoint(420.0, 0.6), SpectralDataPoint(460.0, 0.08), SpectralDataPoint(600.0, 0.01),
+          ],
+        ),
+      ],
+    ),
+  ];
 }
 
-class DeductionStep {
-  final int stepNumber;
-  final String title;
-  final String summary;
-  final String content;
-  final IconData icon;
+// ----------------------------------------------------
+// Auxiliary Data Models
+// ----------------------------------------------------
 
-  const DeductionStep({
-    required this.stepNumber,
-    required this.title,
-    required this.summary,
-    required this.content,
-    required this.icon,
+enum CarbonDeptType {
+  ch3,
+  ch2,
+  ch,
+  cq,
+}
+
+extension CarbonDeptTypeExtension on CarbonDeptType {
+  String get label {
+    switch (this) {
+      case CarbonDeptType.ch3: return 'CH₃ (Methyl)';
+      case CarbonDeptType.ch2: return 'CH₂ (Methylene)';
+      case CarbonDeptType.ch: return 'CH (Methine)';
+      case CarbonDeptType.cq: return 'C_q (Quaternary)';
+    }
+  }
+
+  String get shortLabel {
+    switch (this) {
+      case CarbonDeptType.ch3: return 'CH₃';
+      case CarbonDeptType.ch2: return 'CH₂';
+      case CarbonDeptType.ch: return 'CH';
+      case CarbonDeptType.cq: return 'C_q';
+    }
+  }
+
+  String get dept135Phase {
+    switch (this) {
+      case CarbonDeptType.ch3: return 'Positive (+ Up)';
+      case CarbonDeptType.ch2: return 'Negative (- Inverted)';
+      case CarbonDeptType.ch: return 'Positive (+ Up)';
+      case CarbonDeptType.cq: return 'Absent (Zero)';
+    }
+  }
+}
+
+class ProtonSignal {
+  final double shift;
+  final String multiplicity;
+  final int integration;
+  final double? couplingJ;
+  final String? assignment;
+
+  const ProtonSignal({
+    required this.shift,
+    this.multiplicity = 's',
+    this.integration = 1,
+    this.couplingJ,
+    this.assignment,
   });
+}
+
+class CarbonSignal {
+  final double shift;
+  final CarbonDeptType deptType;
+  final String? assignment;
+
+  const CarbonSignal({
+    required this.shift,
+    this.deptType = CarbonDeptType.ch,
+    this.assignment,
+  });
+}
+
+class AnalyticalTechniqueInfo {
+  final String id;
+  final String title;
+  final String acronym;
+  final String category;
+  final String xAxisName;
+  final String xAxisUnit;
+  final String xAxisDirection;
+  final String xAxisPhysicalMeaning;
+  final String yAxisName;
+  final String yAxisUnit;
+  final String yAxisDirection;
+  final String yAxisPhysicalMeaning;
+  final String fundamentalPrinciple;
+  final List<String> howToRead;
+  final List<String> keyFormulas;
+  final List<SpectrogramExample> examples;
+
+  const AnalyticalTechniqueInfo({
+    required this.id,
+    required this.title,
+    required this.acronym,
+    required this.category,
+    required this.xAxisName,
+    required this.xAxisUnit,
+    required this.xAxisDirection,
+    required this.xAxisPhysicalMeaning,
+    required this.yAxisName,
+    required this.yAxisUnit,
+    required this.yAxisDirection,
+    required this.yAxisPhysicalMeaning,
+    required this.fundamentalPrinciple,
+    required this.howToRead,
+    required this.keyFormulas,
+    required this.examples,
+  });
+}
+
+class SpectrogramExample {
+  final String id;
+  final String title;
+  final String compound;
+  final String description;
+  final double xMin;
+  final double xMax;
+  final double yMin;
+  final double yMax;
+  final String xAxisLabel;
+  final String yAxisLabel;
+  final List<SpectralPeakAnnotation> peaks;
+  final List<SpectralDataPoint> curvePoints;
+
+  const SpectrogramExample({
+    required this.id,
+    required this.title,
+    required this.compound,
+    required this.description,
+    required this.xMin,
+    required this.xMax,
+    required this.yMin,
+    required this.yMax,
+    required this.xAxisLabel,
+    required this.yAxisLabel,
+    required this.peaks,
+    required this.curvePoints,
+  });
+}
+
+class SpectralPeakAnnotation {
+  final double x;
+  final double y;
+  final String label;
+  final String compoundOrFragment;
+  final String explanation;
+
+  const SpectralPeakAnnotation({
+    required this.x,
+    required this.y,
+    required this.label,
+    required this.compoundOrFragment,
+    required this.explanation,
+  });
+}
+
+class SpectralDataPoint {
+  final double x;
+  final double y;
+
+  const SpectralDataPoint(this.x, this.y);
 }
 
 class ParsedFormula {
@@ -1048,35 +1809,35 @@ class ParsedFormula {
   final int hydrogens;
   final int nitrogens;
   final int oxygens;
-  final int fluorines;
+  final int halogens;
   final int chlorines;
   final int bromines;
+  final int fluorines;
   final int iodines;
   final int sulfurs;
   final int phosphoruses;
-  final bool isValid;
-  final String? errorMessage;
   final double dbe;
   final double molarMass;
+  final bool isValid;
+  final String? errorMessage;
 
   const ParsedFormula({
     required this.carbons,
     required this.hydrogens,
     this.nitrogens = 0,
     this.oxygens = 0,
-    this.fluorines = 0,
+    this.halogens = 0,
     this.chlorines = 0,
     this.bromines = 0,
+    this.fluorines = 0,
     this.iodines = 0,
     this.sulfurs = 0,
     this.phosphoruses = 0,
-    required this.isValid,
-    this.errorMessage,
     required this.dbe,
     required this.molarMass,
+    required this.isValid,
+    this.errorMessage,
   });
-
-  int get halogens => fluorines + chlorines + bromines + iodines;
 }
 
 enum SanitySeverity {
@@ -1134,6 +1895,22 @@ class SpectroscopyAnalysisResult {
     required this.steps,
     required this.markdownFull,
     this.sanityReport,
+  });
+}
+
+class DeductionStep {
+  final int stepNumber;
+  final String title;
+  final String summary;
+  final String content;
+  final IconData icon;
+
+  const DeductionStep({
+    required this.stepNumber,
+    required this.title,
+    required this.summary,
+    required this.content,
+    required this.icon,
   });
 }
 

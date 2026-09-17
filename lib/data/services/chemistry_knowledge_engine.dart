@@ -165,7 +165,21 @@ I couldn't find that information in the uploaded PDF (**${documentName ?? "Uploa
       return curatedResponse;
     }
 
-    // 5. Intelligent Context-Aware Academic Synthesis (General Science & Chemistry Solver)
+    // 5. Check if quick mode question is non-science
+    if (mode == 'quick' && _isNonScienceQuery(lowerQ)) {
+      final redirectResponse = RagResponse(
+        answer: ChemistryTextFormatter.format(
+          '⚡ **ChemBuddy Quick Answer is specialized for Science & Chemistry.**\n\n'
+          'To ask general, non-science questions, please switch to the **✨ General AI** tab above! Feel free to ask me any chemistry or science question here!',
+        ),
+        sources: const [],
+      );
+      if (_responseCache.length >= _maxCacheSize) _responseCache.remove(_responseCache.keys.first);
+      _responseCache[cacheKey] = redirectResponse;
+      return redirectResponse;
+    }
+
+    // 6. Intelligent Context-Aware Academic Synthesis (General Science & Chemistry Solver)
     final dynamicAnswer = _generateIntelligentAnswer(cleanQ, subject: subject, is2M: is2M, is5M: is5M, is10M: is10M);
     final dynResponse = RagResponse(
       answer: ChemistryTextFormatter.format(dynamicAnswer),
@@ -190,6 +204,26 @@ I couldn't find that information in the uploaded PDF (**${documentName ?? "Uploa
     if (is5M) return _format5Mark(q, content);
     if (is10M) return _format10Mark(q, content);
     return content;
+  }
+
+  static bool _isNonScienceQuery(String lower) {
+    final nonScienceKeywords = [
+      'movie', 'actor', 'actress', 'film', 'cinema', 'song', 'singer',
+      'football', 'cricket', 'fifa', 'messi', 'ronaldo', 'celebrity',
+      'dating', 'gossip', 'sports', 'gaming', 'minecraft', 'playstation',
+      'fashion', 'recipe for cake', 'recipe for pizza', 'politics', 'election',
+      'weather forecast', 'who won', 'box office',
+    ];
+    final scienceKeywords = [
+      'chem', 'acid', 'base', 'reaction', 'molecule', 'bond', 'orbital',
+      'nmr', 'ir', 'mass', 'spectr', 'quantum', 'physics', 'electron',
+      'formula', 'metal', 'organic', 'inorganic', 'thermodynamic', 'kinetic',
+      'mechanism', 'synthesis', 'molar', 'solution', 'ph', 'titrat',
+      'enzyme', 'protein', 'dna', 'rna', 'cell', 'bio', 'algebra', 'calculus',
+    ];
+    final hasNonScience = nonScienceKeywords.any(lower.contains);
+    final hasScience = scienceKeywords.any(lower.contains);
+    return hasNonScience && !hasScience;
   }
 
   // =========================================================================

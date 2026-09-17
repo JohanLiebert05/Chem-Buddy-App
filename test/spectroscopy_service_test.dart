@@ -107,5 +107,83 @@ void main() {
       final esterWarn = report.items.firstWhere((i) => i.title.contains('Ester Oxygen Requirement'));
       expect(esterWarn.severity, equals(SanitySeverity.warning));
     });
+    test('analyzeSpectraStructured differentiates Ketone from Aldehyde using 13C and 1H', () {
+      // Ketone: 13C at 198.1 ppm, NO proton at 9.5-10.5 ppm
+      final ketoneRes = SpectroscopyService.analyzeSpectraStructured(
+        formula: 'C8H8O',
+        irPeaks: [1685, 1600, 1450],
+        nmr1HPeaks: [2.60, 7.50, 7.95],
+        nmr13CPeaks: [26.6, 128.3, 128.6, 133.1, 137.1, 198.1],
+      );
+      expect(ketoneRes.isValid, isTrue);
+      expect(ketoneRes.markdownFull, contains('Ketone Carbonyl'));
+      expect(ketoneRes.markdownFull, isNot(contains('Aldehyde Group')));
+
+      // Aldehyde: 13C at 190.9 ppm, proton at 9.82 ppm
+      final aldehydeRes = SpectroscopyService.analyzeSpectraStructured(
+        formula: 'C8H8O3',
+        irPeaks: [1665, 1590],
+        nmr1HPeaks: [3.96, 7.03, 7.41, 9.82],
+        nmr13CPeaks: [56.1, 108.8, 114.4, 127.6, 130.0, 147.2, 151.7, 190.9],
+      );
+      expect(aldehydeRes.isValid, isTrue);
+      expect(aldehydeRes.markdownFull, contains('Aldehyde Carbonyl'));
+    });
+
+    test('analyzeSpectraStructured auto-filters 13C shifts mistakenly placed in nmrPeaks', () {
+      // User entered both 1H (2.6, 7.5) and 13C (128.3, 198.1) in generic nmrPeaks
+      final res = SpectroscopyService.analyzeSpectraStructured(
+        formula: 'C8H8O',
+        nmrPeaks: [2.6, 7.5, 7.9, 26.6, 128.3, 137.1, 198.1],
+      );
+      expect(res.isValid, isTrue);
+      // Shifts > 20 should be handled in 13C step and not erroneously mapped to aliphatic protons
+      final step3 = res.steps[2].content;
+      expect(step3, contains('δ 2.60 ppm'));
+      expect(step3, isNot(contains('δ 198.10 ppm')));
+      final step4 = res.steps[3].content;
+      expect(step4, contains('198.1'));
+    });
+
+    test('All 8 analytical techniques are registered with detailed X/Y guides', () {
+      final techs = SpectroscopyService.analyticalTechniques;
+      expect(techs.length, equals(8));
+
+      final ids = techs.map((t) => t.id).toList();
+      expect(ids, containsAll(['gc', 'hplc', 'tlc', 'ms', '1h_nmr', '13c_nmr', 'ftir', 'uv_vis']));
+
+      for (final t in techs) {
+        expect(t.xAxisName.isNotEmpty, isTrue);
+        expect(t.xAxisUnit.isNotEmpty, isTrue);
+        expect(t.xAxisPhysicalMeaning.isNotEmpty, isTrue);
+        expect(t.yAxisName.isNotEmpty, isTrue);
+        expect(t.yAxisPhysicalMeaning.isNotEmpty, isTrue);
+        expect(t.howToRead.isNotEmpty, isTrue);
+        expect(t.keyFormulas.isNotEmpty, isTrue);
+        expect(t.examples.isNotEmpty, isTrue);
+        final ex = t.examples.first;
+        expect(ex.peaks.isNotEmpty, isTrue);
+      }
+    });
+
+    test('13C DEPT multiplicity signals correctly report CH3, CH2, CH, Cq', () {
+      final signals = [
+        const CarbonSignal(shift: 14.1, deptType: CarbonDeptType.ch3),
+        const CarbonSignal(shift: 22.5, deptType: CarbonDeptType.ch2),
+        const CarbonSignal(shift: 35.2, deptType: CarbonDeptType.ch),
+        const CarbonSignal(shift: 172.0, deptType: CarbonDeptType.cq),
+      ];
+
+      final res = SpectroscopyService.analyzeSpectraStructured(
+        formula: 'C4H8O2',
+        carbonSignals: signals,
+      );
+
+      expect(res.isValid, isTrue);
+      expect(res.markdownFull, contains('CH₃ Carbons'));
+      expect(res.markdownFull, contains('CH₂ Carbons'));
+      expect(res.markdownFull, contains('CH Carbons'));
+      expect(res.markdownFull, contains('Quaternary C_q Carbons'));
+    });
   });
 }

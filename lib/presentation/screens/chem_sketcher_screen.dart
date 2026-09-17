@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -9,6 +10,7 @@ import '../../core/utils/haptics.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/services/rdkit_service.dart';
 import '../../services/reaction_predictor_service.dart';
+import '../widgets/chemdraw_guide_dialog.dart';
 import 'ask_chembuddy_screen.dart';
 import 'organic_reaction_predictor_screen.dart';
 
@@ -75,6 +77,21 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
   void initState() {
     super.initState();
     _initWebView();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkFirstTimeGuide();
+    });
+  }
+
+  Future<void> _checkFirstTimeGuide() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final seen = prefs.getBool('chemdraw_guide_walkthrough_seen') ?? false;
+      if (!seen && mounted) {
+        await prefs.setBool('chemdraw_guide_walkthrough_seen', true);
+        if (!mounted) return;
+        ChemDrawGuideDialog.show(context, onLoadExample: _loadSmiles);
+      }
+    } catch (_) {}
   }
 
   void _initWebView() {
@@ -938,6 +955,11 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
               icon: const Icon(Icons.file_upload_outlined, color: AppColors.accentCyan, size: 20),
               tooltip: 'Export SMILES / Molfile',
               onPressed: _showExportDialog,
+            ),
+            IconButton(
+              icon: const Icon(Icons.help_outline_rounded, color: AppColors.accentCyan, size: 21),
+              tooltip: 'ChemDraw Guide & Tutorial 💡',
+              onPressed: () => ChemDrawGuideDialog.show(context, onLoadExample: _loadSmiles),
             ),
           ],
         ),

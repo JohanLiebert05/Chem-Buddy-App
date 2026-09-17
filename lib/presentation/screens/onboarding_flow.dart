@@ -246,11 +246,22 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
               ),
               const SizedBox(height: 8),
               const Text(
-                'Everything you need for your postgraduate chemistry journey.',
+                'Chem Buddy by Prajwal A Kambar — attendance, tests, and notes for MSc Chemistry students.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Attendance tracker with safe bunk calculations, smart timetable schedules, PDF library, and next-generation chemical sketcher & AI tools.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.textSecondary,
-                  fontSize: 12.5,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.w500,
                   height: 1.35,
                 ),
@@ -260,6 +271,34 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
                 child: ListView(
                   physics: const BouncingScrollPhysics(),
                   children: const [
+                    _FeatureRow(
+                      icon: Icons.how_to_reg_rounded,
+                      iconColor: Color(0xFF10B981),
+                      title: 'Smart Attendance & Safe Bunks',
+                      subtitle: 'Live buffer calculation above 75%, bunk limits, and recovery roadmaps.',
+                    ),
+                    SizedBox(height: 8),
+                    _FeatureRow(
+                      icon: Icons.calendar_month_rounded,
+                      iconColor: Color(0xFFF59E0B),
+                      title: 'Organic & Inorganic Timetables',
+                      subtitle: 'Preloaded BCU schedules, faculty mapping, and bidirectional stream switching.',
+                    ),
+                    SizedBox(height: 8),
+                    _FeatureRow(
+                      icon: Icons.menu_book_rounded,
+                      iconColor: Color(0xFF8B5CF6),
+                      title: 'PDF Library & Notes Reader',
+                      subtitle: 'In-app PDF reader for textbooks, reference materials, syllabus, and notes.',
+                    ),
+                    SizedBox(height: 8),
+                    _FeatureRow(
+                      icon: Icons.quiz_rounded,
+                      iconColor: Color(0xFFEC4899),
+                      title: 'Tests, Quizzes & Exam Revision',
+                      subtitle: 'Track internal assessment tests, chapter revision, and mock exam readiness.',
+                    ),
+                    SizedBox(height: 8),
                     _FeatureRow(
                       icon: Icons.draw_rounded,
                       iconColor: Color(0xFF06B6D4),
@@ -271,7 +310,7 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
                     _FeatureRow(
                       icon: Icons.auto_awesome_rounded,
                       iconColor: Color(0xFFA855F7),
-                      title: 'Live ChemBuddy AI',
+                      title: 'Live ChemBuddy AI Tutor',
                       subtitle: 'Google Gemini tutor for reaction mechanisms, spectroscopy & exams.',
                       badge: 'AI',
                     ),
@@ -282,13 +321,6 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
                       title: 'Notes to Smart Flashcards',
                       subtitle: 'Snap photos of handwritten notes into active recall flashcard sets.',
                       badge: 'OCR',
-                    ),
-                    SizedBox(height: 8),
-                    _FeatureRow(
-                      icon: Icons.how_to_reg_rounded,
-                      iconColor: Color(0xFF10B981),
-                      title: 'Smart Attendance & Safe Bunks',
-                      subtitle: 'Live buffer calculation above 75%, timetable alerts & lecture schedules.',
                     ),
                   ],
                 ),

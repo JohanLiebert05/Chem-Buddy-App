@@ -57,7 +57,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final state = ref.watch(appControllerProvider);
     final repo = ref.watch(chemRepositoryProvider);
     final overall = repo.overallStats();
-    final name = state.profile.fullName.isEmpty ? 'Chemist' : state.profile.fullName.split(' ').first;
+    final rawName = state.profile.fullName.trim();
+    final isRoll = RegExp(r'^[0-9A-Za-z]{2,4}\d{2,8}$').hasMatch(rawName) || RegExp(r'^\d+$').hasMatch(rawName);
+    final name = (rawName.isEmpty || isRoll) ? 'Chemist' : rawName.split(' ').first;
 
     final localStore = ref.watch(localStoreProvider);
     final allSessions = localStore.all(localStore.studySessions).map((j) => StudySession.fromJson(j)).toList();

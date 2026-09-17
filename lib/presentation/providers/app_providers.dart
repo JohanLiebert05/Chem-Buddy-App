@@ -92,6 +92,12 @@ class AppController extends Notifier<AppState> {
 
   @override
   AppState build() {
+    NotificationService.onAttendanceMarked = () {
+      reload();
+    };
+    ref.onDispose(() {
+      NotificationService.onAttendanceMarked = null;
+    });
     // Automatically reschedule and ensure active notifications on app startup/restart
     Future.microtask(() => reload());
     return _snapshot();
@@ -138,6 +144,7 @@ class AppController extends Notifier<AppState> {
       entries: state.entries,
       events: state.events,
       reminders: state.reminders,
+      subjects: state.subjects,
       flashcardSets: flashcardSets,
       smartCards: smartCards,
       subjectStats: subjectStats,

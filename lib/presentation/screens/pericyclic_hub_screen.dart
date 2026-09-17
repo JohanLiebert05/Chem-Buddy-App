@@ -7,6 +7,7 @@ import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/services/pericyclic_service.dart';
+import '../widgets/pericyclic_3d_orbital_view.dart';
 import 'reaction_mechanism_screen.dart';
 
 class PericyclicHubScreen extends StatefulWidget {
@@ -18,14 +19,21 @@ class PericyclicHubScreen extends StatefulWidget {
 
 class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  // Predictor state
   PericyclicType _selectedType = PericyclicType.electrocyclic;
   int _selectedElectrons = 4; // 4 or 6
   ReactionCondition _selectedCondition = ReactionCondition.thermal;
 
+  // 3D Studio state
+  int _selected3DIndex = 0;
+  int _selectedOrbitalIndex = 0;
+  bool _showSecondaryOverlap = true;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -58,12 +66,15 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
           ),
           bottom: TabBar(
             controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             indicatorColor: AppColors.brandBright,
             indicatorWeight: 3,
             labelColor: Colors.white,
             unselectedLabelColor: AppColors.textMuted,
             labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             tabs: const [
+              Tab(text: '3D Orbital Studio 🌐'),
               Tab(text: 'FMO Predictor'),
               Tab(text: 'Woodward-Hoffmann Rules'),
               Tab(text: 'MSc Reaction Classes'),
@@ -73,6 +84,7 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
         body: TabBarView(
           controller: _tabController,
           children: [
+            _build3DStudioTab(),
             _buildPredictorTab(),
             _buildRulesTab(),
             _buildClassesTab(),
@@ -82,6 +94,261 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
     );
   }
 
+  // ----------------------------------------------------
+  // 1. 3D Orbital & Transition State Studio Tab
+  // ----------------------------------------------------
+  Widget _build3DStudioTab() {
+    final examples = PericyclicService.threeDExamples;
+    final currentEx = examples[_selected3DIndex.clamp(0, examples.length - 1)];
+    final orbitals = currentEx.system.orbitals;
+    final activeOrb = orbitals[_selectedOrbitalIndex.clamp(0, orbitals.length - 1)];
+    final isTS = currentEx.category.contains('Cycloaddition') || currentEx.category.contains('Sigmatropic') || currentEx.category.contains('Frontier');
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // System Selector Pills
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: List.generate(examples.length, (index) {
+              final isSelected = _selected3DIndex == index;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(
+                    examples[index].title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                    ),
+                  ),
+                  selected: isSelected,
+                  selectedColor: AppColors.brandPrimary,
+                  backgroundColor: const Color(0xFF0F172A),
+                  side: BorderSide(
+                    color: isSelected ? AppColors.brandBright : Colors.white12,
+                    width: 1.2,
+                  ),
+                  onSelected: (val) {
+                    if (val) {
+                      AppHaptics.selection();
+                      setState(() {
+                        _selected3DIndex = index;
+                        _selectedOrbitalIndex = 0;
+                      });
+                    }
+                  },
+                ),
+              );
+            }),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Interactive 3D Canvas
+        Pericyclic3DOrbitalView(
+          system: currentEx.system,
+          activeOrbital: activeOrb,
+          transitionStateLabel: currentEx.title,
+          isTransitionState: isTS,
+          showSecondaryOverlap: _showSecondaryOverlap,
+        ),
+        const SizedBox(height: 12),
+
+        // Orbital Switcher (if multiple orbitals available)
+        if (orbitals.length > 1) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.layers_outlined, color: AppColors.brandBright, size: 16),
+                    SizedBox(width: 6),
+                    Text(
+                      'Select Molecular Orbital (FMO Level):',
+                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: List.generate(orbitals.length, (i) {
+                    final orb = orbitals[i];
+                    final isSel = _selectedOrbitalIndex == i;
+                    return InkWell(
+                      onTap: () {
+                        AppHaptics.selection();
+                        setState(() => _selectedOrbitalIndex = i);
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSel ? AppColors.brandPrimary.withValues(alpha: 0.3) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSel ? AppColors.brandBright : Colors.white12,
+                          ),
+                        ),
+                        child: Text(
+                          orb.name,
+                          style: TextStyle(
+                            color: isSel ? AppColors.brandBright : AppColors.textSecondary,
+                            fontSize: 11,
+                            fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Endo Rule Secondary Overlap Toggle (for Diels-Alder)
+        if (currentEx.id == 'diels_alder_endo') ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1B4B).withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFA855F7).withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.auto_fix_high_rounded, color: Color(0xFFA855F7), size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Highlight Endo Secondary Orbital Overlap',
+                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: _showSecondaryOverlap,
+                  activeThumbColor: const Color(0xFFA855F7),
+                  onChanged: (val) {
+                    AppHaptics.selection();
+                    setState(() => _showSecondaryOverlap = val);
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Academic Explanation Card
+        GlowCard(
+          padding: const EdgeInsets.all(16),
+          borderColor: AppColors.brandBright.withValues(alpha: 0.5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentCyan.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      currentEx.category,
+                      style: const TextStyle(color: AppColors.accentCyan, fontSize: 11, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentGold.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      currentEx.condition,
+                      style: const TextStyle(color: AppColors.accentGold, fontSize: 11, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                currentEx.title,
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                currentEx.subtitle,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+              const Divider(color: AppColors.borderSubtle, height: 20),
+              _buildDetailRow('Selection Rule:', currentEx.stereochemicalRule, AppColors.brandBright),
+              const SizedBox(height: 8),
+              _buildDetailRow('Active FMO Symmetry:', activeOrb.symmetry, AppColors.accentCyan),
+              const SizedBox(height: 8),
+              _buildDetailRow('Nodal Topology:', '${activeOrb.nodes} Nodal Plane(s) • ${activeOrb.description}', Colors.white70),
+              const SizedBox(height: 12),
+              const Text(
+                'Comprehensive MSc Mechanistic Rationale:',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              ChemistryMarkdownView(
+                text: currentEx.academicExplanation,
+                textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.45),
+              ),
+              if (currentEx.secondaryOrbitalNotes != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F172A),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.stars_rounded, color: AppColors.accentCyan, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          currentEx.secondaryOrbitalNotes!,
+                          style: const TextStyle(color: AppColors.accentCyan, fontSize: 11.5, height: 1.35, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ----------------------------------------------------
+  // 2. FMO Predictor Tab
+  // ----------------------------------------------------
   Widget _buildPredictorTab() {
     final prediction = PericyclicService.predict(
       type: _selectedType,
@@ -186,7 +453,7 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
         ),
         const SizedBox(height: 16),
         GlowCard(
-          borderColor: prediction.isThermallyAllowed ? AppColors.success.withValues(alpha: 0.5) : AppColors.brandBright.withValues(alpha: 0.5),
+          borderColor: prediction.isThermallyAllowed ? AppColors.statusSuccess.withValues(alpha: 0.5) : AppColors.brandBright.withValues(alpha: 0.5),
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,14 +462,14 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
                 children: [
                   Icon(
                     prediction.isThermallyAllowed ? Icons.check_circle_rounded : Icons.wb_sunny_rounded,
-                    color: prediction.isThermallyAllowed ? AppColors.success : AppColors.brandBright,
+                    color: prediction.isThermallyAllowed ? AppColors.statusSuccess : AppColors.brandBright,
                     size: 22,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     'Predicted Mode: ${prediction.allowedMode}',
                     style: TextStyle(
-                      color: prediction.isThermallyAllowed ? AppColors.success : AppColors.brandBright,
+                      color: prediction.isThermallyAllowed ? AppColors.statusSuccess : AppColors.brandBright,
                       fontWeight: FontWeight.w800,
                       fontSize: 16,
                     ),
@@ -229,6 +496,9 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
     );
   }
 
+  // ----------------------------------------------------
+  // 3. Woodward-Hoffmann Rules Tab
+  // ----------------------------------------------------
   Widget _buildRulesTab() {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -249,7 +519,7 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.purple.withValues(alpha: 0.2),
+                        color: AppColors.brandPrimary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(rule.electronCount, style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontWeight: FontWeight.w700)),
@@ -257,7 +527,7 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
                   ],
                 ),
                 const SizedBox(height: 10),
-                _buildDetailRow('Thermal (Δ):', rule.thermalMode, AppColors.success),
+                _buildDetailRow('Thermal (Δ):', rule.thermalMode, AppColors.statusSuccess),
                 const SizedBox(height: 6),
                 _buildDetailRow('Photochemical (hν):', rule.photochemicalMode, AppColors.accentCyan),
                 const SizedBox(height: 8),
@@ -270,6 +540,9 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
     );
   }
 
+  // ----------------------------------------------------
+  // 4. MSc Reaction Classes Tab
+  // ----------------------------------------------------
   Widget _buildClassesTab() {
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -303,75 +576,27 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
               AppHaptics.selection();
               Navigator.push(
                 context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const ReactionMechanismsScreen(initialReactionId: 'diels_alder'),
+                MaterialPageRoute(
+                  builder: (_) => const ReactionMechanismsScreen(
+                    initialReactionId: 'diels_alder',
+                  ),
                 ),
               );
             },
-            icon: const Icon(Icons.view_in_ar_rounded, size: 16),
-            label: const Text('Explore Diels-Alder 3D Lab & Vectors ⚗️', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+            icon: const Icon(Icons.auto_stories_rounded, size: 16),
+            label: const Text('View Diels-Alder Arrow Mechanism', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
           ),
         ),
         const SizedBox(height: 12),
         _buildClassCard(
           title: '3. Sigmatropic Rearrangements',
-          subtitle: 'Uncatalyzed intramolecular migration of a sigma bond across a conjugated pi electron framework.',
+          subtitle: 'Migration of a sigma bond across a conjugated pi electron framework.',
           bullets: [
-            '[3,3]-Cope Rearrangement: Thermal isomerization of 1,5-hexadienes through a 6-membered chair-like transition state.',
-            '[3,3]-Claisen Rearrangement: Thermal rearrangement of allyl vinyl ethers or allyl aryl ethers into gamma,delta-unsaturated carbonyls.',
-            '[1,5]-Sigmatropic Hydrogen Shift: Thermally allowed with suprafacial migration across a pentadienyl system (retention of configuration).',
+            '[3,3]-Cope: Rearrangement of 1,5-dienes via aromatic 6-electron chair-like transition state.',
+            '[3,3]-Claisen: Rearrangement of allyl vinyl ethers to gamma,delta-unsaturated carbonyls with complete chirality transfer.',
+            '[1,5]-Hydride Shifts: Suprafacial hydrogen migration with retention in (Z)-1,3-pentadienes.',
+            '[1,3]-Carbon Shifts: Thermal shifts require antarafacial geometry with inversion of migrating group configuration.',
           ],
-          actionWidget: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.purpleBright),
-                        foregroundColor: AppColors.purpleBright,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: () {
-                        AppHaptics.selection();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) => const ReactionMechanismsScreen(initialReactionId: 'cope'),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.sync_alt_rounded, size: 15),
-                      label: const Text('Cope 3D Lab 🔄', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.accentCyan),
-                        foregroundColor: AppColors.accentCyan,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: () {
-                        AppHaptics.selection();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) => const ReactionMechanismsScreen(initialReactionId: 'claisen_sigmatropic'),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.science_rounded, size: 15),
-                      label: const Text('Claisen 3D Lab 🧪', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ),
       ],
     );
@@ -388,20 +613,25 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
+          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
           const SizedBox(height: 4),
           Text(subtitle, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.3)),
-          const Divider(color: AppColors.borderSubtle, height: 16),
+          const Divider(color: AppColors.borderSubtle, height: 18),
           ...bullets.map((b) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('• ', style: TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w900)),
-                Expanded(child: Text(b, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35))),
-              ],
-            ),
-          )),
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('• ', style: TextStyle(color: AppColors.brandBright, fontSize: 14, fontWeight: FontWeight.w800)),
+                    Expanded(
+                      child: Text(
+                        b,
+                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
           if (actionWidget != null) ...[
             const SizedBox(height: 10),
             actionWidget,
@@ -411,12 +641,21 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
     );
   }
 
-  Widget _buildDetailRow(String label, String value, Color color) {
+  Widget _buildDetailRow(String label, String value, Color valueColor) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(width: 8),
-        Expanded(child: Text(value, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w800))),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(color: valueColor, fontSize: 12.5, fontWeight: FontWeight.w700),
+          ),
+        ),
       ],
     );
   }
