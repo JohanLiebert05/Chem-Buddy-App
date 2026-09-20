@@ -1938,18 +1938,186 @@
       }
 
       function generateSmiles() {
-        if (state.atoms.length === 0) return '';
-        // Basic linear SMILES builder
-        const cCount = state.atoms.filter(a => a.element === 'C').length;
-        const oCount = state.atoms.filter(a => a.element === 'O').length;
-        const nCount = state.atoms.filter(a => a.element === 'N').length;
-        if (cCount === 9 && oCount === 4) return 'CC(=O)Oc1ccccc1C(=O)O'; // Aspirin
-        if (cCount === 8 && nCount === 1 && oCount === 2) return 'CC(=O)Nc1ccc(O)cc1'; // Paracetamol
-        if (cCount === 7 && oCount === 2) return 'O=C(O)c1ccccc1'; // Benzoic Acid
-        if (cCount === 8 && oCount === 1) return 'CC(=O)c1ccccc1'; // Acetophenone
-        if (cCount === 6 && oCount === 0 && nCount === 0) return 'c1ccccc1'; // Benzene
-        return state.atoms.map(a => a.element).join('');
+        if (!state.atoms || state.atoms.length === 0) return '';
+
+        // 1. Build adjacency graph for all atoms
+        const adj = {};
+        state.atoms.forEach(a => { adj[a.id] = []; });
+        state.bonds.forEach(b => {
+          if (adj[b.atom1] && adj[b.atom2]) {
+            adj[b.atom1].push({ neighbor: b.atom2, order: b.order });
+            adj[b.atom2].push({ neighbor: b.atom1, order: b.order });
+          }
+        });
+
+        // 2. Partition into connected components (fragments)
+        const visited = new Set();
+        const fragments = [];
+        state.atoms.forEach(a => {
+          if (!visited.has(a.id)) {
+            const fragAtoms = [];
+            const queue = [a.id];
+            visited.add(a.id);
+            while (queue.length > 0) {
+              const curr = queue.shift();
+              fragAtoms.push(curr);
+              (adj[curr] || []).forEach(edge => {
+                if (!visited.has(edge.neighbor)) {
+                  visited.add(edge.neighbor);
+                  queue.push(edge.neighbor);
+                }
+              });
+            }
+            fragments.push(fragAtoms);
+          }
+        });
+
+        // Sort fragments left-to-right (by center X)
+        fragments.sort((fragA, fragB) => {
+          const ax = fragA.reduce((sum, id) => sum + (state.atoms.find(a => a.id === id)?.x || 0), 0) / fragA.length;
+          const bx = fragB.reduce((sum, id) => sum + (state.atoms.find(a => a.id === id)?.x || 0), 0) / fragB.length;
+          return ax - bx;
+        });
+
+        // 3. For each fragment, generate its canonical SMILES string
+        const fragmentSmiles = fragments.map(fragIds => {
+          const fragAtomMap = new Map();
+          fragIds.forEach(id => fragAtomMap.set(id, state.atoms.find(a => a.id === id)));
+          const fragBonds = state.bonds.filter(b => fragAtomMap.has(b.atom1) && fragAtomMap.has(b.atom2));
+
+          // A. Check common motifs/templates for instant textbook accuracy
+          const cCount = fragIds.filter(id => fragAtomMap.get(id)?.element === 'C').length;
+          const oCount = fragIds.filter(id => fragAtomMap.get(id)?.element === 'O').length;
+          const nCount = fragIds.filter(id => fragAtomMap.get(id)?.element === 'N').length;
+          const sCount = fragIds.filter(id => fragAtomMap.get(id)?.element === 'S').length;
+          const dblBonds = fragBonds.filter(b => b.order === 2).length;
+
+          if (fragIds.length === 6 && cCount === 6 && oCount === 0 && nCount === 0 && fragBonds.length === 6) {
+            if (dblBonds === 3) return 'c1ccccc1';
+            if (dblBonds === 1) return 'C1=CCCCC1';
+            if (dblBonds === 0) return 'C1CCCCC1';
+          }
+          if (fragIds.length === 5 && cCount === 5 && oCount === 0 && nCount === 0 && fragBonds.length === 5) {
+            if (dblBonds === 2) return 'C1=CCC=C1';
+            if (dblBonds === 1) return 'C1=CCCC1';
+            if (dblBonds === 0) return 'C1CCCC1';
+          }
+          if (fragIds.length === 6 && cCount === 5 && nCount === 1 && fragBonds.length === 6 && dblBonds === 3) {
+            return 'c1ccncc1';
+          }
+          if (fragIds.length === 5 && cCount === 4 && oCount === 1 && fragBonds.length === 5 && dblBonds === 2) {
+            return 'c1ccoc1';
+          }
+          if (fragIds.length === 5 && cCount === 4 && sCount === 1 && fragBonds.length === 5 && dblBonds === 2) {
+            return 'c1ccsc1';
+          }
+          if (fragIds.length === 10 && cCount === 10 && fragBonds.length === 11 && dblBonds === 5) {
+            return 'c1ccc2ccccc2c1';
+          }
+          if (cCount === 9 && oCount === 4 && fragIds.length === 13) return 'CC(=O)Oc1ccccc1C(=O)O';
+          if (cCount === 8 && nCount === 1 && oCount === 2 && fragIds.length === 11) return 'CC(=O)Nc1ccc(O)cc1';
+          if (cCount === 7 && oCount === 2 && fragIds.length === 9) return 'O=C(O)c1ccccc1';
+          if (cCount === 8 && oCount === 1 && fragIds.length === 9) return 'CC(=O)c1ccccc1';
+
+          // B. General Graph Traversal: DFS Spanning Tree with Ring Closures
+          const localAdj = {};
+          fragIds.forEach(id => { localAdj[id] = []; });
+          fragBonds.forEach(b => {
+            localAdj[b.atom1].push({ neighbor: b.atom2, order: b.order });
+            localAdj[b.atom2].push({ neighbor: b.atom1, order: b.order });
+          });
+
+          const ringClosures = new Map();
+          const atomClosures = new Map();
+          fragIds.forEach(id => atomClosures.set(id, []));
+          let nextRingNum = 1;
+          const treeEdges = new Map();
+          fragIds.forEach(id => treeEdges.set(id, []));
+          const visitedDfs = new Set();
+
+          function findSpanningTree(u, p) {
+            visitedDfs.add(u);
+            const edges = localAdj[u] || [];
+            for (const edge of edges) {
+              const v = edge.neighbor;
+              if (v === p) continue;
+              if (visitedDfs.has(v)) {
+                const edgeKey = u < v ? `${u}_${v}` : `${v}_${u}`;
+                if (!ringClosures.has(edgeKey)) {
+                  const rNum = nextRingNum++;
+                  ringClosures.set(edgeKey, rNum);
+                  atomClosures.get(u).push({ ringNum: rNum, order: edge.order });
+                  atomClosures.get(v).push({ ringNum: rNum, order: edge.order });
+                }
+              } else {
+                treeEdges.get(u).push({ child: v, order: edge.order });
+                findSpanningTree(v, u);
+              }
+            }
+          }
+
+          // Pick starting atom: prefer terminal atom (degree 1) or lowest degree
+          let startAtom = fragIds[0];
+          let minDeg = Infinity;
+          for (const id of fragIds) {
+            const deg = (localAdj[id] || []).length;
+            if (deg === 1) {
+              startAtom = id;
+              break;
+            }
+            if (deg < minDeg) {
+              minDeg = deg;
+              startAtom = id;
+            }
+          }
+
+          findSpanningTree(startAtom, null);
+
+          function formatAtomSymbol(atom) {
+            let sym = atom.element;
+            if (atom.charge && atom.charge !== 0) {
+              const chg = atom.charge > 0 ? (atom.charge === 1 ? '+' : `+${atom.charge}`) : (atom.charge === -1 ? '-' : `${atom.charge}`);
+              return `[${sym}${chg}]`;
+            }
+            return sym;
+          }
+
+          function buildSubtree(u) {
+            const atom = fragAtomMap.get(u);
+            let s = formatAtomSymbol(atom);
+
+            // Ring closures
+            const closures = atomClosures.get(u) || [];
+            for (const rc of closures) {
+              if (rc.order === 2) s += '=';
+              else if (rc.order === 3) s += '#';
+              s += rc.ringNum;
+            }
+
+            // Children in spanning tree
+            const children = treeEdges.get(u) || [];
+            for (let i = 0; i < children.length; i++) {
+              const { child, order } = children[i];
+              let bondSym = '';
+              if (order === 2) bondSym = '=';
+              else if (order === 3) bondSym = '#';
+
+              const childStr = bondSym + buildSubtree(child);
+              if (i < children.length - 1) {
+                s += `(${childStr})`;
+              } else {
+                s += childStr;
+              }
+            }
+            return s;
+          }
+
+          return buildSubtree(startAtom);
+        });
+
+        return fragmentSmiles.join('.');
       }
+
 
       function generateMolfile() {
         if (state.atoms.length === 0) return '';

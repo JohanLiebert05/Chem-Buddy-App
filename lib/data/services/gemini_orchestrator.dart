@@ -37,9 +37,10 @@ class GeminiOrchestrator {
   final Map<String, OrchestratorResponse> _clientMemoryCache = {};
 
   static const List<String> candidateModels = [
-    'gemini-3-flash-preview',
-    'gemini-flash-latest',
-    'gemini-3.6-flash',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-2.5-flash-lite',
   ];
 
   /// Calls the orchestrator edge function, with local client-side multi-key failover fallback

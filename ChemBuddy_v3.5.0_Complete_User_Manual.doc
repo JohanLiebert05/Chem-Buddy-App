@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ChemBuddy v3.5.0 — Complete User Manual & Documentation</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 15mm 20mm 15mm;
+    @bottom-right {
+      content: counter(page);
+    }
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1E293B;
+    line-height: 1.6;
+    font-size: 11pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  h1, h2, h3, h4 {
+    color: #0F172A;
+    font-weight: 700;
+    margin-top: 1.4em;
+    margin-bottom: 0.5em;
+    page-break-after: avoid;
+  }
+
+  h1 { font-size: 24pt; color: #6D28D9; border-bottom: 2px solid #8B5CF6; padding-bottom: 6px; }
+  h2 { font-size: 16pt; color: #4C1D95; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px; margin-top: 2em; }
+  h3 { font-size: 13pt; color: #0369A1; }
+  h4 { font-size: 11pt; color: #334155; }
+
+  p { margin: 0.6em 0; text-align: justify; }
+
+  .cover-page {
+    page-break-after: always;
+    text-align: center;
+    padding-top: 120px;
+    padding-bottom: 120px;
+  }
+
+  .cover-title {
+    font-size: 36pt;
+    font-weight: 900;
+    color: #6D28D9;
+    margin: 0;
+    letter-spacing: -1px;
+  }
+
+  .cover-subtitle {
+    font-size: 15pt;
+    color: #475569;
+    margin-top: 15px;
+    font-weight: 500;
+  }
+
+  .cover-badge {
+    display: inline-block;
+    background: #EDE9FE;
+    color: #6D28D9;
+    font-weight: 700;
+    padding: 8px 18px;
+    border-radius: 20px;
+    margin-top: 25px;
+    font-size: 12pt;
+    border: 1px solid #C4B5FD;
+  }
+
+  .cover-meta {
+    margin-top: 160px;
+    font-size: 11pt;
+    color: #64748B;
+    border-top: 1px solid #E2E8F0;
+    padding-top: 25px;
+    display: inline-block;
+    text-align: left;
+    width: 320px;
+  }
+
+  .cover-meta strong {
+    color: #1E293B;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .toc {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 20px 30px;
+    margin: 20px 0;
+  }
+
+  .toc ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+
+  .toc li {
+    padding: 5px 0;
+    border-bottom: 1px dotted #CBD5E1;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .toc a {
+    color: #6D28D9;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .callout {
+    border-left: 4px solid #8B5CF6;
+    background: #F5F3FF;
+    padding: 12px 16px;
+    margin: 14px 0;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .callout-title {
+    font-weight: 700;
+    color: #6D28D9;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .callout-success {
+    border-left-color: #10B981;
+    background: #ECFDF5;
+  }
+  .callout-success .callout-title { color: #047857; }
+
+  .callout-warning {
+    border-left-color: #F59E0B;
+    background: #FFFBEB;
+  }
+  .callout-warning .callout-title { color: #B45309; }
+
+  .callout-info {
+    border-left-color: #0284C7;
+    background: #F0F9FF;
+  }
+  .callout-info .callout-title { color: #0369A1; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 10pt;
+  }
+
+  th, td {
+    border: 1px solid #CBD5E1;
+    padding: 8px 12px;
+    text-align: left;
+  }
+
+  th {
+    background-color: #F1F5F9;
+    color: #0F172A;
+    font-weight: 700;
+  }
+
+  tr:nth-child(even) {
+    background-color: #F8FAFC;
+  }
+
+  code {
+    font-family: Consolas, Monaco, "Courier New", Courier, monospace;
+    background: #F1F5F9;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 9.5pt;
+    color: #BE185D;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 15px 0;
+  }
+
+  .feature-box {
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: #FFFFFF;
+  }
+
+  .feature-box h4 {
+    margin-top: 0;
+    color: #6D28D9;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .badge-purple { background: #EDE9FE; color: #6D28D9; }
+  .badge-blue { background: #E0F2FE; color: #0369A1; }
+  .badge-green { background: #DCFCE7; color: #15803D; }
+  .badge-amber { background: #FEF3C7; color: #B45309; }
+
+  .step-num {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    background: #6D28D9;
+    color: white;
+    text-align: center;
+    line-height: 22px;
+    border-radius: 50%;
+    font-size: 9pt;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover-page">
+  <h1 class="cover-title">ChemBuddy</h1>
+  <div class="cover-subtitle">Complete User & Technical Operating Manual</div>
+  <div class="cover-badge">Version 3.5.0 Edition</div>
+  <p style="margin-top: 20px; color: #64748B; font-size: 13pt;">
+    The Intelligent Academic Operating System for MSc Chemistry Students
+  </p>
+  
+  <div class="cover-meta">
+    <div><strong>Author & Developer:</strong> Prajwal A Kambar</div>
+    <div><strong>Application Version:</strong> v3.5.0+28 (Release Build)</div>
+    <div><strong>Platform:</strong> Android, Web, Desktop</div>
+    <div><strong>Publication Date:</strong> September 2026</div>
+    <div><strong>Target Audience:</strong> MSc Chemistry Students, Faculty & Researchers</div>
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="page-break"></div>
+<h2>Table of Contents</h2>
+<div class="toc">
+  <ul>
+    <li><span>1. Introduction & Overview</span> <span>Page 3</span></li>
+    <li><span>2. Installation & Quick Setup</span> <span>Page 4</span></li>
+    <li><span>3. Smart Timetable & Attendance Intelligence Engine</span> <span>Page 5</span></li>
+    <li><span>4. Notification System & Action Shade (1-Tap Attendance)</span> <span>Page 7</span></li>
+    <li><span>5. Daily Psychology Facts Engine (120+ Curated Facts)</span> <span>Page 9</span></li>
+    <li><span>6. Home Dashboard & Intelligent Contextual Greeting</span> <span>Page 11</span></li>
+    <li><span>7. ChemDraw Pro & Ketcher Pro (118-Element Molecular Sketcher)</span> <span>Page 13</span></li>
+    <li><span>8. Reaction Product Prediction & 2D Vector SVG Generator</span> <span>Page 16</span></li>
+    <li><span>9. Spectroscopy & Chromatography Hub (KaTeX & Zoomable Spectrum)</span> <span>Page 18</span></li>
+    <li><span>10. Spectroscopy Structure Solver Intelligence (52+ Molecules)</span> <span>Page 20</span></li>
+    <li><span>11. MSc Chemistry Toolkit & 16 Postgrad Calculators</span> <span>Page 22</span></li>
+    <li><span>12. Pericyclic Hub & Woodward-Hoffmann FMO Engine</span> <span>Page 25</span></li>
+    <li><span>13. Smart Flashcards & Spaced Repetition (Active Recall)</span> <span>Page 27</span></li>
+    <li><span>14. PDF Library, Study Hub & Strictly Grounded RAG Assistant</span> <span>Page 29</span></li>
+    <li><span>15. Exam Mode & BCU Model Answer Generator</span> <span>Page 31</span></li>
+    <li><span>16. Settings, Backup, Security & Offline Architecture</span> <span>Page 32</span></li>
+    <li><span>17. Troubleshooting & FAQ</span> <span>Page 34</span></li>
+  </ul>
+</div>
+
+<div class="callout callout-info">
+  <div class="callout-title">💡 About ChemBuddy</div>
+  ChemBuddy by Prajwal A Kambar was engineered specifically to solve the unique academic pressures faced by postgraduate Chemistry students—balancing rigorous laboratory synthesis, spectroscopic characterization, competitive exam preparation (CSIR-NET, GATE, SET), and strict 75% attendance regulations.
+</div>
+
+<!-- CHAPTER 1 -->
+<div class="page-break"></div>
+<h2>1. Introduction & Architecture Overview</h2>
+<p>
+  <strong>ChemBuddy</strong> is a comprehensive, offline-first mobile and desktop application designed exclusively for Master of Science (MSc) Chemistry students, researchers, and educators. Unlike generic student planners or basic scientific calculators, ChemBuddy brings together specialized chemoinformatics engines, textbook-grade spectroscopy analyzers, advanced attendance algorithms, and grounded artificial intelligence in a unified, private, and distraction-free interface.
+</p>
+
+<h3>Design Philosophy & Core Pillars</h3>
+<ul>
+  <li><strong>100% Offline Core Functionality:</strong> Attendance calculations, timetable parsing, 16 chemistry calculators, Woodward-Hoffmann selection rules, spectroscopy databases, reaction prediction, and 2D vector SVG generation execute entirely on-device with zero internet connection required.</li>
+  <li><strong>Scientific Rigor:</strong> All formulas, mechanisms, spectroscopic peaks, and unit conversions follow IUPAC standards and standard graduate textbooks (Silverstein, Pavia, March, Clayden, Carey-Sundberg).</li>
+  <li><strong>Privacy & Local Ownership:</strong> Student profiles, attendance logs, notes, and PDF documents are stored locally in high-performance encrypted Hive boxes. Cloud synchronization via Supabase is completely optional.</li>
+  <li><strong>Laboratory Ergonomics:</strong> The dark-mode interface (`AppColors` design system: #0A0914 canvas, #8B5CF6 brand purple, #06B6D4 cyan, #F59E0B gold) protects dark-adapted eyes in laser spectroscopy rooms and low-light laboratory environments.</li>
+</ul>
+
+<!-- CHAPTER 2 -->
+<h2>2. Installation & Quick Setup</h2>
+<p>
+  ChemBuddy is distributed as an optimized Android APK and standalone cross-platform package.
+</p>
+
+<h3>Installation Steps</h3>
+<ol>
+  <li><strong>Download Release APK:</strong> Obtain <code>ChemBuddy-v3.5.0-by-Prajwal-A-Kambar.apk</code> from the official GitHub Releases page.</li>
+  <li><strong>Enable Unknown Sources:</strong> On your Android device, navigate to <em>Settings → Security → Install Unknown Apps</em> and allow your browser or file manager.</li>
+  <li><strong>Install APK:</strong> Open the downloaded APK file and tap <strong>Install</strong>.</li>
+  <li><strong>Grant Permissions:</strong>
+    <ul>
+      <li><strong>Notifications:</strong> Required for the 8:30 AM Timetable Briefing, 30-minute advance class reminders, and 8:00 PM Daily Psychology Facts.</li>
+      <li><strong>Exact Alarms (Android 12+):</strong> Ensures class alerts fire with pinpoint accuracy down to the minute.</li>
+      <li><strong>Storage / Media:</strong> Required if you wish to import university timetable PDFs or study notes into the PDF Library.</li>
+    </ul>
+  </li>
+  <li><strong>Initial Profile Setup:</strong> On first launch, enter your Name, University/College (e.g., Bangalore City University), Semester (1 to 4), and Specialization (Organic, Inorganic, Physical, or Analytical Chemistry).</li>
+</ol>
+
+<!-- CHAPTER 3 -->
+<div class="page-break"></div>
+<h2>3. Smart Timetable & Attendance Intelligence Engine</h2>
+<p>
+  The attendance module in ChemBuddy is not a simple counter—it is a predictive mathematical engine designed to prevent hall ticket debarment and manage attendance safely.
+</p>
+
+<h3>The 75% Cutoff Mathematics</h3>
+<p>
+  Most Indian and global universities enforce a mandatory <strong>75% attendance threshold</strong> for semester exam eligibility. ChemBuddy constantly computes two critical metrics:
+</p>
+<ol>
+  <li><strong>Classes Needed to Reach 75% (Target Equation):</strong>
+    <p>If current attendance is below 75%, ChemBuddy solves:</p>
+    <p><code>$$	ext{Needed} = \max\left(0, \lceil 3 	imes 	ext{Absent} - 	ext{Present} ceilight)$$</code></p>
+    <p>It tells you the exact number of consecutive classes you must attend without missing a single one to recover eligibility.</p>
+  </li>
+  <li><strong>Safe Bunks Available (Buffer Equation):</strong>
+    <p>If current attendance is safely above 75%, ChemBuddy solves:</p>
+    <p><code>$$	ext{Can Skip} = \max\left(0, \lfloor (	ext{Present} - 3 	imes 	ext{Absent}) / 3 flooright)$$</code></p>
+    <p>This reveals the exact number of classes you can afford to skip while remaining strictly above the 75.0% threshold.</p>
+  </li>
+</ol>
+
+<h3>Postponed, Cancelled & Excused Classes</h3>
+<p>
+  ChemBuddy supports four distinct attendance states:
+</p>
+<table>
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>Effect on Percentage</th>
+      <th>Use Case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Present (✅)</strong></td>
+      <td>Increments both Present and Total Count</td>
+      <td>Student attended the class in person or online.</td>
+    </tr>
+    <tr>
+      <td><strong>Absent (❌)</strong></td>
+      <td>Increments Total Count, Present remains unchanged</td>
+      <td>Student missed class or arrived after roll call.</td>
+    </tr>
+    <tr>
+      <td><strong>Postponed / Cancelled (⏸️)</strong></td>
+      <td><strong>Excluded from calculation</strong></td>
+      <td>Faculty was absent, college holiday, or lab rescheduled. Does not penalize student.</td>
+    </tr>
+    <tr>
+      <td><strong>Excused / On Duty (OD)</strong></td>
+      <td>Treated as Present</td>
+      <td>Official college duty, conference, sports, or medical leave approved by HOD.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>2D University Grid Timetable Parser</h3>
+<p>
+  Instead of manually typing weekly classes, you can load institutional schedules directly:
+</p>
+<ul>
+  <li><strong>Auto-Extraction:</strong> Parses complex university timetable tables (including Dr. Manmohan Singh BCU MSc Chemistry presets).</li>
+  <li><strong>Combined Practical Codes:</strong> Automatically recognizes 4-hour joint lab sessions (e.g. <code>CHE-504P</code> Organic Lab).</li>
+  <li><strong>Faculty Legend Resolution:</strong> Maps faculty acronyms (e.g. <code>DS</code> → <em>Dr. Sharma</em>) to schedule slots automatically.</li>
+</ul>
+
+<!-- CHAPTER 4 -->
+<div class="page-break"></div>
+<h2>4. Notification System & Action Shade (1-Tap Attendance)</h2>
+<p>
+  ChemBuddy features an active notification engine anchored to the <strong>Asia/Kolkata (IST)</strong> timezone, operating across 5 dedicated Android channels.
+</p>
+
+<div class="callout callout-success">
+  <div class="callout-title">⚡ Industry-First: Action Shade Attendance</div>
+  You never have to open the app to mark attendance! When a class reminder arrives in your notification shade, tap <strong>Present ✅</strong> or <strong>Absent ❌</strong> directly from the notification. ChemBuddy instantly logs the record to local Hive storage, updates your percentages, and posts a discreet confirmation toast.
+</div>
+
+<h3>The 5 Notification Channels</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Channel Name</th>
+      <th>Trigger Time</th>
+      <th>Description & Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Class Reminders</strong><br><code>chem_buddy_classes</code></td>
+      <td>30 min before class (customizable: 5, 10, 15, 30, 60m)</td>
+      <td>Advance alert with room number, subject, attendance health tier, and direct 1-tap Present / Absent action buttons.</td>
+    </tr>
+    <tr>
+      <td><strong>Daily Timetable</strong><br><code>chem_buddy_daily</code></td>
+      <td>Every morning at <strong>8:30 AM sharp</strong></td>
+      <td>Complete morning briefing: class count, time breakdown, rooms, overall attendance %, and humorous chemistry banter.</td>
+    </tr>
+    <tr>
+      <td><strong>Daily Psychology Facts</strong><br><code>chem_buddy_psychology_facts</code></td>
+      <td>Every evening at <strong>8:00 PM sharp</strong></td>
+      <td>Daily fascinating insight into human behavior, memory, cognitive biases, or habits (120+ rotating facts).</td>
+    </tr>
+    <tr>
+      <td><strong>Tests & Assignments</strong><br><code>chem_buddy_deadlines</code></td>
+      <td>24h & 2h before deadline</td>
+      <td>Reminders for upcoming internal assessments, lab record submissions, seminars, and university exams.</td>
+    </tr>
+    <tr>
+      <td><strong>Study & Flashcards</strong><br><code>chem_buddy_flashcards</code></td>
+      <td>When spaced review is due</td>
+      <td>Active recall reminders preventing memory decay along the Ebbinghaus forgetting curve.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- CHAPTER 5 -->
+<div class="page-break"></div>
+<h2>5. Daily Psychology Facts Engine (120+ Curated Facts)</h2>
+<p>
+  Inspired by the popular "Psychology Facts" app, ChemBuddy v3.5.0 includes a dedicated, scientifically grounded psychology facts engine. Studying postgraduate chemistry demands deep focus, high emotional resilience, and optimized memory retention. This feature delivers daily evidence-based cognitive insights.
+</p>
+
+<h3>Domains of Psychology Covered</h3>
+<div class="feature-grid">
+  <div class="feature-box">
+    <h4>1. Cognitive Biases & Heuristics</h4>
+    <p>The Zeigarnik Effect, Halo Effect, Dunning-Kruger Effect, Pratfall Effect, Spotlight Effect, Framing Effect, Anchoring Bias, Loss Aversion, Sunk Cost Fallacy, and Dual-Process Theory (System 1 vs 2).</p>
+  </div>
+  <div class="feature-box">
+    <h4>2. Memory & Learning Psychology</h4>
+    <p>Ebbinghaus Forgetting Curve, Testing Effect, Serial Position Effect (Primacy & Recency), State-Dependent Memory, Sleep Consolidation, Generation Effect, and Von Restorff Isolation Effect.</p>
+  </div>
+  <div class="feature-box">
+    <h4>3. Brain Science & Neuroplasticity</h4>
+    <p>Mirror Neurons, Dopamine Anticipation Engine, Neuroplasticity Across Life, The Amygdala Hijack, The McGurk Effect, Ultradian Rhythms (90-min focus blocks), and Sleep Spindles.</p>
+  </div>
+  <div class="feature-box">
+    <h4>4. Habits, Focus & Peak Performance</h4>
+    <p>The 20-Second Rule, Implementation Intentions ("If-Then" planning), Parkinson's Law, Decision Fatigue, The Pomodoro Effect, The 5-Second Rule, and The 1% Daily Compounding Rule.</p>
+  </div>
+</div>
+
+<h3>Prime-Weighted Calendar Rotation</h3>
+<p>
+  To guarantee that <strong>every single day gets a completely distinct, non-repeating fact</strong>, ChemBuddy uses a deterministic prime-weighted hashing formula:
+</p>
+<p><code>$$	ext{Index} = \left( 	ext{Year} 	imes 365 + 	ext{DayOfYear} 	imes 47 + 	ext{Month} 	imes 13 ight) \pmod{	ext{TotalFacts}}$$</code></p>
+<p>
+  This ensures consecutive days never repeat and cycle across different psychological categories, while remaining completely deterministic so scheduled alarms and in-app cards display identical content.
+</p>
+
+<!-- CHAPTER 6 -->
+<div class="page-break"></div>
+<h2>6. Home Dashboard & Contextual Intelligence</h2>
+<p>
+  The Home Dashboard acts as your academic mission control. It synthesizes real-time attendance, upcoming classes, diagnostic study recommendations, and daily inspiration.
+</p>
+
+<h3>Claude-Inspired Intelligent Welcome Text</h3>
+<p>
+  Instead of a generic "Good morning", ChemBuddy dynamically crafts 40+ chemistry-themed greetings based on three real-time parameters:
+</p>
+<ol>
+  <li><strong>Time of Day:</strong>
+    <ul>
+      <li><em>Midnight to 4 AM:</em> "Burning the midnight Bunsen burner, [Name] — Even catalysts need rest to regenerate."</li>
+      <li><em>4 AM to 8 AM:</em> "Rise and catalyze, [Name] ⚗️ — Your neurons are fresh and ready for synthesis."</li>
+      <li><em>8 AM to 12 PM:</em> "New week, new reactions. Let's start with high yield, [Name] 🔬"</li>
+      <li><em>Afternoon & Evening:</em> Tailored to post-lab winding down and analytical problem solving.</li>
+    </ul>
+  </li>
+  <li><strong>Attendance Health Tiers:</strong>
+    <ul>
+      <li><em>Below 75% (Danger):</em> "Your attendance needs an emergency titration, [Name] ⚠️ Every class counts today."</li>
+      <li><em>85%+ (Exemplary):</em> "Look at you, academic weapon! Flawless attendance streak intact 🌟"</li>
+    </ul>
+  </li>
+  <li><strong>Day of the Week:</strong> Special Monday kickoff energy and Friday sprint reflections.</li>
+</ol>
+
+<h3>In-App Daily Psychology Fact Card</h3>
+<p>
+  Located directly in the dashboard between the MSc Chemistry Hub and Schedule status:
+</p>
+<ul>
+  <li><strong>Category Chip:</strong> Color-coded badge (e.g., Purple for <em>Cognitive Biases</em>, Blue for <em>Memory</em>, Green for <em>Habits</em>).</li>
+  <li><strong>Title & Emoji:</strong> Clearly formatted concept name (e.g. <code>⏳ The Zeigarnik Effect</code>).</li>
+  <li><strong>Detailed Phenomenon:</strong> 2–3 sentences explaining the underlying psychological discovery.</li>
+  <li><strong>Practical Takeaway Box:</strong> <code>💡 Insight:</code> Actionable advice tailored for studying and daily life.</li>
+  <li><strong>Shuffle Button (🔀):</strong> Tap to cycle through random facts on demand for quick mental breaks.</li>
+</ul>
+
+<!-- CHAPTER 7 -->
+<div class="page-break"></div>
+<h2>7. ChemDraw Pro & Ketcher Pro (118-Element Molecular Sketcher)</h2>
+<p>
+  ChemBuddy v3.5.0 features a full-fledged chemical structure drawing canvas optimized for touchscreens and desktop mice alike.
+</p>
+
+<h3>118-Element Periodic Table Modal</h3>
+<p>
+  Tap the element button or the <code>🧪</code> icon to open the complete 118-element IUPAC periodic table:
+</p>
+<ul>
+  <li><strong>Instant Search:</strong> Filter elements by symbol (<code>Fe</code>), name (<code>Iron</code>), or atomic number (<code>26</code>).</li>
+  <li><strong>Category Filters:</strong> Filter by Alkali metals, Alkaline earth, Transition metals, Lanthanides, Actinides, Post-transition, Metalloids, Nonmetals, Halogens, and Noble gases.</li>
+  <li><strong>Full CPK Color Palette:</strong> Every element renders with standard CPK colors (Carbon: dark grey, Oxygen: red, Nitrogen: blue, Chlorine: green, Bromine: dark red, etc.).</li>
+</ul>
+
+<h3>ChemDraw Pro Canvas Tools</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Tool / Icon</th>
+      <th>Tool Name</th>
+      <th>Operation & Function</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>— / = / ≡</strong></td>
+      <td>Bonds</td>
+      <td>Draws single, double, or triple covalent bonds between atoms with automatic angle snapping (30°/60°/120°).</td>
+    </tr>
+    <tr>
+      <td><strong>▲ / ▰</strong></td>
+      <td>Stereo Bonds</td>
+      <td>Wedge (solid) and Dash (hashed) bonds for indicating R/S stereochemistry and 3D spatial orientation.</td>
+    </tr>
+    <tr>
+      <td><strong>⤴</strong></td>
+      <td>Electron Arrow</td>
+      <td>Curved arrow for arrow-pushing mechanisms (nucleophilic attack, resonance, pericyclic electron flow).</td>
+    </tr>
+    <tr>
+      <td><strong>⬚</strong></td>
+      <td>Marquee Selection</td>
+      <td>Drag a selection rectangle over atoms to group, move, rotate, or delete fragments collectively.</td>
+    </tr>
+    <tr>
+      <td><strong>🧹</strong></td>
+      <td>2D Clean-Up</td>
+      <td>Standardizes all bond lengths to 55px and snaps valence angles to idealized textbook geometry.</td>
+    </tr>
+    <tr>
+      <td><strong>+ / -</strong></td>
+      <td>Formal Charges</td>
+      <td>Applies +1, -1, +2, -2 formal charge badges with circled superscripts and exports <code>M CHG</code> in MDL Molfiles.</td>
+    </tr>
+    <tr>
+      <td><strong>→</strong></td>
+      <td>Reaction Arrow</td>
+      <td>Draws a horizontal reaction arrow separating reactants from products on the canvas.</td>
+    </tr>
+    <tr>
+      <td><strong>🔍</strong></td>
+      <td>Pinch & Pan</td>
+      <td>Two-finger pinch to zoom (0.3x to 3.0x) and two-finger drag to pan canvas. Tap 🔍 to reset view to 1.0x.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Functional Group Quick Palette</h3>
+<p>
+  Quickly attach standard functional groups to any selected atom in one tap:
+</p>
+<p><code>—OH</code> (Hydroxyl) · <code>—NH₂</code> (Amino) · <code>—COOH</code> (Carboxylic Acid) · <code>—CHO</code> (Aldehyde) · <code>—NO₂</code> (Nitro) · <code>—CN</code> (Cyano)</p>
+
+<h3>MSc Molecular Templates</h3>
+<p>
+  Non-destructive template loading allows adding rings and heterocycles without overwriting your existing sketch:
+  <strong>Benzene</strong>, <strong>Cyclohexane</strong>, <strong>Cyclopentane</strong>, <strong>Pyridine</strong>, <strong>Aspirin</strong>, <strong>Naphthalene</strong>, <strong>Indole</strong>, <strong>Imidazole</strong>, <strong>Thiophene</strong>, <strong>Furan</strong>, <strong>18-Crown-6</strong>, <strong>Ferrocene</strong>, <strong>Steroid core</strong>, <strong>Boc/Fmoc/TBS protecting groups</strong>, and <strong>Porphyrin ring</strong>.
+</p>
+
+<!-- CHAPTER 8 -->
+<div class="page-break"></div>
+<h2>8. Reaction Product Prediction & 2D Vector SVG Output</h2>
+<p>
+  A major breakthrough in ChemBuddy v3.5.0 is the complete overhaul of chemical reaction product prediction and its vector graphics output.
+</p>
+
+<h3>45+ Instant Offline Reaction Rules (0ms Latency)</h3>
+<p>
+  When you draw reactants or enter reactant SMILES and tap <strong>Predict Product ⚡</strong>, ChemBuddy first runs its deterministic offline reaction engine:
+</p>
+<ul>
+  <li><strong>Aspirin Synthesis:</strong> Salicylic Acid + Acetic Anhydride $ightarrow$ Aspirin + Acetic Acid.</li>
+  <li><strong>Paracetamol Synthesis:</strong> 4-Aminophenol + Acetic Anhydride $ightarrow$ Paracetamol.</li>
+  <li><strong>Acetanilide Synthesis:</strong> Aniline + Acetic Anhydride $ightarrow$ Acetanilide.</li>
+  <li><strong>Esterification:</strong> Benzoic Acid / Carboxylic acids + Alcohols $ightarrow$ Esters (Methyl benzoate, Ethyl benzoate, Ethyl acetate).</li>
+  <li><strong>Electrophilic Aromatic Substitution (EAS):</strong> Nitration, Bromination, Sulfonation, Friedel-Crafts Alkylation & Acylation of Benzene, Toluene, Aniline, and Phenol.</li>
+  <li><strong>Named Organic Reactions:</strong> Kolbe-Schmitt, Reimer-Tiemann, Williamson Ether Synthesis, Aldol Condensation, Cannizzaro, Benzoin, Diels-Alder cycloadditions.</li>
+  <li><strong>Additions & Eliminations:</strong> Markovnikov & Anti-Markovnikov additions to alkenes, SN1/SN2 substitutions, E1/E2 eliminations, carbonyl reductions (NaBH4/LiAlH4), and alcohol oxidations.</li>
+</ul>
+
+<h3>Pure Client-Side 2D Vector SVG Engine (<code>SmilesSvgGenerator</code>)</h3>
+<p>
+  Previously, chemical structure renderers either relied on external server calls (like NIH Cactus) or fell back to raw text placeholders (<code>&lt;text&gt;PRODUCT&lt;/text&gt;</code>). ChemBuddy v3.5.0 introduces a standalone, client-side SVG generator:
+</p>
+<ol>
+  <li><strong>Hand-Tuned Textbook Coordinates:</strong> High-precision coordinates for all common aromatic and heterocyclic scaffolds ensure publication-quality geometry.</li>
+  <li><strong>Graph-Based Layout Engine:</strong> Arbitrary SMILES strings are parsed into molecular graphs with regular polygon rings (5, 6-membered), 120° zig-zag aliphatic chains, and double/triple bond offsets.</li>
+  <li><strong>CPK Heteroatoms & Masks:</strong> Heteroatoms (O: red, N: blue, S: yellow, P: orange, Halogens: green/brown/purple) render with circular background masks to cleanly occlude underlying bonds.</li>
+  <li><strong>100% Vector Scalability:</strong> The resulting SVGs render sharply at any zoom scale or DPI without pixelation.</li>
+</ol>
+
+<!-- CHAPTER 9 -->
+<div class="page-break"></div>
+<h2>9. Spectroscopy & Chromatography Hub</h2>
+<p>
+  The Spectroscopy Hub covers 8 essential analytical techniques taught across postgraduate chemistry curricula.
+</p>
+
+<h3>The 8 Analytical Techniques</h3>
+<ol>
+  <li><strong>Reverse-Phase HPLC (Chromatography):</strong> Retention factor ($k'$), resolution ($R_s$), theoretical plates ($N$), and tailing factor ($T_f$).</li>
+  <li><strong>Gas Chromatography (Chromatography):</strong> Kovats retention index ($I$), Van Deemter equation ($H = A + B/u + Cu$).</li>
+  <li><strong>Thin Layer Chromatography (Chromatography):</strong> Retention factor ($R_f = d_{	ext{solute}} / d_{	ext{solvent}}$).</li>
+  <li><strong>500 MHz 1H NMR (Spectroscopy):</strong> Chemical shifts ($\delta$, ppm), spin-spin coupling ($J$, Hz), integration, and splitting patterns.</li>
+  <li><strong>13C DEPT NMR (Spectroscopy):</strong> Quaternary carbons, CH, CH2, and CH3 discrimination across DEPT-45, DEPT-90, and DEPT-135.</li>
+  <li><strong>FT-IR Spectroscopy (Spectroscopy):</strong> Functional group frequencies ($ar{
+u}$, $	ext{cm}^{-1}$), Hooke's law, reduced mass ($\mu$).</li>
+  <li><strong>Mass Spectrometry (Spectroscopy):</strong> Molecular ion ($M^+$), base peak, isotope clusters ($M+1$, $M+2$), and Nitrogen Rule.</li>
+  <li><strong>UV-Visible Spectroscopy (Spectroscopy):</strong> Beer-Lambert law ($A = arepsilon c l$), $\lambda_{\max}$, chromophores, and auxochromes.</li>
+</ol>
+
+<h3>Interactive Zoom & Peak Inspection</h3>
+<p>
+  Every technique includes a high-resolution interactive spectrogram:
+</p>
+<ul>
+  <li><strong>Pinch & Pan (1.0x to 5.0x):</strong> Smooth 2D navigation powered by <code>InteractiveViewer</code>.</li>
+  <li><strong>Zoom Toolbar:</strong> Dedicated on-screen buttons: <code>+</code> (Zoom in), <code>-</code> (Zoom out), <code>Reset</code> (1.0x), and live zoom level badge.</li>
+  <li><strong>Haptic Peak Snapping:</strong> Tap near any peak on the spectrum to trigger haptic feedback, snapping an inspection crosshair that displays exact chemical shift ($\delta$), retention time ($t_R$), or wavenumber ($	ext{cm}^{-1}$).</li>
+  <li><strong>Textbook KaTeX Math:</strong> All fundamental principles, formulas, and axis definitions render with beautiful KaTeX equations.</li>
+</ul>
+
+<!-- CHAPTER 10 -->
+<div class="page-break"></div>
+<h2>10. Spectroscopy Structure Solver Intelligence (52+ Molecules)</h2>
+<p>
+  The Structure Solver is an algorithmic and database-driven deduction engine that solves unknown molecular structures from multi-spectral data.
+</p>
+
+<h3>52+ Curated MSc Chemistry Compounds</h3>
+<p>
+  Contains full spectral fingerprints ($^1	ext{H}$ NMR, $^{13}	ext{C}$ NMR, FT-IR, MS, UV-Vis) for over 52 postgraduate benchmark molecules:
+  <em>Aspirin, Paracetamol, Benzoic Acid, Salicylic Acid, Benzaldehyde, Phenol, Aniline, Nitrobenzene, Toluene, Benzyl Alcohol, Acetophenone, Benzocaine, 1-Bromopropane, 2-Bromopropane, Vanillin, Ethyl propionate, Methyl salicylate, Ibuprofen, Pyridine, etc.</em>
+</p>
+
+<h3>Algorithmic Solver Workflow for Arbitrary Formulas</h3>
+<p>
+  When presented with an unlisted molecular formula (e.g. $C_8H_8O$), the solver executes a 4-step deduction:
+</p>
+<div class="step-box">
+  <p><span class="step-num">1</span> <strong>Double Bond Equivalent (DBE / IHD):</strong></p>
+  <p><code>$$	ext{DBE} = C + 1 - rac{H}{2} - rac{X}{2} + rac{N}{2}$$</code></p>
+  <p>A DBE of 4+ immediately signals a benzene ring ($C_6H_5$ or substituted).</p>
+</div>
+<div class="step-box">
+  <p><span class="step-num">2</span> <strong>FT-IR Functional Group Classification:</strong></p>
+  <p>Cross-references carbonyls ($1680	ext{–}1750	ext{ cm}^{-1}$), hydroxyls ($3200	ext{–}3600	ext{ cm}^{-1}$), and aromatic C=C stretches ($1500	ext{–}1600	ext{ cm}^{-1}$).</p>
+</div>
+<div class="step-box">
+  <p><span class="step-num">3</span> <strong>1H NMR Splitting & Integration Analysis:</strong></p>
+  <p>Distinguishes isomers (e.g. Acetophenone's 3H singlet at $\delta 2.6$ vs Benzaldehyde's 1H singlet at $\delta 9.9$).</p>
+</div>
+<div class="step-box">
+  <p><span class="step-num">4</span> <strong>Constitutional Isomer Ruling-Out:</strong></p>
+  <p>Explains systematically why other constitutional isomers with the same formula are impossible based on the observed data.</p>
+</div>
+
+<!-- CHAPTER 11 -->
+<div class="page-break"></div>
+<h2>11. MSc Chemistry Toolkit & 16 Postgrad Calculators</h2>
+<p>
+  The Chemistry Toolkit consolidates 16 high-precision calculators across 6 dedicated tabs:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tab</th>
+      <th>Calculator Name</th>
+      <th>Governing Equation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="3"><strong>Solutions</strong></td>
+      <td>Molar Mass Calculator</td>
+      <td>$	ext{MW} = \sum n_i \cdot M_i$ (Supports complex formulas like $	ext{Fe}_4[	ext{Fe}(	ext{CN})_6]_3$)</td>
+    </tr>
+    <tr>
+      <td>Molarity Calculator</td>
+      <td>$M = rac{m}{MW 	imes V_{	ext{liters}}}$</td>
+    </tr>
+    <tr>
+      <td>Dilution Assistant</td>
+      <td>$C_1 V_1 = C_2 V_2$</td>
+    </tr>
+    <tr>
+      <td rowspan="3"><strong>Acid-Base</strong></td>
+      <td>pH & pOH Calculator</td>
+      <td>$	ext{pH} = -\log[H^+]$, $	ext{pH} + 	ext{pOH} = 14$</td>
+    </tr>
+    <tr>
+      <td>Henderson-Hasselbalch</td>
+      <td>$	ext{pH} = 	ext{p}K_a + \log\left(rac{[	ext{A}^-]}{[	ext{HA}]}ight)$</td>
+    </tr>
+    <tr>
+      <td>Buffer Formulation Assistant</td>
+      <td>Computes exact mass of weak acid and conjugate salt needed for target pH.</td>
+    </tr>
+    <tr>
+      <td rowspan="2"><strong>Thermo & Kinetics</strong></td>
+      <td>Gibbs Free Energy</td>
+      <td>$\Delta G = \Delta H - T\Delta S$ (Spontaneity and equilibrium temperature)</td>
+    </tr>
+    <tr>
+      <td>Arrhenius Rate Law</td>
+      <td>$k = A e^{-E_a / RT}$, $\ln(k_2/k_1) = rac{E_a}{R}\left(rac{1}{T_1} - rac{1}{T_2}ight)$</td>
+    </tr>
+    <tr>
+      <td rowspan="2"><strong>Spectroscopy</strong></td>
+      <td>Beer-Lambert Law</td>
+      <td>$A = arepsilon \cdot b \cdot c$ (Solves for unknown concentration or pathlength)</td>
+    </tr>
+    <tr>
+      <td>Photon Energy & Wavelength</td>
+      <td>$E = h
+u = rac{hc}{\lambda}$ (Converts eV, Joules, nm, and wavenumbers)</td>
+    </tr>
+    <tr>
+      <td rowspan="2"><strong>Electrochem</strong></td>
+      <td>Nernst Equation</td>
+      <td>$E = E^\circ - rac{RT}{nF}\ln Q = E^\circ - rac{0.05916}{n}\log_{10} Q$</td>
+    </tr>
+    <tr>
+      <td>Cell Potential ($E^\circ_{	ext{cell}}$)</td>
+      <td>$E^\circ_{	ext{cell}} = E^\circ_{	ext{cathode}} - E^\circ_{	ext{anode}}$</td>
+    </tr>
+    <tr>
+      <td rowspan="4"><strong>Analytical</strong></td>
+      <td>HPLC Calibration Curve</td>
+      <td>Linear regression ($y = mx + c$), $R^2$, and unknown sample quantification.</td>
+    </tr>
+    <tr>
+      <td>Theoretical Plates ($N$)</td>
+      <td>$N = 16 \left(rac{t_R}{W}ight)^2 = 5.54 \left(rac{t_R}{W_{1/2}}ight)^2$</td>
+    </tr>
+    <tr>
+      <td>Chromatographic Resolution ($R_s$)</td>
+      <td>$R_s = rac{2(t_{R2} - t_{R1})}{W_1 + W_2}$</td>
+    </tr>
+    <tr>
+      <td>Kovats Retention Index ($I$)</td>
+      <td>$I = 100 \left[ n + (N-n) rac{\log t'_{R(x)} - \log t'_{R(n)}}{\log t'_{R(N)} - \log t'_{R(n)}} ight]$</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- CHAPTER 12 -->
+<div class="page-break"></div>
+<h2>12. Pericyclic Hub & Woodward-Hoffmann FMO Engine</h2>
+<p>
+  Pericyclic reactions are notoriously tricky in competitive exams like CSIR-NET and GATE. ChemBuddy incorporates a Frontier Molecular Orbital (FMO) engine:
+</p>
+
+<h3>Woodward-Hoffmann Selection Rules Matrix</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Reaction Type</th>
+      <th>Electron System</th>
+      <th>Thermal ($\Delta$)</th>
+      <th>Photochemical ($h
+u$)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="2"><strong>Electrocyclic Reactions</strong></td>
+      <td>$4n$ electrons (e.g. Butadiene)</td>
+      <td><strong>Conrotatory</strong></td>
+      <td><strong>Disrotatory</strong></td>
+    </tr>
+    <tr>
+      <td>$4n+2$ electrons (e.g. Hexatriene)</td>
+      <td><strong>Disrotatory</strong></td>
+      <td><strong>Conrotatory</strong></td>
+    </tr>
+    <tr>
+      <td rowspan="2"><strong>Cycloadditions</strong></td>
+      <td>$4n$ electrons (e.g. $[2+2]$)</td>
+      <td>Symmetry Forbidden ($s+s$)</td>
+      <td><strong>Allowed</strong> ($s+s$)</td>
+    </tr>
+    <tr>
+      <td>$4n+2$ electrons (e.g. $[4+2]$ Diels-Alder)</td>
+      <td><strong>Allowed</strong> ($s+s$, Endo selective)</td>
+      <td>Symmetry Forbidden</td>
+    </tr>
+    <tr>
+      <td rowspan="2"><strong>Sigmatropic Shifts</strong></td>
+      <td>$[1,3]$ hydrogen shift</td>
+      <td>Forbidden (Suprafacial)</td>
+      <td><strong>Allowed</strong> (Suprafacial)</td>
+    </tr>
+    <tr>
+      <td>$[1,5]$ / $[3,3]$ (Cope, Claisen)</td>
+      <td><strong>Allowed</strong> (Suprafacial / Chair-like)</td>
+      <td>Forbidden</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- CHAPTER 13 -->
+<h2>13. Smart Flashcards & Spaced Repetition (Active Recall)</h2>
+<p>
+  ChemBuddy implements the <strong>SuperMemo-2 (SM-2) spaced repetition algorithm</strong> to ensure long-term memorization of chemical reactions, reagents, named mechanisms, and spectroscopic tables.
+</p>
+<ul>
+  <li><strong>Active Recall Testing:</strong> Flashcards present the prompt/reactant first. You mentally formulate the product or mechanism before tapping to reveal the answer.</li>
+  <li><strong>Rating System:</strong> Rate your recall quality from 1 to 4:
+    <ul>
+      <li><code>Again (1)</code>: Complete blackout. Card repeats within the same session.</li>
+      <li><code>Hard (2)</code>: Recalled with significant difficulty. Interval expands slowly.</li>
+      <li><code>Good (3)</code>: Correct recall with normal hesitation. Optimal interval expansion.</li>
+      <li><code>Easy (4)</code>: Instant, confident recall. Interval expands aggressively.</li>
+    </ul>
+  </li>
+  <li><strong>Automated Deck Generation:</strong> Automatically generates flashcard sets from your uploaded PDF notes.</li>
+</ul>
+
+<!-- CHAPTER 14 -->
+<div class="page-break"></div>
+<h2>14. PDF Library, Study Hub & Grounded RAG AI Assistant</h2>
+<p>
+  The PDF Library allows you to store, annotate, and interrogate your course materials.
+</p>
+
+<h3>Strict Single-Source-of-Truth RAG Architecture</h3>
+<p>
+  Most AI chat tools hallucinate when asked advanced chemistry questions. ChemBuddy's RAG engine adheres to strict grounding rules:
+</p>
+<ul>
+  <li><strong>Strictly Grounded on Your Notes:</strong> When chatting in the PDF Study Hub, the AI is constrained strictly to the text extracted from your uploaded PDF.</li>
+  <li><strong>Standardized Refusal:</strong> If a topic is not present in your course PDF, the assistant explicitly states: <em>"This topic is not covered in the provided document."</em> rather than guessing.</li>
+  <li><strong>8192 Token Complete Answers:</strong> Output limits have been quadrupled to 8192 tokens. Answers are comprehensive, complete, and formatted with KaTeX math and structural ASCII schemes.</li>
+</ul>
+
+<!-- CHAPTER 15 -->
+<h2>15. Exam Mode & BCU Model Answer Generator</h2>
+<p>
+  Designed around Bangalore City University (BCU) and Indian central university examination patterns:
+</p>
+<ul>
+  <li><strong>2-Mark Question Mode:</strong> Concise, precise definitions, IUPAC nomenclature, and brief statements.</li>
+  <li><strong>5-Mark Question Mode:</strong> Step-by-step mechanism, electron arrow pushing, and key intermediates.</li>
+  <li><strong>10-Mark Question Mode:</strong> Comprehensive essays, retro-synthetic analysis, multi-step synthesis, and spectroscopic validation.</li>
+</ul>
+
+<!-- CHAPTER 16 -->
+<div class="page-break"></div>
+<h2>16. Settings, Backup, Security & Offline Architecture</h2>
+
+<h3>Notification Preferences Management</h3>
+<p>
+  Navigate to <em>Settings → Notifications</em> to configure:
+</p>
+<ul>
+  <li>Master Toggle: Enable/Disable all notifications.</li>
+  <li>Class Reminders (with 1-Tap Attendance).</li>
+  <li>Daily Timetable Briefing (8:30 AM IST).</li>
+  <li>Daily Psychology Facts (8:00 PM IST).</li>
+  <li>Assignment & Exam Reminders.</li>
+  <li>Spaced Repetition Flashcard Due Alerts.</li>
+  <li>Instant Test Dispatch: Tap <strong>🔔 Send Test Notification Now</strong> or <strong>🧠 Send Psychology Fact Now</strong> to test your notification shade immediately.</li>
+</ul>
+
+<h3>Data Backup & Restore</h3>
+<ul>
+  <li><strong>Local JSON Export:</strong> Export your complete profile, attendance logs, flashcard decks, and timetable as a portable JSON file.</li>
+  <li><strong>Restore:</strong> Import backup JSON on a new device to instantly restore all records with zero data loss.</li>
+</ul>
+
+<!-- CHAPTER 17 -->
+<h2>17. Troubleshooting & Frequently Asked Questions (FAQ)</h2>
+
+<div class="callout callout-warning">
+  <div class="callout-title">Q1: Why didn't my 8:30 AM timetable notification sound?</div>
+  <strong>Answer:</strong> On Android 12+, ensure that <em>"Alarms & Reminders"</em> permission is granted in Android System Settings. Also, check that battery optimization for ChemBuddy is set to <em>"Unrestricted"</em> so Android's Doze mode does not defer morning alarms.
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">Q2: Can I draw inorganic coordination complexes in ChemDraw Pro?</div>
+  <strong>Answer:</strong> Yes! Open the 118-element periodic table, select your central transition metal (e.g. Fe, Co, Pt), and use coordination bonds. You can also load the <em>Ferrocene</em> or <em>Porphyrin</em> templates directly.
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">Q3: How does ChemBuddy calculate attendance if a class is cancelled?</div>
+  <strong>Answer:</strong> Mark the class as <em>Postponed / Cancelled (⏸️)</em>. ChemBuddy completely removes that slot from both the numerator and denominator, ensuring your percentage is never unfairly penalized.
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">Q4: Does the reaction product predictor require internet?</div>
+  <strong>Answer:</strong> No! The 45+ standard MSc organic reaction rules and the <code>SmilesSvgGenerator</code> vector engine run 100% locally on your device with 0ms latency.
+</div>
+
+<hr style="margin-top: 40px; border: 0; border-top: 1px solid #CBD5E1;">
+<p style="text-align: center; color: #64748B; font-size: 10pt;">
+  <strong>ChemBuddy v3.5.0 Operating Manual</strong><br>
+  Engineered with ❤️ for MSc Chemistry Students worldwide by <strong>Prajwal A Kambar</strong>.
+</p>
+
+</body>
+</html>

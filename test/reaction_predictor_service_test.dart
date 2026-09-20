@@ -104,5 +104,39 @@ void main() {
       expect(res.productSmiles, equals('BrCCBr'));
       expect(res.svgData, contains('<svg'));
     });
+
+    test('12. Predicts Diels-Alder Cycloaddition (Cyclopentadiene + Maleic Anhydride) with mechanism steps', () async {
+      final res = await ReactionPredictorService.instance.predictMajorProduct('C1=CCC=C1.O=C1OC(=O)C=C1');
+      expect(res.success, isTrue);
+      expect(res.productSmiles, equals('O=C1OC(=O)C2C1C3CC2C=C3'));
+      expect(res.svgData, contains('<svg'));
+      expect(res.reactionName, contains('Diels-Alder'));
+      expect(res.mechanismSteps, isNotEmpty);
+      expect(res.mechanismSteps.first.electronPushing, contains('pi-electron'));
+    });
+
+    test('13. Predicts Cyclopentadiene Dimerization with valid SVG and mechanism', () async {
+      final res = await ReactionPredictorService.instance.predictMajorProduct('C1=CCC=C1.C1=CCC=C1');
+      expect(res.success, isTrue);
+      expect(res.productSmiles, equals('C1C=CC2C1C3CC2C=C3'));
+      expect(res.svgData, contains('<svg'));
+      expect(res.reactionName, contains('Dimerization'));
+    });
+
+    test('14. Predicts Cyclopentadiene + Benzene (Benzonorbornadiene) with valid SVG', () async {
+      final res = await ReactionPredictorService.instance.predictMajorProduct('C1=CCC=C1.c1ccccc1');
+      expect(res.success, isTrue);
+      expect(res.productSmiles, equals('C1=CC2CC1c3ccccc23'));
+      expect(res.svgData, contains('<svg'));
+      expect(res.reactionName, contains('Cycloaddition'));
+    });
+
+    test('15. Offline fallback provides predicted product, mechanism, and valid SVG for arbitrary reactants', () async {
+      final res = await ReactionPredictorService.instance.predictMajorProduct('c1ccccc1.c1ccccc1');
+      expect(res.success, isTrue);
+      expect(res.productSmiles.isNotEmpty, isTrue);
+      expect(res.svgData, contains('<svg'));
+      expect(res.mechanismSteps, isNotEmpty);
+    });
   });
 }

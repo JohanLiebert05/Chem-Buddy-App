@@ -448,6 +448,211 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                 ],
               ),
             ),
+            if (result.reactionName.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.bg1,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.borderSubtle),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            result.reactionName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        if (result.reactionClass.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.brandBright.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.brandBright, width: 0.8),
+                            ),
+                            child: Text(
+                              result.reactionClass,
+                              style: const TextStyle(
+                                color: AppColors.brandBright,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (result.productName.isNotEmpty && result.productName != result.reactionName) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Major Product: ${result.productName}',
+                        style: const TextStyle(
+                          color: AppColors.accentCyan,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+            if (result.mechanismSteps.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  Icon(Icons.timeline_rounded, color: AppColors.accentCyan, size: 16),
+                  SizedBox(width: 6),
+                  Text(
+                    'Step-by-Step Reaction Mechanism',
+                    style: TextStyle(
+                      color: AppColors.brandBright,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ...result.mechanismSteps.map((step) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F172A),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF1E293B)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentCyan.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Step ${step.stepNumber}',
+                            style: const TextStyle(
+                              color: AppColors.accentCyan,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            step.stepTitle,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (step.electronPushing.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.subdirectory_arrow_right_rounded, color: Color(0xFFA78BFA), size: 15),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              step.electronPushing,
+                              style: const TextStyle(
+                                color: Color(0xFFA78BFA),
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (step.description.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        step.description,
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 11.5,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              )),
+            ],
+            if (result.drivingForce.isNotEmpty || result.regioselectivityRule.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1B4B).withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.5)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (result.drivingForce.isNotEmpty) ...[
+                      const Row(
+                        children: [
+                          Icon(Icons.bolt_rounded, color: Color(0xFFFBBF24), size: 15),
+                          SizedBox(width: 5),
+                          Text(
+                            'Driving Force',
+                            style: TextStyle(color: Color(0xFFFBBF24), fontSize: 11.5, fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        result.drivingForce,
+                        style: const TextStyle(color: Colors.white, fontSize: 11.5, height: 1.3),
+                      ),
+                    ],
+                    if (result.drivingForce.isNotEmpty && result.regioselectivityRule.isNotEmpty)
+                      const SizedBox(height: 8),
+                    if (result.regioselectivityRule.isNotEmpty) ...[
+                      const Row(
+                        children: [
+                          Icon(Icons.explore_rounded, color: AppColors.accentCyan, size: 15),
+                          SizedBox(width: 5),
+                          Text(
+                            'Regio- & Stereoselectivity',
+                            style: TextStyle(color: AppColors.accentCyan, fontSize: 11.5, fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        result.regioselectivityRule,
+                        style: const TextStyle(color: Colors.white, fontSize: 11.5, height: 1.3),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             // Action Buttons: Import to Canvas & Ask ChemBuddy Mechanism
             Row(

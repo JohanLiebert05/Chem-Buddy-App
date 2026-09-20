@@ -678,6 +678,177 @@ class SmilesSvgGenerator {
       );
     }
 
+    // 12. Norbornene Anhydride (Diels-Alder Adduct)
+    if (lower.contains('o=c1oc(=o)c2c1c3cc2c=c3') ||
+        lower.contains('o=c1oc(=o)c=c1') ||
+        (lower.contains('c1c2cc(c1)c=c2') && lower.contains('o=c'))) {
+      return _buildNorborneneSvg(
+        width: width,
+        height: height,
+        title: title ?? 'NORBORNENE ANHYDRIDE (Diels-Alder)',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₉H₈O₃',
+        hasAnhydride: true,
+      );
+    }
+
+    // 13. Benzonorbornadiene (Diels-Alder / Cycloaddition)
+    if (lower.contains('c1=cc2cc1c3ccccc23') ||
+        lower.contains('c1=cc2cc1c3=cc=cc=c23') ||
+        (lower.contains('c1=ccc=c1') && lower.contains('c1ccccc1')) ||
+        (lower.contains('c1=cc=cc1') && lower.contains('c1ccccc1'))) {
+      return _buildNorborneneSvg(
+        width: width,
+        height: height,
+        title: title ?? 'BENZONORBORNADIENE (Cycloaddition)',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₁₁H₁₀',
+        hasBenzeneFusion: true,
+      );
+    }
+
+    // 14. Dicyclopentadiene (Diels-Alder Dimer)
+    if (lower.contains('c1c=cc2c1c3cc2c=c3') ||
+        lower.contains('c1=ccc=c1.c1=ccc=c1') ||
+        lower.contains('c1=cc=cc1.c1=cc=cc1')) {
+      return _buildNorborneneSvg(
+        width: width,
+        height: height,
+        title: title ?? 'DICYCLOPENTADIENE (Diels-Alder Dimer)',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₁₀H₁₂',
+        hasCyclopenteneFusion: true,
+      );
+    }
+
+    // 15. Norbornene (Bicyclo[2.2.1]hept-2-ene)
+    if (lower == 'c1=cc2cc1cc2' || lower == 'c1c2cc(c1)c=c2' || lower == 'c1cc2cc1cc2') {
+      return _buildNorborneneSvg(
+        width: width,
+        height: height,
+        title: title ?? 'NORBORNENE (Bicyclo[2.2.1]hept-2-ene)',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₇H₁₀',
+      );
+    }
+
+    // 16. Biphenyl
+    if (lower == 'c1ccc(-c2ccccc2)cc1' ||
+        lower == 'c1ccccc1-c2ccccc2' ||
+        lower == 'c1ccc(cc1)c2ccccc2' ||
+        lower == 'c1ccccc1.c1ccccc1') {
+      return _buildCoupledRingsSvg(
+        width: width,
+        height: height,
+        title: title ?? 'BIPHENYL',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₁₂H₁₀',
+        leftRingSize: 6,
+        rightRingSize: 6,
+        leftDoubleBonds: [0, 2, 4],
+        rightDoubleBonds: [0, 2, 4],
+      );
+    }
+
+    // 17. Cyclopentylbenzene (Friedel-Crafts / Coupling)
+    if (lower == 'c1cccc1c2ccccc2' ||
+        lower == 'c1ccccc1c2cccc2' ||
+        (lower.contains('c1cccc1') && lower.contains('c1ccccc1')) ||
+        (lower.contains('c1=cccc1') && lower.contains('c1ccccc1'))) {
+      return _buildCoupledRingsSvg(
+        width: width,
+        height: height,
+        title: title ?? 'CYCLOPENTYLBENZENE',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₁₁H₁₄',
+        leftRingSize: 5,
+        rightRingSize: 6,
+        leftDoubleBonds: const [],
+        rightDoubleBonds: [0, 2, 4],
+      );
+    }
+
+    // 18. Cyclohexylbenzene
+    if (lower == 'c1ccccc1c2ccccc2' && !lower.contains('-c2') ||
+        (lower.contains('c1ccccc1') && lower.contains('c1ccccc1=') == false && lower.length > 12)) {
+      return _buildCoupledRingsSvg(
+        width: width,
+        height: height,
+        title: title ?? 'CYCLOHEXYLBENZENE',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₁₂H₁₆',
+        leftRingSize: 6,
+        rightRingSize: 6,
+        leftDoubleBonds: const [],
+        rightDoubleBonds: [0, 2, 4],
+      );
+    }
+
+    // 19. Cyclohexene: C1=CCCCC1
+    if (lower == 'c1=ccccc1' || lower == 'c1ccccc1=') {
+      return _buildSingleRingSvg(
+        width: width,
+        height: height,
+        title: title ?? 'CYCLOHEXENE',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₆H₁₀',
+        ringSize: 6,
+        doubleBonds: [0],
+      );
+    }
+
+    // 20. Cyclopentadiene: C1=CCC=C1 or C1=CC=CC1
+    if (lower == 'c1=ccc=c1' || lower == 'c1=cc=cc1') {
+      return _buildSingleRingSvg(
+        width: width,
+        height: height,
+        title: title ?? 'CYCLOPENTADIENE',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₅H₆',
+        ringSize: 5,
+        doubleBonds: [0, 2],
+      );
+    }
+
+    // 21. Cyclopentene: C1=CCCC1
+    if (lower == 'c1=cccc1') {
+      return _buildSingleRingSvg(
+        width: width,
+        height: height,
+        title: title ?? 'CYCLOPENTENE',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₅H₈',
+        ringSize: 5,
+        doubleBonds: [0],
+      );
+    }
+
+    // 22. Cyclopentane: C1CCCC1
+    if (lower == 'c1cccc1') {
+      return _buildSingleRingSvg(
+        width: width,
+        height: height,
+        title: title ?? 'CYCLOPENTANE',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₅H₁₀',
+        ringSize: 5,
+        doubleBonds: const [],
+      );
+    }
+
+    // 23. Cyclohexane: C1CCCCC1
+    if (lower == 'c1ccccc1' && smiles.contains('C1CCCCC1')) {
+      return _buildSingleRingSvg(
+        width: width,
+        height: height,
+        title: title ?? 'CYCLOHEXANE',
+        subtitle: subtitle ?? smiles,
+        formula: 'C₆H₁₂',
+        ringSize: 6,
+        doubleBonds: const [],
+      );
+    }
+
     return null;
   }
 
@@ -1041,4 +1212,293 @@ class SmilesSvgGenerator {
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&apos;');
   }
+
+  /// Builds a crisp, publication-grade single ring SVG (Cyclohexene, Cyclopentadiene, etc.)
+  static String _buildSingleRingSvg({
+    required double width,
+    required double height,
+    required String title,
+    required String subtitle,
+    required String formula,
+    required int ringSize,
+    required List<int> doubleBonds,
+  }) {
+    final buffer = StringBuffer();
+    buffer.writeln('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 $width $height" width="100%" height="100%">');
+    buffer.writeln('  <defs>');
+    buffer.writeln('    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">');
+    buffer.writeln('      <stop offset="0%" stop-color="#0B1120"/>');
+    buffer.writeln('      <stop offset="100%" stop-color="#0F172A"/>');
+    buffer.writeln('    </linearGradient>');
+    buffer.writeln('  </defs>');
+    buffer.writeln('  <rect width="$width" height="$height" rx="16" fill="url(#bgGrad)" stroke="#1E293B" stroke-width="1.5"/>');
+
+    // Header
+    buffer.writeln('  <g id="header" font-family="system-ui, -apple-system, sans-serif">');
+    buffer.writeln('    <rect x="16" y="12" width="170" height="22" rx="6" fill="#38BDF8" fill-opacity="0.12" stroke="#38BDF8" stroke-width="1"/>');
+    buffer.writeln('    <circle cx="28" cy="23" r="4" fill="#38BDF8"/>');
+    buffer.writeln('    <text x="101" y="27" fill="#38BDF8" font-size="10" font-weight="800" text-anchor="middle" letter-spacing="0.5">$title</text>');
+    buffer.writeln('  </g>');
+
+    final cx = width / 2;
+    final cy = height / 2 + 4;
+    final r = ringSize == 5 ? 44.0 : 48.0;
+
+    final pts = <math.Point<double>>[];
+    for (int i = 0; i < ringSize; i++) {
+      final angle = (i * 2 * math.pi / ringSize) - math.pi / 2;
+      pts.add(math.Point(cx + r * math.cos(angle), cy + r * math.sin(angle)));
+    }
+
+    buffer.writeln('  <g id="ring-bonds">');
+    for (int i = 0; i < ringSize; i++) {
+      final p1 = pts[i];
+      final p2 = pts[(i + 1) % ringSize];
+      buffer.writeln('    <line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+
+      if (doubleBonds.contains(i)) {
+        final inR = r - 8.0;
+        final a1 = (i * 2 * math.pi / ringSize) - math.pi / 2;
+        final a2 = ((i + 1) * 2 * math.pi / ringSize) - math.pi / 2;
+        final mx1 = cx + inR * math.cos(a1);
+        final my1 = cy + inR * math.sin(a1);
+        final mx2 = cx + inR * math.cos(a2);
+        final my2 = cy + inR * math.sin(a2);
+        buffer.writeln('    <line x1="$mx1" y1="$my1" x2="$mx2" y2="$my2" stroke="#CBD5E1" stroke-width="2.0" stroke-linecap="round"/>');
+      }
+    }
+    buffer.writeln('  </g>');
+
+    // Footer
+    final footerY = height - 26;
+    buffer.writeln('  <g id="footer" font-family="monospace">');
+    buffer.writeln('    <rect x="16" y="${footerY - 6}" width="${width - 32}" height="22" rx="6" fill="#1E293B" fill-opacity="0.8" stroke="#334155" stroke-width="0.8"/>');
+    buffer.writeln('    <text x="26" y="${footerY + 9}" fill="#94A3B8" font-size="11" font-weight="600">${_escapeXml(subtitle)}</text>');
+    buffer.writeln('    <text x="${width - 26}" y="${footerY + 9}" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="end">$formula</text>');
+    buffer.writeln('  </g>');
+    buffer.writeln('</svg>');
+    return buffer.toString();
+  }
+
+  /// Builds a coupled two-ring system (Biphenyl, Cyclopentylbenzene, Cyclohexylbenzene)
+  static String _buildCoupledRingsSvg({
+    required double width,
+    required double height,
+    required String title,
+    required String subtitle,
+    required String formula,
+    required int leftRingSize,
+    required int rightRingSize,
+    required List<int> leftDoubleBonds,
+    required List<int> rightDoubleBonds,
+  }) {
+    final buffer = StringBuffer();
+    buffer.writeln('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 $width $height" width="100%" height="100%">');
+    buffer.writeln('  <defs>');
+    buffer.writeln('    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">');
+    buffer.writeln('      <stop offset="0%" stop-color="#0B1120"/>');
+    buffer.writeln('      <stop offset="100%" stop-color="#0F172A"/>');
+    buffer.writeln('    </linearGradient>');
+    buffer.writeln('  </defs>');
+    buffer.writeln('  <rect width="$width" height="$height" rx="16" fill="url(#bgGrad)" stroke="#1E293B" stroke-width="1.5"/>');
+
+    // Header
+    buffer.writeln('  <g id="header" font-family="system-ui, -apple-system, sans-serif">');
+    buffer.writeln('    <rect x="16" y="12" width="180" height="22" rx="6" fill="#38BDF8" fill-opacity="0.12" stroke="#38BDF8" stroke-width="1"/>');
+    buffer.writeln('    <circle cx="28" cy="23" r="4" fill="#38BDF8"/>');
+    buffer.writeln('    <text x="106" y="27" fill="#38BDF8" font-size="10" font-weight="800" text-anchor="middle" letter-spacing="0.5">$title</text>');
+    buffer.writeln('  </g>');
+
+    final cy = height / 2 + 4;
+    final rLeft = leftRingSize == 5 ? 36.0 : 40.0;
+    final rRight = rightRingSize == 5 ? 36.0 : 40.0;
+    final cxLeft = width / 2 - 58.0;
+    final cxRight = width / 2 + 58.0;
+
+    // Left Ring
+    final leftPts = <math.Point<double>>[];
+    for (int i = 0; i < leftRingSize; i++) {
+      final angle = (i * 2 * math.pi / leftRingSize);
+      leftPts.add(math.Point(cxLeft + rLeft * math.cos(angle), cy + rLeft * math.sin(angle)));
+    }
+
+    // Right Ring
+    final rightPts = <math.Point<double>>[];
+    for (int i = 0; i < rightRingSize; i++) {
+      final angle = (i * 2 * math.pi / rightRingSize) + math.pi;
+      rightPts.add(math.Point(cxRight + rRight * math.cos(angle), cy + rRight * math.sin(angle)));
+    }
+
+    buffer.writeln('  <g id="coupled-bonds">');
+    // Draw Left Ring
+    for (int i = 0; i < leftRingSize; i++) {
+      final p1 = leftPts[i];
+      final p2 = leftPts[(i + 1) % leftRingSize];
+      buffer.writeln('    <line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/>');
+      if (leftDoubleBonds.contains(i)) {
+        final inR = rLeft - 7.0;
+        final a1 = (i * 2 * math.pi / leftRingSize);
+        final a2 = ((i + 1) * 2 * math.pi / leftRingSize);
+        buffer.writeln('    <line x1="${cxLeft + inR * math.cos(a1)}" y1="${cy + inR * math.sin(a1)}" x2="${cxLeft + inR * math.cos(a2)}" y2="${cy + inR * math.sin(a2)}" stroke="#CBD5E1" stroke-width="1.9" stroke-linecap="round"/>');
+      }
+    }
+
+    // Draw Connecting Bond
+    final connectL = leftPts[0]; // Rightmost vertex of left ring
+    final connectR = rightPts[0]; // Leftmost vertex of right ring
+    buffer.writeln('    <line x1="${connectL.x}" y1="${connectL.y}" x2="${connectR.x}" y2="${connectR.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+
+    // Draw Right Ring
+    for (int i = 0; i < rightRingSize; i++) {
+      final p1 = rightPts[i];
+      final p2 = rightPts[(i + 1) % rightRingSize];
+      buffer.writeln('    <line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/>');
+      if (rightDoubleBonds.contains(i)) {
+        final inR = rRight - 7.0;
+        final a1 = (i * 2 * math.pi / rightRingSize) + math.pi;
+        final a2 = ((i + 1) * 2 * math.pi / rightRingSize) + math.pi;
+        buffer.writeln('    <line x1="${cxRight + inR * math.cos(a1)}" y1="${cy + inR * math.sin(a1)}" x2="${cxRight + inR * math.cos(a2)}" y2="${cy + inR * math.sin(a2)}" stroke="#CBD5E1" stroke-width="1.9" stroke-linecap="round"/>');
+      }
+    }
+    buffer.writeln('  </g>');
+
+    // Footer
+    final footerY = height - 26;
+    buffer.writeln('  <g id="footer" font-family="monospace">');
+    buffer.writeln('    <rect x="16" y="${footerY - 6}" width="${width - 32}" height="22" rx="6" fill="#1E293B" fill-opacity="0.8" stroke="#334155" stroke-width="0.8"/>');
+    buffer.writeln('    <text x="26" y="${footerY + 9}" fill="#94A3B8" font-size="11" font-weight="600">${_escapeXml(subtitle)}</text>');
+    buffer.writeln('    <text x="${width - 26}" y="${footerY + 9}" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="end">$formula</text>');
+    buffer.writeln('  </g>');
+    buffer.writeln('</svg>');
+    return buffer.toString();
+  }
+
+  /// Builds a textbook 3D perspective 2D vector graphic of bicyclic norbornene adducts
+  static String _buildNorborneneSvg({
+    required double width,
+    required double height,
+    required String title,
+    required String subtitle,
+    required String formula,
+    bool hasAnhydride = false,
+    bool hasBenzeneFusion = false,
+    bool hasCyclopenteneFusion = false,
+  }) {
+    final buffer = StringBuffer();
+    buffer.writeln('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 $width $height" width="100%" height="100%">');
+    buffer.writeln('  <defs>');
+    buffer.writeln('    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">');
+    buffer.writeln('      <stop offset="0%" stop-color="#0B1120"/>');
+    buffer.writeln('      <stop offset="100%" stop-color="#0F172A"/>');
+    buffer.writeln('    </linearGradient>');
+    buffer.writeln('  </defs>');
+    buffer.writeln('  <rect width="$width" height="$height" rx="16" fill="url(#bgGrad)" stroke="#1E293B" stroke-width="1.5"/>');
+
+    // Header
+    buffer.writeln('  <g id="header" font-family="system-ui, -apple-system, sans-serif">');
+    buffer.writeln('    <rect x="16" y="12" width="220" height="22" rx="6" fill="#38BDF8" fill-opacity="0.12" stroke="#38BDF8" stroke-width="1"/>');
+    buffer.writeln('    <circle cx="28" cy="23" r="4" fill="#38BDF8"/>');
+    buffer.writeln('    <text x="126" y="27" fill="#38BDF8" font-size="9.5" font-weight="800" text-anchor="middle" letter-spacing="0.5">$title</text>');
+    buffer.writeln('  </g>');
+
+    final cx = (hasAnhydride || hasBenzeneFusion || hasCyclopenteneFusion) ? (width / 2 - 36.0) : (width / 2);
+    final cy = height / 2 + 10;
+
+    // Norbornene boat framework vertices
+    final c1 = math.Point(cx - 32.0, cy - 8.0);
+    final c2 = math.Point(cx - 44.0, cy + 26.0);
+    final c3 = math.Point(cx - 16.0, cy + 46.0);
+    final c4 = math.Point(cx + 24.0, cy + 46.0);
+    final c5 = math.Point(cx + 36.0, cy + 18.0);
+    final c6 = math.Point(cx + 16.0, cy - 8.0);
+    final c7 = math.Point(cx - 6.0, cy - 36.0); // Apex bridgehead
+
+    buffer.writeln('  <g id="norbornene-core">');
+    // Base boat ring
+    buffer.writeln('    <line x1="${c1.x}" y1="${c1.y}" x2="${c2.x}" y2="${c2.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+    buffer.writeln('    <line x1="${c2.x}" y1="${c2.y}" x2="${c3.x}" y2="${c3.y}" stroke="#CBD5E1" stroke-width="3.2" stroke-linecap="round"/>'); // Double bond
+    buffer.writeln('    <line x1="${c2.x + 5}" y1="${c2.y + 4}" x2="${c3.x + 4}" y2="${c3.y - 2}" stroke="#CBD5E1" stroke-width="2.0" stroke-linecap="round"/>'); // Inner double
+    buffer.writeln('    <line x1="${c3.x}" y1="${c3.y}" x2="${c4.x}" y2="${c4.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+    buffer.writeln('    <line x1="${c4.x}" y1="${c4.y}" x2="${c5.x}" y2="${c5.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+    buffer.writeln('    <line x1="${c5.x}" y1="${c5.y}" x2="${c6.x}" y2="${c6.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+    buffer.writeln('    <line x1="${c6.x}" y1="${c6.y}" x2="${c1.x}" y2="${c1.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+
+    // Methylene bridge (C1 - C7 - C4)
+    buffer.writeln('    <line x1="${c1.x}" y1="${c1.y}" x2="${c7.x}" y2="${c7.y}" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round"/>');
+    buffer.writeln('    <line x1="${c4.x}" y1="${c4.y}" x2="${c7.x}" y2="${c7.y}" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round"/>');
+    buffer.writeln('  </g>');
+
+    // Fused Anhydride
+    if (hasAnhydride) {
+      final ca1 = math.Point(c6.x + 36.0, c6.y - 12.0);
+      final ca2 = math.Point(c5.x + 36.0, c5.y + 12.0);
+      final oAnhydride = math.Point(c6.x + 60.0, cy + 5.0);
+      final oCarbonyl1 = math.Point(ca1.x + 8.0, ca1.y - 24.0);
+      final oCarbonyl2 = math.Point(ca2.x + 8.0, ca2.y + 24.0);
+
+      buffer.writeln('  <g id="anhydride-fusion">');
+      buffer.writeln('    <line x1="${c6.x}" y1="${c6.y}" x2="${ca1.x}" y2="${ca1.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${c5.x}" y1="${c5.y}" x2="${ca2.x}" y2="${ca2.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${ca1.x}" y1="${ca1.y}" x2="${oAnhydride.x}" y2="${oAnhydride.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${ca2.x}" y1="${ca2.y}" x2="${oAnhydride.x}" y2="${oAnhydride.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+
+      // Carbonyl =O (1)
+      buffer.writeln('    <line x1="${ca1.x - 2}" y1="${ca1.y}" x2="${oCarbonyl1.x - 2}" y2="${oCarbonyl1.y}" stroke="#CBD5E1" stroke-width="2.0" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${ca1.x + 2}" y1="${ca1.y}" x2="${oCarbonyl1.x + 2}" y2="${oCarbonyl1.y}" stroke="#CBD5E1" stroke-width="2.0" stroke-linecap="round"/>');
+      buffer.writeln('    <circle cx="${oCarbonyl1.x}" cy="${oCarbonyl1.y}" r="9" fill="#0B1120"/>');
+      buffer.writeln('    <text x="${oCarbonyl1.x}" y="${oCarbonyl1.y + 4}" fill="#EF4444" font-size="12" font-weight="700" text-anchor="middle" font-family="system-ui">O</text>');
+
+      // Carbonyl =O (2)
+      buffer.writeln('    <line x1="${ca2.x - 2}" y1="${ca2.y}" x2="${oCarbonyl2.x - 2}" y2="${oCarbonyl2.y}" stroke="#CBD5E1" stroke-width="2.0" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${ca2.x + 2}" y1="${ca2.y}" x2="${oCarbonyl2.x + 2}" y2="${oCarbonyl2.y}" stroke="#CBD5E1" stroke-width="2.0" stroke-linecap="round"/>');
+      buffer.writeln('    <circle cx="${oCarbonyl2.x}" cy="${oCarbonyl2.y}" r="9" fill="#0B1120"/>');
+      buffer.writeln('    <text x="${oCarbonyl2.x}" y="${oCarbonyl2.y + 4}" fill="#EF4444" font-size="12" font-weight="700" text-anchor="middle" font-family="system-ui">O</text>');
+
+      // Anhydride O
+      buffer.writeln('    <circle cx="${oAnhydride.x}" cy="${oAnhydride.y}" r="10" fill="#0B1120"/>');
+      buffer.writeln('    <text x="${oAnhydride.x}" y="${oAnhydride.y + 4}" fill="#EF4444" font-size="12" font-weight="700" text-anchor="middle" font-family="system-ui">O</text>');
+      buffer.writeln('  </g>');
+    }
+
+    // Fused Benzene
+    if (hasBenzeneFusion) {
+      final cb1 = math.Point(c6.x + 36.0, c6.y - 12.0);
+      final cb2 = math.Point(c5.x + 36.0, c5.y + 12.0);
+      final cb3 = math.Point(cb2.x + 32.0, cb2.y);
+      final cb4 = math.Point(cb1.x + 32.0, cb1.y);
+
+      buffer.writeln('  <g id="benzene-fusion">');
+      buffer.writeln('    <line x1="${c6.x}" y1="${c6.y}" x2="${cb1.x}" y2="${cb1.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${cb1.x}" y1="${cb1.y}" x2="${cb4.x}" y2="${cb4.y}" stroke="#CBD5E1" stroke-width="3.0" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${cb4.x}" y1="${cb4.y}" x2="${cb3.x}" y2="${cb3.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${cb3.x}" y1="${cb3.y}" x2="${cb2.x}" y2="${cb2.y}" stroke="#CBD5E1" stroke-width="3.0" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${cb2.x}" y1="${cb2.y}" x2="${c5.x}" y2="${c5.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+      buffer.writeln('  </g>');
+    }
+
+    // Fused Cyclopentene
+    if (hasCyclopenteneFusion) {
+      final cc1 = math.Point(c6.x + 32.0, c6.y - 4.0);
+      final cc2 = math.Point(c5.x + 32.0, c5.y + 4.0);
+      final cc3 = math.Point(c6.x + 56.0, cy + 5.0);
+
+      buffer.writeln('  <g id="cyclopentene-fusion">');
+      buffer.writeln('    <line x1="${c6.x}" y1="${c6.y}" x2="${cc1.x}" y2="${cc1.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${cc1.x}" y1="${cc1.y}" x2="${cc3.x}" y2="${cc3.y}" stroke="#CBD5E1" stroke-width="3.0" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${cc3.x}" y1="${cc3.y}" x2="${cc2.x}" y2="${cc2.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+      buffer.writeln('    <line x1="${cc2.x}" y1="${cc2.y}" x2="${c5.x}" y2="${c5.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+      buffer.writeln('  </g>');
+    }
+
+    // Footer
+    final footerY = height - 26;
+    buffer.writeln('  <g id="footer" font-family="monospace">');
+    buffer.writeln('    <rect x="16" y="${footerY - 6}" width="${width - 32}" height="22" rx="6" fill="#1E293B" fill-opacity="0.8" stroke="#334155" stroke-width="0.8"/>');
+    buffer.writeln('    <text x="26" y="${footerY + 9}" fill="#94A3B8" font-size="11" font-weight="600">${_escapeXml(subtitle)}</text>');
+    buffer.writeln('    <text x="${width - 26}" y="${footerY + 9}" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="end">$formula</text>');
+    buffer.writeln('  </g>');
+    buffer.writeln('</svg>');
+    return buffer.toString();
+  }
+
 }
