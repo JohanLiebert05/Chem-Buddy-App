@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
+import '../core/chemistry/smiles_svg_generator.dart';
 import '../data/remote/supabase_service.dart';
 import '../data/services/gemini_orchestrator.dart';
+import '../data/services/reaction_matcher_engine.dart';
 
 /// Models for postgraduate MSc-level organic synthesis prediction
 class OrganicSynthesisPrediction {
@@ -355,20 +357,21 @@ Identify the major organic product and generate the complete step-by-step reacti
     );
   }
 
-  /// Hydrates vector SVGs from Cactus for major product and intermediate structures
+  /// Hydrates vector SVGs for major product and intermediate structures
   Future<OrganicSynthesisPrediction> _hydrateSvgs(OrganicSynthesisPrediction pred) async {
     PredictedProduct? prod = pred.majorProduct;
     if (prod != null && (prod.svgData.isEmpty || !prod.svgData.contains('<svg'))) {
       var svg = await fetchCactusSvg(prod.smiles);
-      if (svg.isEmpty) svg = _generateFallbackSvg(prod.smiles);
+      if (svg.isEmpty) svg = SmilesSvgGenerator.generateSvg(prod.smiles, title: prod.name);
       prod = prod.copyWith(svgData: svg);
     }
 
     final updatedSteps = <PredictedMechanismStep>[];
     for (final step in pred.mechanismSteps) {
       if (step.intermediateSmiles.isNotEmpty && (step.svgData.isEmpty || !step.svgData.contains('<svg'))) {
-        final svg = await fetchCactusSvg(step.intermediateSmiles);
-        updatedSteps.add(step.copyWith(svgData: svg.isNotEmpty ? svg : _generateFallbackSvg(step.intermediateSmiles)));
+        var svg = await fetchCactusSvg(step.intermediateSmiles);
+        if (svg.isEmpty) svg = SmilesSvgGenerator.generateSvg(step.intermediateSmiles, title: step.stepTitle);
+        updatedSteps.add(step.copyWith(svgData: svg));
       } else {
         updatedSteps.add(step);
       }
@@ -426,7 +429,7 @@ Identify the major organic product and generate the complete step-by-step reacti
       );
     }
 
-    // 1. Instant Offline Rule Engine (0 ms resolution for standard organic transformations)
+    // 1. Instant Offline Rule Engine (0 ms resolution for 45+ standard MSc organic transformations)
     final offlineRule = _tryOfflineReactionRule(cleanReactants);
     if (offlineRule != null) {
       _memoryCache[cacheKey] = offlineRule;
@@ -444,12 +447,58 @@ Identify the major organic product and generate the complete step-by-step reacti
       return offlineRule;
     }
 
-    // 2. Ultra-Fast Client-Side 4-Key Gemini Orchestrator (Direct, with 4.5s timeout)
+    // 2. High-Confidence Curated MSc Reaction Database Match
     try {
-      const systemInstruction =
-          'You are an expert organic reaction outcome engine. Return ONLY the valid SMILES string of the single major organic product. Do not include markdown blocks, notes, or explanations.';
-      final prompt =
-          'Reactants: $cleanReactants\nPredict the single major organic product under standard reaction conditions. Return ONLY its SMILES string.';
+      final match = await ReactionMatcherEngine.instance.matchReaction(
+        reactantsSmiles: cleanReactants,
+        reagents: '',
+      );
+      if (match.isMatched && match.majorProductSmiles.isNotEmpty) {
+        final prodSmiles = match.majorProductSmiles;
+        final svg = match.schemeSvg.isNotEmpty && match.schemeSvg.contains('<svg')
+            ? match.schemeSvg
+            : SmilesSvgGenerator.generateSvg(
+                prodSmiles,
+                title: match.majorProductName.isNotEmpty ? match.majorProductName : 'PREDICTED PRODUCT',
+              );
+        final result = ReactionPredictionResult(
+          success: true,
+          productSmiles: prodSmiles,
+          svgData: svg,
+          isCached: true,
+        );
+        _memoryCache[cacheKey] = result;
+        return result;
+      }
+    } catch (e) {
+      debugPrint('[ReactionPredictorService] ReactionMatcherEngine check error: $e');
+    }
+
+    // 3. Ultra-Fast Client-Side 4-Key Gemini Orchestrator (Direct, with 5.5s timeout)
+    try {
+      const systemInstruction = '''You are an authoritative postgraduate MSc-level organic synthesis engine.
+Your task is to predict the single MAJOR organic reaction product given the reactant SMILES and optional reaction conditions.
+
+STRICT INSTRUCTIONS:
+1. Return ONLY the valid canonical SMILES string of the single major organic product.
+2. Do NOT include markdown formatting, code blocks (e.g. no ```), labels, or explanations.
+3. Obey fundamental organic chemistry principles:
+   - Valency: Carbon must have 4 bonds, Nitrogen 3 (or 4 with [N+]), Oxygen 2 (or 1 with [O-]), Halogens 1.
+   - Aromaticity: Lowercase letters (c, n, o, s) for aromatic rings (e.g., benzene is c1ccccc1).
+   - Regiochemistry: Markovnikov / Zaitsev rules, ortho/para directing (+M/-I) vs meta directing (-M/-I) on benzene.
+   - Stereochemistry: syn/anti addition or retention/inversion where applicable.
+4. Examples:
+   - Reactants: c1ccccc1.CC(=O)Cl -> CC(=O)c1ccccc1
+   - Reactants: c1ccccc1.BrBr -> c1ccc(cc1)Br
+   - Reactants: CC(=O)Oc1ccccc1C(=O)O -> CC(=O)Oc1ccccc1C(=O)O
+   - Reactants: C=CC=C.C=C -> C1=CCCCC1
+   - Reactants: CC=C.BrBr -> CC(Br)CBr
+   - Reactants: c1ccccc1C=O.[CH3-].[Mg+2].[Br-] -> CC(O)c1ccccc1
+''';
+
+      final prompt = '''Reactant(s) SMILES: $cleanReactants
+Predict the single major organic product under standard reaction conditions.
+Return ONLY the canonical product SMILES string:''';
 
       final aiRes = await GeminiOrchestrator.instance
           .ask(
@@ -458,28 +507,28 @@ Identify the major organic product and generate the complete step-by-step reacti
             systemInstruction: systemInstruction,
             temperature: 0.0,
           )
-          .timeout(const Duration(milliseconds: 4500));
+          .timeout(const Duration(milliseconds: 5500));
 
       final cleanSmiles = _sanitizeSmiles(aiRes.text);
       if (cleanSmiles.isNotEmpty) {
-        final fallbackSvg = _generateFallbackSvg(cleanSmiles);
+        final svg = SmilesSvgGenerator.generateSvg(cleanSmiles, title: 'PREDICTED PRODUCT');
 
         final result = ReactionPredictionResult(
           success: true,
           productSmiles: cleanSmiles,
-          svgData: fallbackSvg,
+          svgData: svg,
           keyIndexUsed: aiRes.keyIndexUsed,
           model: aiRes.model,
         );
         _memoryCache[cacheKey] = result;
 
         // Hydrate with Cactus 2D vector asynchronously in background
-        fetchCactusSvg(cleanSmiles).then((svg) {
-          if (svg.isNotEmpty && svg.contains('<svg')) {
+        fetchCactusSvg(cleanSmiles).then((cactusSvg) {
+          if (cactusSvg.isNotEmpty && cactusSvg.contains('<svg')) {
             _memoryCache[cacheKey] = ReactionPredictionResult(
               success: true,
               productSmiles: cleanSmiles,
-              svgData: svg,
+              svgData: cactusSvg,
               keyIndexUsed: aiRes.keyIndexUsed,
               model: aiRes.model,
             );
@@ -492,7 +541,7 @@ Identify the major organic product and generate the complete step-by-step reacti
       debugPrint('[ReactionPredictorService] Fast Gemini orchestrator error or timeout: $e');
     }
 
-    // 3. Fallback: Edge Function invocation if Gemini was unreachable
+    // 4. Fallback: Edge Function invocation if Gemini was unreachable
     try {
       final client = SupabaseService.instance.client;
       if (client != null) {
@@ -511,7 +560,7 @@ Identify the major organic product and generate the complete step-by-step reacti
             var svgData = (data['svg_data'] as String?)?.trim() ?? '';
 
             if (productSmiles.isNotEmpty && (svgData.isEmpty || !svgData.contains('<svg'))) {
-              svgData = _generateFallbackSvg(productSmiles);
+              svgData = SmilesSvgGenerator.generateSvg(productSmiles, title: 'PREDICTED PRODUCT');
             }
 
             final result = ReactionPredictionResult(
@@ -535,10 +584,19 @@ Identify the major organic product and generate the complete step-by-step reacti
     );
   }
 
-  /// Instant offline prediction for common textbook organic reactions (0 ms resolution)
+  /// Instant offline prediction for common textbook MSc organic reactions (0 ms resolution)
   ReactionPredictionResult? _tryOfflineReactionRule(String reactants) {
     final s = reactants.replaceAll(' ', '');
     final lower = s.toLowerCase();
+
+    ReactionPredictionResult makeResult(String prodSmiles, {String? title}) {
+      return ReactionPredictionResult(
+        success: true,
+        productSmiles: prodSmiles,
+        svgData: SmilesSvgGenerator.generateSvg(prodSmiles, title: title ?? 'PREDICTED PRODUCT'),
+        isCached: true,
+      );
+    }
 
     // 1. Aspirin Synthesis: Salicylic acid + Acetic Anhydride / Acetyl Chloride -> Aspirin
     final hasSalicylic = lower.contains('oc1ccccc1c(=o)o') ||
@@ -549,120 +607,240 @@ Identify the major organic product and generate the complete step-by-step reacti
         lower.contains('clc(c)=o') ||
         lower.contains('acetic');
     if (hasSalicylic && hasAcetylatingAgent) {
-      const prod = 'CC(=O)Oc1ccccc1C(=O)O'; // Aspirin
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('CC(=O)Oc1ccccc1C(=O)O', title: 'ASPIRIN');
     }
-    // Salicylic acid alone (acetylating to Aspirin under standard synthesis prompt)
+    // Salicylic acid alone
     if (lower == 'oc1ccccc1c(=o)o' || lower == 'c1ccc(c(c1)c(=o)o)o') {
-      const prod = 'CC(=O)Oc1ccccc1C(=O)O';
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('CC(=O)Oc1ccccc1C(=O)O', title: 'ASPIRIN');
     }
 
     // 2. Paracetamol Synthesis: 4-Aminophenol + Acetic Anhydride
     final has4Aminophenol = lower.contains('nc1ccc(o)cc1') || lower.contains('oc1ccc(n)cc1');
     if (has4Aminophenol && hasAcetylatingAgent) {
-      const prod = 'CC(=O)Nc1ccc(O)cc1'; // Paracetamol
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('CC(=O)Nc1ccc(O)cc1', title: 'PARACETAMOL');
     }
 
     // 3. Esterification: Acetic Acid + Ethanol -> Ethyl Acetate
     if ((lower.contains('cc(=o)o') || lower.contains('cc(o)=o')) && (lower.contains('cco') || lower.contains('occ'))) {
-      const prod = 'CCOC(=O)C';
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('CCOC(=O)C', title: 'ETHYL ACETATE');
     }
 
-    // 4. Benzoic Acid + Methanol -> Methyl Benzoate
+    // 4. Esterification: Acetic Acid + Methanol -> Methyl Acetate
+    if ((lower.contains('cc(=o)o') || lower.contains('cc(o)=o')) && (lower.contains('.co') || lower.contains('co.'))) {
+      return makeResult('COC(=O)C', title: 'METHYL ACETATE');
+    }
+
+    // 5. Benzoic Acid + Methanol -> Methyl Benzoate
     if ((lower.contains('c1ccccc1c(=o)o') || lower.contains('o=c(o)c1ccccc1')) && (lower.contains('.co') || lower.contains('co.'))) {
-      const prod = 'COC(=O)c1ccccc1';
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('COC(=O)c1ccccc1', title: 'METHYL BENZOATE');
     }
 
-    // 5. Electrophilic Aromatic Substitution: Benzene
+    // 6. Benzoic Acid + Ethanol -> Ethyl Benzoate
+    if ((lower.contains('c1ccccc1c(=o)o') || lower.contains('o=c(o)c1ccccc1')) && (lower.contains('cco') || lower.contains('occ'))) {
+      return makeResult('CCOC(=O)c1ccccc1', title: 'ETHYL BENZOATE');
+    }
+
+    // 7. Electrophilic Aromatic Substitution: Benzene
     final isBenzene = lower == 'c1ccccc1' || lower == 'c1=cc=cc=c1';
     if (isBenzene) {
-      const prod = 'c1ccc(cc1)[N+](=O)[O-]'; // Nitrobenzene
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('c1ccc(cc1)[N+](=O)[O-]', title: 'NITROBENZENE');
     }
     if ((lower.contains('c1ccccc1') || lower.contains('c1=cc=cc=c1')) && (lower.contains('br') || lower.contains('brom'))) {
-      const prod = 'c1ccc(cc1)Br'; // Bromobenzene
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('c1ccc(cc1)Br', title: 'BROMOBENZENE');
+    }
+    if ((lower.contains('c1ccccc1') || lower.contains('c1=cc=cc=c1')) && (lower.contains('cl2') || lower.contains('cl.cl') || lower.contains('chlor'))) {
+      return makeResult('c1ccc(cc1)Cl', title: 'CHLOROBENZENE');
     }
     if ((lower.contains('c1ccccc1') || lower.contains('c1=cc=cc=c1')) && (lower.contains('cc(=o)cl') || lower.contains('clc(c)=o'))) {
-      const prod = 'CC(=O)c1ccccc1'; // Acetophenone (Friedel-Crafts)
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('CC(=O)c1ccccc1', title: 'ACETOPHENONE');
+    }
+    if ((lower.contains('c1ccccc1') || lower.contains('c1=cc=cc=c1')) && (lower.contains('ccl') || lower.contains('clc') || lower.contains('cbr'))) {
+      return makeResult('Cc1ccccc1', title: 'TOLUENE');
+    }
+    if ((lower.contains('c1ccccc1') || lower.contains('c1=cc=cc=c1')) && (lower.contains('s(=o)') || lower.contains('so3') || lower.contains('h2so4'))) {
+      return makeResult('c1ccc(cc1)S(=O)(=O)O', title: 'BENZENESULFONIC ACID');
     }
 
-    // 6. Aniline + Acetyl chloride -> Acetanilide
+    // 8. Toluene + HNO3 -> 4-Nitrotoluene
+    if (lower.contains('cc1ccccc1') && (lower.contains('n') || lower.contains('nitr'))) {
+      return makeResult('Cc1ccc([N+](=O)[O-])cc1', title: '4-NITROTOLUENE');
+    }
+
+    // 9. Aniline + Acetyl chloride -> Acetanilide
     if (lower.contains('nc1ccccc1') && hasAcetylatingAgent) {
-      const prod = 'CC(=O)Nc1ccccc1';
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('CC(=O)Nc1ccccc1', title: 'ACETANILIDE');
     }
 
-    // 7. Alkene Halogenation: Ethene + Br2 -> 1,2-Dibromoethane
+    // 10. Aniline Diazotization: Aniline + NaNO2/HCl -> Benzenediazonium
+    if (lower.contains('nc1ccccc1') && (lower.contains('nano2') || lower.contains('no2') || lower.contains('hcl'))) {
+      return makeResult('c1ccccc1[N+]#N', title: 'BENZENEDIAZONIUM');
+    }
+
+    // 11. Phenol Bromination: Phenol + Br2 -> 2,4,6-Tribromophenol / 4-Bromophenol
+    if (lower.contains('oc1ccccc1') && lower.contains('br')) {
+      return makeResult('Oc1c(Br)cc(Br)cc1Br', title: '2,4,6-TRIBROMOPHENOL');
+    }
+
+    // 12. Phenol + NaOH + CO2 (Kolbe-Schmitt) -> Salicylic acid
+    if (lower.contains('oc1ccccc1') && (lower.contains('co2') || lower.contains('o=c=o') || lower.contains('naoh'))) {
+      return makeResult('Oc1ccccc1C(=O)O', title: 'SALICYLIC ACID');
+    }
+
+    // 13. Phenol + CHCl3 + KOH (Reimer-Tiemann) -> Salicylaldehyde
+    if (lower.contains('oc1ccccc1') && (lower.contains('chcl3') || lower.contains('clc(cl)cl'))) {
+      return makeResult('Oc1ccccc1C=O', title: 'SALICYLALDEHYDE');
+    }
+
+    // 14. Phenol + MeI (Williamson Ether) -> Anisole
+    if (lower.contains('oc1ccccc1') && (lower.contains('.ci') || lower.contains('ic.') || lower.contains('ci.'))) {
+      return makeResult('COc1ccccc1', title: 'ANISOLE');
+    }
+
+    // 15. Phenol + EtBr / EtI (Williamson Ether) -> Phenetole
+    if (lower.contains('oc1ccccc1') && (lower.contains('ccbr') || lower.contains('cci') || lower.contains('brcc'))) {
+      return makeResult('CCOc1ccccc1', title: 'PHENETOLE');
+    }
+
+    // 16. Benzoic acid + SOCl2 -> Benzoyl chloride
+    if ((lower.contains('c1ccccc1c(=o)o') || lower.contains('o=c(o)c1ccccc1')) && (lower.contains('socl2') || lower.contains('os(cl)cl') || lower.contains('pcl5'))) {
+      return makeResult('c1ccccc1C(=O)Cl', title: 'BENZOYL CHLORIDE');
+    }
+
+    // 17. Aldol Condensation: Acetaldehyde self-condensation -> Crotonaldehyde
+    if (lower == 'cc=o' || lower == 'cc=o.cc=o' || lower == 'cc(=o)h') {
+      return makeResult('CC=CC=O', title: 'CROTONALDEHYDE');
+    }
+
+    // 18. Claisen-Schmidt: Benzaldehyde + Acetone -> Benzylideneacetone
+    if ((lower.contains('c1ccccc1c=o') || lower.contains('o=cc1ccccc1')) && (lower.contains('cc(=o)c') || lower.contains('cc(c)=o'))) {
+      return makeResult('c1ccccc1C=CC(=O)C', title: 'BENZYLIDENEACETONE');
+    }
+
+    // 19. Cannizzaro Reaction: Benzaldehyde + KOH/NaOH -> Benzyl alcohol + Benzoic acid
+    if (lower == 'c1ccccc1c=o' || lower == 'o=cc1ccccc1') {
+      return makeResult('c1ccccc1CO', title: 'BENZYL ALCOHOL');
+    }
+
+    // 20. Benzoin Condensation: Benzaldehyde + KCN -> Benzoin
+    if ((lower.contains('c1ccccc1c=o') || lower.contains('o=cc1ccccc1')) && (lower.contains('kcn') || lower.contains('c#n') || lower.contains('cn.'))) {
+      return makeResult('c1ccccc1C(=O)C(O)c1ccccc1', title: 'BENZOIN');
+    }
+
+    // 21. Carbonyl + Hydroxylamine: Cyclohexanone + NH2OH -> Cyclohexanone oxime
+    if ((lower.contains('c1ccccc1=o') || lower.contains('o=c1ccccc1') || lower.contains('c1ccccc1')) && (lower.contains('no') || lower.contains('on') || lower.contains('nh2oh'))) {
+      if (lower.contains('c1ccccc1=o') || lower.contains('o=c1ccccc1')) {
+        return makeResult('C1CCCCC1=NO', title: 'CYCLOHEXANONE OXIME');
+      }
+    }
+
+    // 22. Grignard Addition: Acetone + MeMgBr -> tert-Butanol
+    if ((lower.contains('cc(=o)c') || lower.contains('cc(c)=o')) && (lower.contains('mg') || lower.contains('me-') || lower.contains('cmg'))) {
+      return makeResult('CC(C)(C)O', title: 'tert-BUTANOL');
+    }
+
+    // 23. Grignard Addition: Benzaldehyde + MeMgBr -> 1-Phenylethanol
+    if ((lower.contains('c1ccccc1c=o') || lower.contains('o=cc1ccccc1')) && (lower.contains('mg') || lower.contains('cmg'))) {
+      return makeResult('CC(O)c1ccccc1', title: '1-PHENYLETHANOL');
+    }
+
+    // 24. Carbonyl Reduction: Acetophenone + NaBH4 -> 1-Phenylethanol
+    if ((lower.contains('cc(=o)c1ccccc1') || lower.contains('c1ccccc1c(=o)c')) && (lower.contains('nabh4') || lower.contains('lialh4') || lower.contains('bh4') || lower.contains('h-'))) {
+      return makeResult('CC(O)c1ccccc1', title: '1-PHENYLETHANOL');
+    }
+
+    // 25. Carbonyl Reduction: Acetone + NaBH4 -> 2-Propanol
+    if ((lower.contains('cc(=o)c') || lower.contains('cc(c)=o')) && (lower.contains('nabh4') || lower.contains('lialh4') || lower.contains('h-'))) {
+      return makeResult('CC(O)C', title: '2-PROPANOL');
+    }
+
+    // 26. Nitro Reduction: Nitrobenzene + Fe/HCl or Sn/HCl -> Aniline
+    if (lower.contains('c1ccc(cc1)[n+](=o)[o-]') && (lower.contains('fe') || lower.contains('sn') || lower.contains('pd') || lower.contains('h2'))) {
+      return makeResult('c1ccccc1N', title: 'ANILINE');
+    }
+
+    // 27. Alkene Halogenation: Ethene + Br2 -> 1,2-Dibromoethane
     if ((lower == 'c=c' || lower == 'c=c.brbr' || lower.contains('c=c.br')) && lower.contains('br')) {
-      const prod = 'BrCCBr';
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('BrCCBr', title: '1,2-DIBROMOETHANE');
     }
 
-    // 8. Cyclohexene + Br2 -> 1,2-Dibromocyclohexane
+    // 28. Alkene Halogenation: Cyclohexene + Br2 -> 1,2-Dibromocyclohexane
     if (lower.contains('c1=ccccc1') && lower.contains('br')) {
-      const prod = 'BrC1CCCCC1Br';
-      return ReactionPredictionResult(
-        success: true,
-        productSmiles: prod,
-        svgData: _generateFallbackSvg(prod),
-        isCached: true,
-      );
+      return makeResult('BrC1CCCCC1Br', title: '1,2-DIBROMOCYCLOHEXANE');
+    }
+
+    // 29. Markovnikov Addition: Propene + HBr -> 2-Bromopropane
+    if ((lower.contains('cc=c') || lower.contains('c=cc')) && lower.contains('hbr') && !lower.contains('perox') && !lower.contains('o-o')) {
+      return makeResult('CC(Br)C', title: '2-BROMOPROPANE (Markovnikov)');
+    }
+
+    // 30. Anti-Markovnikov Addition: Propene + HBr + Peroxide -> 1-Bromopropane
+    if ((lower.contains('cc=c') || lower.contains('c=cc')) && lower.contains('hbr') && (lower.contains('perox') || lower.contains('o-o'))) {
+      return makeResult('CCCBr', title: '1-BROMOPROPANE (Anti-Markovnikov)');
+    }
+
+    // 31. Alkene Hydration: Propene + H2O/H+ -> 2-Propanol
+    if ((lower.contains('cc=c') || lower.contains('c=cc')) && (lower.contains('h2o') || lower.contains('oh2') || lower.contains('h+'))) {
+      return makeResult('CC(O)C', title: '2-PROPANOL (Markovnikov)');
+    }
+
+    // 32. 1-Butene + HBr -> 2-Bromobutane
+    if ((lower.contains('ccc=c') || lower.contains('c=ccc')) && lower.contains('br')) {
+      return makeResult('CCC(Br)C', title: '2-BROMOBUTANE');
+    }
+
+    // 33. Diels-Alder: 1,3-Butadiene + Ethene -> Cyclohexene
+    if ((lower.contains('c=cc=c') || lower.contains('c=c-c=c')) && (lower.contains('c=c') && !lower.contains('c=cc=c.c=cc=c'))) {
+      return makeResult('C1=CCCCC1', title: 'CYCLOHEXENE (Diels-Alder)');
+    }
+
+    // 34. Diels-Alder: Cyclopentadiene + Maleic anhydride
+    if (lower.contains('c1=ccc=c1') || (lower.contains('c1=cc=cc1') && lower.contains('o=c1oc(=o)c=c1'))) {
+      return makeResult('O=C1OC(=O)C2C1C3CC2C=C3', title: 'NORBORNENE ANHYDRIDE (Diels-Alder)');
+    }
+
+    // 35. SN2 Substitution: 1-Bromobutane + NaCN -> Pentanenitrile
+    if (lower.contains('ccccbr') && (lower.contains('nacn') || lower.contains('c#n') || lower.contains('kcn'))) {
+      return makeResult('CCCCC#N', title: 'PENTANENITRILE');
+    }
+
+    // 36. SN2 Substitution: 1-Bromobutane + NaOH -> 1-Butanol
+    if (lower.contains('ccccbr') && (lower.contains('naoh') || lower.contains('oh-') || lower.contains('koh'))) {
+      return makeResult('CCCCO', title: '1-BUTANOL');
+    }
+
+    // 37. Finkelstein: 1-Chloropropane + NaI -> 1-Iodopropane
+    if (lower.contains('ccccl') && (lower.contains('nai') || lower.contains('i-') || lower.contains('ki'))) {
+      return makeResult('CCCI', title: '1-IODOPROPANE (Finkelstein)');
+    }
+
+    // 38. SN1 Solvolysis: tert-Butyl bromide + H2O -> tert-Butanol
+    if ((lower.contains('cc(c)(c)br') || lower.contains('brc(c)(c)c')) && (lower.contains('h2o') || lower.contains('oh2'))) {
+      return makeResult('CC(C)(C)O', title: 'tert-BUTANOL (SN1)');
+    }
+
+    // 39. E2 Elimination: tert-Butyl bromide + strong base -> Isobutylene
+    if ((lower.contains('cc(c)(c)br') || lower.contains('brc(c)(c)c')) && (lower.contains('tbuk') || lower.contains('base') || lower.contains('naoet') || lower.contains('koh'))) {
+      return makeResult('CC(=C)C', title: 'ISOBUTYLENE (E2)');
+    }
+
+    // 40. Alcohol Oxidation: Benzyl alcohol + PCC -> Benzaldehyde
+    if (lower.contains('c1ccccc1co') && (lower.contains('pcc') || lower.contains('pdc') || lower.contains('dmp'))) {
+      return makeResult('c1ccccc1C=O', title: 'BENZALDEHYDE');
+    }
+
+    // 41. Alcohol Oxidation: Benzyl alcohol + KMnO4 -> Benzoic acid
+    if (lower.contains('c1ccccc1co') && (lower.contains('kmno4') || lower.contains('cro3') || lower.contains('jones'))) {
+      return makeResult('c1ccccc1C(=O)O', title: 'BENZOIC ACID');
+    }
+
+    // 42. Secondary Alcohol Oxidation: 2-Propanol + PCC -> Acetone
+    if ((lower == 'cc(o)c' || lower == 'oc(c)c') && (lower.contains('pcc') || lower.contains('cro3') || lower.contains('jones') || lower.contains('kmno4'))) {
+      return makeResult('CC(=O)C', title: 'ACETONE');
+    }
+
+    // 43. Primary Alcohol Oxidation: Ethanol + PCC -> Acetaldehyde
+    if (lower == 'cco' && (lower.contains('pcc') || lower.contains('pdc'))) {
+      return makeResult('CC=O', title: 'ACETALDEHYDE');
     }
 
     return null;
@@ -702,16 +880,5 @@ Identify the major organic product and generate the complete step-by-step reacti
     s = s.replaceAll(RegExp(r'''^["'`]|["'`]$'''), '').trim();
     s = s.replaceAll(RegExp(r'[.;]+$'), '').trim();
     return s;
-  }
-
-  static String _generateFallbackSvg(String smiles) {
-    final safe = smiles.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-    return '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 180" width="100%" height="100%">
-  <rect width="340" height="180" rx="16" fill="#0F172A" stroke="#334155" stroke-width="1.5"/>
-  <circle cx="170" cy="65" r="32" fill="#8B5CF6" fill-opacity="0.15" stroke="#A78BFA" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <text x="170" y="72" font-size="22" font-weight="bold" fill="#38BDF8" text-anchor="middle" font-family="sans-serif">PRODUCT</text>
-  <text x="170" y="125" font-size="14" font-weight="700" fill="#E2E8F0" text-anchor="middle" font-family="monospace">$safe</text>
-  <text x="170" y="148" font-size="11" font-weight="600" fill="#94A3B8" text-anchor="middle" font-family="sans-serif">Predicted Major Product (SMILES)</text>
-</svg>''';
   }
 }

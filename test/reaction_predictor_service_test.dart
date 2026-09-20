@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:chem_buddy/services/reaction_predictor_service.dart';
+import 'package:chem_buddy/core/chemistry/smiles_svg_generator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +54,55 @@ void main() {
       expect(encoded, equals('c1ccccc1C(%3DO)O.OCC'));
       expect(expectedUrl, contains('cactus.nci.nih.gov'));
       expect(expectedUrl, contains('format=svg'));
+    });
+
+    test('6. Predicts Aspirin synthesis with 100% accuracy and valid SVG', () async {
+      final res = await ReactionPredictorService.instance.predictMajorProduct('Oc1ccccc1C(=O)O.CC(=O)OC(=O)C');
+      expect(res.success, isTrue);
+      expect(res.productSmiles, equals('CC(=O)Oc1ccccc1C(=O)O'));
+      expect(res.svgData, contains('<svg'));
+      expect(res.svgData, contains('viewBox'));
+      expect(res.svgData, contains('ASPIRIN'));
+    });
+
+    test('7. Predicts Paracetamol synthesis with 100% accuracy and valid SVG', () async {
+      final res = await ReactionPredictorService.instance.predictMajorProduct('Nc1ccc(O)cc1.CC(=O)Cl');
+      expect(res.success, isTrue);
+      expect(res.productSmiles, equals('CC(=O)Nc1ccc(O)cc1'));
+      expect(res.svgData, contains('<svg'));
+      expect(res.svgData, contains('PARACETAMOL'));
+    });
+
+    test('8. Predicts Esterification (Ethyl Acetate) with valid SVG', () async {
+      final res = await ReactionPredictorService.instance.predictMajorProduct('CC(=O)O.CCO');
+      expect(res.success, isTrue);
+      expect(res.productSmiles, equals('CCOC(=O)C'));
+      expect(res.svgData, contains('<svg'));
+      expect(res.svgData, contains('ETHYL ACETATE'));
+    });
+
+    test('9. Predicts Electrophilic Bromination of Benzene with valid SVG', () async {
+      final res = await ReactionPredictorService.instance.predictMajorProduct('c1ccccc1.BrBr');
+      expect(res.success, isTrue);
+      expect(res.productSmiles, equals('c1ccc(cc1)Br'));
+      expect(res.svgData, contains('<svg'));
+      expect(res.svgData, contains('BROMOBENZENE'));
+    });
+
+    test('10. SmilesSvgGenerator parses and renders arbitrary SMILES into clean SVG', () {
+      final svg = SmilesSvgGenerator.generateSvg('BrCCBr', title: '1,2-DIBROMOETHANE');
+      expect(svg, contains('<svg'));
+      expect(svg, contains('viewBox'));
+      expect(svg, contains('1,2-DIBROMOETHANE'));
+      expect(svg, contains('Br'));
+      expect(svg, contains('stroke='));
+    });
+
+    test('11. Predicts Alkene Halogenation (Ethene + Br2 -> 1,2-Dibromoethane) with valid SVG', () async {
+      final res = await ReactionPredictorService.instance.predictMajorProduct('C=C.BrBr');
+      expect(res.success, isTrue);
+      expect(res.productSmiles, equals('BrCCBr'));
+      expect(res.svgData, contains('<svg'));
     });
   });
 }

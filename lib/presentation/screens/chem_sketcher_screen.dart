@@ -359,7 +359,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             const SizedBox(height: 16),
             // 2D Vector Structure Rendering
             const Text(
-              '2D Molecular Vector Structure (NIH Cactus Engine)',
+              '2D Molecular Vector Structure (Clean Vector SVG)',
               style: TextStyle(color: AppColors.brandBright, fontSize: 13, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
