@@ -312,7 +312,7 @@ You are functioning as an expert, all-knowing general AI tutor (like Google Gemi
       // DEFAULT QUICK ANSWER MODE
       modeInstructions = `DEFAULT MODE: QUICK & DIRECT ANSWER (⚡)
 The student is asking a standard chemistry question.
-- Give a fast, direct, smart, and concise answer (2 to 5 clear sentences or clean bullet points).
+- Give a fast, direct, smart, and concise answer (Provide a complete, thorough answer covering all relevant aspects. Use headings, equations, and examples. Never truncate.).
 - DO NOT force artificial headings like "### Definition", "### Principle", "### Mechanism", "### Applications" unless requested.
 - Explain cleanly, correctly, and accurately without introductory fluff or repetitive filler.`;
     }
@@ -384,7 +384,7 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
           contents,
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 2500,
+            maxOutputTokens: 8192,
             thinkingConfig: {
               thinkingLevel: "low",
             },

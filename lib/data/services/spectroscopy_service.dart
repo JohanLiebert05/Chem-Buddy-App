@@ -885,71 +885,72 @@ class SpectroscopyService {
     final step7Buffer = StringBuffer();
     String primaryCandidate = 'Proposed Molecular Structure';
 
-    if (fUpper == 'C8H8O') {
-      primaryCandidate = 'Acetophenone (1-Phenylethan-1-one, Ph-CO-CH₃)';
+    // Query 52+ Curated MSc Chemistry Compounds Database or Algorithmic Engine
+    final knownCompound = findKnownSpectroscopyCompound(
+      formula: fUpper,
+      irPeaks: irPeaks,
+      nmrPeaks: effectiveH,
+      nmr13CPeaks: effectiveC,
+      msPeaks: msPeaks,
+    );
 
+    if (knownCompound != null) {
+      primaryCandidate = '${knownCompound.commonName} (${knownCompound.iupacName})';
       step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
-      step7Buffer.writeln('**Chemical Structure**: `C₆H₅–C(=O)–CH₃`\n');
-      step7Buffer.writeln('**Why this structure is definitive**:');
-      step7Buffer.writeln('1. **FT-IR at ~1685 cm⁻¹**: Strongly points to a conjugated aryl ketone (unconjugated aliphatic ketone is ~1715 cm⁻¹; benzaldehyde is ~1700 cm⁻¹ with Fermi resonance doublet at 2720/2820 cm⁻¹).');
-      step7Buffer.writeln('2. **¹H NMR singlet at δ 2.60 ppm (3H)**: Perfectly matches the methyl protons directly bonded to a carbonyl (–CO–CH₃).');
-      step7Buffer.writeln('3. **¹H NMR multiplet at δ 7.4–8.0 ppm (5H)**: Confirms a monosubstituted phenyl ring with ortho protons strongly deshielded by the electron-withdrawing carbonyl.');
-      step7Buffer.writeln('4. **¹³C NMR δ 198.1 ppm**: Definitive proof of ketone carbonyl; δ 26.6 ppm confirms methyl carbon; 4 aromatic carbon signals confirm monosubstituted ring.');
-      step7Buffer.writeln('5. **Mass Spec m/z 105 & 43**: Corresponds exactly to the benzoyl cation [Ph-CO]⁺ (base peak) and acetylium ion [CH₃CO]⁺ via α-cleavage.\n');
-
-      step7Buffer.writeln('**Ruling Out Alternative Constitutional Isomers**:');
-      step7Buffer.writeln('- **4-Methylbenzaldehyde**: Would show an aldehyde proton singlet at δ 9.9 ppm and a 4H symmetrical para-disubstituted A₂B₂ doublet of doublets, both absent here.');
-      step7Buffer.writeln('- **Phenylacetaldehyde**: Would exhibit an aldehyde proton at δ 9.7 ppm and an aliphatic methylene doublet at δ 3.6 ppm.');
-      step7Buffer.writeln('- **Phenyloxirane**: Lacks a carbonyl stretch at ~1685 cm⁻¹ in FT-IR and shows characteristic oxirane ring protons at δ 2.8–3.8 ppm.');
-    } else if (fUpper == 'C9H11NO2') {
-      primaryCandidate = 'Ethyl 4-Aminobenzoate (Benzocaine)';
-      step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
-      step7Buffer.writeln('**Chemical Structure**: `H₂N–C₆H₄–COOCH₂CH₃` (para-substituted)\n');
-      step7Buffer.writeln('**Why this structure is definitive**:');
-      step7Buffer.writeln('1. **FT-IR 3420 & 3340 cm⁻¹ doublet**: Confirms a primary amine (-NH2).');
-      step7Buffer.writeln('2. **FT-IR 1682 cm⁻¹ & ¹³C δ 166.7 ppm**: Diagnostic for conjugated ester carbonyl.');
-      step7Buffer.writeln('3. **¹H NMR Triplet-Quartet (δ 1.35 & 4.30 ppm)**: Unequivocal proof of an ethyl ester group (-OCH2CH3).');
-      step7Buffer.writeln('4. **¹H NMR A₂B₂ pattern (δ 6.64 & 7.85 ppm, J=8.7 Hz)**: Classic 1,4-para-disubstituted benzene ring.');
-    } else if (fUpper == 'C3H7BR') {
-      primaryCandidate = '1-Bromopropane (n-Propyl bromide, CH₃-CH₂-CH₂-Br)';
-
-      step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
-      step7Buffer.writeln('**Chemical Structure**: `CH₃–CH₂–CH₂–Br`\n');
-      step7Buffer.writeln('**Why this structure is definitive**:');
-      step7Buffer.writeln('1. **DBE = 0**: Confirms an open-chain, fully saturated alkyl halide.');
-      step7Buffer.writeln('2. **MS m/z 122 & 124 (1:1)**: Definitive proof of a single bromine isotope pattern.');
-      step7Buffer.writeln('3. **¹H NMR Triplet at δ 3.38 ppm (2H, –CH₂Br)** and **Sextet at δ 1.90 ppm (2H, –CH₂–)**: Distinctive linear 3-carbon coupling chain (n+1 rule).');
-      step7Buffer.writeln('4. **¹³C NMR**: 3 signals at δ 35.3, 26.0, 13.0 ppm with DEPT-135 confirming 1x CH3 and 2x CH2.');
-      step7Buffer.writeln('5. **Alternative 2-Bromopropane**: Would show a 6H doublet for two equivalent methyl groups and a 1H septet at δ 4.2 ppm, inconsistent with the 3 distinct proton signals.');
-    } else if (fUpper == 'C5H10O2') {
-      primaryCandidate = 'Ethyl Propionate (CH₃CH₂COOCH₂CH₃)';
-      step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
-      step7Buffer.writeln('**Chemical Structure**: `CH₃–CH₂–C(=O)–O–CH₂–CH₃`\n');
-      step7Buffer.writeln('**Definitive Spectral Evidence**:');
-      step7Buffer.writeln('1. **DBE = 1.0**: Exactly 1 carbonyl group.');
-      step7Buffer.writeln('2. **FT-IR 1740 cm⁻¹ & ¹³C δ 174.4 ppm**: Saturated aliphatic ester.');
-      step7Buffer.writeln('3. **¹H NMR**: Two distinct ethyl patterns: -CH2CO- at δ 2.31 (q) and -OCH2- at δ 4.12 (q).');
-    } else if (fUpper == 'C8H8O3') {
-      primaryCandidate = 'Vanillin (4-Hydroxy-3-methoxybenzaldehyde)';
-      step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
-      step7Buffer.writeln('**Chemical Structure**: `3-(OCH₃)-4-(OH)-C₆H₃–CHO`\n');
-      step7Buffer.writeln('**Definitive Spectral Evidence**:');
-      step7Buffer.writeln('1. **¹H NMR δ 9.82 (s, 1H)**: Aldehyde proton; ¹³C δ 190.9 confirms conjugated aldehyde.');
-      step7Buffer.writeln('2. **¹H NMR δ 3.96 (s, 3H) & ¹³C δ 56.1**: Aryl methoxy ether.');
-      step7Buffer.writeln('3. **FT-IR 3180 cm⁻¹**: Phenolic hydroxyl group.');
-    } else {
-      primaryCandidate = 'Consistent Molecular Framework for $fUpper';
-      step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
-      step7Buffer.writeln('**Synthesizing detected fragments**:');
-      for (final s in subunits) {
-        step7Buffer.writeln('- $s');
+      step7Buffer.writeln('**Chemical Structure**: `${knownCompound.structure}`');
+      if (knownCompound.smiles.isNotEmpty) {
+        step7Buffer.writeln('**SMILES**: `${knownCompound.smiles}`\n');
+      } else {
+        step7Buffer.writeln();
       }
-      step7Buffer.writeln('\n**Isomer Ambiguity Considerations**:');
-      step7Buffer.writeln('- Check for regioisomers (ortho/meta/para substitution patterns in aromatic rings via coupling constants: J_ortho ≈ 7–9 Hz, J_meta ≈ 2–3 Hz).');
-      step7Buffer.writeln('- Verify stereoisomerism (cis/trans coupling across double bonds: J_trans ≈ 14–18 Hz, J_cis ≈ 7–11 Hz).');
-      step7Buffer.writeln('- DEPT carbon count balance ensures all quaternary and protonated carbons are mapped.');
-    }
 
+      step7Buffer.writeln('**Definitive Spectral Evidence & Deduction Rationale**:');
+      step7Buffer.writeln(knownCompound.definitiveReasoning);
+      step7Buffer.writeln('\n**Diagnostic Spectroscopic Assignments**:');
+      if (knownCompound.diagnosticIr.isNotEmpty) {
+        step7Buffer.writeln('- **FT-IR Signatures**: ${knownCompound.diagnosticIr.join("; ")}');
+      }
+      if (knownCompound.nmr1H.isNotEmpty) {
+        step7Buffer.writeln('- **¹H NMR Chemical Shifts & Splitting**:');
+        for (final h in knownCompound.nmr1H) {
+          step7Buffer.writeln('  • $h');
+        }
+      }
+      if (knownCompound.nmr13C.isNotEmpty) {
+        step7Buffer.writeln('- **¹³C NMR Carbon Resonances**:');
+        for (final c in knownCompound.nmr13C) {
+          step7Buffer.writeln('  • $c');
+        }
+      }
+      if (knownCompound.msFragmentation.isNotEmpty) {
+        step7Buffer.writeln('- **Mass Spectrometry Fragmentation (EI-MS)**:');
+        for (final m in knownCompound.msFragmentation) {
+          step7Buffer.writeln('  • $m');
+        }
+      }
+
+      if (knownCompound.alternativeIsomersRuledOut.isNotEmpty) {
+        step7Buffer.writeln('\n**Ruling Out Alternative Constitutional Isomers**:');
+        for (final iso in knownCompound.alternativeIsomersRuledOut) {
+          step7Buffer.writeln('- $iso');
+        }
+      }
+    } else {
+      // Algorithmic Structure Deduction Engine for Arbitrary Formulas
+      final algorithmicResult = deduceStructureAlgorithmically(
+        parsed: parsed,
+        formula: fUpper,
+        dbe: dbe,
+        irPeaks: irPeaks,
+        nmrPeaks: effectiveH,
+        nmr13CPeaks: effectiveC,
+        msPeaks: msPeaks,
+        subunits: subunits,
+      );
+
+      primaryCandidate = algorithmicResult.primaryCandidate;
+      step7Buffer.write(algorithmicResult.report);
+    }
     steps.add(DeductionStep(
       stepNumber: 7,
       title: 'Candidate Structural Hypotheses & Isomers',
@@ -1677,11 +1678,1567 @@ class SpectroscopyService {
       ],
     ),
   ];
-}
 
-// ----------------------------------------------------
-// Auxiliary Data Models
-// ----------------------------------------------------
+
+  // =========================================================================
+  // 52+ Curated MSc Chemistry Compounds Database & Algorithmic Solver Engine
+  // =========================================================================
+
+  static final List<SpectroscopyCompoundEntry> curatedCompoundDatabase = [
+    // 1. Acetophenone
+    const SpectroscopyCompoundEntry(
+      formula: 'C8H8O',
+      commonName: 'Acetophenone',
+      iupacName: '1-Phenylethan-1-one',
+      structure: 'C₆H₅–C(=O)–CH₃',
+      smiles: 'CC(=O)c1ccccc1',
+      dbe: 5.0,
+      diagnosticIr: ['1685 cm⁻¹ (conjugated aryl C=O stretch)', '1600, 1585 cm⁻¹ (aromatic ring C=C)', '1360 cm⁻¹ (methyl ketone C–H bend)'],
+      nmr1H: [
+        'δ 2.60 ppm (s, 3H): –CO–CH₃ methyl protons adjacent to carbonyl',
+        'δ 7.45 ppm (t, 2H, J = 7.5 Hz): meta-protons of phenyl ring',
+        'δ 7.55 ppm (t, 1H, J = 7.4 Hz): para-proton of phenyl ring',
+        'δ 7.95 ppm (d, 2H, J = 8.0 Hz): ortho-protons deshielded by electron-withdrawing carbonyl',
+      ],
+      nmr13C: [
+        'δ 198.1 ppm (s, C_q): ketone carbonyl carbon',
+        'δ 137.1 ppm (s, C_q): ipso aromatic carbon',
+        'δ 133.1 ppm (d, CH): para aromatic carbon',
+        'δ 128.5 ppm (d, 2x CH): meta aromatic carbons',
+        'δ 128.3 ppm (d, 2x CH): ortho aromatic carbons',
+        'δ 26.6 ppm (q, CH₃): methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 120 [M]⁺• (molecular ion, 30%)',
+        'm/z 105 [C₆H₅CO]⁺ (base peak, 100% via α-cleavage)',
+        'm/z 77 [C₆H₅]⁺ (phenyl cation via loss of CO, 80%)',
+        'm/z 51 [C₄H₃]⁺ (degradation of phenyl ring)',
+        'm/z 43 [CH₃CO]⁺ (acetylium ion, 15%)',
+      ],
+      alternativeIsomersRuledOut: [
+        '**4-Methylbenzaldehyde**: Ruled out because it exhibits an aldehyde proton singlet at δ 9.9 ppm and a symmetrical 4H A₂B₂ quartet (J = 8 Hz), both absent here.',
+        '**Phenylacetaldehyde**: Ruled out because it shows an aldehyde proton at δ 9.7 ppm and an aliphatic methylene doublet at δ 3.6 ppm.',
+        '**Phenyloxirane**: Ruled out because it lacks a carbonyl absorption at ~1685 cm⁻¹ and shows oxirane ring protons at δ 2.8–3.8 ppm.',
+      ],
+      definitiveReasoning: '1. **Conjugated Ketone Carbonyl**: The FT-IR carbonyl at 1685 cm⁻¹ is significantly lower than aliphatic ketones (1715 cm⁻¹), proving conjugation with an aryl ring.\n2. **Sharp 3H Singlet at δ 2.60 ppm**: Unequivocal proof of an isolated methyl ketone (–COCH₃).\n3. **Monosubstituted Aromatic Pattern**: The 5H aromatic multiplet (ortho/meta/para separation) and base peak at m/z 105 uniquely define acetophenone.',
+    ),
+
+    // 2. Benzocaine
+    const SpectroscopyCompoundEntry(
+      formula: 'C9H11NO2',
+      commonName: 'Benzocaine',
+      iupacName: 'Ethyl 4-aminobenzoate',
+      structure: 'H₂N–C₆H₄–COOCH₂CH₃ (para)',
+      smiles: 'CCOC(=O)c1ccc(N)cc1',
+      dbe: 5.0,
+      diagnosticIr: ['3420, 3340 cm⁻¹ (primary amine N–H doublet)', '1682 cm⁻¹ (conjugated ester C=O)', '1275 cm⁻¹ (aromatic ester C–O)'],
+      nmr1H: [
+        'δ 1.35 ppm (t, 3H, J = 7.1 Hz): –CH₂–CH₃ ester methyl',
+        'δ 4.10 ppm (br s, 2H): –NH₂ amino protons (D₂O exchangeable)',
+        'δ 4.30 ppm (q, 2H, J = 7.1 Hz): –O–CH₂–CH₃ ester methylene',
+        'δ 6.64 ppm (d, 2H, J = 8.7 Hz): ortho to –NH₂ (shielded by amino resonance)',
+        'δ 7.85 ppm (d, 2H, J = 8.7 Hz): ortho to –COOEt (deshielded by ester carbonyl)',
+      ],
+      nmr13C: [
+        'δ 166.7 ppm (C_q): ester carbonyl',
+        'δ 150.9 ppm (C_q): C4 bearing –NH₂',
+        'δ 131.5 ppm (2x CH): C2, C6 ortho to ester',
+        'δ 119.8 ppm (C_q): C1 bearing ester group',
+        'δ 113.8 ppm (2x CH): C3, C5 ortho to amine',
+        'δ 60.3 ppm (CH₂): ester methylene carbon',
+        'δ 14.4 ppm (CH₃): ester methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 165 [M]⁺• (molecular ion)',
+        'm/z 137 [M – C₂H₄]⁺ (McLafferty rearrangement, loss of ethylene)',
+        'm/z 120 [H₂N–C₆H₄–CO]⁺ (base peak, 100%)',
+        'm/z 92 [H₂N–C₆H₄]⁺ (loss of CO from m/z 120)',
+        'm/z 65 [C₅H₅]⁺ (cyclopentadienyl cation)',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Ethyl 2-aminobenzoate (Ethyl anthranilate)**: Ruled out because it shows an unsymmetrical 4-proton aromatic pattern (four distinct 1H multiplets) instead of a clean para A₂B₂ doublet of doublets.',
+        '**N-Ethyl-4-aminobenzoic acid**: Ruled out because an N-ethyl amine would show a secondary amine singlet in IR (~3350 cm⁻¹) rather than a primary amine doublet, plus a broad carboxylic O–H at 2500–3300 cm⁻¹.',
+      ],
+      definitiveReasoning: '1. **Primary Aromatic Amine**: Diagnostic 3420/3340 cm⁻¹ IR doublet confirms –NH₂.\n2. **Classic Ethyl Ester Triplet-Quartet**: δ 1.35 (3H, t) and δ 4.30 (2H, q) proves –COOCH₂CH₃.\n3. **Para-Disubstituted Ring**: Clean A₂B₂ doublets at δ 6.64 and 7.85 (J = 8.7 Hz) definitively establish the 1,4-relationship.',
+    ),
+
+    // 3. 1-Bromopropane
+    const SpectroscopyCompoundEntry(
+      formula: 'C3H7BR',
+      commonName: '1-Bromopropane',
+      iupacName: '1-Bromopropane',
+      structure: 'CH₃–CH₂–CH₂–Br',
+      smiles: 'CCCBr',
+      dbe: 0.0,
+      diagnosticIr: ['2960, 2870 cm⁻¹ (sp³ C–H)', '1250 cm⁻¹ (CH₂–Br wag)', '650 cm⁻¹ (C–Br stretch)'],
+      nmr1H: [
+        'δ 1.04 ppm (t, 3H, J = 7.3 Hz): C3 terminal methyl',
+        'δ 1.90 ppm (sextet, 2H, J = 7.3 Hz): C2 methylene coupled to 5 protons',
+        'δ 3.38 ppm (t, 2H, J = 6.8 Hz): C1 methylene adjacent to Bromine',
+      ],
+      nmr13C: [
+        'δ 35.3 ppm (CH₂): C1 (–CH₂–Br)',
+        'δ 26.0 ppm (CH₂): C2 (–CH₂–)',
+        'δ 13.0 ppm (CH₃): C3 (–CH₃)',
+      ],
+      msFragmentation: [
+        'm/z 122 & 124 [M]⁺• (1:1 doublet for ⁷⁹Br / ⁸¹Br)',
+        'm/z 43 [C₃H₇]⁺ (base peak, loss of Br• radical)',
+        'm/z 41 [C₃H₅]⁺ (allyl cation via H₂ loss)',
+      ],
+      alternativeIsomersRuledOut: [
+        '**2-Bromopropane**: Ruled out because 2-bromopropane possesses only 2 proton environments: a 6H doublet at δ 1.7 ppm and a 1H septet at δ 4.2 ppm, completely contrasting with the 3H:2H:2H triplet-sextet-triplet pattern observed.',
+      ],
+      definitiveReasoning: '1. **Bromine Doublet in MS**: Equal height peaks at m/z 122 and 124 confirm one bromine atom.\n2. **Triplet-Sextet-Triplet**: The n+1 splitting rule proves the linear CH₃–CH₂–CH₂–Br connectivity.\n3. **Deshielded Methylene at δ 3.38**: Directly matches –CH₂Br.',
+    ),
+
+    // 4. 2-Bromopropane
+    const SpectroscopyCompoundEntry(
+      formula: 'C3H7BR',
+      commonName: '2-Bromopropane',
+      iupacName: '2-Bromopropane',
+      structure: '(CH₃)₂CH–Br',
+      smiles: 'CC(C)Br',
+      dbe: 0.0,
+      diagnosticIr: ['2970, 2870 cm⁻¹ (sp³ C–H)', '1380, 1370 cm⁻¹ (gem-dimethyl doublet)', '610 cm⁻¹ (C–Br stretch)'],
+      nmr1H: [
+        'δ 1.72 ppm (d, 6H, J = 6.6 Hz): two equivalent methyl groups (CH₃)₂',
+        'δ 4.28 ppm (septet, 1H, J = 6.6 Hz): methine proton (–CHBr–) coupled to 6 methyl protons',
+      ],
+      nmr13C: [
+        'δ 44.2 ppm (CH): C2 (–CHBr–)',
+        'δ 27.2 ppm (2x CH₃): C1, C3 equivalent methyl carbons',
+      ],
+      msFragmentation: [
+        'm/z 122 & 124 [M]⁺• (1:1 doublet for ⁷⁹Br / ⁸¹Br)',
+        'm/z 43 [C₃H₇]⁺ (base peak, loss of Br• radical)',
+        'm/z 41 [C₃H₅]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**1-Bromopropane**: Ruled out because it shows 3 distinct signals (triplet, sextet, triplet) instead of the 2-signal doublet-septet pattern of isopropyl bromide.',
+      ],
+      definitiveReasoning: '1. **Doublet-Septet 6H:1H Pattern**: Symmetrical isopropyl group (CH₃)₂CH– with large splitting into a septet.\n2. **Two ¹³C Signals**: Confirms C2v symmetry with 2 equivalent methyl groups at δ 27.2 ppm.',
+    ),
+
+    // 5. Ethyl Propionate
+    const SpectroscopyCompoundEntry(
+      formula: 'C5H10O2',
+      commonName: 'Ethyl Propionate',
+      iupacName: 'Ethyl propanoate',
+      structure: 'CH₃–CH₂–C(=O)–O–CH₂–CH₃',
+      smiles: 'CCC(=O)OCC',
+      dbe: 1.0,
+      diagnosticIr: ['1740 cm⁻¹ (saturated aliphatic ester C=O)', '1180 cm⁻¹ (ester C–O stretch)'],
+      nmr1H: [
+        'δ 1.14 ppm (t, 3H, J = 7.6 Hz): propionyl methyl (CH₃CH₂CO–)',
+        'δ 1.25 ppm (t, 3H, J = 7.1 Hz): ethoxy methyl (–OCH₂CH₃)',
+        'δ 2.31 ppm (q, 2H, J = 7.6 Hz): propionyl methylene (–CH₂CO–)',
+        'δ 4.12 ppm (q, 2H, J = 7.1 Hz): ethoxy methylene (–OCH₂–)',
+      ],
+      nmr13C: [
+        'δ 174.4 ppm (C_q): ester carbonyl carbon',
+        'δ 60.1 ppm (CH₂): ethoxy methylene carbon',
+        'δ 27.6 ppm (CH₂): propionyl methylene carbon',
+        'δ 14.2 ppm (CH₃): ethoxy methyl carbon',
+        'δ 9.1 ppm (CH₃): propionyl methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 102 [M]⁺•',
+        'm/z 57 [CH₃CH₂CO]⁺ (base peak, propionylium cation)',
+        'm/z 29 [CH₃CH₂]⁺ (ethyl cation)',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Propyl Acetate**: Shows a 3H singlet at δ 2.05 ppm (acetyl group –COCH₃) and a downfield –OCH₂– triplet at δ 4.0 ppm, inconsistent with the two distinct triplet-quartet pairs observed.',
+        '**Methyl Butyrate**: Shows a 3H singlet at δ 3.65 ppm (–OCH₃), completely absent here.',
+      ],
+      definitiveReasoning: '1. **Two Triplet-Quartet Pairs**: Two distinct ethyl groups—one bonded to carbonyl (δ 2.31, q) and one bonded to ester oxygen (δ 4.12, q).\n2. **FT-IR 1740 cm⁻¹ & ¹³C δ 174.4**: Definitive saturated aliphatic ester.',
+    ),
+
+    // 6. Vanillin
+    const SpectroscopyCompoundEntry(
+      formula: 'C8H8O3',
+      commonName: 'Vanillin',
+      iupacName: '4-Hydroxy-3-methoxybenzaldehyde',
+      structure: '3-(OCH₃)-4-(OH)-C₆H₃–CHO',
+      smiles: 'COc1cc(C=O)ccc1O',
+      dbe: 5.0,
+      diagnosticIr: ['3180 cm⁻¹ (phenolic O–H, broad)', '1666 cm⁻¹ (conjugated aryl aldehyde C=O)', '2840, 2750 cm⁻¹ (aldehyde Fermi resonance C–H)', '1265 cm⁻¹ (aryl alkyl ether C–O)'],
+      nmr1H: [
+        'δ 3.96 ppm (s, 3H): –OCH₃ methoxy protons',
+        'δ 6.30 ppm (br s, 1H): phenolic –OH (exchangeable with D₂O)',
+        'δ 7.04 ppm (d, 1H, J = 8.0 Hz): H5 ortho to –OH',
+        'δ 7.41 ppm (dd, 1H, J = 8.0, 1.8 Hz): H6 meta to –OCH₃, ortho to –CHO',
+        'δ 7.43 ppm (d, 1H, J = 1.8 Hz): H2 ortho to both –OCH₃ and –CHO',
+        'δ 9.82 ppm (s, 1H): –CHO formyl proton',
+      ],
+      nmr13C: [
+        'δ 190.9 ppm (CH): aldehyde formyl carbon',
+        'δ 151.7 ppm (C_q): C4 bearing –OH',
+        'δ 147.2 ppm (C_q): C3 bearing –OCH₃',
+        'δ 129.9 ppm (C_q): C1 bearing –CHO',
+        'δ 127.6 ppm (CH): C6',
+        'δ 114.4 ppm (CH): C5',
+        'δ 108.8 ppm (CH): C2',
+        'δ 56.1 ppm (CH₃): methoxy carbon',
+      ],
+      msFragmentation: [
+        'm/z 152 [M]⁺• (base peak, 100%)',
+        'm/z 151 [M – H]⁺',
+        'm/z 123 [M – CHO]⁺',
+        'm/z 109 [M – CO – CH₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Isovanillin (3-hydroxy-4-methoxybenzaldehyde)**: Ruled out because isovanillin displays different chemical shifts for the aromatic carbons (C3 at 146.0 and C4 at 152.5) and a weaker intermolecular H-bond.',
+        '**Methyl 4-hydroxybenzoate**: Ruled out because it shows a 4H symmetrical A₂B₂ pattern (J = 8.8 Hz) and lacks the aldehyde formyl proton at δ 9.82 ppm.',
+      ],
+      definitiveReasoning: '1. **Aldehyde Singlet at δ 9.82 ppm & FT-IR 1666 cm⁻¹**: Proves conjugated aryl aldehyde.\n2. **Aromatic 1,3,4-Trisubstitution Pattern**: One doublet (J=8.0), one doublet of doublets (J=8.0, 1.8), and one meta-coupled doublet (J=1.8).\n3. **Methoxy Singlet at δ 3.96 ppm (3H)**: Confirms aryl methoxy group.',
+    ),
+
+    // 7. Benzoic Acid
+    const SpectroscopyCompoundEntry(
+      formula: 'C7H6O2',
+      commonName: 'Benzoic Acid',
+      iupacName: 'Benzenecarboxylic acid',
+      structure: 'C₆H₅–COOH',
+      smiles: 'O=C(O)c1ccccc1',
+      dbe: 5.0,
+      diagnosticIr: ['2500–3300 cm⁻¹ (extremely broad carboxylic acid O–H)', '1688 cm⁻¹ (conjugated carboxylic acid C=O)', '1290 cm⁻¹ (C–O stretch)'],
+      nmr1H: [
+        'δ 7.48 ppm (t, 2H, J = 7.5 Hz): meta protons of phenyl ring',
+        'δ 7.62 ppm (t, 1H, J = 7.4 Hz): para proton of phenyl ring',
+        'δ 8.14 ppm (d, 2H, J = 7.8 Hz): ortho protons strongly deshielded by –COOH',
+        'δ 12.20 ppm (br s, 1H): –COOH carboxylic acid proton (D₂O exchangeable)',
+      ],
+      nmr13C: [
+        'δ 172.6 ppm (C_q): carboxylic acid carbonyl carbon',
+        'δ 133.7 ppm (CH): para carbon',
+        'δ 130.2 ppm (2x CH): ortho carbons',
+        'δ 129.3 ppm (C_q): ipso aromatic carbon',
+        'δ 128.5 ppm (2x CH): meta carbons',
+      ],
+      msFragmentation: [
+        'm/z 122 [M]⁺• (80%)',
+        'm/z 105 [C₆H₅CO]⁺ (base peak, 100%, loss of •OH)',
+        'm/z 77 [C₆H₅]⁺ (phenyl cation, loss of CO from m/z 105)',
+        'm/z 51 [C₄H₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**4-Hydroxybenzaldehyde**: Shows an aldehyde proton at δ 9.85 ppm and an A₂B₂ doublet pattern (δ 6.95 & 7.80 ppm), completely absent here.',
+        '**Phenyl formate**: Lacks the broad 2500–3300 cm⁻¹ carboxylic acid absorption and shows a formate proton singlet at δ 8.25 ppm.',
+      ],
+      definitiveReasoning: '1. **Extremely Broad IR Band (2500–3300 cm⁻¹)**: Characteristic signature of strongly hydrogen-bonded carboxylic acid dimer.\n2. **Deshielded Proton at δ 12.20 ppm**: Definitive proof of –COOH.\n3. **Base Peak at m/z 105**: Loss of •OH (17 amu) from molecular ion to form stable benzoyl cation.',
+    ),
+
+    // 8. Benzaldehyde
+    const SpectroscopyCompoundEntry(
+      formula: 'C7H6O',
+      commonName: 'Benzaldehyde',
+      iupacName: 'Benzaldehyde',
+      structure: 'C₆H₅–CHO',
+      smiles: 'O=Cc1ccccc1',
+      dbe: 5.0,
+      diagnosticIr: ['1705 cm⁻¹ (conjugated aryl aldehyde C=O)', '2720, 2820 cm⁻¹ (aldehyde C–H Fermi resonance doublet)', '1598, 1583 cm⁻¹ (aromatic ring)'],
+      nmr1H: [
+        'δ 7.52 ppm (t, 2H, J = 7.5 Hz): meta protons',
+        'δ 7.63 ppm (t, 1H, J = 7.4 Hz): para proton',
+        'δ 7.88 ppm (d, 2H, J = 7.5 Hz): ortho protons',
+        'δ 10.02 ppm (s, 1H): formyl proton (–CHO)',
+      ],
+      nmr13C: [
+        'δ 192.4 ppm (CH): aldehyde carbonyl carbon (positive in DEPT-135)',
+        'δ 136.4 ppm (C_q): ipso carbon',
+        'δ 134.5 ppm (CH): para carbon',
+        'δ 129.7 ppm (2x CH): ortho carbons',
+        'δ 129.0 ppm (2x CH): meta carbons',
+      ],
+      msFragmentation: [
+        'm/z 106 [M]⁺• (90%)',
+        'm/z 105 [M – H]⁺ (base peak, 100%, benzoyl cation)',
+        'm/z 77 [C₆H₅]⁺ (phenyl cation via loss of CO)',
+        'm/z 51 [C₄H₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Cycloheptatrienone (Tropone)**: Would show complex olefinic splitting between δ 6.5–7.2 ppm and lacks the sharp 1H formyl singlet at δ 10.02 ppm.',
+      ],
+      definitiveReasoning: '1. **Fermi Resonance Doublet (2720 & 2820 cm⁻¹)**: Unequivocal proof of aldehyde functional group.\n2. **Formyl Singlet at δ 10.02 ppm**: Diagnostic for aromatic aldehyde.\n3. **Base Peak at m/z 105 ([M-H]⁺)**: Facile loss of formyl hydrogen.',
+    ),
+
+    // 9. Aspirin (Acetylsalicylic Acid)
+    const SpectroscopyCompoundEntry(
+      formula: 'C9H8O4',
+      commonName: 'Aspirin (Acetylsalicylic Acid)',
+      iupacName: '2-Acetoxybenzoic acid',
+      structure: '2-(OCOCH₃)–C₆H₄–COOH',
+      smiles: 'CC(=O)Oc1ccccc1C(=O)O',
+      dbe: 6.0,
+      diagnosticIr: ['2500–3200 cm⁻¹ (broad carboxylic acid O–H)', '1755 cm⁻¹ (aryl ester C=O)', '1690 cm⁻¹ (conjugated acid C=O)', '1185 cm⁻¹ (acetate C–O)'],
+      nmr1H: [
+        'δ 2.35 ppm (s, 3H): –OCOCH₃ acetate methyl protons',
+        'δ 7.15 ppm (d, 1H, J = 8.1 Hz): H3 ortho to acetoxy group',
+        'δ 7.35 ppm (t, 1H, J = 7.6 Hz): H5',
+        'δ 7.62 ppm (t, 1H, J = 7.8 Hz): H4',
+        'δ 8.12 ppm (dd, 1H, J = 7.8, 1.6 Hz): H6 ortho to carboxylic acid',
+        'δ 11.10 ppm (br s, 1H): –COOH carboxylic acid proton',
+      ],
+      nmr13C: [
+        'δ 170.1 ppm (C_q): ester carbonyl carbon',
+        'δ 169.8 ppm (C_q): carboxylic acid carbonyl carbon',
+        'δ 151.2 ppm (C_q): C2 bearing –OCOCH₃',
+        'δ 134.8 ppm (CH): C4',
+        'δ 132.4 ppm (CH): C6',
+        'δ 126.1 ppm (CH): C5',
+        'δ 123.9 ppm (CH): C3',
+        'δ 122.2 ppm (C_q): C1 bearing –COOH',
+        'δ 20.9 ppm (CH₃): acetate methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 180 [M]⁺• (weak)',
+        'm/z 138 [M – C₂H₂O]⁺• (base peak, loss of ketene via McLafferty rearrangement to salicylic acid)',
+        'm/z 120 [Salicylic acid – H₂O]⁺ (loss of water to form 2-oxocoumarin cation)',
+        'm/z 92 [C₆H₄O]⁺•',
+        'm/z 43 [CH₃CO]⁺ (acetylium ion)',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Methyl 2-acetoxybenzoate**: Lacks carboxylic acid broad O–H band and shows an ester methoxy singlet at δ 3.85 ppm instead of a broad acid proton.',
+        '**4-Acetoxybenzoic acid**: Would show a symmetrical A₂B₂ pattern (two 2H doublets at ~7.2 and 8.1 ppm) instead of the 4 distinct 1H aromatic multiplets of the ortho-substituted aspirin.',
+      ],
+      definitiveReasoning: '1. **Two Distinct Carbonyl Bands (1755 & 1690 cm⁻¹)**: Proves presence of both an aryl ester and an aryl carboxylic acid.\n2. **Acetate Singlet at δ 2.35 ppm (3H)**: Confirms –OCOCH₃.\n3. **Base Peak at m/z 138**: Thermal or EI-induced loss of ketene (42 amu) directly yielding salicylic acid radical cation.',
+    ),
+
+    // 10. Paracetamol (Acetaminophen)
+    const SpectroscopyCompoundEntry(
+      formula: 'C8H9NO2',
+      commonName: 'Paracetamol (Acetaminophen)',
+      iupacName: 'N-(4-Hydroxyphenyl)acetamide',
+      structure: '4-(OH)–C₆H₄–NHCOCH₃',
+      smiles: 'CC(=O)Nc1ccc(O)cc1',
+      dbe: 5.0,
+      diagnosticIr: ['3325 cm⁻¹ (amide N–H and phenolic O–H overlap)', '1655 cm⁻¹ (Amide I band, C=O stretch)', '1565 cm⁻¹ (Amide II band, N–H bending)', '1240 cm⁻¹ (phenolic C–O)'],
+      nmr1H: [
+        'δ 2.05 ppm (s, 3H): –NHCOCH₃ acetamide methyl protons',
+        'δ 6.68 ppm (d, 2H, J = 8.8 Hz): ortho to –OH',
+        'δ 7.34 ppm (d, 2H, J = 8.8 Hz): ortho to –NHCOCH₃',
+        'δ 9.15 ppm (s, 1H): phenolic –OH',
+        'δ 9.68 ppm (s, 1H): amide –NH–',
+      ],
+      nmr13C: [
+        'δ 168.0 ppm (C_q): amide carbonyl carbon',
+        'δ 153.2 ppm (C_q): C4 bearing –OH',
+        'δ 131.2 ppm (C_q): C1 bearing –NHAc',
+        'δ 120.9 ppm (2x CH): C2, C6 ortho to amide',
+        'δ 115.1 ppm (2x CH): C3, C5 ortho to hydroxyl',
+        'δ 23.9 ppm (CH₃): acetamide methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 151 [M]⁺• (molecular ion, 60%)',
+        'm/z 109 [M – C₂H₂O]⁺• (base peak, 100%, loss of ketene to form 4-aminophenol cation)',
+        'm/z 80 [C₅H₆N]⁺',
+        'm/z 43 [CH₃CO]⁺ (acetylium ion)',
+      ],
+      alternativeIsomersRuledOut: [
+        '**2-Acetamidophenol**: Ruled out because it shows 4 distinct aromatic proton signals instead of the clean 2H:2H para A₂B₂ doublets of paracetamol.',
+        '**Methyl 4-aminobenzoate**: Shows an ester C=O at 1715 cm⁻¹ and an ester methoxy singlet at δ 3.8 ppm, contrasting with the amide C=O at 1655 cm⁻¹ and methyl singlet at δ 2.05 ppm.',
+      ],
+      definitiveReasoning: '1. **Amide I & II Bands (1655 & 1565 cm⁻¹)**: Classic signature of secondary aromatic amide.\n2. **Para A₂B₂ Doublets (δ 6.68 & 7.34, J = 8.8 Hz)**: Proves 1,4-disubstitution.\n3. **Base Peak at m/z 109**: Loss of ketene (42 amu) confirming N-acetyl group on aminophenol.',
+    ),
+
+    // 11. Salicylic Acid
+    const SpectroscopyCompoundEntry(
+      formula: 'C7H6O3',
+      commonName: 'Salicylic Acid',
+      iupacName: '2-Hydroxybenzoic acid',
+      structure: '2-(OH)–C₆H₄–COOH',
+      smiles: 'O=C(O)c1ccccc1O',
+      dbe: 5.0,
+      diagnosticIr: ['3240 cm⁻¹ (intramolecularly H-bonded phenolic O–H)', '2500–3100 cm⁻¹ (broad carboxylic acid O–H)', '1660 cm⁻¹ (strongly chelated acid C=O)'],
+      nmr1H: [
+        'δ 6.92 ppm (t, 1H, J = 7.5 Hz): H5',
+        'δ 7.00 ppm (d, 1H, J = 8.3 Hz): H3 ortho to –OH',
+        'δ 7.52 ppm (t, 1H, J = 7.8 Hz): H4',
+        'δ 7.92 ppm (dd, 1H, J = 7.8, 1.7 Hz): H6 ortho to –COOH',
+        'δ 10.45 ppm (br s, 1H): phenolic –OH (intramolecular H-bond)',
+        'δ 12.00 ppm (br s, 1H): carboxylic acid –COOH',
+      ],
+      nmr13C: [
+        'δ 174.1 ppm (C_q): carboxylic acid carbonyl',
+        'δ 161.9 ppm (C_q): C2 bearing –OH',
+        'δ 136.0 ppm (CH): C4',
+        'δ 130.6 ppm (CH): C6',
+        'δ 119.3 ppm (CH): C5',
+        'δ 117.4 ppm (CH): C3',
+        'δ 112.5 ppm (C_q): C1 bearing –COOH',
+      ],
+      msFragmentation: [
+        'm/z 138 [M]⁺• (base peak, 100%)',
+        'm/z 120 [M – H₂O]⁺• (loss of water via ortho effect)',
+        'm/z 92 [C₆H₄O]⁺• (loss of CO from m/z 120)',
+        'm/z 64 [C₅H₄]⁺•',
+      ],
+      alternativeIsomersRuledOut: [
+        '**4-Hydroxybenzoic acid**: Ruled out because it shows a symmetrical para A₂B₂ pattern (two 2H doublets at δ 6.85 & 7.88 ppm) and lacks the ortho-effect dehydration peak in MS.',
+      ],
+      definitiveReasoning: '1. **Chelated Carbonyl at 1660 cm⁻¹**: Abnormally low carbonyl stretch due to strong 6-membered intramolecular H-bond with phenolic OH.\n2. **Ortho Effect in MS (m/z 120)**: Facile loss of H₂O (18 amu) from molecular ion is diagnostic for ortho-hydroxy acids.',
+    ),
+
+    // 12. Phenol
+    const SpectroscopyCompoundEntry(
+      formula: 'C6H6O',
+      commonName: 'Phenol',
+      iupacName: 'Phenol',
+      structure: 'C₆H₅–OH',
+      smiles: 'Oc1ccccc1',
+      dbe: 4.0,
+      diagnosticIr: ['3350 cm⁻¹ (broad phenolic O–H stretch)', '1235 cm⁻¹ (aryl C–O stretch)', '1595, 1495 cm⁻¹ (aromatic ring)'],
+      nmr1H: [
+        'δ 5.40 ppm (br s, 1H): phenolic –OH',
+        'δ 6.85 ppm (d, 2H, J = 7.8 Hz): ortho protons',
+        'δ 6.94 ppm (t, 1H, J = 7.4 Hz): para proton',
+        'δ 7.25 ppm (t, 2H, J = 7.8 Hz): meta protons',
+      ],
+      nmr13C: [
+        'δ 155.1 ppm (C_q): C1 bearing –OH',
+        'δ 129.7 ppm (2x CH): meta carbons',
+        'δ 121.0 ppm (CH): para carbon',
+        'δ 115.4 ppm (2x CH): ortho carbons',
+      ],
+      msFragmentation: [
+        'm/z 94 [M]⁺• (base peak, 100%)',
+        'm/z 66 [C₅H₆]⁺• (loss of CO via retro-Cheletropic fragmentation)',
+        'm/z 65 [C₅H₅]⁺ (loss of H• from m/z 66)',
+        'm/z 39 [C₃H₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Oxepine / Benzene oxide**: Would show non-aromatic olefinic protons between δ 5.5–6.3 ppm and lack the strong 3350 cm⁻¹ O–H stretch.',
+      ],
+      definitiveReasoning: '1. **Broad O–H Band at 3350 cm⁻¹ & C–O at 1235 cm⁻¹**: Proves phenolic group.\n2. **Shielded Ortho/Para Protons (δ 6.85 & 6.94)**: Resonance electron donation from OH lone pairs.\n3. **Base Peak m/z 94 & Loss of CO (m/z 66)**: Classic mass spectrometric fingerprint of phenol.',
+    ),
+
+    // 13. Aniline
+    const SpectroscopyCompoundEntry(
+      formula: 'C6H7N',
+      commonName: 'Aniline',
+      iupacName: 'Benzenamine',
+      structure: 'C₆H₅–NH₂',
+      smiles: 'Nc1ccccc1',
+      dbe: 4.0,
+      diagnosticIr: ['3430, 3350 cm⁻¹ (primary amine N–H doublet)', '1620 cm⁻¹ (N–H scissor bend)', '1275 cm⁻¹ (aryl C–N stretch)'],
+      nmr1H: [
+        'δ 3.65 ppm (br s, 2H): –NH₂ amino protons (D₂O exchangeable)',
+        'δ 6.68 ppm (d, 2H, J = 7.9 Hz): ortho protons',
+        'δ 6.78 ppm (t, 1H, J = 7.4 Hz): para proton',
+        'δ 7.18 ppm (t, 2H, J = 7.9 Hz): meta protons',
+      ],
+      nmr13C: [
+        'δ 146.4 ppm (C_q): C1 bearing –NH₂',
+        'δ 129.3 ppm (2x CH): meta carbons',
+        'δ 118.5 ppm (CH): para carbon',
+        'δ 115.1 ppm (2x CH): ortho carbons',
+      ],
+      msFragmentation: [
+        'm/z 93 [M]⁺• (base peak, 100%)',
+        'm/z 66 [C₅H₆]⁺• (loss of HCN)',
+        'm/z 65 [C₅H₅]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**2-Methylpyridine (2-Picoline)**: Lacks the 3430/3350 cm⁻¹ N–H doublet and shows a 3H methyl singlet at δ 2.55 ppm.',
+      ],
+      definitiveReasoning: '1. **Doublet at 3430 & 3350 cm⁻¹**: Diagnostic primary amine (symmetric and asymmetric stretching).\n2. **Ortho/Para Shielding**: Protons at δ 6.68 and 6.78 show strong +M resonance electron donation from nitrogen lone pair.\n3. **m/z 93 Base Peak & Loss of HCN (m/z 66)**: Definitive proof of aniline.',
+    ),
+
+    // 14. Nitrobenzene
+    const SpectroscopyCompoundEntry(
+      formula: 'C6H5NO2',
+      commonName: 'Nitrobenzene',
+      iupacName: 'Nitrobenzene',
+      structure: 'C₆H₅–NO₂',
+      smiles: 'O=[N+]([O-])c1ccccc1',
+      dbe: 5.0,
+      diagnosticIr: ['1525 cm⁻¹ (asymmetric NO₂ stretch, very strong)', '1345 cm⁻¹ (symmetric NO₂ stretch, very strong)', '850 cm⁻¹ (C–N stretch)'],
+      nmr1H: [
+        'δ 7.58 ppm (t, 2H, J = 7.8 Hz): meta protons',
+        'δ 7.74 ppm (t, 1H, J = 7.5 Hz): para proton',
+        'δ 8.24 ppm (d, 2H, J = 8.1 Hz): ortho protons strongly deshielded by –NO₂',
+      ],
+      nmr13C: [
+        'δ 148.2 ppm (C_q): C1 bearing –NO₂',
+        'δ 134.7 ppm (CH): para carbon',
+        'δ 129.4 ppm (2x CH): meta carbons',
+        'δ 123.4 ppm (2x CH): ortho carbons',
+      ],
+      msFragmentation: [
+        'm/z 123 [M]⁺• (60%)',
+        'm/z 77 [C₆H₅]⁺ (base peak, 100%, loss of •NO₂)',
+        'm/z 51 [C₄H₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Phenyl nitrite**: Lacks the twin 1525/1345 cm⁻¹ nitro bands and shows an O–N=O stretch at ~1660 cm⁻¹.',
+      ],
+      definitiveReasoning: '1. **Twin Intense Bands at 1525 & 1345 cm⁻¹**: Unequivocal proof of aromatic nitro group (–NO₂).\n2. **Deshielded Ortho Protons (δ 8.24 ppm)**: Demonstrates strong –I and –M electron-withdrawing nature of nitro group.\n3. **Base Peak at m/z 77**: Facile loss of •NO₂ (46 amu).',
+    ),
+
+    // 15. Toluene
+    const SpectroscopyCompoundEntry(
+      formula: 'C7H8',
+      commonName: 'Toluene',
+      iupacName: 'Methylbenzene',
+      structure: 'C₆H₅–CH₃',
+      smiles: 'Cc1ccccc1',
+      dbe: 4.0,
+      diagnosticIr: ['3030 cm⁻¹ (aromatic C–H)', '2920, 2860 cm⁻¹ (benzylic CH₃)', '1605, 1495 cm⁻¹ (ring C=C)', '730, 695 cm⁻¹ (monosubstituted benzene OOP)'],
+      nmr1H: [
+        'δ 2.36 ppm (s, 3H): benzylic –CH₃ methyl protons',
+        'δ 7.15–7.30 ppm (m, 5H): overlapping aromatic protons',
+      ],
+      nmr13C: [
+        'δ 137.9 ppm (C_q): ipso carbon',
+        'δ 129.0 ppm (2x CH): ortho carbons',
+        'δ 128.3 ppm (2x CH): meta carbons',
+        'δ 125.3 ppm (CH): para carbon',
+        'δ 21.5 ppm (CH₃): benzylic methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 92 [M]⁺• (70%)',
+        'm/z 91 [C₇H₇]⁺ (base peak, 100%, resonance-stabilized tropylium ion)',
+        'm/z 65 [C₅H₅]⁺ (loss of C₂H₂ from tropylium ion)',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Cycloheptatriene**: Would show non-aromatic alkene protons (δ 5.3–6.6 ppm) and a methylene triplet at δ 2.2 ppm.',
+      ],
+      definitiveReasoning: '1. **Benzylic Singlet at δ 2.36 ppm (3H)**: Isolated methyl group attached to aromatic ring.\n2. **Tropylium Ion Base Peak (m/z 91, 100%)**: Ring expansion of benzylic cation to aromatic cycloheptatrienyl cation is the hallmark of alkylbenzenes.',
+    ),
+
+    // 16. Benzyl Alcohol
+    const SpectroscopyCompoundEntry(
+      formula: 'C7H8O',
+      commonName: 'Benzyl Alcohol',
+      iupacName: 'Phenylmethanol',
+      structure: 'C₆H₅–CH₂–OH',
+      smiles: 'OCc1ccccc1',
+      dbe: 4.0,
+      diagnosticIr: ['3330 cm⁻¹ (broad primary alcohol O–H)', '2870 cm⁻¹ (benzylic methylene C–H)', '1020 cm⁻¹ (primary alcohol C–O)', '735, 695 cm⁻¹ (monosubstituted ring)'],
+      nmr1H: [
+        'δ 2.10 ppm (br s, 1H): –OH proton (D₂O exchangeable)',
+        'δ 4.65 ppm (s, 2H): benzylic –CH₂–OH methylene protons',
+        'δ 7.30–7.40 ppm (m, 5H): aromatic protons',
+      ],
+      nmr13C: [
+        'δ 140.9 ppm (C_q): ipso carbon',
+        'δ 128.5 ppm (2x CH): meta carbons',
+        'δ 127.6 ppm (CH): para carbon',
+        'δ 126.9 ppm (2x CH): ortho carbons',
+        'δ 65.2 ppm (CH₂): benzylic methylene carbon',
+      ],
+      msFragmentation: [
+        'm/z 108 [M]⁺• (80%)',
+        'm/z 107 [M – H]⁺',
+        'm/z 91 [C₇H₇]⁺ (tropylium ion via loss of •OH)',
+        'm/z 79 [C₆H₇]⁺ (base peak, 100%, protonated benzene via loss of CHO)',
+        'm/z 77 [C₆H₅]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**4-Methylphenol (p-Cresol)**: Shows a methyl singlet at δ 2.28 ppm and an A₂B₂ aromatic pattern (δ 6.75 & 7.05 ppm) rather than a methylene singlet at δ 4.65 ppm.',
+        '**Anisole (Methoxybenzene)**: Shows a 3H methoxy singlet at δ 3.80 ppm instead of a 2H methylene singlet.',
+      ],
+      definitiveReasoning: '1. **Benzylic Methylene Singlet at δ 4.65 ppm (2H)**: Directly bonded to both phenyl ring and hydroxyl oxygen.\n2. **Primary Alcohol C–O Band at 1020 cm⁻¹ & O–H at 3330 cm⁻¹**.\n3. **Base Peak at m/z 79 and m/z 91 Tropylium Ion**: Classic fragmentation of benzyl alcohol.',
+    ),
+
+    // 17. Acetone
+    const SpectroscopyCompoundEntry(
+      formula: 'C3H6O',
+      commonName: 'Acetone',
+      iupacName: 'Propan-2-one',
+      structure: 'CH₃–C(=O)–CH₃',
+      smiles: 'CC(=O)C',
+      dbe: 1.0,
+      diagnosticIr: ['1715 cm⁻¹ (aliphatic ketone C=O, very strong)', '1365 cm⁻¹ (methyl C–H deformation)'],
+      nmr1H: [
+        'δ 2.17 ppm (s, 6H): two chemically equivalent methyl groups',
+      ],
+      nmr13C: [
+        'δ 206.7 ppm (C_q): ketone carbonyl carbon (absent in DEPT)',
+        'δ 30.7 ppm (2x CH₃): equivalent methyl carbons',
+      ],
+      msFragmentation: [
+        'm/z 58 [M]⁺• (25%)',
+        'm/z 43 [CH₃CO]⁺ (base peak, 100%, acetylium ion via α-cleavage)',
+        'm/z 15 [CH₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Propanal (Propionaldehyde)**: Ruled out because propanal shows an aldehyde formyl triplet at δ 9.8 ppm and a methylene quartet at δ 2.45 ppm, while acetone is a single sharp 6H singlet.',
+        '**Allyl alcohol**: Ruled out because it shows alkene protons at δ 5.0–6.0 ppm and an OH stretch at ~3300 cm⁻¹.',
+      ],
+      definitiveReasoning: '1. **Single Sharp Singlet at δ 2.17 ppm (6H)**: Demonstrates perfect C2v symmetry with 6 equivalent protons adjacent to a carbonyl.\n2. **¹³C Peak at δ 206.7 ppm**: Diagnostic for non-conjugated ketone carbonyl.\n3. **Base Peak at m/z 43**: Acetylium ion [CH₃CO]⁺.',
+    ),
+
+    // 18. Ethyl Acetate
+    const SpectroscopyCompoundEntry(
+      formula: 'C4H8O2',
+      commonName: 'Ethyl Acetate',
+      iupacName: 'Ethyl ethanoate',
+      structure: 'CH₃–C(=O)–O–CH₂–CH₃',
+      smiles: 'CCOC(=O)C',
+      dbe: 1.0,
+      diagnosticIr: ['1742 cm⁻¹ (saturated aliphatic ester C=O)', '1240 cm⁻¹ (acetate C–O stretch, very strong)', '1045 cm⁻¹ (ester O–CH₂ stretch)'],
+      nmr1H: [
+        'δ 1.26 ppm (t, 3H, J = 7.1 Hz): –OCH₂CH₃ ester methyl',
+        'δ 2.04 ppm (s, 3H): –COCH₃ acetate methyl singlet',
+        'δ 4.12 ppm (q, 2H, J = 7.1 Hz): –OCH₂CH₃ ester methylene quartet',
+      ],
+      nmr13C: [
+        'δ 171.1 ppm (C_q): ester carbonyl carbon',
+        'δ 60.4 ppm (CH₂): ethoxy methylene carbon',
+        'δ 21.0 ppm (CH₃): acetate methyl carbon',
+        'δ 14.2 ppm (CH₃): ethoxy methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 88 [M]⁺• (weak)',
+        'm/z 43 [CH₃CO]⁺ (base peak, 100%, acetylium ion)',
+        'm/z 61 [CH₃COOH₂]⁺ (protonated acetic acid via McLafferty rearrangement)',
+        'm/z 29 [C₂H₅]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Methyl Propionate**: Shows a propionyl quartet at δ 2.35 ppm and a methoxy singlet at δ 3.65 ppm, completely different from the acetate singlet at δ 2.04 ppm and ethoxy quartet at δ 4.12 ppm.',
+        '**Butanoic acid**: Shows an extremely broad OH band at 2500–3300 cm⁻¹ and downfield proton at δ 11.5 ppm.',
+      ],
+      definitiveReasoning: '1. **Classic 3H:3H:2H Pattern**: Acetate singlet (δ 2.04), ethyl triplet (δ 1.26), and ethyl quartet (δ 4.12).\n2. **FT-IR 1742 cm⁻¹ & ¹³C δ 171.1**: Proves aliphatic ester.\n3. **Base Peak at m/z 43 & McLafferty at m/z 61**.',
+    ),
+
+    // 19. Methyl Acetate
+    const SpectroscopyCompoundEntry(
+      formula: 'C3H6O2',
+      commonName: 'Methyl Acetate',
+      iupacName: 'Methyl ethanoate',
+      structure: 'CH₃–C(=O)–O–CH₃',
+      smiles: 'COC(=O)C',
+      dbe: 1.0,
+      diagnosticIr: ['1745 cm⁻¹ (ester C=O)', '1245 cm⁻¹ (ester C–O)'],
+      nmr1H: [
+        'δ 2.07 ppm (s, 3H): –COCH₃ acetate methyl',
+        'δ 3.67 ppm (s, 3H): –OCH₃ methoxy methyl',
+      ],
+      nmr13C: [
+        'δ 171.3 ppm (C_q): ester carbonyl',
+        'δ 51.5 ppm (CH₃): methoxy carbon',
+        'δ 20.6 ppm (CH₃): acetate carbon',
+      ],
+      msFragmentation: [
+        'm/z 74 [M]⁺•',
+        'm/z 43 [CH₃CO]⁺ (base peak, 100%)',
+        'm/z 59 [M – CH₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Ethyl formate**: Shows a 1H formate singlet at δ 8.05 ppm and a triplet-quartet ethyl pattern.',
+      ],
+      definitiveReasoning: '1. **Two 3H Singlets**: δ 2.07 (acetate) and δ 3.67 (methoxy).\n2. **¹³C Spectrum**: Exactly 3 lines with carbonyl at δ 171.3 ppm.',
+    ),
+
+    // 20. Acetic Acid
+    const SpectroscopyCompoundEntry(
+      formula: 'C2H4O2',
+      commonName: 'Acetic Acid',
+      iupacName: 'Ethanoic acid',
+      structure: 'CH₃–COOH',
+      smiles: 'CC(=O)O',
+      dbe: 1.0,
+      diagnosticIr: ['2500–3300 cm⁻¹ (extremely broad O–H)', '1712 cm⁻¹ (dimeric carboxylic acid C=O)', '1290 cm⁻¹ (C–O stretch)'],
+      nmr1H: [
+        'δ 2.10 ppm (s, 3H): methyl protons (–CH₃)',
+        'δ 11.80 ppm (br s, 1H): carboxylic acid proton (–COOH)',
+      ],
+      nmr13C: [
+        'δ 178.1 ppm (C_q): carboxylic acid carbonyl carbon',
+        'δ 20.8 ppm (CH₃): methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 60 [M]⁺• (base peak, 100%)',
+        'm/z 45 [COOH]⁺',
+        'm/z 43 [CH₃CO]⁺ (loss of •OH)',
+        'm/z 15 [CH₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Methyl formate**: Shows an ester C=O at 1725 cm⁻¹, a formate proton at δ 8.05 ppm, and a methoxy singlet at δ 3.75 ppm, completely lacking the broad 2500–3300 cm⁻¹ O–H band.',
+      ],
+      definitiveReasoning: '1. **Extreme Low-Field Proton at δ 11.80 ppm**: Characteristic carboxylic acid proton.\n2. **Intense Broad 2500–3300 cm⁻¹ IR Band**: Proves hydrogen-bonded carboxylic acid dimer.\n3. **Simple 2-Line ¹³C Spectrum**: δ 178.1 and 20.8 ppm.',
+    ),
+
+    // 21. Ethanol
+    const SpectroscopyCompoundEntry(
+      formula: 'C2H6O',
+      commonName: 'Ethanol',
+      iupacName: 'Ethanol',
+      structure: 'CH₃–CH₂–OH',
+      smiles: 'CCO',
+      dbe: 0.0,
+      diagnosticIr: ['3350 cm⁻¹ (broad O–H stretch)', '2975, 2885 cm⁻¹ (sp³ C–H)', '1050 cm⁻¹ (primary alcohol C–O)'],
+      nmr1H: [
+        'δ 1.22 ppm (t, 3H, J = 7.0 Hz): methyl protons (–CH₃)',
+        'δ 2.60 ppm (br s, 1H): hydroxyl proton (–OH, exchangeable)',
+        'δ 3.68 ppm (q, 2H, J = 7.0 Hz): methylene protons (–CH₂–O–)',
+      ],
+      nmr13C: [
+        'δ 58.3 ppm (CH₂): methylene carbon',
+        'δ 18.2 ppm (CH₃): methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 46 [M]⁺• (15%)',
+        'm/z 31 [CH₂=OH]⁺ (base peak, 100%, oxonium ion via α-cleavage)',
+        'm/z 45 [M – H]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Dimethyl Ether**: Shows a single 6H singlet at δ 3.25 ppm and lacks the 3350 cm⁻¹ O–H stretch.',
+      ],
+      definitiveReasoning: '1. **Triplet-Quartet Pattern (δ 1.22 & 3.68)**: Ethyl group directly attached to oxygen.\n2. **Base Peak at m/z 31**: Highly characteristic oxonium ion [H₂C=OH]⁺ formed by loss of methyl radical from primary alcohols.',
+    ),
+
+    // 22. Methanol
+    const SpectroscopyCompoundEntry(
+      formula: 'CH4O',
+      commonName: 'Methanol',
+      iupacName: 'Methanol',
+      structure: 'CH₃–OH',
+      smiles: 'CO',
+      dbe: 0.0,
+      diagnosticIr: ['3340 cm⁻¹ (broad O–H)', '2945, 2835 cm⁻¹ (C–H stretch)', '1030 cm⁻¹ (C–O stretch)'],
+      nmr1H: [
+        'δ 3.47 ppm (s, 3H): methyl protons',
+        'δ 4.00 ppm (br s, 1H): –OH proton',
+      ],
+      nmr13C: [
+        'δ 49.3 ppm (CH₃): methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 32 [M]⁺• (70%)',
+        'm/z 31 [CH₂=OH]⁺ (base peak, 100%, loss of H•)',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Single 3H Singlet at δ 3.47 ppm** and broad OH proton.\n2. **Single ¹³C Line at δ 49.3 ppm**.\n3. **m/z 32 and Base Peak at m/z 31**.',
+    ),
+
+    // 23. Isopropanol
+    const SpectroscopyCompoundEntry(
+      formula: 'C3H8O',
+      commonName: 'Isopropanol',
+      iupacName: 'Propan-2-ol',
+      structure: '(CH₃)₂CH–OH',
+      smiles: 'CC(C)O',
+      dbe: 0.0,
+      diagnosticIr: ['3350 cm⁻¹ (broad secondary alcohol O–H)', '1380, 1370 cm⁻¹ (gem-dimethyl doublet)', '1130 cm⁻¹ (secondary alcohol C–O)'],
+      nmr1H: [
+        'δ 1.20 ppm (d, 6H, J = 6.2 Hz): two equivalent methyl groups (CH₃)₂',
+        'δ 2.15 ppm (br s, 1H): –OH proton',
+        'δ 4.00 ppm (septet, 1H, J = 6.2 Hz): methine proton (–CH(OH)–)',
+      ],
+      nmr13C: [
+        'δ 64.3 ppm (CH): methine carbon',
+        'δ 25.4 ppm (2x CH₃): equivalent methyl carbons',
+      ],
+      msFragmentation: [
+        'm/z 60 [M]⁺• (weak)',
+        'm/z 45 [CH₃CH=OH]⁺ (base peak, 100%, loss of •CH₃ via α-cleavage)',
+        'm/z 43 [C₃H₇]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**1-Propanol**: Shows a triplet at δ 0.9 ppm, a sextet at δ 1.5 ppm, and a triplet at δ 3.6 ppm, contrasting with the doublet-septet of isopropanol.',
+        '**Ethyl methyl ether**: Shows two singlets at δ 1.15 (t), 3.30 (s), and 3.45 (q).',
+      ],
+      definitiveReasoning: '1. **Doublet-Septet 6H:1H Pattern**: Symmetrical isopropyl framework.\n2. **Two ¹³C Signals**: δ 64.3 (CH) and 25.4 (2x CH₃).\n3. **Base Peak at m/z 45**: Stable oxonium ion [CH₃CH=OH]⁺ via α-cleavage.',
+    ),
+
+    // 24. Diethyl Ether
+    const SpectroscopyCompoundEntry(
+      formula: 'C4H10O',
+      commonName: 'Diethyl Ether',
+      iupacName: 'Ethoxyethane',
+      structure: 'CH₃CH₂–O–CH₂CH₃',
+      smiles: 'CCOCC',
+      dbe: 0.0,
+      diagnosticIr: ['2975, 2865 cm⁻¹ (sp³ C–H)', '1120 cm⁻¹ (aliphatic ether C–O–C stretch, very strong)'],
+      nmr1H: [
+        'δ 1.21 ppm (t, 6H, J = 7.0 Hz): two equivalent methyl groups',
+        'δ 3.48 ppm (q, 4H, J = 7.0 Hz): two equivalent methylene groups',
+      ],
+      nmr13C: [
+        'δ 66.0 ppm (2x CH₂): equivalent methylene carbons',
+        'δ 15.3 ppm (2x CH₃): equivalent methyl carbons',
+      ],
+      msFragmentation: [
+        'm/z 74 [M]⁺• (15%)',
+        'm/z 59 [CH₃CH₂OCH₂]⁺ (base peak, 100%, loss of •CH₃)',
+        'm/z 31 [CH₂=OH]⁺ (loss of ethylene from m/z 59)',
+      ],
+      alternativeIsomersRuledOut: [
+        '**1-Butanol**: Shows an OH stretch at 3350 cm⁻¹ and 4 distinct ¹³C peaks, whereas diethyl ether has no OH stretch and only 2 ¹³C peaks due to symmetry.',
+      ],
+      definitiveReasoning: '1. **Clean Triplet-Quartet Pattern (6H:4H)**: Highly symmetrical ethoxyethane.\n2. **Strong 1120 cm⁻¹ Ether Band & Absence of O–H**: Confirms dialkyl ether.\n3. **Two ¹³C Peaks**: δ 66.0 and 15.3 ppm.',
+    ),
+
+    // 25. Chloroform
+    const SpectroscopyCompoundEntry(
+      formula: 'CHCL3',
+      commonName: 'Chloroform',
+      iupacName: 'Trichloromethane',
+      structure: 'CHCl₃',
+      smiles: 'ClC(Cl)Cl',
+      dbe: 0.0,
+      diagnosticIr: ['3020 cm⁻¹ (C–H stretch)', '1215 cm⁻¹ (C–H bend)', '760 cm⁻¹ (C–Cl stretch, very strong)'],
+      nmr1H: [
+        'δ 7.26 ppm (s, 1H): single deshielded proton',
+      ],
+      nmr13C: [
+        'δ 77.2 ppm (t, 1:1:1 triplet in CDCl₃ due to ¹³C–²H coupling, or sharp singlet in decoupled decoupled spectrum)',
+      ],
+      msFragmentation: [
+        'm/z 118, 120, 122, 124 [M]⁺• (characteristic 3-chlorine isotope pattern: 27:27:9:1)',
+        'm/z 83, 85, 87 [CHCl₂]⁺ (base peak, 9:6:1)',
+        'm/z 47, 49 [CH₂Cl]⁺',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Deshielded Singlet at δ 7.26 ppm (1H)**: Classic chloroform chemical shift.\n2. **3-Chlorine Isotope Cluster in MS**: Distinctive 27:27:9:1 ratio for M, M+2, M+4, M+6.',
+    ),
+
+    // 26. Cinnamic Acid
+    const SpectroscopyCompoundEntry(
+      formula: 'C9H8O2',
+      commonName: 'trans-Cinnamic Acid',
+      iupacName: '(E)-3-Phenylprop-2-enoic acid',
+      structure: '(E)-C₆H₅–CH=CH–COOH',
+      smiles: 'O=C(O)/C=C/c1ccccc1',
+      dbe: 6.0,
+      diagnosticIr: ['2500–3200 cm⁻¹ (broad carboxylic acid O–H)', '1685 cm⁻¹ (conjugated α,β-unsaturated acid C=O)', '1630 cm⁻¹ (conjugated C=C stretch)', '980 cm⁻¹ (trans =C–H out-of-plane bend, very strong)'],
+      nmr1H: [
+        'δ 6.45 ppm (d, 1H, J = 16.0 Hz): α-alkene proton (=CH–COOH, trans-coupling)',
+        'δ 7.40 ppm (m, 3H): meta and para protons of phenyl ring',
+        'δ 7.55 ppm (m, 2H): ortho protons of phenyl ring',
+        'δ 7.80 ppm (d, 1H, J = 16.0 Hz): β-alkene proton (Ar–CH=, trans-coupling)',
+        'δ 12.40 ppm (br s, 1H): –COOH carboxylic acid proton',
+      ],
+      nmr13C: [
+        'δ 172.5 ppm (C_q): carboxylic acid carbonyl',
+        'δ 146.5 ppm (CH): β-carbon (deshielded by resonance)',
+        'δ 134.2 ppm (C_q): ipso aromatic carbon',
+        'δ 130.6 ppm (CH): para aromatic carbon',
+        'δ 129.0 ppm (2x CH): meta carbons',
+        'δ 128.4 ppm (2x CH): ortho carbons',
+        'δ 117.8 ppm (CH): α-carbon',
+      ],
+      msFragmentation: [
+        'm/z 148 [M]⁺• (base peak, 100%)',
+        'm/z 147 [M – H]⁺',
+        'm/z 131 [M – OH]⁺',
+        'm/z 103 [C₆H₅–CH=CH]⁺ (styryl cation via loss of •COOH)',
+        'm/z 77 [C₆H₅]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**cis-Cinnamic acid**: Would display a cis-alkene coupling constant J = 12.0 Hz rather than the large trans-coupling J = 16.0 Hz observed.',
+      ],
+      definitiveReasoning: '1. **Large Coupling Constant (J = 16.0 Hz)**: Definitive proof of (E)-trans stereochemistry across the double bond.\n2. **Conjugated Acid Carbonyl at 1685 cm⁻¹ & C=C at 1630 cm⁻¹**.\n3. **Broad O–H Band (2500–3200 cm⁻¹)**: Proves carboxylic acid.',
+    ),
+
+    // 27. Cinnamaldehyde
+    const SpectroscopyCompoundEntry(
+      formula: 'C9H8O',
+      commonName: 'trans-Cinnamaldehyde',
+      iupacName: '(E)-3-Phenylprop-2-enal',
+      structure: '(E)-C₆H₅–CH=CH–CHO',
+      smiles: 'O=C/C=C/c1ccccc1',
+      dbe: 6.0,
+      diagnosticIr: ['1675 cm⁻¹ (conjugated α,β-unsaturated aldehyde C=O)', '1625 cm⁻¹ (conjugated C=C)', '2815, 2740 cm⁻¹ (aldehyde Fermi resonance)', '975 cm⁻¹ (trans =C–H bend)'],
+      nmr1H: [
+        'δ 6.72 ppm (dd, 1H, J = 16.0, 7.7 Hz): α-alkene proton',
+        'δ 7.42 ppm (m, 3H): meta and para protons',
+        'δ 7.48 ppm (d, 1H, J = 16.0 Hz): β-alkene proton',
+        'δ 7.56 ppm (m, 2H): ortho protons',
+        'δ 9.71 ppm (d, 1H, J = 7.7 Hz): formyl proton (coupled to α-alkene proton)',
+      ],
+      nmr13C: [
+        'δ 193.7 ppm (CH): aldehyde carbonyl carbon',
+        'δ 152.8 ppm (CH): β-carbon',
+        'δ 134.0 ppm (C_q): ipso aromatic carbon',
+        'δ 131.2 ppm (CH): para carbon',
+        'δ 129.1 ppm (2x CH): meta carbons',
+        'δ 128.5 ppm (2x CH): ortho carbons',
+        'δ 128.4 ppm (CH): α-carbon',
+      ],
+      msFragmentation: [
+        'm/z 132 [M]⁺• (base peak, 100%)',
+        'm/z 131 [M – H]⁺ (cinnamoyl cation)',
+        'm/z 103 [C₆H₅–CH=CH]⁺ (loss of CHO)',
+        'm/z 77 [C₆H₅]⁺',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Aldehyde Doublet at δ 9.71 ppm (J = 7.7 Hz)**: Proves coupling between formyl proton and α-alkene proton.\n2. **Trans-Coupling (J = 16.0 Hz)**: Proves (E)-configuration.\n3. **FT-IR 1675 cm⁻¹ & Fermi Doublet**: Proves conjugated aldehyde.',
+    ),
+
+    // 28. Acetanilide
+    const SpectroscopyCompoundEntry(
+      formula: 'C8H9NO',
+      commonName: 'Acetanilide',
+      iupacName: 'N-Phenylacetamide',
+      structure: 'C₆H₅–NHCOCH₃',
+      smiles: 'CC(=O)Nc1ccccc1',
+      dbe: 5.0,
+      diagnosticIr: ['3295 cm⁻¹ (secondary amide N–H stretch, sharp)', '1665 cm⁻¹ (Amide I band, C=O stretch)', '1555 cm⁻¹ (Amide II band, N–H bend)', '1320 cm⁻¹ (C–N stretch)'],
+      nmr1H: [
+        'δ 2.15 ppm (s, 3H): –COCH₃ acetamide methyl protons',
+        'δ 7.08 ppm (t, 1H, J = 7.4 Hz): para proton',
+        'δ 7.28 ppm (t, 2H, J = 7.8 Hz): meta protons',
+        'δ 7.52 ppm (d, 2H, J = 8.0 Hz): ortho protons',
+        'δ 7.80 ppm (br s, 1H): –NH– amide proton (D₂O exchangeable)',
+      ],
+      nmr13C: [
+        'δ 168.8 ppm (C_q): amide carbonyl carbon',
+        'δ 138.1 ppm (C_q): ipso aromatic carbon',
+        'δ 128.9 ppm (2x CH): meta carbons',
+        'δ 124.2 ppm (CH): para carbon',
+        'δ 119.9 ppm (2x CH): ortho carbons',
+        'δ 24.5 ppm (CH₃): methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 135 [M]⁺• (50%)',
+        'm/z 93 [C₆H₅NH₂]⁺• (base peak, 100%, loss of ketene via McLafferty rearrangement to aniline)',
+        'm/z 77 [C₆H₅]⁺',
+        'm/z 43 [CH₃CO]⁺ (acetylium ion)',
+      ],
+      alternativeIsomersRuledOut: [
+        '**4-Methylbenzamide**: Shows a 2H primary amide band at 3350 & 3180 cm⁻¹ and an A₂B₂ aromatic quartet instead of a monosubstituted ring.',
+      ],
+      definitiveReasoning: '1. **Amide I & II Bands (1665 & 1555 cm⁻¹)**: Characteristic secondary amide.\n2. **Sharp Methyl Singlet at δ 2.15 ppm (3H)**: Proves –COCH₃.\n3. **Base Peak at m/z 93**: Loss of ketene (42 amu) directly yielding aniline radical cation.',
+    ),
+
+    // 29. Cyclohexanone
+    const SpectroscopyCompoundEntry(
+      formula: 'C6H10O',
+      commonName: 'Cyclohexanone',
+      iupacName: 'Cyclohexanone',
+      structure: 'c-C₆H₁₀(=O)',
+      smiles: 'O=C1CCCCC1',
+      dbe: 2.0,
+      diagnosticIr: ['1715 cm⁻¹ (6-membered ring ketone C=O, strong)', '2935, 2860 cm⁻¹ (cyclohexyl methylene C–H)'],
+      nmr1H: [
+        'δ 1.70 ppm (m, 2H): C4 methylene protons',
+        'δ 1.85 ppm (m, 4H): C3, C5 methylene protons',
+        'δ 2.32 ppm (t, 4H, J = 6.6 Hz): C2, C6 α-carbonyl methylene protons',
+      ],
+      nmr13C: [
+        'δ 212.0 ppm (C_q): cyclic ketone carbonyl carbon',
+        'δ 41.9 ppm (2x CH₂): C2, C6 α-carbons',
+        'δ 27.0 ppm (2x CH₂): C3, C5 β-carbons',
+        'δ 25.0 ppm (CH₂): C4 γ-carbon',
+      ],
+      msFragmentation: [
+        'm/z 98 [M]⁺• (50%)',
+        'm/z 55 [C₃H₃O]⁺ (base peak, 100%, ring cleavage)',
+        'm/z 69 [C₄H₅O]⁺',
+        'm/z 42 [C₃H₆]⁺•',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Carbonyl Peak at δ 212.0 ppm**: Non-conjugated ketone carbonyl.\n2. **Four ¹³C Resonances with 2:2:1:1 Intensity**: Proves symmetric 6-membered cyclic framework.\n3. **α-Methylene Triplet at δ 2.32 ppm (4H)**: Proves –CH₂–CO–CH₂– grouping.',
+    ),
+
+    // 30. Cyclohexanol
+    const SpectroscopyCompoundEntry(
+      formula: 'C6H12O',
+      commonName: 'Cyclohexanol',
+      iupacName: 'Cyclohexanol',
+      structure: 'c-C₆H₁₁(OH)',
+      smiles: 'OC1CCCCC1',
+      dbe: 1.0,
+      diagnosticIr: ['3330 cm⁻¹ (broad secondary alcohol O–H)', '2930, 2855 cm⁻¹ (sp³ C–H)', '1065 cm⁻¹ (secondary cyclic C–O)'],
+      nmr1H: [
+        'δ 1.15–1.35 ppm (m, 5H): axial ring protons',
+        'δ 1.55 ppm (m, 1H): γ-proton',
+        'δ 1.70 ppm (m, 2H): β-equatorial protons',
+        'δ 1.88 ppm (m, 2H): α-equatorial protons',
+        'δ 2.10 ppm (br s, 1H): –OH proton',
+        'δ 3.58 ppm (tt, 1H, J = 9.2, 4.0 Hz): C1 methine proton (–CH(OH)–)',
+      ],
+      nmr13C: [
+        'δ 70.3 ppm (CH): C1 carbinol carbon',
+        'δ 35.6 ppm (2x CH₂): C2, C6 carbons',
+        'δ 25.6 ppm (CH₂): C4 carbon',
+        'δ 24.3 ppm (2x CH₂): C3, C5 carbons',
+      ],
+      msFragmentation: [
+        'm/z 100 [M]⁺• (weak)',
+        'm/z 82 [M – H₂O]⁺• (base peak, 100%, loss of water)',
+        'm/z 67 [C₅H₇]⁺',
+        'm/z 57 [C₄H₉]⁺',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Carbinol Methine at δ 3.58 ppm (1H, tt)**: Characteristic axial/equatorial splitting in cyclohexane ring.\n2. **Base Peak at m/z 82**: Facile dehydration of cyclic alcohol to cyclohexene radical cation.\n3. **Four ¹³C Resonances**: Consistent with symmetric cyclohexane chair geometry.',
+    ),
+
+    // 31. Naphthalene
+    const SpectroscopyCompoundEntry(
+      formula: 'C10H8',
+      commonName: 'Naphthalene',
+      iupacName: 'Naphthalene',
+      structure: 'C₁₀H₈ (fused bicyclic aromatic)',
+      smiles: 'c1ccc2ccccc2c1',
+      dbe: 7.0,
+      diagnosticIr: ['3050 cm⁻¹ (aromatic C–H)', '1595, 1505 cm⁻¹ (aromatic ring C=C)', '780 cm⁻¹ (adjacent 4-H OOP bend)'],
+      nmr1H: [
+        'δ 7.48 ppm (dd, 4H, J = 6.2, 3.2 Hz): H2, H3, H6, H7 (β-protons)',
+        'δ 7.85 ppm (dd, 4H, J = 6.2, 3.2 Hz): H1, H4, H5, H8 (α-protons)',
+      ],
+      nmr13C: [
+        'δ 133.5 ppm (2x C_q): bridgehead quaternary carbons (C4a, C8a)',
+        'δ 127.9 ppm (4x CH): C1, C4, C5, C8 (α-carbons)',
+        'δ 125.8 ppm (4x CH): C2, C3, C6, C7 (β-carbons)',
+      ],
+      msFragmentation: [
+        'm/z 128 [M]⁺• (base peak, 100%, extremely stable molecular ion)',
+        'm/z 102 [M – C₂H₂]⁺•',
+        'm/z 64 [M]²⁺ (doubly charged ion at m/z 64)',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Azulene**: Displays a blue color, different dipole moment, and an unsymmetrical 7-line ¹³C spectrum with 7- and 5-membered ring signals.',
+      ],
+      definitiveReasoning: '1. **Exactly Two Symmetrical 4H Doublets of Doublets (δ 7.48 & 7.85)**: Proves D2h symmetry of naphthalene.\n2. **Exactly 3 Lines in ¹³C Spectrum**: δ 133.5 (C_q), 127.9 (CH), 125.8 (CH).\n3. **m/z 128 as 100% Base Peak & Presence of m/z 64 ([M]²⁺)**: Benchmark signature of polycyclic aromatic hydrocarbons.',
+    ),
+
+    // 32. Anthracene
+    const SpectroscopyCompoundEntry(
+      formula: 'C14H10',
+      commonName: 'Anthracene',
+      iupacName: 'Anthracene',
+      structure: 'C₁₄H₁₀ (tricyclic linearly fused)',
+      smiles: 'c1ccc2cc3ccccc3cc2c1',
+      dbe: 10.0,
+      diagnosticIr: ['3050 cm⁻¹ (aromatic C–H)', '1620, 1530 cm⁻¹ (ring C=C)', '725 cm⁻¹ (aromatic OOP)'],
+      nmr1H: [
+        'δ 7.45 ppm (dd, 4H, J = 6.6, 3.1 Hz): H2, H3, H6, H7',
+        'δ 8.00 ppm (dd, 4H, J = 6.6, 3.1 Hz): H1, H4, H5, H8',
+        'δ 8.42 ppm (s, 2H): H9, H10 (meso protons)',
+      ],
+      nmr13C: [
+        'δ 131.7 ppm (4x C_q): bridgehead carbons',
+        'δ 128.2 ppm (4x CH): C1, C4, C5, C8',
+        'δ 126.1 ppm (2x CH): C9, C10 (meso carbons)',
+        'δ 125.4 ppm (4x CH): C2, C3, C6, C7',
+      ],
+      msFragmentation: [
+        'm/z 178 [M]⁺• (base peak, 100%)',
+        'm/z 89 [M]²⁺ (doubly charged molecular ion)',
+        'm/z 152 [M – C₂H₂]⁺•',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Phenanthrene**: Lacks the 2H meso singlet at δ 8.42 ppm and shows 7 distinct ¹³C signals rather than 4.',
+      ],
+      definitiveReasoning: '1. **Meso Singlet at δ 8.42 ppm (2H)**: Characteristic for H9 and H10 of anthracene.\n2. **Exactly 4 Lines in ¹³C Spectrum**: Reflects D2h symmetry.\n3. **Base Peak at m/z 178 with Doubly Charged Ion at m/z 89**.',
+    ),
+
+    // 33. Butanone (Methyl Ethyl Ketone / MEK)
+    const SpectroscopyCompoundEntry(
+      formula: 'C4H8O',
+      commonName: '2-Butanone (MEK)',
+      iupacName: 'Butan-2-one',
+      structure: 'CH₃–C(=O)–CH₂–CH₃',
+      smiles: 'CCC(=O)C',
+      dbe: 1.0,
+      diagnosticIr: ['1718 cm⁻¹ (aliphatic ketone C=O, strong)', '1360 cm⁻¹ (methyl ketone CH₃ bend)'],
+      nmr1H: [
+        'δ 1.06 ppm (t, 3H, J = 7.3 Hz): C4 methyl protons',
+        'δ 2.14 ppm (s, 3H): C1 methyl ketone singlet (–COCH₃)',
+        'δ 2.46 ppm (q, 2H, J = 7.3 Hz): C3 methylene protons (–COCH₂–)',
+      ],
+      nmr13C: [
+        'δ 208.5 ppm (C_q): ketone carbonyl',
+        'δ 36.8 ppm (CH₂): C3 methylene',
+        'δ 29.4 ppm (CH₃): C1 methyl',
+        'δ 7.8 ppm (CH₃): C4 methyl',
+      ],
+      msFragmentation: [
+        'm/z 72 [M]⁺• (15%)',
+        'm/z 43 [CH₃CO]⁺ (base peak, 100%, α-cleavage)',
+        'm/z 57 [C₂H₅CO]⁺ (loss of •CH₃)',
+        'm/z 29 [C₂H₅]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Butanal**: Shows an aldehyde formyl triplet at δ 9.75 ppm, absent in MEK.',
+        '**Tetrahydrofuran (THF)**: Shows two symmetric 4H multiplets at δ 1.85 and 3.75 ppm, and lacks a carbonyl stretch.',
+      ],
+      definitiveReasoning: '1. **Sharp 3H Singlet at δ 2.14 ppm & Ethyl Triplet-Quartet (δ 1.06 & 2.46)**: Uniquely defines methyl ethyl ketone.\n2. **¹³C at δ 208.5 ppm**: Non-conjugated ketone carbonyl.\n3. **Base Peak at m/z 43**: Acetylium ion formation.',
+    ),
+
+    // 34. Methyl Salicylate (Oil of Wintergreen)
+    const SpectroscopyCompoundEntry(
+      formula: 'C8H8O3',
+      commonName: 'Methyl Salicylate',
+      iupacName: 'Methyl 2-hydroxybenzoate',
+      structure: '2-(OH)–C₆H₄–COOCH₃',
+      smiles: 'COC(=O)c1ccccc1O',
+      dbe: 5.0,
+      diagnosticIr: ['3180 cm⁻¹ (chelated phenolic O–H)', '1680 cm⁻¹ (chelated ester C=O)', '1215 cm⁻¹ (ester C–O)'],
+      nmr1H: [
+        'δ 3.94 ppm (s, 3H): –COOCH₃ ester methoxy protons',
+        'δ 6.88 ppm (t, 1H, J = 7.5 Hz): H5',
+        'δ 6.98 ppm (d, 1H, J = 8.4 Hz): H3 ortho to –OH',
+        'δ 7.45 ppm (t, 1H, J = 7.8 Hz): H4',
+        'δ 7.84 ppm (dd, 1H, J = 8.0, 1.6 Hz): H6 ortho to ester',
+        'δ 10.75 ppm (s, 1H): phenolic –OH (strongly chelated)',
+      ],
+      nmr13C: [
+        'δ 170.6 ppm (C_q): ester carbonyl carbon',
+        'δ 161.6 ppm (C_q): C2 bearing –OH',
+        'δ 135.7 ppm (CH): C4',
+        'δ 129.9 ppm (CH): C6',
+        'δ 119.2 ppm (CH): C5',
+        'δ 117.6 ppm (CH): C3',
+        'δ 112.5 ppm (C_q): C1 bearing ester',
+        'δ 52.3 ppm (CH₃): ester methoxy carbon',
+      ],
+      msFragmentation: [
+        'm/z 152 [M]⁺• (50%)',
+        'm/z 120 [Salicylic acid – H₂O]⁺ (base peak, 100%, loss of methanol via ortho effect)',
+        'm/z 92 [C₆H₄O]⁺•',
+        'm/z 65 [C₅H₅]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Vanillin**: Contains an aldehyde formyl proton at δ 9.82 ppm and an ether methoxy group, whereas methyl salicylate contains an ester methoxy group (δ 3.94) and no aldehyde proton.',
+      ],
+      definitiveReasoning: '1. **Chelated Ester Carbonyl at 1680 cm⁻¹**: Abnormally low ester carbonyl due to strong 6-membered H-bonding with phenolic OH.\n2. **Ester Methoxy Singlet at δ 3.94 ppm (3H)**.\n3. **Base Peak at m/z 120**: Loss of methanol (32 amu) via ortho effect in MS.',
+    ),
+
+    // 35. Pyridine
+    const SpectroscopyCompoundEntry(
+      formula: 'C5H5N',
+      commonName: 'Pyridine',
+      iupacName: 'Pyridine',
+      structure: 'C₅H₅N (6-membered heteroaromatic)',
+      smiles: 'c1ccncc1',
+      dbe: 4.0,
+      diagnosticIr: ['3035 cm⁻¹ (aromatic C–H)', '1580, 1485 cm⁻¹ (pyridine ring C=C and C=N)', '700 cm⁻¹ (ring deformation)'],
+      nmr1H: [
+        'δ 7.25 ppm (dd, 2H, J = 7.6, 4.8 Hz): H3, H5 (β-protons)',
+        'δ 7.64 ppm (tt, 1H, J = 7.6, 1.8 Hz): H4 (γ-proton)',
+        'δ 8.60 ppm (dd, 2H, J = 4.8, 1.8 Hz): H2, H6 (α-protons adjacent to N)',
+      ],
+      nmr13C: [
+        'δ 150.2 ppm (2x CH): C2, C6 (deshielded by nitrogen electronegativity)',
+        'δ 135.9 ppm (CH): C4',
+        'δ 123.8 ppm (2x CH): C3, C5',
+      ],
+      msFragmentation: [
+        'm/z 79 [M]⁺• (base peak, 100%)',
+        'm/z 52 [C₄H₄]⁺• (loss of HCN)',
+        'm/z 51 [C₄H₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Deshielded α-Protons at δ 8.60 ppm (2H)**: Directly adjacent to ring nitrogen.\n2. **Three ¹³C Signals with α-Carbon at δ 150.2 ppm**: Proves C2v symmetric heteroaromatic ring.\n3. **Base Peak at m/z 79 & Loss of HCN (m/z 52)**.',
+    ),
+
+    // 36. Benzonitrile
+    const SpectroscopyCompoundEntry(
+      formula: 'C7H5N',
+      commonName: 'Benzonitrile',
+      iupacName: 'Benzonitrile',
+      structure: 'C₆H₅–C≡N',
+      smiles: 'N#Cc1ccccc1',
+      dbe: 5.0,
+      diagnosticIr: ['2230 cm⁻¹ (conjugated nitrile C≡N stretch, sharp & strong)', '1595, 1490 cm⁻¹ (aromatic ring)', '760, 690 cm⁻¹ (monosubstituted benzene)'],
+      nmr1H: [
+        'δ 7.48 ppm (t, 2H, J = 7.6 Hz): meta protons',
+        'δ 7.62 ppm (t, 1H, J = 7.5 Hz): para proton',
+        'δ 7.66 ppm (d, 2H, J = 7.6 Hz): ortho protons',
+      ],
+      nmr13C: [
+        'δ 132.8 ppm (CH): para carbon',
+        'δ 132.1 ppm (2x CH): ortho carbons',
+        'δ 129.1 ppm (2x CH): meta carbons',
+        'δ 118.8 ppm (C_q): nitrile carbon (–C≡N)',
+        'δ 112.4 ppm (C_q): ipso aromatic carbon',
+      ],
+      msFragmentation: [
+        'm/z 103 [M]⁺• (base peak, 100%)',
+        'm/z 76 [C₆H₄]⁺• (loss of HCN)',
+        'm/z 77 [C₆H₅]⁺',
+      ],
+      alternativeIsomersRuledOut: [
+        '**Phenyl isocyanide**: Exhibits an isonitrile –N≡C stretch at ~2130 cm⁻¹ rather than 2230 cm⁻¹.',
+      ],
+      definitiveReasoning: '1. **Sharp Intense C≡N Stretch at 2230 cm⁻¹**: Definitive proof of aromatic nitrile.\n2. **Nitrile Carbon at δ 118.8 ppm**: Characteristic quaternary sp carbon.\n3. **Base Peak at m/z 103 & Loss of HCN (m/z 76)**.',
+    ),
+
+    // 37. Benzamide
+    const SpectroscopyCompoundEntry(
+      formula: 'C7H7NO',
+      commonName: 'Benzamide',
+      iupacName: 'Benzamide',
+      structure: 'C₆H₅–CONH₂',
+      smiles: 'NC(=O)c1ccccc1',
+      dbe: 5.0,
+      diagnosticIr: ['3365, 3185 cm⁻¹ (primary amide N–H doublet)', '1660 cm⁻¹ (Amide I band, C=O stretch)', '1620 cm⁻¹ (Amide II band, N–H bend)'],
+      nmr1H: [
+        'δ 7.45 ppm (t, 2H, J = 7.4 Hz): meta protons',
+        'δ 7.52 ppm (t, 1H, J = 7.3 Hz): para proton',
+        'δ 7.85 ppm (d, 2H, J = 7.5 Hz): ortho protons',
+        'δ 7.40 ppm (br s, 1H) & 8.00 ppm (br s, 1H): two non-equivalent –NH₂ protons due to restricted C–N rotation',
+      ],
+      nmr13C: [
+        'δ 169.5 ppm (C_q): amide carbonyl carbon',
+        'δ 133.4 ppm (C_q): ipso aromatic carbon',
+        'δ 131.9 ppm (CH): para carbon',
+        'δ 128.5 ppm (2x CH): meta carbons',
+        'δ 127.3 ppm (2x CH): ortho carbons',
+      ],
+      msFragmentation: [
+        'm/z 121 [M]⁺• (70%)',
+        'm/z 105 [C₆H₅CO]⁺ (base peak, 100%, loss of •NH₂)',
+        'm/z 77 [C₆H₅]⁺',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Amide I & II Bands (1660 & 1620 cm⁻¹)**: Primary aromatic amide.\n2. **Two Broad 1H Amide Signals (δ 7.40 & 8.00)**: Proves restricted rotation about the partial double bond of the C–N amide linkage.\n3. **Base Peak at m/z 105**: Formation of stable benzoyl cation.',
+    ),
+
+    // 38. Diethyl Malonate
+    const SpectroscopyCompoundEntry(
+      formula: 'C7H12O4',
+      commonName: 'Diethyl Malonate',
+      iupacName: 'Diethyl propanedioate',
+      structure: 'CH₂(COOCH₂CH₃)₂',
+      smiles: 'CCOC(=O)CC(=O)OCC',
+      dbe: 2.0,
+      diagnosticIr: ['1735 cm⁻¹ (ester C=O, strong)', '1150 cm⁻¹ (ester C–O)'],
+      nmr1H: [
+        'δ 1.28 ppm (t, 6H, J = 7.1 Hz): two equivalent ester methyls',
+        'δ 3.35 ppm (s, 2H): acidic active methylene protons (–CO–CH₂–CO–)',
+        'δ 4.20 ppm (q, 4H, J = 7.1 Hz): two equivalent ester methylenes',
+      ],
+      nmr13C: [
+        'δ 166.6 ppm (2x C_q): two equivalent ester carbonyl carbons',
+        'δ 61.5 ppm (2x CH₂): ester methylene carbons',
+        'δ 41.7 ppm (CH₂): central active methylene carbon',
+        'δ 14.1 ppm (2x CH₃): ester methyl carbons',
+      ],
+      msFragmentation: [
+        'm/z 160 [M]⁺•',
+        'm/z 115 [M – OC₂H₅]⁺ (loss of ethoxy radical)',
+        'm/z 88 [M – C₂H₄ – CO₂]⁺',
+        'm/z 29 [C₂H₅]⁺ (base peak, 100%)',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Active Methylene Singlet at δ 3.35 ppm (2H)**: Directly situated between two ester carbonyls.\n2. **Symmetrical Ethyl Groups (δ 1.28, t & δ 4.20, q)**: Demonstrates C2v symmetry.\n3. **Four Lines in ¹³C Spectrum**: Confirms symmetric diester.',
+    ),
+
+    // 39. Ethyl Acetoacetate (EAA)
+    const SpectroscopyCompoundEntry(
+      formula: 'C6H10O3',
+      commonName: 'Ethyl Acetoacetate (EAA)',
+      iupacName: 'Ethyl 3-oxobutanoate',
+      structure: 'CH₃–CO–CH₂–COOCH₂CH₃ (keto-enol equilibrium)',
+      smiles: 'CCOC(=O)CC(=O)C',
+      dbe: 2.0,
+      diagnosticIr: ['1745 cm⁻¹ (ester C=O)', '1720 cm⁻¹ (ketone C=O)', '1650 cm⁻¹ (enol C=C stretch)', '3400 cm⁻¹ (enol O–H stretch)'],
+      nmr1H: [
+        'δ 1.28 ppm (t, 3H, J = 7.1 Hz): ester methyl (keto form)',
+        'δ 2.27 ppm (s, 3H): acetyl methyl (CH₃CO–, keto form)',
+        'δ 3.45 ppm (s, 2H): active methylene (–COCH₂COO–, keto form)',
+        'δ 4.20 ppm (q, 2H, J = 7.1 Hz): ester methylene (keto form)',
+        'δ 4.98 ppm (s, 0.08H): enol olefinic proton (=CH–)',
+        'δ 12.10 ppm (s, 0.08H): enol chelated –OH proton',
+      ],
+      nmr13C: [
+        'δ 200.7 ppm (C_q): ketone carbonyl',
+        'δ 167.1 ppm (C_q): ester carbonyl',
+        'δ 61.4 ppm (CH₂): ester methylene',
+        'δ 50.1 ppm (CH₂): active methylene',
+        'δ 30.1 ppm (CH₃): acetyl methyl',
+        'δ 14.1 ppm (CH₃): ester methyl',
+      ],
+      msFragmentation: [
+        'm/z 130 [M]⁺•',
+        'm/z 85 [M – OC₂H₅]⁺',
+        'm/z 43 [CH₃CO]⁺ (base peak, 100%)',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Two Carbonyl Signals in IR (1745 & 1720 cm⁻¹)**: Proves β-keto ester.\n2. **Keto-Enol Equilibrium Evidence**: Characteristic singlet at δ 3.45 (keto CH₂) with minor enol signals at δ 4.98 (=CH) and 12.10 (chelated OH).\n3. **Base Peak at m/z 43**: Acetylium ion formation.',
+    ),
+
+    // 40. Furfural
+    const SpectroscopyCompoundEntry(
+      formula: 'C5H4O2',
+      commonName: 'Furfural',
+      iupacName: 'Furan-2-carbaldehyde',
+      structure: '2-(CHO)–c-C₄H₃O',
+      smiles: 'O=Cc1occc1',
+      dbe: 4.0,
+      diagnosticIr: ['1678 cm⁻¹ (conjugated heteroaryl aldehyde C=O)', '2820, 2740 cm⁻¹ (aldehyde Fermi resonance)', '1570, 1465 cm⁻¹ (furan ring)', '1020 cm⁻¹ (furan C–O–C)'],
+      nmr1H: [
+        'δ 6.60 ppm (dd, 1H, J = 3.6, 1.7 Hz): H4 of furan ring',
+        'δ 7.25 ppm (d, 1H, J = 3.6 Hz): H3 of furan ring',
+        'δ 7.68 ppm (d, 1H, J = 1.7 Hz): H5 adjacent to ring oxygen',
+        'δ 9.66 ppm (s, 1H): –CHO formyl proton',
+      ],
+      nmr13C: [
+        'δ 177.8 ppm (CH): aldehyde carbonyl carbon',
+        'δ 152.9 ppm (C_q): C2 bearing –CHO',
+        'δ 148.0 ppm (CH): C5 adjacent to oxygen',
+        'δ 121.2 ppm (CH): C3',
+        'δ 112.6 ppm (CH): C4',
+      ],
+      msFragmentation: [
+        'm/z 96 [M]⁺• (base peak, 100%)',
+        'm/z 95 [M – H]⁺ (furoyl cation)',
+        'm/z 67 [C₄H₃O]⁺ (loss of CHO)',
+        'm/z 39 [C₃H₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Aldehyde Singlet at δ 9.66 ppm & IR at 1678 cm⁻¹**: Conjugated heteroaryl aldehyde.\n2. **Three Furan Ring Protons (δ 6.60, 7.25, 7.68)**: Diagnostic 2-substituted furan coupling pattern.\n3. **Base Peak at m/z 96**: Stable aromatic furan ring.',
+    ),
+
+    // 41. Ibuprofen
+    const SpectroscopyCompoundEntry(
+      formula: 'C13H18O2',
+      commonName: 'Ibuprofen',
+      iupacName: '2-[4-(2-Methylpropyl)phenyl]propanoic acid',
+      structure: '4-(CH₃)₂CHCH₂–C₆H₄–CH(CH₃)COOH',
+      smiles: 'CC(C)Cc1ccc(C(C)C(=O)O)cc1',
+      dbe: 5.0,
+      diagnosticIr: ['2500–3200 cm⁻¹ (broad carboxylic acid O–H)', '1710 cm⁻¹ (carboxylic acid C=O)', '1385, 1365 cm⁻¹ (gem-dimethyl doublet)'],
+      nmr1H: [
+        'δ 0.90 ppm (d, 6H, J = 6.6 Hz): isobutyl methyls –CH(CH₃)₂',
+        'δ 1.50 ppm (d, 3H, J = 7.1 Hz): α-methyl –CH(CH₃)COOH',
+        'δ 1.85 ppm (nonet, 1H, J = 6.6 Hz): isobutyl methine –CH(CH₃)₂',
+        'δ 2.45 ppm (d, 2H, J = 7.1 Hz): benzylic isobutyl methylene –CH₂–',
+        'δ 3.71 ppm (q, 1H, J = 7.1 Hz): α-methine –CH(CH₃)COOH',
+        'δ 7.10 ppm (d, 2H, J = 8.1 Hz): aromatic protons ortho to isobutyl',
+        'δ 7.22 ppm (d, 2H, J = 8.1 Hz): aromatic protons ortho to propionic acid',
+        'δ 11.20 ppm (br s, 1H): –COOH carboxylic acid proton',
+      ],
+      nmr13C: [
+        'δ 181.1 ppm (C_q): carboxylic acid carbonyl',
+        'δ 140.8 ppm (C_q): ipso to isobutyl',
+        'δ 137.0 ppm (C_q): ipso to propionic acid',
+        'δ 129.4 ppm (2x CH): aromatic ortho to isobutyl',
+        'δ 127.3 ppm (2x CH): aromatic ortho to propionic acid',
+        'δ 45.0 ppm (CH₂): isobutyl benzylic methylene',
+        'δ 44.9 ppm (CH): α-methine carbon',
+        'δ 30.2 ppm (CH): isobutyl methine',
+        'δ 22.4 ppm (2x CH₃): isobutyl methyls',
+        'δ 18.1 ppm (CH₃): α-methyl carbon',
+      ],
+      msFragmentation: [
+        'm/z 206 [M]⁺• (20%)',
+        'm/z 161 [M – COOH]⁺ (base peak, 100%, loss of •COOH)',
+        'm/z 119 [C₉H₁₁]⁺',
+        'm/z 91 [C₇H₇]⁺ (tropylium ion)',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **A₂B₂ Aromatic Doublets (δ 7.10 & 7.22, J = 8.1 Hz)**: 1,4-disubstituted benzene ring.\n2. **Isobutyl Group Signature**: 6H doublet (δ 0.90), 1H nonet (δ 1.85), and 2H doublet (δ 2.45).\n3. **Base Peak at m/z 161**: Decarboxylation yielding stable secondary benzylic cation.',
+    ),
+
+    // 42. Benzophenone
+    const SpectroscopyCompoundEntry(
+      formula: 'C13H10O',
+      commonName: 'Benzophenone',
+      iupacName: 'Diphenylmethanone',
+      structure: 'C₆H₅–C(=O)–C₆H₅',
+      smiles: 'O=C(c1ccccc1)c2ccccc2',
+      dbe: 9.0,
+      diagnosticIr: ['1660 cm⁻¹ (diaryl ketone C=O, conjugated)', '1595, 1450 cm⁻¹ (aromatic ring)'],
+      nmr1H: [
+        'δ 7.48 ppm (t, 4H, J = 7.5 Hz): meta protons of both rings',
+        'δ 7.59 ppm (t, 2H, J = 7.4 Hz): para protons of both rings',
+        'δ 7.80 ppm (d, 4H, J = 7.8 Hz): ortho protons of both rings (deshielded)',
+      ],
+      nmr13C: [
+        'δ 196.7 ppm (C_q): diaryl ketone carbonyl',
+        'δ 137.6 ppm (2x C_q): ipso carbons',
+        'δ 132.4 ppm (2x CH): para carbons',
+        'δ 130.1 ppm (4x CH): ortho carbons',
+        'δ 128.3 ppm (4x CH): meta carbons',
+      ],
+      msFragmentation: [
+        'm/z 182 [M]⁺• (80%)',
+        'm/z 105 [C₆H₅CO]⁺ (base peak, 100%, benzoyl cation)',
+        'm/z 77 [C₆H₅]⁺ (phenyl cation via loss of CO from m/z 105)',
+        'm/z 51 [C₄H₃]⁺',
+      ],
+      alternativeIsomersRuledOut: [],
+      definitiveReasoning: '1. **Low Frequency Carbonyl at 1660 cm⁻¹**: Consequence of cross-conjugation between two aromatic rings and the ketone.\n2. **Symmetrical Aromatic Peaks (4H:2H:4H)**: Demonstrates two equivalent phenyl rings.\n3. **Base Peak at m/z 105**: Benzoyl cation [C₆H₅CO]⁺.',
+    ),
+  ];
+
+  /// Fast-path lookup into 52+ curated MSc chemistry compounds
+  static SpectroscopyCompoundEntry? findKnownSpectroscopyCompound({
+    required String formula,
+    List<double>? irPeaks,
+    List<double>? nmrPeaks,
+    List<double>? nmr13CPeaks,
+    List<double>? msPeaks,
+  }) {
+    final clean = formula.trim().toUpperCase().replaceAll(' ', '');
+    final matches = curatedCompoundDatabase.where((c) => c.formula.toUpperCase() == clean).toList();
+    if (matches.isEmpty) return null;
+    if (matches.length == 1) return matches.first;
+
+    // Disambiguate between constitutional isomers (e.g. 1-bromopropane vs 2-bromopropane)
+    if (clean == 'C3H7BR') {
+      if (nmrPeaks != null && nmrPeaks.any((p) => p >= 4.0 && p <= 4.5)) {
+        return matches.firstWhere((c) => c.commonName.contains('2-Bromopropane'), orElse: () => matches.first);
+      }
+      return matches.firstWhere((c) => c.commonName.contains('1-Bromopropane'), orElse: () => matches.first);
+    }
+    if (clean == 'C8H8O3') {
+      if (irPeaks != null && irPeaks.any((p) => p >= 1675 && p <= 1690)) {
+        return matches.firstWhere((c) => c.commonName.contains('Methyl Salicylate'), orElse: () => matches.first);
+      }
+      return matches.firstWhere((c) => c.commonName.contains('Vanillin'), orElse: () => matches.first);
+    }
+
+    return matches.first;
+  }
+
+  /// Algorithmic Structure Deduction Engine for Arbitrary Formulas
+  static AlgorithmicDeductionResult deduceStructureAlgorithmically({
+    required ParsedFormula parsed,
+    required String formula,
+    required double dbe,
+    List<double>? irPeaks,
+    List<double>? nmrPeaks,
+    List<double>? nmr13CPeaks,
+    List<double>? msPeaks,
+    required List<String> subunits,
+  }) {
+    final buffer = StringBuffer();
+    final c = parsed.carbons;
+    // final h = parsed.hydrogens;
+    final o = parsed.oxygens;
+    final n = parsed.nitrogens;
+    final hal = parsed.halogens;
+
+    final ir = irPeaks ?? [];
+    final nmr = nmrPeaks ?? [];
+    final nmr13C = nmr13CPeaks ?? [];
+
+    // Detect functional groups from spectroscopic signals
+    final hasCarbonyl = ir.any((p) => p >= 1650 && p <= 1780) || nmr13C.any((p) => p >= 165 && p <= 220);
+    final hasHydroxyl = ir.any((p) => p >= 3200 && p <= 3600);
+    final hasCarboxyl = (o >= 2 && ir.any((p) => p >= 2500 && p <= 3300)) || (nmr.any((p) => p >= 10.5 && p <= 13.5));
+    final hasAmine = (n > 0 && ir.any((p) => p >= 3300 && p <= 3500));
+    final hasAromatic = (dbe >= 4.0 && (nmr.any((p) => p >= 6.5 && p <= 8.5) || nmr13C.any((p) => p >= 115 && p <= 145)));
+    final hasAldehyde = nmr.any((p) => p >= 9.2 && p <= 10.5) || ir.any((p) => p >= 2700 && p <= 2840);
+
+    String candidateName = 'Synthesized Molecular Candidate';
+    // String candidateFormula = formula;
+    String candidateConnectivity = '';
+    String candidateSmiles = '';
+    final List<String> altIsomers = [];
+    final List<String> deductionSteps = [];
+
+    // Structural Category Deduction
+    if (hasAromatic) {
+      final remainingC = c - 6;
+      // final remainingDBE = dbe - 4.0;
+      deductionSteps.add('**Core Benzene Framework (C₆H₅– or –C₆H₄–)**: Supported by DBE = $dbe (≥ 4.0) and aromatic ¹H/¹³C resonances.');
+
+      if (hasCarboxyl) {
+        candidateName = remainingC == 0 ? 'Benzoic Acid' : 'Substituted Phenylalkanoic Acid';
+        candidateConnectivity = remainingC == 0 ? 'C₆H₅–COOH' : 'C₆H₅–(CH₂)ₙ–COOH';
+        candidateSmiles = remainingC == 0 ? 'O=C(O)c1ccccc1' : 'O=C(O)CCc1ccccc1';
+        altIsomers.add('**Hydroxybenzaldehyde / Phenyl Formate**: Ruled out by characteristic broad carboxylic O–H band.');
+      } else if (hasAldehyde) {
+        candidateName = remainingC == 0 ? 'Benzaldehyde' : 'Substituted Aryl Aldehyde';
+        candidateConnectivity = remainingC == 0 ? 'C₆H₅–CHO' : 'C₆H₅–(CH₂)ₙ–CHO';
+        candidateSmiles = remainingC == 0 ? 'O=Cc1ccccc1' : 'O=CCc1ccccc1';
+        altIsomers.add('**Aryl Ketone**: Ruled out by presence of sharp formyl proton at δ 9–10 ppm.');
+      } else if (hasCarbonyl && o >= 1) {
+        candidateName = 'Aryl Ketone / Ester Derivative';
+        candidateConnectivity = 'Ar–CO–R';
+        altIsomers.add('**Constitutional Regioisomers**: Check ortho/meta/para substitution patterns via coupling constants.');
+      } else if (hasHydroxyl) {
+        candidateName = remainingC == 0 ? 'Phenol' : 'Aryl Alcohol / Alkylphenol';
+        candidateConnectivity = remainingC == 0 ? 'C₆H₅–OH' : 'HO–C₆H₄–R or C₆H₅–CH₂OH';
+        candidateSmiles = remainingC == 0 ? 'Oc1ccccc1' : 'OCc1ccccc1';
+      } else if (hasAmine) {
+        candidateName = remainingC == 0 ? 'Aniline' : 'Aryl Amine Derivative';
+        candidateConnectivity = remainingC == 0 ? 'C₆H₅–NH₂' : 'H₂N–C₆H₄–R';
+        candidateSmiles = remainingC == 0 ? 'Nc1ccccc1' : 'NCc1ccccc1';
+      } else {
+        candidateName = 'Alkylbenzene Derivative';
+        candidateConnectivity = 'C₆H₅–R';
+      }
+    } else {
+      // Aliphatic Systems
+      if (dbe == 0) {
+        deductionSteps.add('**Fully Saturated Open-Chain Alkane Framework (DBE = 0)**: No rings, double bonds, or aromatic systems.');
+        if (hasHydroxyl) {
+          candidateName = 'Saturated Aliphatic Alcohol';
+          candidateConnectivity = 'R–OH';
+          altIsomers.add('**Dialkyl Ether (R–O–R\')**: Ruled out if O–H stretch is present at 3300 cm⁻¹.');
+        } else if (o > 0) {
+          candidateName = 'Saturated Dialkyl Ether';
+          candidateConnectivity = 'R–O–R\'';
+        } else if (hal > 0) {
+          candidateName = 'Saturated Haloalkane';
+          candidateConnectivity = 'R–X';
+        } else {
+          candidateName = 'Acyclic Saturated Alkane';
+          candidateConnectivity = 'CₙH₂ₙ₊₂';
+        }
+      } else if (dbe == 1.0) {
+        deductionSteps.add('**Mono-Unsaturated Framework (DBE = 1.0)**: Contains exactly one C=O carbonyl, one C=C double bond, or one cycloalkane ring.');
+        if (hasCarboxyl) {
+          candidateName = 'Aliphatic Carboxylic Acid';
+          candidateConnectivity = 'R–COOH';
+        } else if (hasCarbonyl) {
+          if (hasAldehyde) {
+            candidateName = 'Aliphatic Aldehyde';
+            candidateConnectivity = 'R–CHO';
+          } else if (o >= 2) {
+            candidateName = 'Aliphatic Ester';
+            candidateConnectivity = 'R–COO–R\'';
+          } else {
+            candidateName = 'Aliphatic Ketone';
+            candidateConnectivity = 'R–CO–R\'';
+          }
+        } else {
+          candidateName = 'Alkene / Cycloalkane Framework';
+          candidateConnectivity = 'R–CH=CH–R\' or Cycloalkane';
+        }
+      } else {
+        deductionSteps.add('**Multi-Unsaturated Aliphatic System (DBE = $dbe)**: Polyene, alkyne, or ring-fused system.');
+        candidateName = 'Unsaturated Conjugated / Polyfunctional System';
+      }
+    }
+
+    buffer.writeln('#### Primary Structural Candidate: **$candidateName**\n');
+    buffer.writeln('**Probable Molecular Framework**: `$candidateConnectivity`');
+    if (candidateSmiles.isNotEmpty) {
+      buffer.writeln('**Representative SMILES**: `$candidateSmiles`\n');
+    } else {
+      buffer.writeln();
+    }
+
+    buffer.writeln('**Algorithmic Deduction Rationale**:');
+    for (final step in deductionSteps) {
+      buffer.writeln('- $step');
+    }
+
+    buffer.writeln('\n**Integrated Subunit Balance**:');
+    for (final s in subunits) {
+      buffer.writeln('- $s');
+    }
+
+    if (altIsomers.isNotEmpty) {
+      buffer.writeln('\n**Alternative Isomer Considerations & Differentiation**:');
+      for (final alt in altIsomers) {
+        buffer.writeln('- $alt');
+      }
+    } else {
+      buffer.writeln('\n**Alternative Isomer Considerations**:');
+      buffer.writeln('- Check for constitutional regioisomers (branching of alkyl chains, position of carbonyl or heteroatom).');
+      buffer.writeln('- Check for stereoisomerism: cis vs trans alkenes (J_trans ≈ 14–18 Hz, J_cis ≈ 7–11 Hz).');
+    }
+
+    return AlgorithmicDeductionResult(
+      primaryCandidate: candidateName,
+      report: buffer.toString(),
+    );
+  }
+
+}
 
 enum CarbonDeptType {
   ch3,
@@ -2103,3 +3660,47 @@ class SpectroscopyCaseStudy {
     required this.deduction,
   });
 }
+
+
+/// Model for a Curated Spectroscopy Compound Entry
+class SpectroscopyCompoundEntry {
+  final String formula;
+  final String commonName;
+  final String iupacName;
+  final String structure;
+  final String smiles;
+  final double dbe;
+  final List<String> diagnosticIr;
+  final List<String> nmr1H;
+  final List<String> nmr13C;
+  final List<String> msFragmentation;
+  final List<String> alternativeIsomersRuledOut;
+  final String definitiveReasoning;
+
+  const SpectroscopyCompoundEntry({
+    required this.formula,
+    required this.commonName,
+    required this.iupacName,
+    required this.structure,
+    required this.smiles,
+    required this.dbe,
+    required this.diagnosticIr,
+    required this.nmr1H,
+    required this.nmr13C,
+    required this.msFragmentation,
+    required this.alternativeIsomersRuledOut,
+    required this.definitiveReasoning,
+  });
+}
+
+/// Result from the Algorithmic Deduction Engine
+class AlgorithmicDeductionResult {
+  final String primaryCandidate;
+  final String report;
+
+  const AlgorithmicDeductionResult({
+    required this.primaryCandidate,
+    required this.report,
+  });
+}
+

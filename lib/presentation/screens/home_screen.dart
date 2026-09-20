@@ -52,6 +52,164 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  String _buildSmartGreeting(String name, int hour, int weekday, {double? attendancePct}) {
+    final now = DateTime.now();
+    final dayIndex = now.day % 10; // Rotates every 10 days for variety
+    
+    // Late night (midnight to 4 AM)
+    if (hour < 4) {
+      const lateNight = [
+        'Burning the midnight Bunsen burner',
+        'Even catalysts need rest. Don\'t forget to regenerate',
+        'Late-night synthesis session? Your dedication is Nobel-worthy',
+        'The quietest hours produce the purest crystals of understanding',
+      ];
+      return '${lateNight[dayIndex % lateNight.length]}, $name.';
+    }
+    
+    // Early morning (4-8 AM)
+    if (hour < 8) {
+      const earlyMorning = [
+        'Rise and catalyze',
+        'Your neurons are fresh — perfect conditions for a breakthrough',
+        'Early bird gets the reagent. Let\'s make today count',
+        'A new day of discovery awaits you',
+      ];
+      return '${earlyMorning[dayIndex % earlyMorning.length]}, $name ⚗️';
+    }
+    
+    // Morning (8 AM - 12 PM)
+    if (hour < 12) {
+      // Check attendance health
+      if (attendancePct != null && attendancePct < 75.0) {
+        const dangerMorning = [
+          'Your attendance needs an emergency titration. Every class counts',
+          'Attendance below 75%! Today\'s mission: be present, not absent',
+          'Your presence in class is more valuable than any catalyst',
+        ];
+        return '${dangerMorning[dayIndex % dangerMorning.length]}, $name ⚠️';
+      }
+      
+      // Monday motivation
+      if (weekday == DateTime.monday) {
+        const monday = [
+          'New week, new reactions. Let\'s start with high yield',
+          'Monday: the activation energy barrier. You\'ve got this',
+          'Fresh week ahead. What will you synthesize',
+        ];
+        return '${monday[dayIndex % monday.length]}, $name 🔬';
+      }
+      
+      // Friday celebration
+      if (weekday == DateTime.friday) {
+        const friday = [
+          'Friday! You\'ve survived the week\'s reaction conditions',
+          'Last push of the week. Finish strong like a clean distillation',
+          'Friday vibes: the equilibrium shifts toward the weekend',
+        ];
+        return '${friday[dayIndex % friday.length]}, $name 🎉';
+      }
+      
+      // Weekend
+      if (weekday == DateTime.saturday || weekday == DateTime.sunday) {
+        const weekend = [
+          'Weekend mode: time to recrystallize your thoughts',
+          'No lectures today. Perfect time for self-directed synthesis',
+          'Rest day. Even the most active enzymes need downtime',
+        ];
+        return '${weekend[dayIndex % weekend.length]}, $name ☀️';
+      }
+      
+      // High attendance praise
+      if (attendancePct != null && attendancePct >= 90.0) {
+        final pctStr = attendancePct.toStringAsFixed(0);
+        final praise = [
+          'Operating at $pctStr% yield. Exemplary',
+          'Your consistency would make a crystal lattice jealous',
+          'Academic weapon status: confirmed',
+        ];
+        return '${praise[dayIndex % praise.length]}, $name 🌟';
+      }
+      
+      const morning = [
+        'The lab awaits. What will you discover today',
+        'Another day, another mechanism to master',
+        'Ready to push the boundaries of your understanding',
+        'Good morning. Today\'s experiment: excellence',
+        'Your potential energy is at its peak this morning',
+      ];
+      return '${morning[dayIndex % morning.length]}, $name 👋';
+    }
+    
+    // Afternoon (12 PM - 5 PM)
+    if (hour < 17) {
+      const afternoon = [
+        'Still in the flow state? Keep that reaction going',
+        'Halfway through — your concentration hasn\'t precipitated yet',
+        'Afternoon checkpoint: you\'re doing great work',
+        'The best discoveries happen when others take breaks',
+      ];
+      return '${afternoon[dayIndex % afternoon.length]}, $name 📚';
+    }
+    
+    // Evening (5 PM - 9 PM)
+    if (hour < 21) {
+      const evening = [
+        'Evening reflux. Time to distill today\'s learnings',
+        'The day\'s reactions are complete. Time to analyze the results',
+        'Wind down, but keep those neural pathways active',
+        'Evening study session? Your future self will thank you',
+      ];
+      return '${evening[dayIndex % evening.length]}, $name 🌙';
+    }
+    
+    // Night (9 PM - midnight)
+    const night = [
+      'Burning the midnight oil for chemistry? Respect',
+      'Late study session detected. Remember: quality over quantity',
+      'The night is young and so is your understanding. Keep going',
+      'Night owl mode: when the distractions decay, focus crystallizes',
+    ];
+    return '${night[dayIndex % night.length]}, $name 🌟';
+  }
+
+  static String _chemistryThought(int dayOfMonth) {
+    const thoughts = [
+      '"The only failed experiment is the one you didn\'t try."',
+      '"Chemistry is the science of matter — and you matter."',
+      '"In chemistry, nothing is lost, nothing is created, everything is transformed." — Lavoisier',
+      '"The meeting of two personalities is like the contact of two chemical substances." — Jung',
+      '"Life is a chemical reaction — it only requires the right catalyst."',
+      '"Science knows no country, because knowledge belongs to humanity." — Pasteur',
+      '"Every great advance in science has issued from a new audacity of imagination." — Dewey',
+      '"The important thing in science is not so much to obtain new facts as to discover new ways of thinking." — Bragg',
+      '"Research is to see what everybody else has seen, and think what nobody has thought." — Szent-Györgyi',
+      '"Nothing in life is to be feared, it is only to be understood." — Curie',
+      '"Chemistry begins in the stars." — Primo Levi',
+      '"The atoms of our bodies are traceable to stars that exploded." — Tyson',
+      '"Discovery is seeing what everybody else has seen and thinking what nobody else has thought."',
+      '"Science is a way of thinking much more than it is a body of knowledge." — Sagan',
+      '"The best scientist is open to experience and begins with romance." — Ray Bradbury',
+      '"Not every reaction needs a catalyst — sometimes patience is the reagent."',
+      '"Your knowledge is a solution; keep dissolving new solutes into it."',
+      '"Be like water: adapt, dissolve barriers, and find your equilibrium."',
+      '"The periodic table is poetry arranged in columns."',
+      '"A chemist who doesn\'t know mathematics is not a chemist at all." — Lomonosov',
+      '"Think like a proton — always positive."',
+      '"If you\'re not part of the solution, you\'re part of the precipitate."',
+      '"Never trust an atom — they make up everything."',
+      '"Chemistry: where alcohol IS a solution."',
+      '"Organic chemistry is the chemistry of carbon compounds. Biochemistry is the study of carbon compounds that crawl." — Mike Adams',
+      '"The nitrogen in our DNA, the calcium in our teeth, the iron in our blood... were made in the interiors of collapsing stars." — Sagan',
+      '"Knowledge is like a chemical reaction: it needs activation energy, but once started, it\'s self-sustaining."',
+      '"Your education is your compound interest — it grows exponentially."',
+      '"Like Le Chatelier\'s principle: when stressed, shift to restore equilibrium."',
+      '"Every expert was once a beginner. Every reaction starts with a single bond."',
+      '"Today\'s effort is tomorrow\'s advantage. Keep compounding."',
+    ];
+    return thoughts[dayOfMonth % thoughts.length];
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(appControllerProvider);
@@ -81,7 +239,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final analytics = analyticsService.computeSummary(streakDays: repo.streak());
 
     final hour = DateTime.now().hour;
-    final greeting = hour < 12 ? 'Good morning' : (hour < 17 ? 'Good afternoon' : 'Good evening');
+    final weekday = DateTime.now().weekday;
+    final overallPct = overall.percent;
+    final greeting = _buildSmartGreeting(name, hour, weekday, attendancePct: overallPct);
 
     return AnimatedDashboardList(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
@@ -95,10 +255,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$greeting, $name 👋', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                  Text(greeting, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                   Text(
                     '${state.profile.university.isEmpty ? "MSc Chemistry" : state.profile.university} · Sem ${state.profile.semester}',
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                  Text(
+                    _chemistryThought(DateTime.now().day),
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
               ),

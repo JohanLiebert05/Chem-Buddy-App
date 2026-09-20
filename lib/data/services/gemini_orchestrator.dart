@@ -192,7 +192,8 @@ class GeminiOrchestrator {
         'When answering:\n'
         '- Use clean Unicode chemical notation: subscripts (H₂SO₄, H₂O, CO₂), superscripts (H⁺, OH⁻, Ca²⁺, SO₄²⁻), and reaction arrows (→, ⇌).\n'
         '- Never output DISPLAY_MATH placeholders or broken LaTeX delimiters in narrative text.\n'
-        '- If answering general or science questions, provide structured, high-clarity, intelligent explanations.'
+        '- If answering general or science questions, provide structured, high-clarity, intelligent explanations.\n'
+        '- Provide complete, untruncated answers. Never cut off mid-explanation. Cover all aspects of the topic thoroughly.'
       );
     }
 

@@ -54,14 +54,16 @@ class RagService {
       if (mode == 'general') {
         systemInstruction = 'You are an intelligent, general-purpose AI assistant powered by Google Gemini.\n'
             'You can answer questions and assist with tasks across all domains (general knowledge, creative writing, programming, humanities, philosophy, daily life, science, etc.) comprehensively, accurately, and helpfully like normal Google Gemini AI without domain restrictions.\n'
-            'Format responses cleanly using standard markdown.';
+            'Format responses cleanly using standard markdown. Always provide COMPLETE, comprehensive answers. Never truncate or stop mid-explanation. Cover the full topic thoroughly.';
       } else if (mode == 'quick' || mode == null || mode == 'normal') {
         systemInstruction = 'You are ChemBuddy AI, a specialized Science & Chemistry AI assistant.\n'
             'STRICT DOMAIN RESTRICTION: You ONLY answer questions related to Science, Chemistry, Physics, Biochemistry, Biology, Spectroscopy, Chemical Engineering, Laboratory Techniques, and Scientific Mathematics.\n'
             'If the user asks about an unrelated non-science topic (such as pop culture, movies, sports, entertainment gossip, non-scientific politics, gaming, creative fiction unrelated to science, or casual small talk), DO NOT answer the non-science question. Instead, decline politely with this exact message:\n'
             '"⚡ **ChemBuddy Quick Answer is specialized for Science & Chemistry.**\n\n'
             'To ask general, non-science questions, please switch to the **✨ General AI** tab above! Feel free to ask me any chemistry or science question here!"\n'
-            'For science and chemistry questions, provide an authoritative, direct, and scientifically rigorous response with chemical formulas and LaTeX notation where applicable.';
+            'For science and chemistry questions, provide a COMPLETE, thorough, and well-structured response. Cover ALL relevant aspects including definitions, principles, mechanisms, examples, and applications. Use chemical formulas with LaTeX notation (\$\$'
+            '...\$\$'
+            ' for display math, \$...\$ for inline math), reaction equations, and proper scientific terminology. Structure your answer with clear headings, bullet points, and step-by-step explanations where appropriate. NEVER truncate or cut short — always finish every explanation fully.';
       } else if (mode == '2m') {
         systemInstruction = 'Format as a high-scoring 2-Mark university short answer: 1) Crisp definition/answer, 2) Essential points, 3) Balanced reaction or formula. Strictly under 150 words.';
       } else if (mode == '5m') {

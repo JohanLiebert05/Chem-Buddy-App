@@ -64,9 +64,15 @@ class NotificationService {
     try {
       tzdata.initializeTimeZones();
       final name = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(name));
+      // Force IST (Asia/Kolkata) if timezone detection fails or returns empty
+      final tzName = name.isNotEmpty ? name : 'Asia/Kolkata';
+      tz.setLocalLocation(tz.getLocation(tzName));
     } catch (_) {
       tzdata.initializeTimeZones();
+      // Fallback: Force IST timezone for Indian students
+      try {
+        tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
+      } catch (_) {}
     }
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -501,36 +507,78 @@ class NotificationService {
   }) async {
     final title = entry.displayName.isEmpty ? 'Chemistry Class' : entry.displayName;
 
-    // 1. Advance reminder before class
+    // 1. Advance reminder before class — NOW with 1-tap attendance actions
     if (scheduleReminder) {
       final start = entry.startMinutes;
-      var hour = start ~/ 60;
-      var minute = start % 60 - minutesBefore;
-      while (minute < 0) {
-        minute += 60;
-        hour -= 1;
+      var reminderHour = start ~/ 60;
+      var reminderMinute = start % 60 - minutesBefore;
+      // Fix midnight underflow: roll back to previous day if needed
+      while (reminderMinute < 0) {
+        reminderMinute += 60;
+        reminderHour -= 1;
       }
-      if (hour >= 0) {
-        final next = _nextWeekday(entry.weekdayNumber, hour, minute);
-        final banter = _buildClassBanter(
-          subjectName: title,
-          minutesBefore: minutesBefore,
-          room: entry.room,
-          type: entry.type,
-          stats: stats,
-        );
+      var reminderWeekday = entry.weekdayNumber;
+      while (reminderHour < 0) {
+        reminderHour += 24;
+        reminderWeekday -= 1;
+        if (reminderWeekday < 1) reminderWeekday = 7;
+      }
+      final next = _nextWeekday(reminderWeekday, reminderHour, reminderMinute);
+      final banter = _buildClassBanter(
+        subjectName: title,
+        minutesBefore: minutesBefore,
+        room: entry.room,
+        type: entry.type,
+        stats: stats,
+      );
 
-        await _plugin.zonedSchedule(
-          entry.id.hashCode,
-          banter.title,
-          banter.body,
-          next,
-          const NotificationDetails(android: classChannel, iOS: DarwinNotificationDetails()),
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-        );
-      }
+      // Advance reminder payload for 1-tap attendance marking
+      final advancePayload = jsonEncode({
+        'type': 'attendance_prompt',
+        'subjectId': subjectId ?? entry.subjectCode,
+        'subjectName': title,
+        'slotId': entry.id,
+        'dayOfWeek': entry.weekdayNumber,
+      });
+
+      const androidAdvanceReminder = AndroidNotificationDetails(
+        'chem_buddy_classes',
+        'Class reminders',
+        channelDescription: 'Upcoming lecture and lab reminders',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+        actions: <AndroidNotificationAction>[
+          AndroidNotificationAction(
+            'mark_present',
+            'Present ✅',
+            showsUserInterface: false,
+            cancelNotification: true,
+          ),
+          AndroidNotificationAction(
+            'mark_absent',
+            'Absent ❌',
+            showsUserInterface: false,
+            cancelNotification: true,
+          ),
+        ],
+      );
+
+      const iosAdvanceReminder = DarwinNotificationDetails(
+        categoryIdentifier: 'attendance_actions',
+      );
+
+      await _plugin.zonedSchedule(
+        entry.id.hashCode.abs(),
+        banter.title,
+        banter.body,
+        next,
+        const NotificationDetails(android: androidAdvanceReminder, iOS: iosAdvanceReminder),
+        payload: advancePayload,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      );
     }
 
     // 2. Class-time attendance prompt (at exact class start) with direct 1-tap Present / Absent actions

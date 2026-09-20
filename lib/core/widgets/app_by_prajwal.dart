@@ -15,7 +15,7 @@ class AppByPrajwal extends StatelessWidget {
       children: [
         if (showVersion)
           Text(
-            'ChemBuddy v3.4.7',
+            'ChemBuddy v3.5.0',
             style: TextStyle(
               color: AppColors.purpleBright,
               fontWeight: FontWeight.w800,

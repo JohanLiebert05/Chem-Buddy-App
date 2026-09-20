@@ -916,30 +916,6 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             ],
           ),
           actions: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
-                  foregroundColor: const Color(0xFFA78BFA),
-                  side: const BorderSide(color: Color(0xFFA78BFA), width: 1),
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                onPressed: _isPredicting ? null : _predictMajorProduct,
-                icon: _isPredicting
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFA78BFA)),
-                      )
-                    : const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFFA78BFA)),
-                label: const Text(
-                  'Predict',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ),
             IconButton(
               icon: const Icon(Icons.help_outline_rounded, color: AppColors.accentCyan, size: 21),
               tooltip: 'ChemDraw Guide & Masterclass 💡',
@@ -1034,89 +1010,88 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                 ],
               ),
             ),
-            // Bottom Action Bar
+            // Bottom Action Dock (Streamlined single row for maximum canvas height)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: const BoxDecoration(
-                color: Color(0xFF111827),
+                color: Color(0xFF0F172A),
                 border: Border(top: BorderSide(color: AppColors.borderSubtle)),
               ),
               child: SafeArea(
                 top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                child: Row(
                   children: [
-                    // Primary Action: Predict Major Product
-                    SizedBox(
-                      width: double.infinity,
+                    // Predict Major Product
+                    Expanded(
+                      flex: 5,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF7C3AED),
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 3,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          elevation: 2,
                         ),
                         onPressed: _isPredicting ? null : _predictMajorProduct,
                         icon: _isPredicting
                             ? const SizedBox(
-                                width: 16,
-                                height: 16,
+                                width: 14,
+                                height: 14,
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                               )
-                            : const Icon(Icons.auto_awesome_rounded, size: 18, color: AppColors.accentCyan),
+                            : const Icon(Icons.auto_awesome_rounded, size: 16, color: AppColors.accentCyan),
                         label: Text(
-                          _isPredicting ? 'Predicting Reaction Product...' : 'Predict Major Product ⚡',
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+                          _isPredicting ? 'Predicting...' : 'Predict Product ⚡',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.accentCyan,
-                              foregroundColor: const Color(0xFF0B0F19),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            onPressed: _isAnalyzing ? null : _analyzeWithRdkit,
-                            icon: _isAnalyzing
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                                  )
-                                : const Icon(Icons.biotech_outlined, size: 16),
-                            label: const Text(
-                              'RDKit Descriptors',
-                              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
-                            ),
-                          ),
+                    const SizedBox(width: 6),
+                    // RDKit
+                    Expanded(
+                      flex: 4,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accentCyan,
+                          foregroundColor: const Color(0xFF0B0F19),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              side: const BorderSide(color: AppColors.borderHighlight),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            onPressed: () async {
-                              final smiles = await _getSmiles();
-                              _openAiWithSmiles(smiles.isNotEmpty ? smiles : 'C1=CC=CC=C1');
-                            },
-                            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: AppColors.brandBright),
-                            label: const Text(
-                              'Ask ChemBuddy',
-                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-                            ),
-                          ),
+                        onPressed: _isAnalyzing ? null : _analyzeWithRdkit,
+                        icon: _isAnalyzing
+                            ? const SizedBox(
+                                width: 13,
+                                height: 13,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                              )
+                            : const Icon(Icons.biotech_outlined, size: 15),
+                        label: const Text(
+                          'RDKit 🧪',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11.5),
                         ),
-                      ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    // Ask AI
+                    Expanded(
+                      flex: 4,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: AppColors.brandBright),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () async {
+                          final smiles = await _getSmiles();
+                          _openAiWithSmiles(smiles.isNotEmpty ? smiles : 'C1=CC=CC=C1');
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 15, color: AppColors.brandBright),
+                        label: const Text(
+                          'Ask AI 💬',
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11.5),
+                        ),
+                      ),
                     ),
                   ],
                 ),
