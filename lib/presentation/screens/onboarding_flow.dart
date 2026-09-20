@@ -683,13 +683,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
               const SizedBox(height: 24),
 
-              // Full Name
-              _buildField(
-                controller: name,
-                hintText: signUp ? 'Full Name' : 'Full Name (e.g. Prajwal A Kambar)',
-                icon: Icons.person_outline_rounded,
-              ),
-              const SizedBox(height: 12),
+              // Full Name (Sign Up only)
+              if (signUp) ...[
+                _buildField(
+                  controller: name,
+                  hintText: 'Full Name',
+                  icon: Icons.person_outline_rounded,
+                ),
+                const SizedBox(height: 12),
+              ],
 
               // Register Number
               _buildField(
