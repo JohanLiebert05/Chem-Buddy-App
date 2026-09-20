@@ -13,6 +13,7 @@ import '../../data/models/models.dart';
 import '../../data/models/smart_flashcard.dart';
 import '../../data/models/timetable_entry.dart';
 import '../../data/services/daily_chemistry_service.dart';
+import '../../data/services/psychology_facts_service.dart';
 import '../../data/services/study_analytics_service.dart';
 import '../providers/app_providers.dart';
 import '../widgets/home_widgets.dart';
@@ -581,6 +582,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
         ),
+
+        const SizedBox(height: 12),
+
+        // Daily Psychology Insight
+        const SectionTitle('Daily Psychology Fact 🧠'),
+        const _DailyPsychologyFactCard(),
 
         const SizedBox(height: 12),
 
@@ -1584,3 +1591,129 @@ class _MiniStatRow extends StatelessWidget {
     );
   }
 }
+
+class _DailyPsychologyFactCard extends StatefulWidget {
+  const _DailyPsychologyFactCard();
+
+  @override
+  State<_DailyPsychologyFactCard> createState() => _DailyPsychologyFactCardState();
+}
+
+class _DailyPsychologyFactCardState extends State<_DailyPsychologyFactCard> {
+  late PsychologyFact _fact;
+
+  @override
+  void initState() {
+    super.initState();
+    _fact = PsychologyFactsService.instance.getTodayFact();
+  }
+
+  void _shuffle() {
+    AppHaptics.selection();
+    setState(() {
+      _fact = PsychologyFactsService.instance.getRandomFact();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final catColor = PsychologyFactsService.getCategoryColor(_fact.category);
+
+    return GlowCard(
+      borderColor: catColor.withValues(alpha: 0.35),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: catColor.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(_fact.emoji, style: const TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: catColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: catColor.withValues(alpha: 0.4)),
+                      ),
+                      child: Text(
+                        _fact.category.toUpperCase(),
+                        style: TextStyle(
+                          color: catColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _fact.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.shuffle_rounded, size: 20, color: AppColors.textMuted),
+                tooltip: 'Another Fact',
+                onPressed: _shuffle,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _fact.fact,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.45,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('💡 ', style: TextStyle(fontSize: 13)),
+                Expanded(
+                  child: Text(
+                    _fact.takeaway,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textSecondary,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

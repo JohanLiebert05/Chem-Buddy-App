@@ -13,6 +13,7 @@ import '../models/library_models.dart';
 import '../models/models.dart';
 import '../models/smart_flashcard.dart';
 import '../models/timetable_entry.dart';
+import '../services/psychology_facts_service.dart';
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse details) {
@@ -56,6 +57,14 @@ class NotificationService {
     'chem_buddy_flashcards',
     'Study & Flashcards',
     channelDescription: 'Spaced repetition flashcard review reminders',
+    importance: Importance.high,
+    priority: Priority.high,
+  );
+
+  static const psychologyFactChannel = AndroidNotificationDetails(
+    'chem_buddy_psychology_facts',
+    'Daily Psychology Facts',
+    channelDescription: 'Fascinating daily insights into human behavior, memory, and cognitive psychology',
     importance: Importance.high,
     priority: Priority.high,
   );
@@ -129,6 +138,12 @@ class NotificationService {
         description: 'Spaced repetition flashcard review reminders',
         importance: Importance.high,
       ));
+      await androidPlugin.createNotificationChannel(const AndroidNotificationChannel(
+        'chem_buddy_psychology_facts',
+        'Daily Psychology Facts',
+        description: 'Fascinating daily insights into human behavior, memory, and cognitive psychology',
+        importance: Importance.high,
+      ));
 
       await androidPlugin.requestNotificationsPermission();
       try {
@@ -138,7 +153,7 @@ class NotificationService {
       }
     }
     ready = true;
-    debugPrint('[NotificationService] Initialized with 4 channels and permissions');
+    debugPrint('[NotificationService] Initialized with 5 channels and permissions');
   }
 
   Future<bool> requestPermission() async {
@@ -299,6 +314,39 @@ class NotificationService {
     );
   }
 
+  Future<void> sendTestPsychologyFactNotification({PsychologyFact? fact}) async {
+    if (!ready) await init();
+    final pFact = fact ?? PsychologyFactsService.instance.getTodayFact();
+    final title = '${pFact.emoji} Psychology Fact: ${pFact.title}';
+    final body = '${pFact.fact}\n\n💡 Insight: ${pFact.takeaway}';
+
+    final payload = jsonEncode({
+      'type': 'psychology_fact',
+      'factId': pFact.id,
+      'title': pFact.title,
+      'category': pFact.category,
+    });
+
+    await _plugin.show(
+      99888,
+      title,
+      body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'chem_buddy_psychology_facts',
+          'Daily Psychology Facts',
+          channelDescription: 'Fascinating daily insights into human behavior, memory, and cognitive psychology',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          styleInformation: BigTextStyleInformation(''),
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      payload: payload,
+    );
+  }
+
   Future<void> resync({
     required NotificationPrefs prefs,
     required List<TimetableEntry> entries,
@@ -369,6 +417,11 @@ class NotificationService {
     if (prefs.studyReminders && smartCards != null && smartCards.isNotEmpty) {
       final scheduledSets = await _scheduleFlashcardReviews(smartCards, flashcardSets ?? const []);
       scheduledCount += scheduledSets;
+    }
+
+    if (prefs.dailyPsychologyFact) {
+      final scheduledFacts = await _scheduleDailyPsychologyFacts(prefs);
+      scheduledCount += scheduledFacts;
     }
 
     debugPrint('[NotificationService] Resync complete. Scheduled $scheduledCount active notifications/alarms.');
@@ -767,6 +820,50 @@ class NotificationService {
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
       );
     }
+  }
+
+  Future<int> _scheduleDailyPsychologyFacts(NotificationPrefs prefs) async {
+    final now = tz.TZDateTime.now(tz.local);
+    final hour = prefs.psychologyFactHour;
+    final minute = prefs.psychologyFactMinute;
+    int scheduled = 0;
+
+    // Schedule for the next 30 days so each day gets a distinct, non-repeating psychology fact
+    for (int dayOffset = 0; dayOffset < 30; dayOffset++) {
+      var candidate = tz.TZDateTime(tz.local, now.year, now.month, now.day + dayOffset, hour, minute);
+      if (candidate.isBefore(now)) {
+        continue;
+      }
+
+      final date = DateTime(candidate.year, candidate.month, candidate.day);
+      final fact = PsychologyFactsService.instance.getFactForDay(date);
+
+      final title = '${fact.emoji} Psychology Fact: ${fact.title}';
+      final body = '${fact.fact}\n\n💡 Insight: ${fact.takeaway}';
+
+      final payload = jsonEncode({
+        'type': 'psychology_fact',
+        'factId': fact.id,
+        'title': fact.title,
+        'category': fact.category,
+      });
+
+      await _plugin.zonedSchedule(
+        65000 + dayOffset,
+        title,
+        body,
+        candidate,
+        const NotificationDetails(
+          android: psychologyFactChannel,
+          iOS: DarwinNotificationDetails(),
+        ),
+        payload: payload,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+      scheduled++;
+    }
+    return scheduled;
   }
 
   tz.TZDateTime _nextWeekday(int weekday, int hour, int minute) {

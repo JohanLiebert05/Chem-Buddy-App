@@ -178,6 +178,9 @@ class NotificationPrefs {
     this.assignmentReminders = true,
     this.examReminders = true,
     this.studyReminders = true,
+    this.dailyPsychologyFact = true,
+    this.psychologyFactHour = 20,
+    this.psychologyFactMinute = 0,
     this.defaultMinutesBefore = 30,
   });
 
@@ -188,6 +191,9 @@ class NotificationPrefs {
   final bool assignmentReminders;
   final bool examReminders;
   final bool studyReminders;
+  final bool dailyPsychologyFact;
+  final int psychologyFactHour;
+  final int psychologyFactMinute;
   final int defaultMinutesBefore;
 
   NotificationPrefs copyWith({
@@ -198,6 +204,9 @@ class NotificationPrefs {
     bool? assignmentReminders,
     bool? examReminders,
     bool? studyReminders,
+    bool? dailyPsychologyFact,
+    int? psychologyFactHour,
+    int? psychologyFactMinute,
     int? defaultMinutesBefore,
   }) {
     return NotificationPrefs(
@@ -209,6 +218,9 @@ class NotificationPrefs {
       assignmentReminders: assignmentReminders ?? this.assignmentReminders,
       examReminders: examReminders ?? this.examReminders,
       studyReminders: studyReminders ?? this.studyReminders,
+      dailyPsychologyFact: dailyPsychologyFact ?? this.dailyPsychologyFact,
+      psychologyFactHour: psychologyFactHour ?? this.psychologyFactHour,
+      psychologyFactMinute: psychologyFactMinute ?? this.psychologyFactMinute,
       defaultMinutesBefore: defaultMinutesBefore ?? this.defaultMinutesBefore,
     );
   }
@@ -221,6 +233,9 @@ class NotificationPrefs {
         'assignmentReminders': assignmentReminders,
         'examReminders': examReminders,
         'studyReminders': studyReminders,
+        'dailyPsychologyFact': dailyPsychologyFact,
+        'psychologyFactHour': psychologyFactHour,
+        'psychologyFactMinute': psychologyFactMinute,
         'defaultMinutesBefore': defaultMinutesBefore,
       };
 
@@ -235,6 +250,9 @@ class NotificationPrefs {
       assignmentReminders: json['assignmentReminders'] as bool? ?? true,
       examReminders: json['examReminders'] as bool? ?? true,
       studyReminders: json['studyReminders'] as bool? ?? true,
+      dailyPsychologyFact: json['dailyPsychologyFact'] as bool? ?? true,
+      psychologyFactHour: json['psychologyFactHour'] as int? ?? 20,
+      psychologyFactMinute: json['psychologyFactMinute'] as int? ?? 0,
       defaultMinutesBefore: json['defaultMinutesBefore'] as int? ?? 30,
     );
   }

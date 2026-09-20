@@ -71,6 +71,13 @@ class NotificationSettingsScreen extends ConsumerWidget {
                     value: prefs.studyReminders,
                     onChanged: (v) => _save(ref, prefs.copyWith(studyReminders: v)),
                   ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Daily psychology facts'),
+                    subtitle: const Text('Daily once at 8:00 PM • Fascinating insights into human behavior & mind'),
+                    value: prefs.dailyPsychologyFact,
+                    onChanged: (v) => _save(ref, prefs.copyWith(dailyPsychologyFact: v)),
+                  ),
                 ],
               ),
             ),
@@ -137,9 +144,32 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 testSubjectName: firstSub?.name,
               );
               if (!context.mounted) return;
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Test notification dispatched! Check your notification shade to test 1-tap Present / Absent.'),
+                  backgroundColor: AppColors.statusSuccess,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.purpleBright,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: const Icon(Icons.psychology_rounded),
+            label: const Text('🧠 Send Psychology Fact Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            onPressed: () async {
+              await NotificationService.instance.sendTestPsychologyFactNotification();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Psychology fact dispatched! Check your notification shade.'),
                   backgroundColor: AppColors.statusSuccess,
                 ),
               );

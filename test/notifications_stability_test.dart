@@ -56,7 +56,7 @@ void main() {
   });
 
   group('NotificationService Engine & Scheduling Tests', () {
-    test('1. NotificationService initializes and registers all 4 channels with Android manager', () async {
+    test('1. NotificationService initializes and registers all 5 channels with Android manager', () async {
       final service = NotificationService.instance;
       await service.init();
       expect(service.ready, isTrue);
@@ -65,9 +65,10 @@ void main() {
       expect(NotificationService.dailyChannel.channelId, equals('chem_buddy_daily'));
       expect(NotificationService.deadlineChannel.channelId, equals('chem_buddy_deadlines'));
       expect(NotificationService.flashcardChannel.channelId, equals('chem_buddy_flashcards'));
+      expect(NotificationService.psychologyFactChannel.channelId, equals('chem_buddy_psychology_facts'));
 
       final createdChannels = methodCalls.where((c) => c.method == 'createNotificationChannel').toList();
-      expect(createdChannels.length, equals(4));
+      expect(createdChannels.length, equals(5));
     });
 
     test('2. Resync schedules advance reminder and class-start 1-tap attendance prompt', () async {
@@ -97,6 +98,7 @@ void main() {
           assignmentReminders: false,
           examReminders: false,
           studyReminders: false,
+          dailyPsychologyFact: false,
           defaultMinutesBefore: 15,
         ),
         entries: sampleEntries,
@@ -170,6 +172,7 @@ void main() {
           assignmentReminders: false,
           examReminders: false,
           studyReminders: false,
+          dailyPsychologyFact: false,
         ),
         entries: sampleEntries,
         events: const [],
@@ -291,6 +294,7 @@ void main() {
       expect(find.text('Class-time attendance prompt'), findsOneWidget);
       expect(find.textContaining('8:30 AM'), findsOneWidget);
       expect(find.text('Flashcard & study reminders'), findsOneWidget);
+      expect(find.text('Daily psychology facts'), findsOneWidget);
 
       final buttonFinder = find.textContaining('Send Test Notification');
       expect(buttonFinder, findsOneWidget);
@@ -299,6 +303,57 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Test notification dispatched'), findsOneWidget);
+
+      final psychFinder = find.textContaining('Send Psychology Fact Now');
+      expect(psychFinder, findsOneWidget);
+
+      await tester.tap(psychFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Psychology fact dispatched'), findsOneWidget);
+    });
+
+    test('7. sendTestPsychologyFactNotification dispatches instant psychology fact with payload', () async {
+      final service = NotificationService.instance;
+      await service.init();
+      methodCalls.clear();
+
+      await service.sendTestPsychologyFactNotification();
+      final shown = methodCalls.where((c) => c.method == 'show').toList();
+      expect(shown.length, equals(1));
+      expect(shown.first.arguments['title'], contains('Psychology Fact:'));
+      expect(shown.first.arguments['payload'], contains('psychology_fact'));
+    });
+
+    test('8. Resync with dailyPsychologyFact schedules upcoming daily facts with distinct content', () async {
+      final service = NotificationService.instance;
+      await service.init();
+      methodCalls.clear();
+
+      await service.resync(
+        prefs: const NotificationPrefs(
+          enabled: true,
+          classReminders: false,
+          dailyTimetable: false,
+          attendancePromptAtClassStart: false,
+          assignmentReminders: false,
+          examReminders: false,
+          studyReminders: false,
+          dailyPsychologyFact: true,
+          psychologyFactHour: 20,
+          psychologyFactMinute: 0,
+        ),
+        entries: const [],
+        events: const [],
+        reminders: const [],
+      );
+
+      final scheduled = methodCalls.where((c) => c.method == 'zonedSchedule').toList();
+      expect(scheduled.length, greaterThan(0));
+
+      final firstFact = scheduled.first;
+      expect(firstFact.arguments['title'], contains('Psychology Fact:'));
+      expect(firstFact.arguments['payload'], contains('psychology_fact'));
     });
   });
 }
