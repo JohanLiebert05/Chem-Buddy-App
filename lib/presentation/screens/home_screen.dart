@@ -54,101 +54,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   String _buildSmartGreeting(String name, int hour, int weekday, {double? attendancePct}) {
-    final now = DateTime.now();
-    final dayIndex = now.day % 10; // Rotates every 10 days for variety
-    
-    // Late night (midnight to 4 AM)
-    if (hour < 4) {
-      const lateNight = [
-        'Burning the midnight Bunsen burner',
-        'Even catalysts need rest. Don\'t forget to regenerate',
-        'Late-night synthesis session? Your dedication is Nobel-worthy',
-        'The quietest hours produce the purest crystals of understanding',
-      ];
-      return '${lateNight[dayIndex % lateNight.length]}, $name.';
+    // Punchy, short greetings that fit comfortably on any screen without truncation
+    if (hour < 5) {
+      return 'Late night study, $name 🔬';
     }
-    
-    // Early morning (4-8 AM)
-    if (hour < 8) {
-      const earlyMorning = [
-        'Rise and catalyze',
-        'Your neurons are fresh — perfect conditions for a breakthrough',
-        'Early bird gets the reagent. Let\'s make today count',
-        'A new day of discovery awaits you',
-      ];
-      return '${earlyMorning[dayIndex % earlyMorning.length]}, $name ⚗️';
+    if (hour < 9) {
+      return 'Good morning, $name ⚗️';
     }
-    
-    // Check attendance health first if morning/daytime
-    if (attendancePct != null && attendancePct < 75.0) {
-      const dangerMorning = [
-        'Your attendance needs an emergency titration. Every class counts',
-        'Attendance below 75%! Today\'s mission: be present, not absent',
-        'Your presence in class is more valuable than any catalyst',
-      ];
-      return '${dangerMorning[dayIndex % dangerMorning.length]}, $name ⚠️';
+    if (hour < 12) {
+      if (weekday == DateTime.monday) return 'Monday launch, $name 🚀';
+      if (weekday == DateTime.friday) return 'Friday push, $name 🎉';
+      return 'Good morning, $name 👋';
     }
-    
-    // Early Morning (5 AM - 9 AM)
-    if (hour >= 5 && hour < 9) {
-      const early = [
-        'Good morning',
-        'Early lab session',
-        'Morning focus',
-      ];
-      return '${early[dayIndex % early.length]}, $name 🔬';
-    }
-    
-    // Regular Morning (9 AM - 12 PM)
-    if (hour >= 9 && hour < 12) {
-      if (weekday == DateTime.monday) {
-        return 'Monday launch, $name 🚀';
-      }
-      if (weekday == DateTime.friday) {
-        return 'Friday push, $name 🎉';
-      }
-      if (weekday == DateTime.saturday || weekday == DateTime.sunday) {
-        return 'Weekend study, $name ☀️';
-      }
-      if (attendancePct != null && attendancePct >= 90.0) {
-        return 'Peak yield, $name 🌟';
-      }
-      const morning = [
-        'Good morning',
-        'Lab awaits',
-        'Ready to master',
-      ];
-      return '${morning[dayIndex % morning.length]}, $name 👋';
-    }
-    
-    // Afternoon (12 PM - 5 PM)
     if (hour < 17) {
-      const afternoon = [
-        'In the flow',
-        'Keep it going',
-        'Afternoon focus',
-        'Good afternoon',
-      ];
-      return '${afternoon[dayIndex % afternoon.length]}, $name 📚';
+      return 'Good afternoon, $name 📚';
     }
-    
-    // Evening (5 PM - 9 PM)
     if (hour < 21) {
-      const evening = [
-        'Good evening',
-        'Evening study',
-        'Distilling knowledge',
-      ];
-      return '${evening[dayIndex % evening.length]}, $name 🌙';
+      return 'Good evening, $name 🌙';
     }
-    
-    // Night (9 PM - midnight)
-    const night = [
-      'Night session',
-      'Midnight focus',
-      'Deep study',
-    ];
-    return '${night[dayIndex % night.length]}, $name 🌟';
+    return 'Night study, $name 🌟';
   }
 
   static String _chemistryThought(int dayOfMonth) {
@@ -239,12 +163,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return AnimatedDashboardList(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       children: [
-        // 1. Header with greeting and search (compact, decluttered design)
+        // 1. Header with greeting and search (clean, uncluttered, and fully readable)
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const ChemBuddyLogo(size: 38),
-            const SizedBox(width: 10),
+            const ChemBuddyLogo(size: 40),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,32 +179,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 17,
+                      fontSize: 18,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.2,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 3),
                   Text(
                     '${state.profile.university.isEmpty ? "MSc Chemistry" : state.profile.university} · Sem ${state.profile.semester}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: AppColors.textSecondary,
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    _chemistryThought(DateTime.now().day),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 10.5,
-                      fontStyle: FontStyle.italic,
                     ),
                   ),
                 ],
@@ -305,6 +218,74 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: const Icon(Icons.search),
             ),
           ],
+        ),
+
+        // Attendance Alert Banner (prominently displayed when below 75%)
+        if (overallPct < 75.0) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.danger.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.danger.withValues(alpha: 0.35)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Attendance Warning: ${overallPct.toStringAsFixed(1)}% (Below 75%)',
+                        style: const TextStyle(
+                          color: AppColors.danger,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Every class counts — attend upcoming classes to restore eligibility.',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        // Daily Chemistry Thought (full text visible without truncation)
+        Container(
+          margin: const EdgeInsets.only(top: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
+          child: Row(
+            children: [
+              const Text('💡 ', style: TextStyle(fontSize: 13)),
+              Expanded(
+                child: Text(
+                  _chemistryThought(DateTime.now().day),
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 11.5,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
 
