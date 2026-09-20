@@ -10,6 +10,7 @@ import '../../core/widgets/hex_background.dart';
 import '../../core/widgets/molecule_3d/molecule_3d_models.dart';
 import '../../core/widgets/molecule_3d/molecule_3d_viewer.dart';
 import '../../data/models/reaction_models.dart';
+import '../../data/services/export_service.dart';
 import '../../data/services/reaction_3d_database.dart';
 import '../../data/services/reaction_mechanism_service.dart';
 import '../providers/app_providers.dart';
@@ -62,6 +63,13 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
           title: const Text('Reaction Mechanisms ⚗️', style: TextStyle(fontWeight: FontWeight.w800)),
           backgroundColor: Colors.transparent,
           elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.file_download_outlined, color: AppColors.purpleBright),
+              tooltip: 'Export Reactions Compendium (PDF / Excel)',
+              onPressed: _showCompendiumExportOptions,
+            ),
+          ],
         ),
         body: CustomScrollView(
           slivers: [
@@ -287,6 +295,13 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
               _is3DMode = false;
             }),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.share_outlined, color: AppColors.purpleBright),
+              tooltip: 'Export Mechanism (PDF / Excel / SVG)',
+              onPressed: () => _showExportOptions(m),
+            ),
+          ],
         ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
@@ -963,6 +978,258 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
           ),
         ),
       ),
+    );
+  }
+
+  void _showExportOptions(ReactionMechanism m) {
+    AppHaptics.selection();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.purple.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.science_outlined, color: AppColors.purpleBright, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            m.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Export Mechanism Dossier & Vector Diagram',
+                            style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.purple.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.purpleBright),
+                  ),
+                  title: const Text('Academic PDF Dossier', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  subtitle: const Text('Publication-grade report with step-by-step mechanism & diagrams', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  tileColor: AppColors.surfaceElevated,
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Generating Academic PDF Dossier...')),
+                    );
+                    final file = await ExportService.instance.generateReactionPdf(singleReaction: m);
+                    await ExportService.instance.shareFile(
+                      file,
+                      subject: '${m.name} - MSc Mechanism Dossier',
+                      text: 'Reaction Mechanism Dossier for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentCyan.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.table_chart_outlined, color: AppColors.accentCyan),
+                  ),
+                  title: const Text('Excel / CSV Spreadsheet (XLV)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  subtitle: const Text('Tabular breakdown with steps, electron flows & SVG markup', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  tileColor: AppColors.surfaceElevated,
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Generating Excel Spreadsheet...')),
+                    );
+                    final file = await ExportService.instance.generateReactionsCsv(mechanisms: [m]);
+                    await ExportService.instance.shareFile(
+                      file,
+                      subject: '${m.name} - Spreadsheet Data',
+                      text: 'Excel spreadsheet for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.statusSuccess.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.draw_outlined, color: AppColors.statusSuccess),
+                  ),
+                  title: const Text('Vector SVG Diagram (.svg)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  subtitle: const Text('Standalone vector file for ChemDraw, PowerPoint, or web publishing', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  tileColor: AppColors.surfaceElevated,
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Generating Vector SVG Diagram...')),
+                    );
+                    final file = await ExportService.instance.generateReactionSvg(mechanism: m);
+                    await ExportService.instance.shareFile(
+                      file,
+                      subject: '${m.name} - Vector SVG',
+                      text: 'Vector SVG diagram for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showCompendiumExportOptions() {
+    AppHaptics.selection();
+    final allMechanisms = ReactionMechanismService.instance.mechanisms;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.purple.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.menu_book_outlined, color: AppColors.purpleBright, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'MSc Reactions Compendium',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Export all ${allMechanisms.length} curated MSc mechanisms',
+                            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.purple.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.purpleBright),
+                  ),
+                  title: const Text('Complete Compendium PDF', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  subtitle: const Text('Full monograph of all reactions with step-by-step schemes', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  tileColor: AppColors.surfaceElevated,
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Generating Compendium PDF (this may take a few seconds)...')),
+                    );
+                    final file = await ExportService.instance.generateReactionPdf(reactions: allMechanisms);
+                    await ExportService.instance.shareFile(
+                      file,
+                      subject: 'MSc Organic Chemistry Compendium',
+                      text: 'Complete MSc Organic Chemistry Reaction Compendium from Chem Buddy by Prajwal A Kambar',
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentCyan.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.table_chart_outlined, color: AppColors.accentCyan),
+                  ),
+                  title: const Text('Complete Catalog Spreadsheet (CSV/XLV)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  subtitle: const Text('Excel-ready dataset of all reactions with detailed mechanisms & SVG code', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  tileColor: AppColors.surfaceElevated,
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Generating Reactions Spreadsheet...')),
+                    );
+                    final file = await ExportService.instance.generateReactionsCsv(mechanisms: allMechanisms);
+                    await ExportService.instance.shareFile(
+                      file,
+                      subject: 'MSc Reactions Catalog Spreadsheet',
+                      text: 'Reactions Catalog Spreadsheet exported from Chem Buddy by Prajwal A Kambar',
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

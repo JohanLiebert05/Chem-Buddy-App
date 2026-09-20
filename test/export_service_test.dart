@@ -194,6 +194,36 @@ void main() {
       expect(bytes.length, greaterThan(10000));
     });
 
+    test('generateReactionsCsv produces detailed single reaction monograph with step-by-step breakdown', () async {
+      final sn1 = ReactionMechanismService.instance.find('sn1')!;
+      final file = await ExportService.instance.generateReactionsCsv(
+        mechanisms: [sn1],
+        outputDirectory: testDir,
+      );
+
+      expect(file.existsSync(), isTrue);
+      final content = await file.readAsString();
+      expect(content.contains('CHEM BUDDY - MSC REACTION MECHANISM DOSSIER'), isTrue);
+      expect(content.contains('SN1 Nucleophilic Substitution'), isTrue);
+      expect(content.contains('STEP-BY-STEP REACTION MECHANISM'), isTrue);
+      expect(content.contains('Step 1'), isTrue);
+      expect(content.contains('VECTOR SVG DIAGRAM CODE'), isTrue);
+      expect(content.contains('<svg'), isTrue);
+    });
+
+    test('generateReactionSvg produces standalone valid SVG vector file', () async {
+      final sn1 = ReactionMechanismService.instance.find('sn1')!;
+      final file = await ExportService.instance.generateReactionSvg(
+        mechanism: sn1,
+        outputDirectory: testDir,
+      );
+
+      expect(file.existsSync(), isTrue);
+      final content = await file.readAsString();
+      expect(content.contains('<svg'), isTrue);
+      expect(content.contains('</svg>'), isTrue);
+    });
+
     test('generateReactionsCsv produces tabular spreadsheet containing all reactions', () async {
       final allMechanisms = ReactionMechanismService.instance.mechanisms;
       final file = await ExportService.instance.generateReactionsCsv(

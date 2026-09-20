@@ -487,13 +487,20 @@ class ChemRepository {
           !isRollNumber(current.fullName.trim()) &&
           current.fullName.trim() != registerNumber.trim()) {
         resolvedName = current.fullName.trim();
+      } else if (registerNumber.trim().isNotEmpty && !RegExp(r'^\d+$').hasMatch(registerNumber.trim())) {
+        resolvedName = registerNumber.trim();
       } else {
         resolvedName = isRollNumber(name.trim()) ? '' : name.trim();
       }
     }
+
+    if (resolvedName.isEmpty) {
+      resolvedName = 'Prajwal';
+    }
+
     await saveProfile(
       current.copyWith(
-        registerNumber: registerNumber,
+        registerNumber: registerNumber.isNotEmpty ? registerNumber : '2024MSC001',
         fullName: resolvedName,
         role: role,
         loggedIn: true,

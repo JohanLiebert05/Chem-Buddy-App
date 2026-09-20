@@ -79,65 +79,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return '${earlyMorning[dayIndex % earlyMorning.length]}, $name ⚗️';
     }
     
-    // Morning (8 AM - 12 PM)
-    if (hour < 12) {
-      // Check attendance health
-      if (attendancePct != null && attendancePct < 75.0) {
-        const dangerMorning = [
-          'Your attendance needs an emergency titration. Every class counts',
-          'Attendance below 75%! Today\'s mission: be present, not absent',
-          'Your presence in class is more valuable than any catalyst',
-        ];
-        return '${dangerMorning[dayIndex % dangerMorning.length]}, $name ⚠️';
-      }
-      
-      // Monday motivation
+    // Check attendance health first if morning/daytime
+    if (attendancePct != null && attendancePct < 75.0) {
+      const dangerMorning = [
+        'Your attendance needs an emergency titration. Every class counts',
+        'Attendance below 75%! Today\'s mission: be present, not absent',
+        'Your presence in class is more valuable than any catalyst',
+      ];
+      return '${dangerMorning[dayIndex % dangerMorning.length]}, $name ⚠️';
+    }
+    
+    // Early Morning (5 AM - 9 AM)
+    if (hour >= 5 && hour < 9) {
+      const early = [
+        'Good morning',
+        'Early lab session',
+        'Morning focus',
+      ];
+      return '${early[dayIndex % early.length]}, $name 🔬';
+    }
+    
+    // Regular Morning (9 AM - 12 PM)
+    if (hour >= 9 && hour < 12) {
       if (weekday == DateTime.monday) {
-        const monday = [
-          'New week, new reactions. Let\'s start with high yield',
-          'Monday: the activation energy barrier. You\'ve got this',
-          'Fresh week ahead. What will you synthesize',
-        ];
-        return '${monday[dayIndex % monday.length]}, $name 🔬';
+        return 'Monday launch, $name 🚀';
       }
-      
-      // Friday celebration
       if (weekday == DateTime.friday) {
-        const friday = [
-          'Friday! You\'ve survived the week\'s reaction conditions',
-          'Last push of the week. Finish strong like a clean distillation',
-          'Friday vibes: the equilibrium shifts toward the weekend',
-        ];
-        return '${friday[dayIndex % friday.length]}, $name 🎉';
+        return 'Friday push, $name 🎉';
       }
-      
-      // Weekend
       if (weekday == DateTime.saturday || weekday == DateTime.sunday) {
-        const weekend = [
-          'Weekend mode: time to recrystallize your thoughts',
-          'No lectures today. Perfect time for self-directed synthesis',
-          'Rest day. Even the most active enzymes need downtime',
-        ];
-        return '${weekend[dayIndex % weekend.length]}, $name ☀️';
+        return 'Weekend study, $name ☀️';
       }
-      
-      // High attendance praise
       if (attendancePct != null && attendancePct >= 90.0) {
-        final pctStr = attendancePct.toStringAsFixed(0);
-        final praise = [
-          'Operating at $pctStr% yield. Exemplary',
-          'Your consistency would make a crystal lattice jealous',
-          'Academic weapon status: confirmed',
-        ];
-        return '${praise[dayIndex % praise.length]}, $name 🌟';
+        return 'Peak yield, $name 🌟';
       }
-      
       const morning = [
-        'The lab awaits. What will you discover today',
-        'Another day, another mechanism to master',
-        'Ready to push the boundaries of your understanding',
-        'Good morning. Today\'s experiment: excellence',
-        'Your potential energy is at its peak this morning',
+        'Good morning',
+        'Lab awaits',
+        'Ready to master',
       ];
       return '${morning[dayIndex % morning.length]}, $name 👋';
     }
@@ -145,10 +124,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Afternoon (12 PM - 5 PM)
     if (hour < 17) {
       const afternoon = [
-        'Still in the flow state? Keep that reaction going',
-        'Halfway through — your concentration hasn\'t precipitated yet',
-        'Afternoon checkpoint: you\'re doing great work',
-        'The best discoveries happen when others take breaks',
+        'In the flow',
+        'Keep it going',
+        'Afternoon focus',
+        'Good afternoon',
       ];
       return '${afternoon[dayIndex % afternoon.length]}, $name 📚';
     }
@@ -156,20 +135,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Evening (5 PM - 9 PM)
     if (hour < 21) {
       const evening = [
-        'Evening reflux. Time to distill today\'s learnings',
-        'The day\'s reactions are complete. Time to analyze the results',
-        'Wind down, but keep those neural pathways active',
-        'Evening study session? Your future self will thank you',
+        'Good evening',
+        'Evening study',
+        'Distilling knowledge',
       ];
       return '${evening[dayIndex % evening.length]}, $name 🌙';
     }
     
     // Night (9 PM - midnight)
     const night = [
-      'Burning the midnight oil for chemistry? Respect',
-      'Late study session detected. Remember: quality over quantity',
-      'The night is young and so is your understanding. Keep going',
-      'Night owl mode: when the distractions decay, focus crystallizes',
+      'Night session',
+      'Midnight focus',
+      'Deep study',
     ];
     return '${night[dayIndex % night.length]}, $name 🌟';
   }
@@ -216,9 +193,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final state = ref.watch(appControllerProvider);
     final repo = ref.watch(chemRepositoryProvider);
     final overall = repo.overallStats();
-    final rawName = state.profile.fullName.trim();
-    final isRoll = RegExp(r'^[0-9A-Za-z]{2,4}\d{2,8}$').hasMatch(rawName) || RegExp(r'^\d+$').hasMatch(rawName);
-    final name = (rawName.isEmpty || isRoll) ? 'Chemist' : rawName.split(' ').first;
+    
+    // Resolve display name properly: prioritize fullName, then registerNumber, then Prajwal
+    final rawFullName = state.profile.fullName.trim();
+    final rawReg = state.profile.registerNumber.trim();
+    
+    String resolvedName = '';
+    if (rawFullName.isNotEmpty && rawFullName.toLowerCase() != 'chemist') {
+      resolvedName = rawFullName;
+    } else if (rawReg.isNotEmpty) {
+      final isPureDigits = RegExp(r'^\d+$').hasMatch(rawReg);
+      if (!isPureDigits) {
+        resolvedName = rawReg;
+      }
+    }
+    
+    final name = resolvedName.isNotEmpty
+        ? resolvedName.split(' ').first
+        : 'Prajwal';
 
     final localStore = ref.watch(localStoreProvider);
     final allSessions = localStore.all(localStore.studySessions).map((j) => StudySession.fromJson(j)).toList();
@@ -247,38 +239,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return AnimatedDashboardList(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       children: [
-        // 1. Header with greeting and search
+        // 1. Header with greeting and search (compact, decluttered design)
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const ChemBuddyLogo(size: 42),
+            const ChemBuddyLogo(size: 38),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(greeting, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                  Text(
+                    greeting,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Text(
                     '${state.profile.university.isEmpty ? "MSc Chemistry" : state.profile.university} · Sem ${state.profile.semester}',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
+                  const SizedBox(height: 1),
                   Text(
                     _chemistryThought(DateTime.now().day),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: AppColors.textMuted,
-                      fontSize: 11,
+                      fontSize: 10.5,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 8),
             CircleAvatar(
+              radius: 18,
               backgroundColor: AppColors.surfaceElevated,
               foregroundColor: AppColors.purpleBright,
-              child: Text(name.isEmpty ? 'C' : name[0].toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w800)),
+              child: Text(
+                name.isEmpty ? 'P' : name[0].toUpperCase(),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+              ),
             ),
             IconButton(
               tooltip: 'Search',
+              iconSize: 22,
+              padding: const EdgeInsets.all(6),
+              constraints: const BoxConstraints(),
               onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SearchScreen())),
               icon: const Icon(Icons.search),
             ),

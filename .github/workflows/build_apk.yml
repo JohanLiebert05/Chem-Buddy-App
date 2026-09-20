@@ -48,15 +48,15 @@ jobs:
 
       - name: Copy Named APK
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.5.1-by-Prajwal-A-Kambar.apk"
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.5.1-Release.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.5.2-by-Prajwal-A-Kambar.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.5.2-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-v3.5.1-apk
-          path: ChemBuddy-v3.5.1-by-Prajwal-A-Kambar.apk
+          name: chem-buddy-v3.5.2-apk
+          path: ChemBuddy-v3.5.2-by-Prajwal-A-Kambar.apk
           retention-days: 30
 
       - name: Create GitHub Release (Tags only)
@@ -64,9 +64,11 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ChemBuddy-v3.5.1-by-Prajwal-A-Kambar.apk
-            ChemBuddy-v3.5.1-Release.apk
+            ChemBuddy-v3.5.2-by-Prajwal-A-Kambar.apk
+            ChemBuddy-v3.5.2-Release.apk
             Chem-Buddy-MSc-Release.apk
+            ChemBuddy_v3.5.2_Complete_User_Manual.pdf
+            ChemBuddy_v3.5.2_Complete_User_Manual.doc
           name: ChemBuddy ${{ github.ref_name }} — by Prajwal A Kambar
           body: |
             # ChemBuddy ${{ github.ref_name }} — by Prajwal A Kambar
@@ -77,30 +79,29 @@ jobs:
             
             ### ✨ What's New & Upgraded in ${{ github.ref_name }}:
             
-            #### 🌐 1. Gemini AI Internet Reaction Predictor & Electron-Pushing Mechanism
-            - **Online Gemini AI Intelligence**: Automatically queries active Gemini models (`gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`) via the multi-key pool over the internet.
-            - **Step-by-Step Mechanisms**: Details complete reaction mechanisms with step titles, nucleophile/electrophile descriptions, and curved electron-pushing arrow notations (`curvedArrows`).
-            - **Deep Reaction Insights**: Displays reaction classification (e.g. `[4+2] Cycloaddition`, `Electrophilic Aromatic Substitution`), driving forces (aromatization, ring strain relief), regiochemistry rules, and viva exam Q&As.
-            - **Zero-Dead-End Offline Fallback**: Intelligently synthesizes offline fallback adducts if internet or API keys are unavailable.
+            #### 👤 1. Personalized Student Name & Decluttered Home Header
+            - **Personalized Header**: Replaced the generic "Chemist" label with the student's actual name entered during login or registration (e.g. *"Good morning, Prajwal 👋"* or *"In the flow, Prajwal 📚"*).
+            - **Decluttered 65px Layout**: Font size reduced to crisp 17px with single-line overflow truncation, eliminating bulky line wrapping and saving vertical screen real estate.
+            - **Full Name on Sign-In**: Login screen now includes the Full Name field on both Sign In and Sign Up tabs.
             
-            #### 🎨 2. Publication-Quality 2D Vector SVG ChemDraw Rendering
-            - **True 2D Vector Graphics**: Replaced raw text boxes with crisp vector SVGs rendered directly inside the prediction bottom sheet.
-            - **Curated Complex Architectures**: Norbornene-derived Diels-Alder adducts, benzonorbornadienes, dicyclopentadiene, biphenyls, and functionalized monocycles rendered with textbook bond lengths and CPK heteroatom badges.
+            #### ⚗️ 2. Publication-Grade Reaction Mechanism Dossier & Compendium Export
+            - **Academic PDF Dossier**: Single reaction or complete MSc compendium export featuring 0.5-inch margins, deep purple styling, visual reaction scheme with SVG annotations, and detailed step-by-step mechanisms with curved arrow electron flows and intermediate geometries.
+            - **Excel Spreadsheet (CSV / XLV Format)**: Encoded with UTF-8 BOM for 1-click opening in Microsoft Excel. Features a structured step-by-step mechanism table and complete vector SVG markup code.
+            - **Standalone Vector SVG Diagram (.svg)**: 1-click export of standalone `.svg` vector files ready for ChemDraw, PowerPoint, Word, or web publishing.
+            - **1-Tap Direct Export**: Share and export icons added directly to the Reaction Mechanisms catalog and detail screens.
             
-            #### 🧪 3. Canvas Graph-to-SMILES BFS/DFS Parsing
-            - **Connected-Component Fragment Partitioning**: Resolves multiple disconnected molecules on the canvas into dot-separated SMILES (e.g., `C1=CCC=C1.c1ccccc1`).
-            - **Canonical Motif Recognition**: Instantly detects standard rings (Benzene, Cyclopentadiene, Cyclopentene, Pyridine, Furan, Thiophene) and traverses spanning trees with correct ring closure numbers.
+            #### 📊 3. Academic Audit & Attendance Export System
+            - **Official Attendance PDF**: Student info card, executive KPI cards (Overall %, Counted Sessions, Present, Absent, OD, Academic Standing), and subject-by-subject breakdown with safe skips / classes needed prescriptions.
+            - **Attendance Excel Spreadsheet**: UTF-8 BOM, subject metrics with 75% and 80% targets, and chronological session logs.
             
-            #### ⏰ 4. IST 8:30 AM Timetable Briefing & 1-Tap Class Attendance Alerts
-            - **Strict IST Enforced**: All notifications anchored to `Asia/Kolkata` timezone.
-            - **1-Tap Action Shade**: Class reminders now have direct `Present ✅` and `Absent ❌` action buttons to log attendance without opening the app.
+            #### 📖 4. Complete Visual Operating Manual v3.5.2
+            - Fully updated operating manuals in **PDF** (1.5 MB with embedded screenshots), **Word DOC**, and **Markdown** formats.
             
-            #### 🧠 5. Daily Psychology Facts Notifications
-            - **120+ Curated Facts**: Inspired by the "Psychology Facts" app, rotating daily once at 8:00 PM with zero repeats.
+            #### 🌐 5. Gemini AI Reaction Predictor & 2D Vector SVG Generator
+            - Online Gemini AI mechanism prediction with curved arrows, reaction classification, and 45+ instant offline fallback rules.
             
-            #### 🛡️ 6. Verification & Stability
-            - 100% passing test suite across all services and widgets.
-            - Zero errors, zero warnings, zero lints on `flutter analyze`.
+            #### ⏰ 6. IST 8:30 AM Briefing & 1-Tap Attendance Alerts
+            - Asia/Kolkata timezone enforced, 1-tap Present/Absent action buttons in Android notification shade, and daily 8:00 PM Psychology Facts.
             
             ---
             *Developed with ❤️ by Prajwal A Kambar*

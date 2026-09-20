@@ -683,15 +683,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
               const SizedBox(height: 24),
 
-              // Full Name (Only for Sign Up)
-              if (signUp) ...[
-                _buildField(
-                  controller: name,
-                  hintText: 'Full Name',
-                  icon: Icons.person_outline_rounded,
-                ),
-                const SizedBox(height: 12),
-              ],
+              // Full Name
+              _buildField(
+                controller: name,
+                hintText: signUp ? 'Full Name' : 'Full Name (e.g. Prajwal A Kambar)',
+                icon: Icons.person_outline_rounded,
+              ),
+              const SizedBox(height: 12),
 
               // Register Number
               _buildField(
@@ -755,14 +753,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 onPressed: () async {
                   final regNum = registerNumber.text.trim();
                   final pwd = password.text;
-                  final fullName = name.text.trim();
+                  var fullName = name.text.trim();
+
+                  if (fullName.isEmpty && regNum.isNotEmpty && !RegExp(r'^\d+$').hasMatch(regNum)) {
+                    fullName = regNum;
+                  }
 
                   if (signUp && fullName.isEmpty) {
                     setState(() => error = 'Please enter your full name');
                     return;
                   }
-                  if (regNum.isEmpty) {
-                    setState(() => error = 'Please enter your register number');
+                  if (regNum.isEmpty && fullName.isEmpty) {
+                    setState(() => error = 'Please enter your register number or name');
                     return;
                   }
                   if (pwd.length < 6) {

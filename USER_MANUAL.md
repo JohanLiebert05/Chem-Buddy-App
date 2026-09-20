@@ -1,4 +1,4 @@
-# ChemBuddy v3.5.1 — Complete User & Technical Operating Manual
+# ChemBuddy v3.5.2 — Complete User & Technical Operating Manual
 > **The Intelligent Academic Operating System for MSc Chemistry Students**  
 > *Developed by Prajwal A Kambar*
 
@@ -8,19 +8,21 @@
 1. [Introduction & Academic Architecture](#1-introduction--academic-architecture)
 2. [Installation, Android Permissions & Initial Setup](#2-installation-android-permissions--initial-setup)
 3. [🌟 Ask ChemBuddy AI — The Chemistry Intelligence Engine (FLAGSHIP FEATURE)](#3--ask-chembuddy-ai--the-chemistry-intelligence-engine-flagship-feature)
-4. [Home Dashboard & Dynamic Contextual Greetings](#4-home-dashboard--dynamic-contextual-greetings)
+4. [Home Dashboard, Decluttered Header & Personalized Greetings](#4-home-dashboard-decluttered-header--personalized-greetings)
 5. [Smart Timetable & Attendance Intelligence Engine](#5-smart-timetable--attendance-intelligence-engine)
 6. [Notification System & 1-Tap Action Shade (IST 8:30 AM Briefing)](#6-notification-system--1-tap-action-shade-ist-830-am-briefing)
 7. [ChemDraw Pro & Ketcher Pro (118-Element Molecular Sketcher)](#7-chemdraw-pro--ketcher-pro-118-element-molecular-sketcher)
 8. [Reaction Product Prediction & 2D Vector SVG Generator](#8-reaction-product-prediction--2d-vector-svg-generator)
-9. [Spectroscopy & Chromatography Hub & Structure Solver](#9-spectroscopy--chromatography-hub--structure-solver)
-10. [MSc Chemistry Toolkit & 16 Postgrad Calculators](#10-msc-chemistry-toolkit--16-postgrad-calculators)
-11. [Pericyclic Hub & Woodward-Hoffmann FMO Engine](#11-pericyclic-hub--woodward-hoffmann-fmo-engine)
-12. [Smart Flashcards & Spaced Repetition (Active Recall)](#12-smart-flashcards--spaced-repetition-active-recall)
-13. [PDF Library, Study Hub & Strictly Grounded RAG Assistant](#13-pdf-library-study-hub--strictly-grounded-rag-assistant)
-14. [Exam Mode & BCU Model Answer Generator](#14-exam-mode--bcu-model-answer-generator)
-15. [Settings, Local Backup, Privacy & Offline Architecture](#15-settings-local-backup-privacy--offline-architecture)
-16. [Troubleshooting & Frequently Asked Questions (FAQ)](#16-troubleshooting--frequently-asked-questions-faq)
+9. [⚗️ Reaction Mechanism Dossier & Compendium Export (PDF, Excel/XLV & SVG)](#9-️-reaction-mechanism-dossier--compendium-export-pdf-excelxlv--svg)
+10. [Spectroscopy & Chromatography Hub & Structure Solver](#10-spectroscopy--chromatography-hub--structure-solver)
+11. [MSc Chemistry Toolkit & 16 Postgrad Calculators](#11-msc-chemistry-toolkit--16-postgrad-calculators)
+12. [Pericyclic Hub & Woodward-Hoffmann FMO Engine](#12-pericyclic-hub--woodward-hoffmann-fmo-engine)
+13. [Smart Flashcards & Spaced Repetition (Active Recall)](#13-smart-flashcards--spaced-repetition-active-recall)
+14. [PDF Library, Study Hub & Strictly Grounded RAG Assistant](#14-pdf-library-study-hub--strictly-grounded-rag-assistant)
+15. [Exam Mode & BCU Model Answer Generator](#15-exam-mode--bcu-model-answer-generator)
+16. [📊 Academic Audit & Attendance Export System (PDF & Excel/CSV)](#16--academic-audit--attendance-export-system-pdf--excelcsv)
+17. [Settings, Local Backup, Privacy & Offline Architecture](#17-settings-local-backup-privacy--offline-architecture)
+18. [Troubleshooting & Frequently Asked Questions (FAQ)](#18-troubleshooting--frequently-asked-questions-faq)
 
 ---
 
@@ -36,7 +38,7 @@
 ---
 
 ## 2. Installation, Android Permissions & Initial Setup
-1. **Download Release APK**: Obtain `ChemBuddy-v3.5.1-by-Prajwal-A-Kambar.apk` from the GitHub Releases page.
+1. **Download Release APK**: Obtain `ChemBuddy-v3.5.2-by-Prajwal-A-Kambar.apk` from the GitHub Releases page.
 2. **Enable Unknown Sources**: Navigate to *Settings → Security → Install Unknown Apps* and allow installation.
 3. **Grant Permissions**:
    - **Notifications**: For the 8:30 AM Timetable Briefing, 30-min class alerts, and 8:00 PM Psychology Facts.
@@ -80,8 +82,9 @@
 
 ---
 
-## 4. Home Dashboard & Dynamic Contextual Greetings
-- **40+ Contextual Greetings**: Dynamically adapting to time (late-night Bunsen burner, early morning, afternoon), day of week, and attendance tier (<75% danger warnings vs 85%+ praise).
+## 4. Home Dashboard, Decluttered Header & Personalized Greetings
+- **Personalized Student Name**: Displays your actual name (e.g. *Good morning, Prajwal 👋*) instead of the generic "Chemist" placeholder.
+- **Decluttered 65px Header**: Font size reduced to 17px with single-line truncation and compact subtitles, saving vertical screen real estate.
 - **Attendance Health Ring**: Real-time circular percentage meter indicating exam eligibility and safe bunks.
 - **Daily Psychology Fact Card**: In-app widget rotating 120+ evidence-based cognitive insights daily at 8:00 PM IST with an on-demand shuffle button (`🔀`).
 - **Quick Action Grid**: 1-tap shortcuts to Ask AI, ChemDraw Pro, Spectroscopy Solver, and 16 MSc Calculators.
@@ -142,7 +145,26 @@ When a class notification arrives in your Android notification shade, tap **Pres
 
 ---
 
-## 9. Spectroscopy & Chromatography Hub & Structure Solver
+## 9. ⚗️ Reaction Mechanism Dossier & Compendium Export (PDF, Excel/XLV & SVG)
+- **Academic PDF Dossier**:
+  - Publication-grade layout with 0.5-inch margins and deep purple theme.
+  - Full **Reaction Scheme & Vector Diagram** block with visual reaction equation and SVG annotations.
+  - **Step-by-Step Mechanisms**: Step number, title, detailed chemical transformation, curved arrow electron flow, and intermediate/reactive species.
+  - Multi-page pagination: Complex mechanisms flow across pages without clipping.
+  - Synthetic applications, limitations, and certified footer.
+- **Excel Spreadsheet Export (CSV / XLV Format)**:
+  - Formatted with UTF-8 BOM for 1-click opening in Microsoft Excel.
+  - Single Reaction: Structured metadata, step-by-step mechanism table, and complete SVG vector markup.
+  - Compendium Catalog: Complete dataset of all 21+ reactions with all details.
+- **Standalone Vector SVG Export**:
+  - Exports a standalone `.svg` vector file ready for ChemDraw, Word, PowerPoint, or web publication.
+- **How to Export**:
+  - Open any reaction &rarr; tap the **Share / Export icon (🔗)** in the top-right corner.
+  - On the catalog screen &rarr; tap the **Download icon (📥)** to export the full compendium.
+
+---
+
+## 10. Spectroscopy & Chromatography Hub & Structure Solver
 - **8 Techniques**: RP-HPLC, GC, TLC, 500 MHz 1H NMR, 13C DEPT NMR, FT-IR, Mass Spectrometry, and UV-Vis.
 - **Interactive Zoom & Pan (1.0x to 5.0x)**: Dedicated zoom toolbar and haptic peak snapping.
 - **Textbook KaTeX Math**: Displays formulas and principles in crisp LaTeX notation.
@@ -151,7 +173,7 @@ When a class notification arrives in your Android notification shade, tap **Pres
 
 ---
 
-## 10. MSc Chemistry Toolkit & 16 Postgrad Calculators
+## 11. MSc Chemistry Toolkit & 16 Postgrad Calculators
 - **Solutions**: Molar Mass, Molarity, Dilution ($C_1 V_1 = C_2 V_2$).
 - **Acid-Base**: pH/pOH, Henderson-Hasselbalch, Buffer Formulation Assistant.
 - **Thermodynamics & Kinetics**: Gibbs Free Energy, Arrhenius Rate Law.
@@ -161,7 +183,7 @@ When a class notification arrives in your Android notification shade, tap **Pres
 
 ---
 
-## 11. Pericyclic Hub & Woodward-Hoffmann FMO Engine
+## 12. Pericyclic Hub & Woodward-Hoffmann FMO Engine
 - **Frontier Molecular Orbital (FMO) Theory**: Thermal vs Photochemical selection rules.
 - **Electrocyclic Reactions**: $4n$ (Con/Dis) and $4n+2$ (Dis/Con).
 - **Cycloadditions**: $[4+2]$ Diels-Alder (Endo-rule) and $[2+2]$ photo-additions.
@@ -169,21 +191,21 @@ When a class notification arrives in your Android notification shade, tap **Pres
 
 ---
 
-## 12. Smart Flashcards & Spaced Repetition (Active Recall)
+## 13. Smart Flashcards & Spaced Repetition (Active Recall)
 - **SuperMemo-2 (SM-2) Spaced Repetition**: Exponentially expanding review intervals.
 - **4-Point Confidence Rating**: `Again (1)`, `Hard (2)`, `Good (3)`, `Easy (4)`.
 - **Auto-Deck Creation**: Converts uploaded PDF notes or Ask ChemBuddy AI responses into active recall flashcards.
 
 ---
 
-## 13. PDF Library, Study Hub & Strictly Grounded RAG Assistant
+## 14. PDF Library, Study Hub & Strictly Grounded RAG Assistant
 - **Offline PDF Viewer**: Smooth viewing, page navigation, and text extraction.
 - **Strictly Grounded RAG Chat**: Constrained strictly to your uploaded notes (zero hallucinations).
 - **8192 Token Complete Answers**: Comprehensive explanations with KaTeX math and ASCII reaction mechanisms.
 
 ---
 
-## 14. Exam Mode & BCU Model Answer Generator
+## 15. Exam Mode & BCU Model Answer Generator
 - **BCU & Central University Exam Blueprints**:
   - 2-Mark: Definitions, IUPAC names, concise statements.
   - 5-Mark: Mechanisms, intermediate structures, arrow pushing.
@@ -191,22 +213,38 @@ When a class notification arrives in your Android notification shade, tap **Pres
 
 ---
 
-## 15. Settings, Backup, Security & Offline Architecture
+## 16. 📊 Academic Audit & Attendance Export System (PDF & Excel/CSV)
+- **Official Attendance PDF Report**:
+  - Student Information Card (Name, Reg. Number, University, Semester).
+  - Executive KPI Cards: Attendance %, Counted Sessions, Present, Absent, OD, Academic Standing.
+  - Subject Breakdown Table with status and safe skips / classes needed.
+- **Attendance Excel Spreadsheet (CSV)**:
+  - UTF-8 BOM for Microsoft Excel.
+  - Subject stats with 75% and 80% targets.
+  - Chronological session-by-session log with dates and notes.
+- **Coursework Audit Dossier (PDF & CSV)**:
+  - Quiz accuracies, flashcards mastered, study streaks, and topic-by-topic competency.
+
+---
+
+## 17. Settings, Backup, Security & Offline Architecture
 - **Notification Toggles**: Class reminders, 8:30 AM Timetable, 8:00 PM Psychology Facts, Deadlines, Flashcards.
 - **Test Dispatch Buttons**: Send test class alert or test psychology fact notification instantly.
 - **Local JSON Backup & Restore**: Full export/import of profile, timetable, and attendance.
 
 ---
 
-## 16. Troubleshooting & FAQ
+## 18. Troubleshooting & FAQ
 - **Q: Why didn't my 8:30 AM notification sound?**  
   *A:* Ensure "Alarms & Reminders" permission is granted on Android 12+, and set battery usage to "Unrestricted".
 - **Q: Should I delete the older app or keep it?**  
-  *A:* **Delete/uninstall the older app!** The new v3.5.1 APK has the updated graph-to-SMILES parser, Gemini AI reaction prediction, and 2D vector SVG engine compiled into the native binary.
+  *A:* **Delete/uninstall the older app!** The new v3.5.2 APK has the updated graph-to-SMILES parser, Gemini AI reaction prediction, reaction SVG export, and decluttered personalized home screen compiled into the native binary.
+- **Q: How do I export reactions and attendance to Excel or PDF?**  
+  *A:* From the Profile screen, tap *Export Attendance* or *Export Reaction Mechanisms*. You can also tap the export icon directly from the Reaction Mechanisms screen.
 - **Q: Does product prediction require internet?**  
   *A:* The 45+ offline reaction rules and `SmilesSvgGenerator` vector engine run 100% locally on-device. When connected to the internet, it additionally queries Google Gemini AI for advanced mechanisms.
 - **Q: How does a cancelled class affect attendance?**  
   *A:* Mark as *Postponed / Cancelled (⏸️)* to exclude the class from calculations so your percentage is never penalized.
 
 ---
-*ChemBuddy v3.5.1 — Engineered with ❤️ for MSc Chemistry Students worldwide by Prajwal A Kambar.*
+*ChemBuddy v3.5.2 — Engineered with ❤️ for MSc Chemistry Students worldwide by Prajwal A Kambar.*
