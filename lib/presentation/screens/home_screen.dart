@@ -53,26 +53,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  String _buildSmartGreeting(String name, int hour, int weekday, {double? attendancePct}) {
-    // Punchy, short greetings that fit comfortably on any screen without truncation
-    if (hour < 5) {
-      return 'Late night study, $name 🔬';
-    }
-    if (hour < 9) {
-      return 'Good morning, $name ⚗️';
-    }
+  String _timeGreeting(int hour, int weekday) {
+    if (hour < 5) return 'Late night study 🔬';
+    if (hour < 9) return 'Good morning ⚗️';
     if (hour < 12) {
-      if (weekday == DateTime.monday) return 'Monday launch, $name 🚀';
-      if (weekday == DateTime.friday) return 'Friday push, $name 🎉';
-      return 'Good morning, $name 👋';
+      if (weekday == DateTime.monday) return 'Monday launch 🚀';
+      if (weekday == DateTime.friday) return 'Friday push 🎉';
+      return 'Good morning 👋';
     }
-    if (hour < 17) {
-      return 'Good afternoon, $name 📚';
-    }
-    if (hour < 21) {
-      return 'Good evening, $name 🌙';
-    }
-    return 'Night study, $name 🌟';
+    if (hour < 17) return 'Good afternoon 📚';
+    if (hour < 21) return 'Good evening 🌙';
+    return 'Night study 🌟';
   }
 
   static String _chemistryThought(int dayOfMonth) {
@@ -158,16 +149,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final hour = DateTime.now().hour;
     final weekday = DateTime.now().weekday;
     final overallPct = overall.percent;
-    final greeting = _buildSmartGreeting(name, hour, weekday, attendancePct: overallPct);
+    final timeGreeting = _timeGreeting(hour, weekday);
 
     return AnimatedDashboardList(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       children: [
-        // 1. Header with greeting and search (clean, uncluttered, and fully readable)
+        // 1. Header with greeting, student name, college, and search (fully readable, no truncation)
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const ChemBuddyLogo(size: 40),
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: ChemBuddyLogo(size: 42),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -175,38 +169,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    greeting,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    timeGreeting,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.2,
+                      color: AppColors.purpleBright,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    name.isEmpty ? 'Prajwal' : name,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.4,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
                   Text(
                     '${state.profile.university.isEmpty ? "MSc Chemistry" : state.profile.university} · Sem ${state.profile.semester}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
+                      height: 1.3,
                     ),
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: AppColors.surfaceElevated,
-              foregroundColor: AppColors.purpleBright,
-              child: Text(
-                name.isEmpty ? 'P' : name[0].toUpperCase(),
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
               ),
             ),
             IconButton(
