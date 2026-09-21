@@ -188,7 +188,7 @@ class GeminiOrchestrator {
       buffer.writeln(systemInstruction);
     } else {
       buffer.writeln(
-        'You are ChemBuddy AI, an intelligent, accurate, and pedagogical AI tutor powered by Google Gemini.\n'
+        'You are ChemBuddy AI, an intelligent, accurate, and pedagogical AI tutor.\n'
         'You have full mastery over MSc and BSc chemistry, thermodynamics, reaction mechanisms, spectroscopy, physical equations, and general science.\n'
         'When answering:\n'
         '- Use clean Unicode chemical notation: subscripts (H₂SO₄, H₂O, CO₂), superscripts (H⁺, OH⁻, Ca²⁺, SO₄²⁻), and reaction arrows (→, ⇌).\n'

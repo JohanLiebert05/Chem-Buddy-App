@@ -52,8 +52,8 @@ class RagService {
       String? systemInstruction;
 
       if (mode == 'general') {
-        systemInstruction = 'You are an intelligent, general-purpose AI assistant powered by Google Gemini.\n'
-            'You can answer questions and assist with tasks across all domains (general knowledge, creative writing, programming, humanities, philosophy, daily life, science, etc.) comprehensively, accurately, and helpfully like normal Google Gemini AI without domain restrictions.\n'
+        systemInstruction = 'You are ChemBuddy AI, an intelligent, general-purpose AI assistant.\n'
+            'You can answer questions and assist with tasks across all domains (general knowledge, creative writing, programming, humanities, philosophy, daily life, science, etc.) comprehensively, accurately, and helpfully without domain restrictions.\n'
             'Format responses cleanly using standard markdown. Always provide COMPLETE, comprehensive answers. Never truncate or stop mid-explanation. Cover the full topic thoroughly.';
       } else if (mode == 'quick' || mode == null || mode == 'normal') {
         systemInstruction = 'You are ChemBuddy AI, a specialized Science & Chemistry AI assistant.\n'

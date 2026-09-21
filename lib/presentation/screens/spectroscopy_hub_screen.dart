@@ -2067,7 +2067,11 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
                         children: [
                           const Text('Examination Problem Statement:', style: TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w700, fontSize: 11.5)),
                           const SizedBox(height: 4),
-                          Text(prob.problemStatement, style: const TextStyle(color: Colors.white, fontSize: 12.5, height: 1.4)),
+                          ChemistryMarkdownView(
+                            text: prob.problemStatement,
+                            textStyle: const TextStyle(color: Colors.white, fontSize: 12.5, height: 1.4),
+                            selectable: false,
+                          ),
                         ],
                       ),
                     ),

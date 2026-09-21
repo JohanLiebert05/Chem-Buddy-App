@@ -640,29 +640,29 @@ $analysis
 ### Model 10/10 Examination Solution
 
 #### (a) Assignment of Transitions with Term Symbols [2 Marks]
-For \$Ni^{2+}\$ (\$d^8\$), the ground free-ion term is \$^3F\$ with excited \$^3P\$ at \$15B\$ above.
-In octahedral symmetry (\$O_h\$), the term splitting produces three spin-allowed quartet transitions:
-1. \$\\nu_1: ^3A_{2g} \\to ^3T_{2g} = 8,500\\text{ cm}^{-1}\$
-2. \$\\nu_2: ^3A_{2g} \\to ^3T_{1g}(F) = 13,800\\text{ cm}^{-1}\$
-3. \$\\nu_3: ^3A_{2g} \\to ^3T_{1g}(P) = 25,300\\text{ cm}^{-1}\$
+For $Ni^{2+}$ ($d^8$), the ground free-ion term is $^3F$ with excited $^3P$ at $15B$ above.
+In octahedral symmetry ($O_h$), the term splitting produces three spin-allowed quartet transitions:
+1. $\nu_1: {}^3A_{2g} \to {}^3T_{2g} = 8,500\text{ cm}^{-1}$
+2. $\nu_2: {}^3A_{2g} \to {}^3T_{1g}(F) = 13,800\text{ cm}^{-1}$
+3. $\nu_3: {}^3A_{2g} \to {}^3T_{1g}(P) = 25,300\text{ cm}^{-1}$
 
-#### (b) Calculation of 10Dq, Racah B, and \$\\beta\$ [5 Marks]
+#### (b) Calculation of 10Dq, Racah B, and $\beta$ [5 Marks]
 - **Crystal Field Splitting**:
-  \$\$10Dq = \\nu_1 = 8,500\\text{ cm}^{-1}\$\$
+  $$10Dq = \nu_1 = 8,500\text{ cm}^{-1}$$
 - **Band Ratio**:
-  \$\$\\frac{\\nu_2}{\\nu_1} = \\frac{13,800}{8,500} = 1.62\\quad (\\text{Within ideal range } 1.5 - 1.8)\$\$
-- **Racah Parameter \$B\$**:
+  $$\frac{\nu_2}{\nu_1} = \frac{13,800}{8,500} = 1.62\quad (\text{Within ideal range } 1.5 - 1.8)$$
+- **Racah Parameter $B$**:
   From the secular equation determinant:
-  \$\$\\nu_2 + \\nu_3 - 3\\nu_1 = 15B\$\$
-  \$\$B = \\frac{13,800 + 25,300 - 3(8,500)}{15} = \\frac{39,100 - 25,500}{15} = \\frac{13,600}{15} = \\mathbf{906.67\\text{ cm}^{-1}}\$\$
-- **Nephelauxetic Ratio (\$\\beta\$)**:
-  \$\$\\beta = \\frac{B_{\\text{complex}}}{B_0} = \\frac{906.67}{1030} = \\mathbf{0.8803}\$\$
-  \$\$\\text{Nephelauxetic parameter: } (1 - \\beta) \\times 100\\% = \\mathbf{11.97\\%}\$\$
+  $$\nu_2 + \nu_3 - 3\nu_1 = 15B$$
+  $$B = \frac{13,800 + 25,300 - 3(8,500)}{15} = \frac{39,100 - 25,500}{15} = \frac{13,600}{15} = \mathbf{906.67\text{ cm}^{-1}}$$
+- **Nephelauxetic Ratio ($\beta$)**:
+  $$\beta = \frac{B_{\text{complex}}}{B_0} = \frac{906.67}{1030} = \mathbf{0.8803}$$
+  $$\text{Nephelauxetic parameter: } (1 - \beta) \times 100\% = \mathbf{11.97\%}$$
 
 #### (c) Physical Origin of the Nephelauxetic Effect [3 Marks]
-1. **Central Field Covalency**: Overlap of ligand donor orbitals with metal \$3d\$ orbitals expands the metal electron cloud, lowering effective nuclear charge \$Z_{\\text{eff}}\$.
-2. **Symmetry-Restricted Covalency**: Delocalization of metal electrons into ligand orbitals reduces interelectronic repulsion between \$d\$-electrons.
-3. This \$\\sim 12\\%\$ reduction confirms moderate covalent character in the \$Ni-OH_2\$ coordination bond.
+1. **Central Field Covalency**: Overlap of ligand donor orbitals with metal $3d$ orbitals expands the metal electron cloud, lowering effective nuclear charge $Z_{\text{eff}}$.
+2. **Symmetry-Restricted Covalency**: Delocalization of metal electrons into ligand orbitals reduces interelectronic repulsion between $d$-electrons.
+3. This $\sim 12\%$ reduction confirms moderate covalent character in the $Ni-OH_2$ coordination bond.
 ''',
       takeawayPoints: 'Always remember: 10Dq = ν1 directly for d8 and d3 octahedral complexes. 15B = ν2 + ν3 - 3ν1.',
     ),
@@ -685,25 +685,25 @@ In octahedral symmetry (\$O_h\$), the term splitting produces three spin-allowed
 ### Model 10/10 Examination Solution
 
 #### Step 1: Spin-Only Magnetic Moments [2 Marks]
-- For \$[Cr(H_2O)_6]^{3+}\$ (\$d^3\$, \$t_{2g}^3\$): \$n = 3\$ unpaired electrons.
-  \$\$\\mu_{\\text{s.o.}} = \\sqrt{3(3 + 2)} = \\sqrt{15} = \\mathbf{3.873\\text{ B.M.}}\$\$
-- For \$[Ni(H_2O)_6]^{2+}\$ (\$d^8\$, \$t_{2g}^6 e_g^2\$): \$n = 2\$ unpaired electrons.
-  \$\$\\mu_{\\text{s.o.}} = \\sqrt{2(2 + 2)} = \\sqrt{8} = \\mathbf{2.828\\text{ B.M.}}\$\$
+- For $[Cr(H_2O)_6]^{3+}$ ($d^3$, $t_{2g}^3$): $n = 3$ unpaired electrons.
+  $$\mu_{\text{s.o.}} = \sqrt{3(3 + 2)} = \sqrt{15} = \mathbf{3.873\text{ B.M.}}$$
+- For $[Ni(H_2O)_6]^{2+}$ ($d^8$, $t_{2g}^6 e_g^2$): $n = 2$ unpaired electrons.
+  $$\mu_{\text{s.o.}} = \sqrt{2(2 + 2)} = \sqrt{8} = \mathbf{2.828\text{ B.M.}}$$
 
 #### Step 2: Griffith-Kotani Equation for A₂ Ground States [3 Marks]
-Both complexes possess an \$A_{2g}\$ ground term (\$d^3 \\to ^4A_{2g}\$, \$d^8 \\to ^3A_{2g}\$).
-Because \$A\$ terms have no first-order orbital angular momentum (\$L=0\$), second-order spin-orbit mixing with excited \$T_2\$ states modifies the moment:
-\$\$\\mu_{\\text{eff}} = \\mu_{\\text{s.o.}} \\left(1 - \\frac{4\\lambda}{10Dq}\\right)\$\$
+Both complexes possess an $A_{2g}$ ground term ($d^3 \to {}^4A_{2g}$, $d^8 \to {}^3A_{2g}$).
+Because $A$ terms have no first-order orbital angular momentum ($L=0$), second-order spin-orbit mixing with excited $T_2$ states modifies the moment:
+$$\mu_{\text{eff}} = \mu_{\text{s.o.}} \left(1 - \frac{4\lambda}{10Dq}\right)$$
 
 #### Step 3: Numerical Substitution [3 Marks]
-- **For \$[Cr(H_2O)_6]^{3+}\$** (\$\\lambda = +92\\text{ cm}^{-1}, 10Dq = 17,400\\text{ cm}^{-1}\$):
-  \$\$\\mu_{\\text{eff}} = 3.873 \\times \\left(1 - \\frac{4 \\times 92}{17,400}\\right) = 3.873 \\times (1 - 0.02115) = \\mathbf{3.791\\text{ B.M.}}\$\$
-- **For \$[Ni(H_2O)_6]^{2+}\$** (\$\\lambda = -315\\text{ cm}^{-1}, 10Dq = 8,500\\text{ cm}^{-1}\$):
-  \$\$\\mu_{\\text{eff}} = 2.828 \\times \\left(1 - \\frac{4 \\times (-315)}{8,500}\\right) = 2.828 \\times (1 + 0.1482) = \\mathbf{3.247\\text{ B.M.}}\$\$
+- **For $[Cr(H_2O)_6]^{3+}$** ($\lambda = +92\text{ cm}^{-1}, 10Dq = 17,400\text{ cm}^{-1}$):
+  $$\mu_{\text{eff}} = 3.873 \times \left(1 - \frac{4 \times 92}{17,400}\right) = 3.873 \times (1 - 0.02115) = \mathbf{3.791\text{ B.M.}}$$
+- **For $[Ni(H_2O)_6]^{2+}$** ($\lambda = -315\text{ cm}^{-1}, 10Dq = 8,500\text{ cm}^{-1}$):
+  $$\mu_{\text{eff}} = 2.828 \times \left(1 - \frac{4 \times (-315)}{8,500}\right) = 2.828 \times (1 + 0.1482) = \mathbf{3.247\text{ B.M.}}$$
 
-#### Step 4: Explanation of Sign Reversal in \$\\lambda\$ [2 Marks]
-- For electron shells that are **less than half-full** (\$d^3 < d^5\$), \$\\lambda\$ is **positive**, causing \$\\mu_{\\text{eff}} < \\mu_{\\text{s.o.}}\$.
-- For electron shells that are **more than half-full** (\$d^8 > d^5\$), holes replace electrons and \$\\lambda\$ is **negative**, causing \$\\mu_{\\text{eff}} > \\mu_{\\text{s.o.}}\$.
+#### Step 4: Explanation of Sign Reversal in $\lambda$ [2 Marks]
+- For electron shells that are **less than half-full** ($d^3 < d^5$), $\lambda$ is **positive**, causing $\mu_{\text{eff}} < \mu_{\text{s.o.}}$.
+- For electron shells that are **more than half-full** ($d^8 > d^5$), holes replace electrons and $\lambda$ is **negative**, causing $\mu_{\text{eff}} > \mu_{\text{s.o.}}$.
 ''',
       takeawayPoints: 'λ is positive for d1-d4, negative for d6-d9. A2 ground state complexes use alpha = 4.',
     ),
@@ -767,26 +767,26 @@ Each of the 4 primary copper lines is split into 5 sub-lines:
 ### Model 10/10 Examination Solution
 
 #### 1. Point Group Symmetries [2 Marks]
-- **trans-Mo(CO)₄(PPh₃)₂**: Belongs to the \$\\mathbf{D_{4h}}\$ point group (possesses a center of inversion \$i\$).
-- **cis-Mo(CO)₄(PPh₃)₂**: Belongs to the \$\\mathbf{C_{2v}}\$ point group (no center of inversion).
+- **trans-Mo(CO)₄(PPh₃)₂**: Belongs to the $\mathbf{D_{4h}}$ point group (possesses a center of inversion $i$).
+- **cis-Mo(CO)₄(PPh₃)₂**: Belongs to the $\mathbf{C_{2v}}$ point group (no center of inversion).
 
-#### 2. trans-Isomer (\$D_{4h}\$) Analysis [3 Marks]
+#### 2. trans-Isomer ($D_{4h}$) Analysis [3 Marks]
 Using the four C-O stretching vectors as basis:
-\$\$\\Gamma_{\\text{CO}} = A_{1g} + B_{1g} + E_u\$\$
-- In \$D_{4h}\$, dipole moment transforms as \$A_{2u} (z)\$ and \$E_u (x, y)\$.
-  \$\$\\implies \\mathbf{1\\text{ IR-Active Band: } E_u\\text{ (Very Strong)}}\$\$
-- Polarizability transforms as \$A_{1g}, B_{1g}, B_{2g}, E_g\$.
-  \$\$\\implies \\mathbf{2\\text{ Raman-Active Bands: } A_{1g} + B_{1g}}\$\$
+$$\Gamma_{\text{CO}} = A_{1g} + B_{1g} + E_u$$
+- In $D_{4h}$, dipole moment transforms as $A_{2u} (z)$ and $E_u (x, y)$.
+  $$\implies \mathbf{1\text{ IR-Active Band: } E_u\text{ (Very Strong)}}$$
+- Polarizability transforms as $A_{1g}, B_{1g}, B_{2g}, E_g$.
+  $$\implies \mathbf{2\text{ Raman-Active Bands: } A_{1g} + B_{1g}}$$
 
-#### 3. cis-Isomer (\$C_{2v}\$) Analysis [3 Marks]
+#### 3. cis-Isomer ($C_{2v}$) Analysis [3 Marks]
 Using the four C-O stretching vectors as basis:
-\$\$\\Gamma_{\\text{CO}} = 2A_1 + B_1 + B_2\$\$
-- In \$C_{2v}\$, dipole moment transforms as \$A_1 (z), B_1 (x), B_2 (y)\$.
-  \$\$\\implies \\text{All 4 modes are IR-active: } \\mathbf{2A_1 + B_1 + B_2\\text{ (4 Bands)}}\$\$
-- All 4 modes are also Raman active in \$C_{2v}\$.
+$$\Gamma_{\text{CO}} = 2A_1 + B_1 + B_2$$
+- In $C_{2v}$, dipole moment transforms as $A_1 (z), B_1 (x), B_2 (y)$.
+  $$\implies \text{All 4 modes are IR-active: } \mathbf{2A_1 + B_1 + B_2\text{ (4 Bands)}}$$
+- All 4 modes are also Raman active in $C_{2v}$.
 
 #### 4. Spectroscopic Conclusion [2 Marks]
-- **Rule of Mutual Exclusion**: Holds strictly for the trans-isomer (\$D_{4h}\$ contains \$i\$). The single IR band (\$E_u\$) is Raman inactive.
+- **Rule of Mutual Exclusion**: Holds strictly for the trans-isomer ($D_{4h}$ contains $i$). The single IR band ($E_u$) is Raman inactive.
 - **Diagnostic Decision**: An FT-IR spectrum showing **1 strong band** confirms the **trans-isomer**, while **4 bands** confirms the **cis-isomer**.
 ''',
       takeawayPoints: 'trans-M(CO)4L2 has D4h symmetry and 1 IR band. cis-M(CO)4L2 has C2v symmetry and 4 IR bands.',
@@ -809,26 +809,26 @@ Using the four C-O stretching vectors as basis:
 ### Model 10/10 Examination Solution
 
 #### 1. Oxidation & Spin States [2 Marks]
-- **\$K_4[Fe(CN)_6]\$**: \$Fe(II)\$, \$d^6\$ low-spin (\$t_{2g}^6 e_g^0, S = 0\$). Diamagnetic.
-- **\$K_3[Fe(CN)_6]\$**: \$Fe(III)\$, \$d^5\$ low-spin (\$t_{2g}^5 e_g^0, S = 1/2\$). Paramagnetic.
+- **$K_4[Fe(CN)_6]$**: $Fe(II)$, $d^6$ low-spin ($t_{2g}^6 e_g^0, S = 0$). Diamagnetic.
+- **$K_3[Fe(CN)_6]$**: $Fe(III)$, $d^5$ low-spin ($t_{2g}^5 e_g^0, S = 1/2$). Paramagnetic.
 
-#### 2. Isomer Shift (\$\\delta\$) Comparison [3 Marks]
-- \$\\delta\$ measures \$s\$-electron density at the \$^{57}\\text{Fe}\$ nucleus. For \$^{57}\\text{Fe}\$, \$\\Delta R/R < 0\$.
-- \$Fe(II)\$ has one more \$d\$-electron than \$Fe(III)\$. Normally, extra \$d\$-electrons shield \$3s\$, lowering \$s\$-density and increasing \$\\delta\$.
-- However, with strong \$\\pi\$-acceptor \$CN^-\$ ligands, **metal-to-ligand \$\\pi\$-backdonation** (\$Fe(d) \\to CN(\\pi^*)\$) is greater in \$Fe(II)\$ due to higher electron density.
-- Consequently, \$\\delta\$ for both complexes is very low:
-  \$\$\\delta [Fe(II)] \\approx -0.04\\text{ mm/s},\\quad \\delta [Fe(III)] \\approx -0.12\\text{ mm/s}\$\$
+#### 2. Isomer Shift ($\delta$) Comparison [3 Marks]
+- $\delta$ measures $s$-electron density at the $^{57}\text{Fe}$ nucleus. For $^{57}\text{Fe}$, $\Delta R/R < 0$.
+- $Fe(II)$ has one more $d$-electron than $Fe(III)$. Normally, extra $d$-electrons shield $3s$, lowering $s$-density and increasing $\delta$.
+- However, with strong $\pi$-acceptor $CN^-$ ligands, **metal-to-ligand $\pi$-backdonation** ($Fe(d) \to CN(\pi^*)$) is greater in $Fe(II)$ due to higher electron density.
+- Consequently, $\delta$ for both complexes is very low:
+  $$\delta [Fe(II)] \approx -0.04\text{ mm/s},\quad \delta [Fe(III)] \approx -0.12\text{ mm/s}$$
 
-#### 3. Quadrupole Splitting (\$\\Delta E_Q\$) Explanation [3 Marks]
-Quadrupole splitting requires a non-zero Electric Field Gradient (\$q \\ne 0\$):
-\$\$q = q_{\\text{valence}} + q_{\\text{lattice}}\$\$
-- In **\$K_4[Fe(CN)_6]\$**: The \$t_{2g}^6\$ subshell is completely filled and spherically symmetric.
-  \$\$\\implies q_{\\text{valence}} = 0\$\$
-  The regular octahedral environment means \$q_{\\text{lattice}} \\approx 0\$.
-  Hence, \$\\Delta E_Q = 0\\implies\$ **Single sharp resonance line (singlet)**.
-- In **\$K_3[Fe(CN)_6]\$**: The \$t_{2g}^5\$ subshell has an asymmetric hole (electron deficiency in one of \$d_{xy}, d_{yz}, d_{xz}\$).
-  \$\$\\implies q_{\\text{valence}} \\ne 0\$\$
-  This substantial valence EFG splits the \$I = 3/2\$ excited state into \$M_I = \\pm 3/2\$ and \$\\pm 1/2\$, giving **\$\\Delta E_Q \\approx 0.70\\text{ mm/s}\$ (Doublet)**.
+#### 3. Quadrupole Splitting ($\Delta E_Q$) Explanation [3 Marks]
+Quadrupole splitting requires a non-zero Electric Field Gradient ($q \ne 0$):
+$$q = q_{\text{valence}} + q_{\text{lattice}}$$
+- In **$K_4[Fe(CN)_6]$**: The $t_{2g}^6$ subshell is completely filled and spherically symmetric.
+  $$\implies q_{\text{valence}} = 0$$
+  The regular octahedral environment means $q_{\text{lattice}} \approx 0$.
+  Hence, $\Delta E_Q = 0\implies$ **Single sharp resonance line (singlet)**.
+- In **$K_3[Fe(CN)_6]$**: The $t_{2g}^5$ subshell has an asymmetric hole (electron deficiency in one of $d_{xy}, d_{yz}, d_{xz}$).
+  $$\implies q_{\text{valence}} \ne 0$$
+  This substantial valence EFG splits the $I = 3/2$ excited state into $M_I = \pm 3/2$ and $\pm 1/2$, giving **$\Delta E_Q \approx 0.70\text{ mm/s}$ (Doublet)**.
 ''',
       takeawayPoints: 't2g6 (Fe2+ LS) is spherically symmetric -> singlet (no quadrupole splitting). t2g5 (Fe3+ LS) has an asymmetric hole -> doublet.',
     ),

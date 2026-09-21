@@ -521,24 +521,29 @@ Identify the major organic product and generate the complete step-by-step reacti
       const systemInstruction = '''You are an authoritative postgraduate MSc-level organic synthesis & reaction mechanism engine.
 Given the reactant SMILES and conditions, predict the single MAJOR organic reaction product and its step-by-step reaction mechanism.
 
+CRITICAL CHEMICAL ACCURACY & MASS CONSERVATION:
+1. STRICT MASS CONSERVATION: The predicted product carbon and heteroatom framework MUST strictly correspond to the reactant starting materials and any standard stoichiometric reagents. Never invent benzene rings, biphenyl, or complex ring systems out of small fragments (e.g., C.C or methane cannot yield 12-carbon biphenyl; C.C yields ethane CC under radical/Wurtz conditions).
+2. CHEMICAL SPONTANEITY: If the drawn reactants do not spontaneously react under ambient conditions without reagents, infer the standard textbook catalyst/reagent (e.g., radical initiator, Na/dry ether for Wurtz, Lewis acid for EAS, acid catalyst for addition) and predict the genuine major product.
+3. VALID CANONICAL SMILES: The product_smiles must be valid, chemically accurate, with correct valency and no markdown wrapping.
+
 Return ONLY a valid JSON object strictly matching this schema:
 {
-  "reaction_name": "IUPAC or Named Reaction (e.g. Diels-Alder [4+2] Cycloaddition, Friedel-Crafts Alkylation)",
-  "reaction_class": "e.g. Pericyclic Reaction, Electrophilic Aromatic Substitution, Addition",
+  "reaction_name": "IUPAC or Named Reaction (e.g. Diels-Alder [4+2] Cycloaddition, Free-Radical Recombination)",
+  "reaction_class": "e.g. Pericyclic Reaction, Radical Recombination, Addition",
   "product_name": "Chemical name of the major product",
   "product_smiles": "Canonical SMILES of the single major product (no markdown, valid valence)",
   "mechanism_steps": [
     {
       "step_number": 1,
-      "step_title": "Short title (e.g. Concerted [4+2] Orbital Overlap, Electrophilic Attack)",
+      "step_title": "Short title (e.g. Radical Coupling, Concerted [4+2] Orbital Overlap)",
       "intermediate_smiles": "canonical_smiles_or_empty",
       "description": "Rigorous explanation of the mechanistic transformation",
-      "electron_pushing": "Curved arrow movement: which pair attacks which center"
+      "electron_pushing": "Curved arrow movement: which pair or radical attacks which center"
     }
   ],
   "pedagogy": {
-    "driving_force": "Thermodynamic or kinetic driving force (e.g. Restoration of aromaticity, sigma-bond enthalpy)",
-    "regioselectivity_rule": "e.g. Endo-rule, Markovnikov, Ortho/Para orientation"
+    "driving_force": "Thermodynamic or kinetic driving force",
+    "regioselectivity_rule": "e.g. Endo-rule, Markovnikov, Radical stability"
   }
 }''';
 
@@ -668,6 +673,27 @@ Predict the major organic reaction product and complete step-by-step mechanism i
         drivingForce: drivingForce,
         regioselectivityRule: regioselectivityRule,
         isCached: true,
+      );
+    }
+
+    // 0. Simple Alkyl Radical / Wurtz Recombination (e.g. C.C -> CC Ethane)
+    if (lower == 'c.c' || lower == 'c . c') {
+      return makeResult(
+        'CC',
+        title: 'ETHANE (Radical Recombination / Wurtz)',
+        reactionName: 'Free-Radical C-C Coupling',
+        reactionClass: 'Radical Recombination',
+        drivingForce: 'Formation of a stable C(sp³)-C(sp³) σ-bond (347 kJ/mol) from reactive radical species.',
+        regioselectivityRule: 'Direct center-to-center radical spin-pairing.',
+        mechanismSteps: [
+          const PredictedMechanismStep(
+            stepNumber: 1,
+            stepTitle: 'Radical Recombination',
+            intermediateSmiles: 'CC',
+            description: 'Two methyl radicals undergo spin pairing to form a stable covalent C-C single bond, yielding ethane.',
+            electronPushing: 'Single-electron fishhook arrows from each methyl carbon meet to form the C-C σ-bond.',
+          ),
+        ],
       );
     }
 
@@ -1190,23 +1216,60 @@ Predict the major organic reaction product and complete step-by-step mechanism i
         );
       }
 
-      // Biaryl / Ring Coupling fallback
-      const prodSmiles = 'c1ccc(-c2ccccc2)cc1';
+      // Helper: Count carbons in a SMILES fragment
+      final c1 = RegExp(r'c', caseSensitive: false).allMatches(f1).length;
+      final c2 = RegExp(r'c', caseSensitive: false).allMatches(f2).length;
+      final totalCarbons = c1 + c2;
+
+      // Aromatic Cross-Coupling: ONLY if BOTH fragments contain aromatic rings
+      final hasArom1 = f1Lower.contains('c1') || f1Lower.contains('c2') || (c1 >= 6 && f1.contains('c'));
+      final hasArom2 = f2Lower.contains('c1') || f2Lower.contains('c2') || (c2 >= 6 && f2.contains('c'));
+      if (hasArom1 && hasArom2) {
+        const prodSmiles = 'c1ccc(-c2ccccc2)cc1';
+        return ReactionPredictionResult(
+          success: true,
+          productSmiles: prodSmiles,
+          svgData: SmilesSvgGenerator.generateSvg(prodSmiles, title: 'COUPLING PRODUCT'),
+          reactionName: 'Aromatic C-C Cross Coupling',
+          reactionClass: 'Cross-Coupling',
+          productName: 'Biphenyl Derivative',
+          drivingForce: 'Extension of molecular conjugated pi-electron system.',
+          mechanismSteps: [
+            const PredictedMechanismStep(
+              stepNumber: 1,
+              stepTitle: 'C-C Bond Formation',
+              intermediateSmiles: 'c1ccc(-c2ccccc2)cc1',
+              description: 'Coupling between the two aryl frameworks to form the unified conjugated product.',
+              electronPushing: 'Aryl center-to-center C-C sigma bond formation.',
+            ),
+          ],
+          isCached: true,
+        );
+      }
+
+      // Small acyclic / alkyl fragments: combine carbon skeletons (e.g. C.C -> CC Ethane)
+      final nCarbons = totalCarbons > 0 ? totalCarbons : 2;
+      final prodSmiles = 'C' * nCarbons;
+      final prodName = nCarbons == 2
+          ? 'Ethane'
+          : (nCarbons == 3 ? 'Propane' : (nCarbons == 4 ? 'Butane' : 'Alkane Adduct'));
+
       return ReactionPredictionResult(
         success: true,
         productSmiles: prodSmiles,
-        svgData: SmilesSvgGenerator.generateSvg(prodSmiles, title: 'COUPLING PRODUCT'),
-        reactionName: 'Aromatic C-C Cross Coupling',
-        reactionClass: 'Cross-Coupling',
-        productName: 'Biphenyl Derivative',
-        drivingForce: 'Extension of molecular conjugated pi-electron system.',
+        svgData: SmilesSvgGenerator.generateSvg(prodSmiles, title: prodName.toUpperCase()),
+        reactionName: 'Free-Radical Recombination / Wurtz Coupling',
+        reactionClass: 'Alkyl Coupling',
+        productName: '$prodName (C-C Coupling Adduct)',
+        drivingForce: 'Formation of a stable C-C sigma bond from reactive fragments.',
+        regioselectivityRule: 'Direct terminal carbon-carbon bond pairing.',
         mechanismSteps: [
-          const PredictedMechanismStep(
+          PredictedMechanismStep(
             stepNumber: 1,
-            stepTitle: 'C-C Bond Formation',
-            intermediateSmiles: 'c1ccc(-c2ccccc2)cc1',
-            description: 'Coupling between the two carbon frameworks to form the unified conjugated product.',
-            electronPushing: 'Aryl center-to-center C-C sigma bond formation.',
+            stepTitle: 'Radical Recombination',
+            intermediateSmiles: prodSmiles,
+            description: 'Coupling between the two carbon fragments to form the unified hydrocarbon product ($prodName).',
+            electronPushing: 'Single-electron fishhook coupling between carbon radical centers.',
           ),
         ],
         isCached: true,

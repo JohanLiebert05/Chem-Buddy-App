@@ -645,7 +645,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                             ),
                             const SizedBox(height: 6),
                             _SuggestionTile(
-                              text: '✨ Ask Gemini AI: What are the principles of Green Chemistry and atomic economy?',
+                              text: '✨ What are the principles of Green Chemistry and atomic economy?',
                               onTap: () => _sendMessage('What are the principles of Green Chemistry and atomic economy?'),
                             ),
                             const SizedBox(height: 6),

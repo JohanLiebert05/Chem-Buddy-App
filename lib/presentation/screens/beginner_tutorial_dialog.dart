@@ -222,7 +222,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           const GlowCard(
             padding: EdgeInsets.all(14),
             child: Text(
-              'Your all-in-one companion for postgraduate chemistry. Calculate attendance & safe bunk limits, switch Organic & Inorganic timetables, study reference PDFs, sketch molecules in ChemDraw, and master mechanisms with Google Gemini AI.',
+              'Your all-in-one companion for postgraduate chemistry. Calculate attendance & safe bunk limits, switch Organic & Inorganic timetables, study reference PDFs, sketch molecules in ChemDraw, and master mechanisms with ChemBuddy AI.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.45),
             ),
@@ -237,7 +237,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
               _FeatureChip(icon: '📅', label: 'Timetable Presets'),
               _FeatureChip(icon: '📖', label: 'PDF Library & Notes'),
               _FeatureChip(icon: '🎨', label: 'ChemDraw Canvas'),
-              _FeatureChip(icon: '⚡', label: 'Gemini AI Tutor'),
+              _FeatureChip(icon: '⚡', label: 'ChemBuddy AI Tutor'),
               _FeatureChip(icon: '📸', label: 'Notes to Flashcards'),
               _FeatureChip(icon: '📝', label: 'Tests & Quizzes'),
             ],
@@ -298,7 +298,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _badge('LIVE GOOGLE GEMINI', Icons.auto_awesome_rounded, color: const Color(0xFFA855F7)),
+          _badge('CHEMBUDDY AI TUTOR', Icons.auto_awesome_rounded, color: const Color(0xFFA855F7)),
           const SizedBox(height: 10),
           const Text(
             'Intelligent Academic Tutor ⚡',
@@ -306,7 +306,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           ),
           const SizedBox(height: 6),
           const Text(
-            'Powered by live Google Gemini with dedicated modes for MSc studies.',
+            'Powered by intelligent academic reasoning with dedicated modes for MSc studies.',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
           ),
           const SizedBox(height: 12),

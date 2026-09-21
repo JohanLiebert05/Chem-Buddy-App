@@ -311,7 +311,7 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
                       icon: Icons.auto_awesome_rounded,
                       iconColor: Color(0xFFA855F7),
                       title: 'Live ChemBuddy AI Tutor',
-                      subtitle: 'Google Gemini tutor for reaction mechanisms, spectroscopy & exams.',
+                      subtitle: 'Intelligent AI tutor for reaction mechanisms, spectroscopy & exams.',
                       badge: 'AI',
                     ),
                     SizedBox(height: 8),

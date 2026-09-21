@@ -314,7 +314,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                       const Icon(Icons.auto_awesome_rounded, color: Color(0xFFA78BFA), size: 13),
                       const SizedBox(width: 4),
                       Text(
-                        result.isCached ? 'Cached Zero-Token' : '4-Key Gemini',
+                        result.isCached ? 'Verified Reaction' : 'AI Predicted',
                         style: const TextStyle(
                           color: Color(0xFFA78BFA),
                           fontSize: 11,

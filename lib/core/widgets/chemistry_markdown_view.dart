@@ -190,6 +190,9 @@ class ChemistryMarkdownView extends StatelessWidget {
   static String _preprocessText(String input) {
     var s = input;
 
+    // Failsafe -1: Unescape any escaped LaTeX dollar delimiters ($$ and $) from raw strings or JSON
+    s = s.replaceAll(r'\$$', r'$$').replaceAll(r'\$', r'$');
+
     // Failsafe 0: Purge any raw placeholder strings that may exist in AI response or cache
     s = s.replaceAll(RegExp(r'___?DISPLAY_MATH[0-9₀-₉_]*___?'), '');
     s = s.replaceAll(RegExp(r'DISPLAY_MATH[0-9₀-₉_]+'), '');
@@ -341,6 +344,8 @@ class ChemistryMarkdownView extends StatelessWidget {
     // Wrap naked superscripts/subscripts for KaTeX
     s = s.replaceAllMapped(RegExp(r'\^([-+])(?![{a-zA-Z0-9])'), (m) => '^{${m[1]}}');
     s = s.replaceAllMapped(RegExp(r'\^([0-9]+[-+])(?![{a-zA-Z0-9])'), (m) => '^{${m[1]}}');
+    // Prefix leading or naked term symbol / orbital superscripts (e.g. ^3A_{2g}, ^3T, ^3P, ^3F, ^4A) with empty atom {} for KaTeX
+    s = s.replaceAllMapped(RegExp(r'(?<=^|[\s=+\-:(,\(])\^([0-9a-zA-Z\+\-]+)'), (m) => '{}^${m[1]}');
     return s;
   }
 
@@ -520,7 +525,7 @@ class ChemistryMarkdownView extends StatelessWidget {
 /// Custom InlineSyntax that catches `$math$` expressions and converts them to
 /// an element with tag 'latex-inline' for `_LatexInlineBuilder`.
 class LatexInlineSyntax extends md.InlineSyntax {
-  LatexInlineSyntax() : super(r'(?<!\\|\$)\$([^\$\n]+?)\$(?!\$)');
+  LatexInlineSyntax() : super(r'(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)');
 
   @override
   bool onMatch(md.InlineParser parser, Match match) {
