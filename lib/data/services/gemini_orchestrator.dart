@@ -37,10 +37,9 @@ class GeminiOrchestrator {
   final Map<String, OrchestratorResponse> _clientMemoryCache = {};
 
   static const List<String> candidateModels = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-2.5-flash-lite',
+    'gemini-3.5-flash-lite',
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
   ];
 
   /// Calls the orchestrator edge function, with local client-side multi-key failover fallback
@@ -95,7 +94,7 @@ class GeminiOrchestrator {
         final formattedText = ChemistryTextFormatter.format(rawText);
         final response = OrchestratorResponse(
           text: formattedText,
-          model: res['model'] as String? ?? 'gemini-3-flash-preview',
+          model: res['model'] as String? ?? 'gemini-3.5-flash-lite',
           isCached: res['cached'] == true,
           keyIndexUsed: (res['key_index'] as num?)?.toInt() ?? 1,
           totalKeys: (res['total_keys'] as num?)?.toInt() ?? 3,
@@ -304,6 +303,7 @@ class GeminiOrchestrator {
 
     // Direct active key pool for 100% failover resilience
     final fallbackBase64 = [
+      'QVEuQWI4Uk42STBzcnNsRXg2SnRtek4tM1BRSnQ2SDJqejIwQkFiNl83SUNmRVRvMDlCRGc=',
       'QVEuQWI4Uk42TFdoRHRwWlppYkYzY08wbjJ0RVdGOWt2enlNVzUwcjRfVE9sZkVpUF9jSHc=',
       'QVEuQWI4Uk42TFloMi01alpsTUFkdl9CaXE0cHMzZ2RxeXlpSDVBNV95c09kMktyZWptVHc=',
       'QVEuQWI4Uk42THB0RlUxXzdBR3NKbnZ6cVpaeVpYRDZCSnlzNzlkWmJKUGpENEpjWnhVUHc=',
