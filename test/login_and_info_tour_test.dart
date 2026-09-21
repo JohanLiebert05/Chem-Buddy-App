@@ -38,7 +38,7 @@ void main() {
   });
 
   group('Intelligent Info Tour (BeginnerTutorialDialog) Tests', () {
-    testWidgets('Steps through all 7 intelligent stages including ChemDraw and Gemini AI', (tester) async {
+    testWidgets('Steps through all 7 intelligent stages including ChemDraw and ChemBuddy AI', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
@@ -55,7 +55,7 @@ void main() {
       expect(find.text('STEP 1 OF 7'), findsOneWidget);
       expect(find.text('Welcome to ChemBuddy 🧪'), findsOneWidget);
       expect(find.text('ChemDraw Canvas'), findsOneWidget);
-      expect(find.text('Gemini AI Tutor'), findsOneWidget);
+      expect(find.text('ChemBuddy AI Tutor'), findsOneWidget);
 
       await tester.tap(find.text('Next →'));
       await tester.pumpAndSettle();

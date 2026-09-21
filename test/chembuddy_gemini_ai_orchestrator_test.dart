@@ -14,10 +14,10 @@ void main() {
       expect(ChemBuddyAiMode.general.name, equals('general'));
     });
 
-    test('2. GeminiOrchestrator has working candidate models with gemini-2.5-flash as primary', () {
-      expect(GeminiOrchestrator.candidateModels.first, equals('gemini-2.5-flash'));
-      expect(GeminiOrchestrator.candidateModels.contains('gemini-2.0-flash'), isTrue);
-      expect(GeminiOrchestrator.candidateModels.contains('gemini-1.5-flash'), isTrue);
+    test('2. GeminiOrchestrator has working candidate models with gemini-3.5-flash-lite as primary', () {
+      expect(GeminiOrchestrator.candidateModels.first, equals('gemini-3.5-flash-lite'));
+      expect(GeminiOrchestrator.candidateModels.contains('gemini-3.6-flash'), isTrue);
+      expect(GeminiOrchestrator.candidateModels.contains('gemini-3.5-flash'), isTrue);
     });
 
     test('3. RagService defaults gracefully to offline engine when unconfigured or offline', () async {
