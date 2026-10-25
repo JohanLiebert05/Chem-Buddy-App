@@ -705,7 +705,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                   if (facultyList.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      '👨‍🏫 Faculty: ${facultyList.join(", ")}',
+                      'Faculty: ${facultyList.join(", ")}',
                       style: const TextStyle(color: AppColors.brandBright, fontSize: 11.5, fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -789,7 +789,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'University Timetable Photo 📷',
+                      'University Timetable Photo',
                       style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5, color: Colors.white),
                     ),
                     Text(
@@ -808,7 +808,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             children: [
               Expanded(
                 child: ChoiceChip(
-                  label: const Center(child: Text('⚗️ Organic')),
+                  label: const Center(child: Text('Organic')),
                   selected: _selectedPhotoPreset == TimetablePreset.organic,
                   avatar: activePreset == TimetablePreset.organic
                       ? const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.present)
@@ -832,7 +832,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: ChoiceChip(
-                  label: const Center(child: Text('🧪 Inorganic')),
+                  label: const Center(child: Text('Inorganic')),
                   selected: _selectedPhotoPreset == TimetablePreset.inorganic,
                   avatar: activePreset == TimetablePreset.inorganic
                       ? const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.present)
@@ -918,7 +918,14 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                 color: AppColors.purple.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Text('Pinch to Zoom 🔍', style: TextStyle(color: AppColors.purpleBright, fontSize: 10, fontWeight: FontWeight.w700)),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.zoom_in_rounded, size: 12, color: AppColors.purpleBright),
+                                  SizedBox(width: 3),
+                                  Text('Pinch to Zoom', style: TextStyle(color: AppColors.purpleBright, fontSize: 10, fontWeight: FontWeight.w700)),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -958,7 +965,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('✓ Switched timetable to ${_selectedPhotoPreset.title}!'),
+                            content: Text('Switched timetable to ${_selectedPhotoPreset.title}.'),
                             backgroundColor: AppColors.surfaceElevated,
                             duration: const Duration(seconds: 2),
                           ),
@@ -988,7 +995,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('✓ Switched timetable to ${next.title}!'),
+                            content: Text('Switched timetable to ${next.title}.'),
                             backgroundColor: AppColors.surfaceElevated,
                             duration: const Duration(seconds: 2),
                           ),
@@ -998,8 +1005,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                     icon: const Icon(Icons.swap_horiz_rounded, size: 16),
                     label: Text(
                       activePreset == TimetablePreset.organic
-                          ? 'Switch to Inorganic Timetable 🧪'
-                          : 'Switch to Organic Timetable ⚗️',
+                          ? 'Switch to Inorganic Timetable'
+                          : 'Switch to Organic Timetable',
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                     ),
                   ),
@@ -1038,7 +1045,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Today\'s Timetable Check-In 📋',
+                  'Today\'s Timetable Check-In',
                   style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
                 ),
                 const SizedBox(height: 2),
@@ -1126,7 +1133,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 ),
                 if (teacher.isNotEmpty)
-                  Text('👨‍🏫 Faculty: $teacher',
+                  Text('Faculty: $teacher',
                       style: const TextStyle(color: AppColors.brandBright, fontSize: 11.5, fontWeight: FontWeight.w600))
                 else if (nextSlot.room.isNotEmpty)
                   Text('Room: ${nextSlot.room}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
@@ -1443,10 +1450,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
   String _statusBadgeText(AttendanceStatus status) {
     return switch (status) {
-      AttendanceStatus.present => '✓ Present',
-      AttendanceStatus.absent => '✗ Absent',
-      AttendanceStatus.postponed => '⏸ Postponed',
-      AttendanceStatus.excused => '📋 Excused',
+      AttendanceStatus.present => 'Present',
+      AttendanceStatus.absent => 'Absent',
+      AttendanceStatus.postponed => 'Postponed',
+      AttendanceStatus.excused => 'Excused',
     };
   }
 

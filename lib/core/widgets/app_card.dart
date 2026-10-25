@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../utils/haptics.dart';
 
-/// Authoritative 10/10 Container Card following ChemBuddy Design System.
-/// Provides glassmorphic blur, 16px border radius, subtle hairline border,
-/// and optional interactive highlight states.
+/// Material 3 Expressive Container Card following ChemBuddy Design System.
+/// Provides tonal surfaces, 16-20px border radius, subtle outline,
+/// and smooth interactive state feedback.
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
@@ -16,7 +16,7 @@ class AppCard extends StatelessWidget {
     this.isHighlighted = false,
     this.borderColor,
     this.backgroundColor,
-    this.borderRadius = 16,
+    this.borderRadius = 18,
     this.withGlow = false,
   });
 
@@ -35,7 +35,7 @@ class AppCard extends StatelessWidget {
     final effectiveBorderColor = borderColor ??
         (isHighlighted ? AppColors.borderHighlight : AppColors.borderSubtle);
     final effectiveBgColor = backgroundColor ??
-        (isHighlighted ? AppColors.bg2 : AppColors.card);
+        (isHighlighted ? AppColors.surfaceContainerHighest : AppColors.surfaceContainerHigh);
 
     Widget content = Container(
       width: double.infinity,
@@ -45,21 +45,8 @@ class AppCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
           color: effectiveBorderColor,
-          width: isHighlighted ? 1.2 : 0.8,
+          width: isHighlighted ? 1.2 : 0.6,
         ),
-        boxShadow: [
-          if (withGlow || isHighlighted)
-            BoxShadow(
-              color: AppColors.brandPrimary.withValues(alpha: 0.18),
-              blurRadius: 18,
-              spreadRadius: -2,
-            ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: child,
     );
@@ -79,14 +66,14 @@ class AppCard extends StatelessWidget {
         },
         borderRadius: BorderRadius.circular(borderRadius),
         splashColor: AppColors.brandPrimary.withValues(alpha: 0.12),
-        highlightColor: AppColors.brandPrimary.withValues(alpha: 0.06),
+        highlightColor: AppColors.brandPrimary.withValues(alpha: 0.05),
         child: content,
       ),
     );
   }
 }
 
-/// Compact metric card displaying a key statistic (e.g. Accuracy, Streak, Solved count).
+/// Material 3 Expressive Stat Card displaying a key metric (e.g. Accuracy, Streak, Solved count).
 class StatCard extends StatelessWidget {
   const StatCard({
     super.key,
@@ -120,19 +107,19 @@ class StatCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(8),
+                  color: iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, size: 18, color: iconColor),
               ),
               if (badgeText != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: (badgeColor ?? AppColors.brandPrimary).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     badgeText!,
@@ -145,7 +132,7 @@ class StatCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             value,
             style: const TextStyle(
@@ -153,6 +140,7 @@ class StatCard extends StatelessWidget {
               fontSize: 20,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.4,
+              fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
           const SizedBox(height: 2),
@@ -200,13 +188,13 @@ class EmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.12),
+                color: iconColor.withValues(alpha: 0.10),
                 shape: BoxShape.circle,
-                border: Border.all(color: iconColor.withValues(alpha: 0.25)),
+                border: Border.all(color: iconColor.withValues(alpha: 0.2)),
               ),
-              child: Icon(icon, size: 36, color: iconColor),
+              child: Icon(icon, size: 32, color: iconColor),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
@@ -228,17 +216,17 @@ class EmptyState extends StatelessWidget {
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 20),
-              ElevatedButton.icon(
+              FilledButton.icon(
                 onPressed: () {
                   AppHaptics.confirm();
                   onAction!();
                 },
-                style: ElevatedButton.styleFrom(
+                style: FilledButton.styleFrom(
                   backgroundColor: AppColors.brandPrimary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 icon: const Icon(Icons.add, size: 18),

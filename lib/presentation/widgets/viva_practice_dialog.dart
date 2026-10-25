@@ -201,7 +201,7 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
     } else {
       // Completed viva
       setState(() {
-        _feedback = '🎉 **Viva Completed!**\n\nYou answered $scoreString questions in $_selectedTopic with solid MSc conceptual depth. Keep revising key equations and mechanisms!';
+        _feedback = '**Viva Completed!**\n\nYou answered $scoreString questions in $_selectedTopic with solid MSc conceptual depth. Keep revising key equations and mechanisms!';
       });
     }
   }

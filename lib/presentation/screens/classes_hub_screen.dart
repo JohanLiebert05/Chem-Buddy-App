@@ -38,9 +38,9 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
     showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: AppColors.bg1,
+        backgroundColor: AppColors.bg2,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,7 +55,7 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                       children: [
                         Text(
                           '${preset.title} Timetable',
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.textPrimary),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -131,12 +131,16 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
               Expanded(
                 child: Text(
                   mainTab == 0 ? 'Classes & Schedule' : 'Attendance Tracker',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -0.4),
                 ),
               ),
               if (mainTab == 0)
-                IconButton(
+                IconButton.filledTonal(
                   tooltip: 'Add class',
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.surfaceContainerHigh,
+                    foregroundColor: AppColors.brandBright,
+                  ),
                   onPressed: () => Navigator.push<bool>(
                     context,
                     ReviewTimetableScreen.route(
@@ -152,21 +156,21 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                       ],
                     ),
                   ),
-                  icon: const Icon(Icons.add_circle_outline, color: AppColors.purpleBright),
+                  icon: const Icon(Icons.add_rounded, size: 20),
                 ),
             ],
           ),
         ),
 
-        // Primary View Toggle: [ 📅 Schedule  |  📊 Attendance ]
+        // Primary View Toggle: [ Schedule  |  Attendance ]
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
           child: Container(
-            padding: const EdgeInsets.all(3),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppColors.bg2,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.borderSubtle, width: 0.8),
+              color: AppColors.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.borderSubtle, width: 0.6),
             ),
             child: Row(
               children: [
@@ -199,24 +203,36 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                   Expanded(
                     child: Padding(
                       padding: EdgeInsets.only(right: item.key == 3 ? 0 : 6),
-                      child: GestureDetector(
+                      child: InkWell(
                         onTap: () {
                           AppHaptics.selection();
                           setState(() => timetableTab = item.key);
                         },
-                        child: Container(
+                        borderRadius: BorderRadius.circular(10),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOutCubic,
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
-                            color: timetableTab == item.key ? AppColors.brandPrimary : AppColors.surfaceElevated,
+                            color: timetableTab == item.key
+                                ? AppColors.brandPrimary
+                                : AppColors.surfaceContainerHigh,
                             borderRadius: BorderRadius.circular(10),
-                            border: timetableTab == item.key
-                                ? Border.all(color: AppColors.borderHighlight, width: 0.8)
-                                : null,
+                            border: Border.all(
+                              color: timetableTab == item.key
+                                  ? AppColors.borderHighlight
+                                  : AppColors.borderSubtle,
+                              width: 0.6,
+                            ),
                           ),
                           child: Text(
                             item.value,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                            style: TextStyle(
+                              fontWeight: timetableTab == item.key ? FontWeight.w700 : FontWeight.w500,
+                              fontSize: 12,
+                              color: timetableTab == item.key ? Colors.white : AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       ),
@@ -229,7 +245,7 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
         // Active Content Body
         Expanded(
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
+            duration: const Duration(milliseconds: 200),
             switchInCurve: Curves.easeOutCubic,
             switchOutCurve: Curves.easeInCubic,
             child: KeyedSubtree(
@@ -267,9 +283,9 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.bg1,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderSubtle),
+        color: AppColors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderSubtle, width: 0.6),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,9 +309,9 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.bg2,
+                    color: AppColors.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.borderHighlight, width: 0.8),
+                    border: Border.all(color: AppColors.borderSubtle, width: 0.6),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -316,7 +332,7 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                 child: _buildPresetCard(
                   preset: TimetablePreset.organic,
                   isActive: isOrgActive,
-                  icon: '⚗️',
+                  icon: Icons.biotech_rounded,
                 ),
               ),
               const SizedBox(width: 8),
@@ -324,7 +340,7 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                 child: _buildPresetCard(
                   preset: TimetablePreset.inorganic,
                   isActive: isInorganic && !isOrganic,
-                  icon: '🧪',
+                  icon: Icons.science_rounded,
                 ),
               ),
             ],
@@ -337,7 +353,7 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
   Widget _buildPresetCard({
     required TimetablePreset preset,
     required bool isActive,
-    required String icon,
+    required IconData icon,
   }) {
     return InkWell(
       onTap: () async {
@@ -346,8 +362,8 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
           final confirm = await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
-              backgroundColor: AppColors.bg1,
-              title: Text('Switch to ${preset.title}?', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              backgroundColor: AppColors.bg2,
+              title: Text('Switch to ${preset.title}?', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
               content: Text(
                 'This will set your active attendance & timetable schedule to ${preset.title} (BCU Central College Sem III w.e.f. 24-08-2026).',
                 style: const TextStyle(color: AppColors.textSecondary),
@@ -357,8 +373,8 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandPrimary),
+                FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: AppColors.brandPrimary),
                   onPressed: () => Navigator.pop(ctx, true),
                   child: const Text('Apply Timetable', style: TextStyle(color: Colors.white)),
                 ),
@@ -369,26 +385,30 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
             await ref.read(appControllerProvider.notifier).applyPresetTimetable(preset);
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('✓ ${preset.title} timetable activated as default schedule!')),
+                SnackBar(content: Text('${preset.title} timetable activated as default schedule.')),
               );
             }
           }
         }
       },
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.brandPrimary.withValues(alpha: 0.25) : AppColors.bg2,
-          borderRadius: BorderRadius.circular(10),
+          color: isActive ? AppColors.brandPrimary.withValues(alpha: 0.18) : AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isActive ? AppColors.brandBright : AppColors.borderSubtle,
-            width: isActive ? 1.5 : 1.0,
+            width: isActive ? 1.2 : 0.6,
           ),
         ),
         child: Row(
           children: [
-            Text(icon, style: const TextStyle(fontSize: 16)),
+            Icon(
+              icon,
+              size: 18,
+              color: isActive ? AppColors.brandBright : AppColors.textMuted,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -397,13 +417,13 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                   Text(
                     preset.title,
                     style: TextStyle(
-                      color: isActive ? Colors.white : AppColors.textSecondary,
+                      color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
                       fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
                       fontSize: 11.5,
                     ),
                   ),
                   Text(
-                    isActive ? '✓ Default Active' : 'Tap to switch',
+                    isActive ? 'Default Active' : 'Tap to switch',
                     style: TextStyle(
                       color: isActive ? AppColors.brandBright : AppColors.textMuted,
                       fontSize: 10,
@@ -425,27 +445,19 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
     required String label,
   }) {
     final isSelected = mainTab == index;
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         AppHaptics.selection();
         setState(() => mainTab = index);
       },
+      borderRadius: BorderRadius.circular(12),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.brandPrimary : Colors.transparent,
-          borderRadius: BorderRadius.circular(11),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.brandPrimary.withValues(alpha: 0.35),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -495,7 +507,7 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('${e.dayOfWeek} · ${e.startTime}–${e.endTime}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                      Text(e.displayName, style: const TextStyle(fontWeight: FontWeight.w800)),
+                      Text(e.displayName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary)),
                       Text(
                         [e.type, if (e.room.isNotEmpty) e.room, if (e.teacherName.isNotEmpty) e.teacherName].join(' · '),
                         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
@@ -505,7 +517,7 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                 ),
                 IconButton(
                   onPressed: () => ref.read(appControllerProvider.notifier).deleteTimetableEntry(e.id),
-                  icon: const Icon(Icons.delete_outline, color: AppColors.danger),
+                  icon: const Icon(Icons.delete_outline_rounded, color: AppColors.statusDanger, size: 20),
                 ),
               ],
             ),
@@ -514,4 +526,3 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
     ];
   }
 }
-

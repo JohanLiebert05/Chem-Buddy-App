@@ -179,7 +179,7 @@ class _ChemDrawGuideDialogState extends State<ChemDrawGuideDialog> {
                         elevation: 4,
                       ),
                       child: Text(
-                        _currentStep == _totalSteps - 1 ? 'Start Sketching 🚀' : 'Next Step →',
+                        _currentStep == _totalSteps - 1 ? 'Start Sketching' : 'Next Step →',
                         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
                       ),
                     ),
@@ -203,7 +203,7 @@ class _ChemDrawGuideDialogState extends State<ChemDrawGuideDialog> {
           _buildBadge('CANVAS ESSENTIALS', Icons.touch_app_rounded, const Color(0xFF06B6D4)),
           const SizedBox(height: 10),
           const Text(
-            'Touch-First Molecular Drawing 🎨',
+            'Touch-First Molecular Drawing',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
           const SizedBox(height: 6),
@@ -237,7 +237,7 @@ class _ChemDrawGuideDialogState extends State<ChemDrawGuideDialog> {
             icon: Icons.pinch_rounded,
             color: Color(0xFF06B6D4),
             title: 'Pinch-to-Zoom & Pan',
-            description: 'Pinch with two fingers to zoom from 0.3x to 3.0x. Drag with two fingers to pan. Tap 🔍 to reset.',
+            description: 'Pinch with two fingers to zoom from 0.3x to 3.0x. Drag with two fingers to pan. Tap reset view to reset.',
           ),
         ],
       ),
@@ -298,7 +298,7 @@ class _ChemDrawGuideDialogState extends State<ChemDrawGuideDialog> {
           _buildBadge('QUICK PALETTE', Icons.hub_rounded, const Color(0xFF10B981)),
           const SizedBox(height: 10),
           const Text(
-            'Functional Groups at Your Fingertips 🌿',
+            'Functional Groups at Your Fingertips',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
           const SizedBox(height: 6),
@@ -341,7 +341,7 @@ class _ChemDrawGuideDialogState extends State<ChemDrawGuideDialog> {
           _buildBadge('REACTIONS & EDITING', Icons.swap_horiz_rounded, const Color(0xFFF59E0B)),
           const SizedBox(height: 10),
           const Text(
-            'Reactions, Arrows & Smart Eraser 🧹',
+            'Reactions, Arrows & Smart Eraser',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
           const SizedBox(height: 6),
@@ -374,7 +374,7 @@ class _ChemDrawGuideDialogState extends State<ChemDrawGuideDialog> {
           const _GuideCard(
             icon: Icons.cleaning_services_rounded,
             color: Color(0xFFEF4444),
-            title: 'Smart Eraser Tool (🧹)',
+            title: 'Smart Eraser Tool',
             description: 'Tap on any atom to erase it and connected bonds, or tap near a bond to delete just the bond cleanly.',
           ),
         ],
@@ -392,7 +392,7 @@ class _ChemDrawGuideDialogState extends State<ChemDrawGuideDialog> {
           _buildBadge('PRACTICAL EXAMPLE', Icons.science_rounded, const Color(0xFF38BDF8)),
           const SizedBox(height: 10),
           const Text(
-            'Step-by-Step: Drawing Aspirin 💊',
+            'Step-by-Step: Drawing Aspirin',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
           const SizedBox(height: 6),
@@ -408,7 +408,7 @@ class _ChemDrawGuideDialogState extends State<ChemDrawGuideDialog> {
                 _StepRow(num: '1', title: 'Insert Benzene Ring', text: 'Tap Templates (Hexagon icon) and choose Benzene.'),
                 _StepRow(num: '2', title: 'Add Carboxylic Acid', text: 'Select Carbon 1 and tap —COOH from the Quick Palette.'),
                 _StepRow(num: '3', title: 'Attach Acetoxy Ester', text: 'Select adjacent Carbon 2, tap —OH, then extend with —C(=O)CH₃.'),
-                _StepRow(num: '4', title: 'Calculate & Predict', text: 'Tap RDKit to inspect MW (180.16 g/mol) or ⚡ Predict to run AI reactions.', isLast: true),
+                _StepRow(num: '4', title: 'Calculate & Predict', text: 'Tap RDKit to inspect MW (180.16 g/mol) or Predict to run AI reactions.', isLast: true),
               ],
             ),
           ),
@@ -429,7 +429,7 @@ class _ChemDrawGuideDialogState extends State<ChemDrawGuideDialog> {
                 widget.onLoadExample('CC(=O)Oc1ccccc1C(=O)O');
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('✓ Loaded Aspirin structure onto ChemDraw canvas!'),
+                    content: Text('Loaded Aspirin structure onto ChemDraw canvas.'),
                     backgroundColor: Color(0xFF0F172A),
                     duration: Duration(seconds: 2),
                   ),
@@ -437,7 +437,7 @@ class _ChemDrawGuideDialogState extends State<ChemDrawGuideDialog> {
               },
               icon: const Icon(Icons.play_circle_fill_rounded, size: 20),
               label: const Text(
-                'Try Aspirin Example Now 🚀',
+                'Try Aspirin Example Now',
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
               ),
             ),

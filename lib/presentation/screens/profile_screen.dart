@@ -42,8 +42,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           backgroundColor: connected ? AppColors.success : AppColors.surfaceElevated,
           content: Text(
             connected
-                ? '🟢 Connected to Cloud Storage! Sync is active.'
-                : '⚪ Offline Local Mode active. Your notes, attendance & timetable remain safe on this device.',
+                ? 'Connected to cloud storage. Sync is active.'
+                : 'Offline local mode active. Your notes, attendance & timetable remain safe on this device.',
           ),
           duration: const Duration(seconds: 4),
         ),
@@ -66,8 +66,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           backgroundColor: AppColors.success,
           content: Text(
             isPdf
-                ? '🟢 Attendance PDF Generated! Opening share sheet...'
-                : '🟢 Attendance Spreadsheet (CSV) Generated! Opening share sheet...',
+                ? 'Attendance PDF Generated! Opening share sheet...'
+                : 'Attendance Spreadsheet (CSV) Generated! Opening share sheet...',
           ),
           duration: const Duration(seconds: 3),
         ),
@@ -108,8 +108,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           backgroundColor: AppColors.success,
           content: Text(
             isPdf
-                ? '🟢 Coursework Audit PDF Ready! Opening share sheet...'
-                : '🟢 Coursework Spreadsheet (CSV) Ready! Opening share sheet...',
+                ? 'Coursework Audit PDF Ready! Opening share sheet...'
+                : 'Coursework Spreadsheet (CSV) Ready! Opening share sheet...',
           ),
           duration: const Duration(seconds: 3),
         ),
@@ -159,8 +159,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           backgroundColor: AppColors.success,
           content: Text(
             isPdf
-                ? '🟢 Reaction Dossier PDF Ready! Opening share sheet...'
-                : '🟢 Reaction Catalog Spreadsheet Ready! Opening share sheet...',
+                ? 'Reaction Dossier PDF ready. Opening share sheet...'
+                : 'Reaction Catalog Spreadsheet ready. Opening share sheet...',
           ),
           duration: const Duration(seconds: 3),
         ),
@@ -272,7 +272,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Text(
-                                'Active Scholar 🎓',
+                                'Active Scholar',
                                 style: TextStyle(color: AppColors.statusSuccess, fontSize: 11, fontWeight: FontWeight.w700),
                               ),
                             ),
@@ -323,7 +323,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Expanded(
               child: _buildMetricTile(
                 label: 'Streak',
-                value: '${analytics.streakDays}d 🔥',
+                value: '${analytics.streakDays}d',
                 color: AppColors.warning,
                 icon: Icons.local_fire_department_outlined,
               ),
@@ -333,7 +333,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         const SizedBox(height: 18),
 
         // 3. UNIFIED REPORTS & ACADEMIC DATA EXPORT HUB
-        const SectionTitle('Reports & Academic Data Export 📄📊'),
+        const SectionTitle('Reports & Academic Data Export', icon: Icons.description_rounded),
         GlowCard(
           padding: const EdgeInsets.all(16),
           borderColor: AppColors.purple.withValues(alpha: 0.45),
@@ -446,7 +446,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         const SizedBox(height: 14),
 
         // 5. ACADEMIC HELP & SETTINGS
-        const SectionTitle('Help, Guides & Settings ⚙️'),
+        const SectionTitle('Help, Guides & Settings', icon: Icons.settings_rounded),
         GlowCard(
           onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const AppGuidesScreen())),
           child: const Row(
@@ -647,7 +647,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 onPressed: _isExporting ? null : () => _exportAttendance(isPdf: true),
                 icon: const Icon(Icons.picture_as_pdf_rounded, size: 15),
-                label: const Text('Export PDF 📄', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                label: const Text('Export PDF', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
               ),
             ),
             const SizedBox(width: 10),
@@ -661,7 +661,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 onPressed: _isExporting ? null : () => _exportAttendance(isPdf: false),
                 icon: const Icon(Icons.table_chart_outlined, size: 15),
-                label: const Text('Excel / CSV 📊', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                label: const Text('Excel / CSV', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -717,7 +717,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 onPressed: _isExporting ? null : () => _exportCoursework(isPdf: true),
                 icon: const Icon(Icons.picture_as_pdf_rounded, size: 15),
-                label: const Text('Export PDF 📄', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                label: const Text('Export PDF', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
               ),
             ),
             const SizedBox(width: 10),
@@ -731,7 +731,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 onPressed: _isExporting ? null : () => _exportCoursework(isPdf: false),
                 icon: const Icon(Icons.table_chart_outlined, size: 15),
-                label: const Text('Excel / CSV 📊', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                label: const Text('Excel / CSV', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -779,12 +779,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               items: [
                 const DropdownMenuItem(
                   value: 'all',
-                  child: Text('📚 Complete MSc Master Compendium (All 25+ Reactions)'),
+                  child: Text('Complete MSc Master Compendium (All 25+ Reactions)'),
                 ),
                 ...ReactionMechanismService.instance.mechanisms.map(
                   (m) => DropdownMenuItem(
                     value: m.id,
-                    child: Text('⚗️ ${m.name}'),
+                    child: Text(m.name),
                   ),
                 ),
               ],
@@ -808,7 +808,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onPressed: _isExporting ? null : () => _exportReaction(isPdf: true),
                 icon: const Icon(Icons.menu_book_rounded, size: 15),
                 label: Text(
-                  _selectedReactionForExport == 'all' ? 'Compendium PDF 📚' : 'Reaction PDF 📄',
+                  _selectedReactionForExport == 'all' ? 'Compendium PDF' : 'Reaction PDF',
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                 ),
               ),
@@ -824,7 +824,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 onPressed: _isExporting ? null : () => _exportReaction(isPdf: false),
                 icon: const Icon(Icons.grid_on_rounded, size: 15),
-                label: const Text('Excel / CSV 📊', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                label: const Text('Excel / CSV', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -878,7 +878,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Edit Profile Details 🎓', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Colors.white)),
+                  const Text('Edit Profile Details', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Colors.white)),
                   const SizedBox(height: 12),
                   TextField(
                     controller: name,
@@ -1049,19 +1049,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.text, {super.key});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 8),
-      child: Text(text, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)),
     );
   }
 }

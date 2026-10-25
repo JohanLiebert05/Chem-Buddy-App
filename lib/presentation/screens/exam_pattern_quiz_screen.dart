@@ -198,7 +198,7 @@ class _ExamPatternQuizScreenState extends ConsumerState<ExamPatternQuizScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('💡 EXAMINER TIPS & HIGH-SCORING STRATEGY', style: TextStyle(color: AppColors.accentGold, fontSize: 11, fontWeight: FontWeight.w800)),
+              const Text('EXAMINER TIPS & HIGH-SCORING STRATEGY', style: TextStyle(color: AppColors.accentGold, fontSize: 11, fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -214,7 +214,7 @@ class _ExamPatternQuizScreenState extends ConsumerState<ExamPatternQuizScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('🎯 KEY EVALUATION CRITERIA', style: TextStyle(color: AppColors.statusSuccess, fontSize: 11, fontWeight: FontWeight.w800)),
+              const Text('KEY EVALUATION CRITERIA', style: TextStyle(color: AppColors.statusSuccess, fontSize: 11, fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
               ...q.markingRubric.map((r) => Padding(
                 padding: const EdgeInsets.only(bottom: 4),

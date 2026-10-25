@@ -60,7 +60,7 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Reaction Mechanisms ⚗️', style: TextStyle(fontWeight: FontWeight.w800)),
+          title: const Text('Reaction Mechanisms', style: TextStyle(fontWeight: FontWeight.w800)),
           backgroundColor: Colors.transparent,
           elevation: 0,
           actions: [
@@ -106,9 +106,9 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildCategoryChip(null, 'All Mechanisms 🧪'),
+                        _buildCategoryChip(null, 'All Mechanisms'),
                         ...ReactionCategory.values.map(
-                          (cat) => _buildCategoryChip(cat, '${cat.emoji} ${cat.displayName}'),
+                          (cat) => _buildCategoryChip(cat, cat.displayName),
                         ),
                       ],
                     ),
@@ -257,7 +257,7 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                         Icon(Icons.view_in_ar_rounded, size: 12, color: AppColors.accentCyan),
                         SizedBox(width: 4),
                         Text(
-                          '3D Models 🌐',
+                          '3D Models',
                           style: TextStyle(
                             color: AppColors.accentCyan,
                             fontSize: 10.5,
@@ -469,7 +469,7 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                '3D Molecular Lab 🌐',
+                                '3D Molecular Lab',
                                 style: TextStyle(
                                   color: _is3DMode ? Colors.white : AppColors.textMuted,
                                   fontSize: 12.5,
@@ -517,7 +517,7 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                       border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
                     ),
                     child: const Text(
-                      'Pinch to Zoom 🔍',
+                      'Pinch to Zoom',
                       style: TextStyle(color: AppColors.purpleBright, fontSize: 10.5, fontWeight: FontWeight.w700),
                     ),
                   ),
@@ -750,7 +750,7 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                 border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.4)),
               ),
               child: const Text(
-                'Full 3D Orbitals ⚛️',
+                'Full 3D Orbitals',
                 style: TextStyle(color: AppColors.accentCyan, fontSize: 10.5, fontWeight: FontWeight.w800),
               ),
             ),

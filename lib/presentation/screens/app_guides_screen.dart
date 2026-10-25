@@ -84,7 +84,7 @@ class AppGuidesScreen extends StatelessWidget {
               bullets: [
                 'Upload notes, question papers, or syllabus PDFs into your subject folders.',
                 'Tap "Study with ChemBuddy" to launch a focused study session.',
-                'Start with "Important Topics" to see concepts ranked by coverage depth and exam relevance (🔥 Very High, 🟠 High, 🟡 Medium).',
+                'Start with "Important Topics" to see concepts ranked by coverage depth and exam relevance (Very High, High, Medium).',
                 'Generate an Academic Summary containing Core Concepts, Definitions, Reactions, and Quick Revision points.',
                 'Use Ask ChemBuddy with the document attached for strictly grounded answers.',
               ],

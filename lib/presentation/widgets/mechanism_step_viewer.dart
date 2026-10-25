@@ -239,7 +239,7 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
                   widget.onSwitchTo3D!();
                 },
                 icon: const Icon(Icons.view_in_ar_rounded, size: 18),
-                label: const Text('Explore in 3D 🌐'),
+                label: const Text('Explore in 3D'),
               ),
           ],
         ),

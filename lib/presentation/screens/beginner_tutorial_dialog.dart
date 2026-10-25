@@ -175,7 +175,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
                         shadowColor: AppColors.purple.withValues(alpha: 0.5),
                       ),
                       child: Text(
-                        _step == _totalSteps - 1 ? 'Start Using ChemBuddy 🚀' : 'Next →',
+                        _step == _totalSteps - 1 ? 'Start Using ChemBuddy' : 'Next →',
                         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                       ),
                     ),
@@ -199,7 +199,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           const AtomLogo(size: 72, animated: true),
           const SizedBox(height: 14),
           Text(
-            'Welcome to ChemBuddy 🧪',
+            'Welcome to ChemBuddy',
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 21,
@@ -233,13 +233,13 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
             runSpacing: 8,
             alignment: WrapAlignment.center,
             children: const [
-              _FeatureChip(icon: '📊', label: 'Attendance & Safe Bunks'),
-              _FeatureChip(icon: '📅', label: 'Timetable Presets'),
-              _FeatureChip(icon: '📖', label: 'PDF Library & Notes'),
-              _FeatureChip(icon: '🎨', label: 'ChemDraw Canvas'),
-              _FeatureChip(icon: '⚡', label: 'ChemBuddy AI Tutor'),
-              _FeatureChip(icon: '📸', label: 'Notes to Flashcards'),
-              _FeatureChip(icon: '📝', label: 'Tests & Quizzes'),
+              _FeatureChip(icon: Icons.analytics_rounded, label: 'Attendance & Safe Bunks'),
+              _FeatureChip(icon: Icons.calendar_month_rounded, label: 'Timetable Presets'),
+              _FeatureChip(icon: Icons.menu_book_rounded, label: 'PDF Library & Notes'),
+              _FeatureChip(icon: Icons.gesture_rounded, label: 'ChemDraw Canvas'),
+              _FeatureChip(icon: Icons.auto_awesome_rounded, label: 'ChemBuddy AI Tutor'),
+              _FeatureChip(icon: Icons.camera_alt_rounded, label: 'Notes to Flashcards'),
+              _FeatureChip(icon: Icons.quiz_rounded, label: 'Tests & Quizzes'),
             ],
           ),
         ],
@@ -257,7 +257,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           _badge('NEW · CHEMDRAW CANVAS', Icons.draw_rounded, color: const Color(0xFF06B6D4)),
           const SizedBox(height: 10),
           const Text(
-            'Interactive Chemical Sketcher 🎨',
+            'Interactive Chemical Sketcher',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
           const SizedBox(height: 6),
@@ -301,7 +301,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           _badge('CHEMBUDDY AI TUTOR', Icons.auto_awesome_rounded, color: const Color(0xFFA855F7)),
           const SizedBox(height: 10),
           const Text(
-            'Intelligent Academic Tutor ⚡',
+            'Intelligent Academic Tutor',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
           const SizedBox(height: 6),
@@ -313,7 +313,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           const _TourCard(
             icon: Icons.psychology_rounded,
             iconColor: Color(0xFFA855F7),
-            title: '✨ General AI & Internet Access',
+            title: 'General AI & Internet Access',
             description: 'Ask any chemistry, scientific, or research question with live internet intelligence and multi-key failover.',
           ),
           const SizedBox(height: 8),
@@ -345,7 +345,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           _badge('AI OCR & FLASHCARDS', Icons.document_scanner_rounded, color: const Color(0xFF3B82F6)),
           const SizedBox(height: 10),
           const Text(
-            'Handwritten Notes → Flashcards 📸',
+            'Handwritten Notes → Flashcards',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
           const SizedBox(height: 6),
@@ -389,7 +389,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           _badge('ATTENDANCE INTELLIGENCE', Icons.how_to_reg_rounded, color: const Color(0xFF10B981)),
           const SizedBox(height: 10),
           const Text(
-            'Stay Confidently Above 75% 📊',
+            'Stay Confidently Above 75%',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
           const SizedBox(height: 6),
@@ -433,7 +433,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           _badge('SMART TIMETABLE', Icons.calendar_month_rounded, color: const Color(0xFFF59E0B)),
           const SizedBox(height: 10),
           const Text(
-            'Your Daily Command Center 📅',
+            'Your Daily Command Center',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
           const SizedBox(height: 6),
@@ -477,7 +477,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           _badge('STUDY ROUTINE', Icons.rocket_launch_rounded, color: const Color(0xFFA855F7)),
           const SizedBox(height: 10),
           const Text(
-            'The 5-Step Academic Routine 🚀',
+            'The 5-Step Academic Routine',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
           ),
           const SizedBox(height: 6),
@@ -591,7 +591,7 @@ class _TourCard extends StatelessWidget {
 
 class _FeatureChip extends StatelessWidget {
   const _FeatureChip({required this.icon, required this.label});
-  final String icon;
+  final IconData icon;
   final String label;
 
   @override
@@ -606,7 +606,7 @@ class _FeatureChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 12)),
+          Icon(icon, size: 14, color: AppColors.purpleBright),
           const SizedBox(width: 5),
           Text(
             label,

@@ -105,7 +105,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
               children: [
                 const Icon(Icons.check_circle_outline, size: 48, color: AppColors.success),
                 const SizedBox(height: 12),
-                const Text('All caught up! 🎉', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Colors.white)),
+                const Text('All caught up', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Colors.white)),
                 const SizedBox(height: 8),
                 const Text(
                   'No flashcards currently due for review in this queue. Great job staying consistent!',
@@ -334,7 +334,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                           border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4), width: 0.8),
                         ),
                         child: Text(
-                          '✨ $term',
+                          term,
                           style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
                         ),
                       )).toList(),
@@ -501,7 +501,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                         ? 'Evaluating with AI...'
                         : (_currentEvaluation != null
                             ? 'AI Match: ${_currentEvaluation!.matchPercentage}% (${_currentEvaluation!.recommendedLabel}) • View Analysis'
-                            : 'Evaluate My Answer with AI ✨'),
+                            : 'Evaluate My Answer with AI'),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 13.5,
@@ -544,7 +544,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                     border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4), width: 0.8),
                   ),
                   child: Text(
-                    '✨ $term',
+                    term,
                     style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
                   ),
                 )).toList(),
@@ -634,13 +634,13 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     Color color = AppColors.purpleBright;
 
     if (card.isNew) {
-      label = '🆕 New';
+      label = 'New';
       color = AppColors.blue;
     } else if (card.isLearning) {
-      label = '🟡 Learning';
+      label = 'Learning';
       color = AppColors.warning;
     } else if (card.isMature) {
-      label = '🟢 Mature';
+      label = 'Mature';
       color = AppColors.success;
     }
 
@@ -873,7 +873,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                   children: [
                     Icon(Icons.military_tech_rounded, color: AppColors.purpleBright, size: 28),
                     SizedBox(width: 10),
-                    Text('🎉 Review Complete!', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: Colors.white)),
+                    Text('Review Complete', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: Colors.white)),
                   ],
                 ),
                 const SizedBox(height: 16),

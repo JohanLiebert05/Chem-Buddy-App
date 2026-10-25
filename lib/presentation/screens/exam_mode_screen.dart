@@ -146,7 +146,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Exam Mode 🎯',
+                'Exam Mode',
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Colors.white),
               ),
               Text(
@@ -502,7 +502,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
                                   label: Text(
                                     (_selfAssessmentOpen[index] ?? false)
                                         ? 'Hide Rubric Test'
-                                        : '✍️ Self-Assessment',
+                                        : 'Self-Assessment',
                                     style: const TextStyle(
                                       color: AppColors.accentGold,
                                       fontWeight: FontWeight.w700,
@@ -1028,7 +1028,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Indian University MSc Rubric Generator 📝',
+                'Indian University MSc Rubric Generator',
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
               ),
               SizedBox(height: 4),
@@ -1251,7 +1251,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> with SingleTick
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'PDF-Grounded Exam Revision 📄',
+                'PDF-Grounded Exam Revision',
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
               ),
               SizedBox(height: 4),

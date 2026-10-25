@@ -265,35 +265,35 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
           children: [
             _AiModeChip(
               icon: Icons.bolt_rounded,
-              label: '⚡ Quick Answer (Science)',
+              label: 'Quick Answer',
               selected: _currentMode == ChemBuddyAiMode.normal,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.normal),
             ),
             const SizedBox(width: 8),
             _AiModeChip(
               icon: Icons.auto_awesome_rounded,
-              label: '✨ General AI',
+              label: 'General AI',
               selected: _currentMode == ChemBuddyAiMode.general,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.general),
             ),
             const SizedBox(width: 8),
             _AiModeChip(
               icon: Icons.chat_bubble_outline_rounded,
-              label: '💬 Simple',
+              label: 'Simple',
               selected: _currentMode == ChemBuddyAiMode.simple,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.simple),
             ),
             const SizedBox(width: 8),
             _AiModeChip(
               icon: Icons.view_headline_rounded,
-              label: '≡ 2M Answer',
+              label: '2M Answer',
               selected: _currentMode == ChemBuddyAiMode.exam2M,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.exam2M),
             ),
             const SizedBox(width: 8),
             _AiModeChip(
               icon: Icons.format_list_bulleted_rounded,
-              label: '≡ 5M Answer',
+              label: '5M Answer',
               selected: _currentMode == ChemBuddyAiMode.exam5M,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.exam5M),
             ),
@@ -321,14 +321,14 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
             const SizedBox(width: 8),
             _AiModeChip(
               icon: Icons.science_outlined,
-              label: '⚗️ Mechanisms',
+              label: 'Mechanisms',
               selected: _currentMode == ChemBuddyAiMode.mechanisms,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.mechanisms),
             ),
             const SizedBox(width: 8),
             _AiModeChip(
               icon: Icons.picture_as_pdf_outlined,
-              label: '📄 From My PDF',
+              label: 'From PDF',
               selected: _currentMode == ChemBuddyAiMode.fromMyPdf,
               onTap: () => setState(() => _currentMode = ChemBuddyAiMode.fromMyPdf),
             ),
@@ -545,10 +545,17 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                                     borderRadius: BorderRadius.circular(4),
                                     border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.5), width: 0.6),
                                   ),
-                                  child: const Text('🔒 Strict PDF Mode', style: TextStyle(color: AppColors.purpleBright, fontSize: 10, fontWeight: FontWeight.w800)),
+                                  child: const Text('Strict PDF Mode', style: TextStyle(color: AppColors.purpleBright, fontSize: 10, fontWeight: FontWeight.w800)),
                                 ),
                                 const SizedBox(width: 6),
-                                const Text('Grounded 🟢', style: TextStyle(color: AppColors.success, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                                const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.check_circle_outline_rounded, size: 12, color: AppColors.success),
+                                    SizedBox(width: 3),
+                                    Text('Grounded', style: TextStyle(color: AppColors.success, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                                  ],
+                                ),
                               ],
                             ),
                             const SizedBox(height: 3),
@@ -645,7 +652,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
                             ),
                             const SizedBox(height: 6),
                             _SuggestionTile(
-                              text: '✨ What are the principles of Green Chemistry and atomic economy?',
+                              text: 'What are the principles of Green Chemistry and atomic economy?',
                               onTap: () => _sendMessage('What are the principles of Green Chemistry and atomic economy?'),
                             ),
                             const SizedBox(height: 6),
@@ -1172,7 +1179,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Extracted Key Concepts 💡',
+                  'Extracted Key Concepts',
                   style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 2),
@@ -1250,7 +1257,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen> with Si
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Created flashcard deck with ${cards.length} cards! 🎉',
+                'Created flashcard deck with ${cards.length} cards.',
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
             ),

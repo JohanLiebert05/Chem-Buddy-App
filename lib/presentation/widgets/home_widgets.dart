@@ -29,26 +29,35 @@ class StudyPrioritiesCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: (weakTopics.isNotEmpty ? AppColors.danger : AppColors.brandPrimary).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  color: (weakTopics.isNotEmpty ? AppColors.statusDanger : AppColors.brandPrimary).withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   weakTopics.isNotEmpty ? Icons.warning_amber_rounded : Icons.task_alt_rounded,
-                  color: weakTopics.isNotEmpty ? AppColors.danger : AppColors.success,
+                  color: weakTopics.isNotEmpty ? AppColors.statusDanger : AppColors.statusSuccess,
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Today’s Study Priorities', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Study Priorities',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
                     Text(
                       weakTopics.isNotEmpty
-                          ? '${weakTopics.length} topic(s) need immediate reinforcement'
-                          : (hasPriorities ? 'Reinforce moderate topics' : 'Mastery looking great'),
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                          ? '${weakTopics.length} topic${weakTopics.length == 1 ? "" : "s"} need reinforcement'
+                          : (hasPriorities ? 'Reinforce moderate topics' : 'Mastery looking strong'),
+                      style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -60,25 +69,25 @@ class StudyPrioritiesCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.bg0,
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.check_circle_outline, color: AppColors.success, size: 20),
-                  SizedBox(width: 8),
+                  Icon(Icons.check_circle_outline_rounded, color: AppColors.statusSuccess, size: 20),
+                  SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'All tested chemistry topics are in strong mastery! Keep your study streak going with flashcard reviews.',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      'All tested chemistry topics are in strong mastery. Keep your momentum with flashcard reviews.',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.35),
                     ),
                   ),
                 ],
               ),
             ),
           ] else ...[
-            ...weakTopics.take(3).map((w) => _buildTopicRow(w.topic, '${w.accuracy.toStringAsFixed(0)}% accuracy', AppColors.danger, 'WEAK')),
-            ...moderateTopics.take(2).map((m) => _buildTopicRow(m.topic, '${m.accuracy.toStringAsFixed(0)}% accuracy', AppColors.warning, 'REVIEW')),
+            ...weakTopics.take(3).map((w) => _buildTopicRow(w.topic, '${w.accuracy.toStringAsFixed(0)}% accuracy', AppColors.statusDanger, 'NEEDS FOCUS')),
+            ...moderateTopics.take(2).map((m) => _buildTopicRow(m.topic, '${m.accuracy.toStringAsFixed(0)}% accuracy', AppColors.statusWarning, 'REVIEW')),
           ],
         ],
       ),
@@ -90,9 +99,9 @@ class StudyPrioritiesCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.bg0,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 0.8),
       ),
       child: Row(
         children: [
@@ -100,7 +109,10 @@ class StudyPrioritiesCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(topic, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                Text(
+                  topic,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                ),
                 const SizedBox(height: 2),
                 Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
               ],
@@ -109,12 +121,12 @@ class StudyPrioritiesCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
+              color: color.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               badge,
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+              style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: color, letterSpacing: 0.3),
             ),
           ),
         ],
@@ -154,8 +166,13 @@ class HomeGreetingHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hello, $displayName 👋',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                'Hello, $displayName',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.3,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

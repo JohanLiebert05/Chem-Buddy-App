@@ -248,11 +248,11 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
             labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             tabs: const [
               Tab(text: 'Structure Solver'),
-              Tab(text: 'Chromatograms & Spectrograms 📊'),
+              Tab(text: 'Chromatograms & Spectrograms'),
               Tab(text: '¹H / ¹³C NMR'),
               Tab(text: 'FT-IR Frequencies'),
               Tab(text: 'Mass Spec'),
-              Tab(text: 'Inorganic 10M ⚗️'),
+              Tab(text: 'Inorganic 10M'),
             ],
           ),
         ),
@@ -358,7 +358,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                     );
                   },
                   icon: const Icon(Icons.gesture_rounded, size: 16),
-                  label: const Text('Draw Structure in Mobile ChemDraw Canvas ✏️', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+                  label: const Text('Draw Structure in Mobile ChemDraw Canvas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
                 ),
               ),
             ],
@@ -578,9 +578,9 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
             children: [
               _buildCategoryFilterChip('All', 'All (${allTechniques.length})', Icons.auto_awesome_mosaic_rounded),
               const SizedBox(width: 8),
-              _buildCategoryFilterChip('Chromatography', '🧪 Chromatography (3)', Icons.biotech_rounded),
+              _buildCategoryFilterChip('Chromatography', 'Chromatography (3)', Icons.biotech_rounded),
               const SizedBox(width: 8),
-              _buildCategoryFilterChip('Spectroscopy', '🧲 Spectroscopy (5)', Icons.waves_rounded),
+              _buildCategoryFilterChip('Spectroscopy', 'Spectroscopy (5)', Icons.waves_rounded),
             ],
           ),
         ),
@@ -1211,7 +1211,7 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
               children: [
                 const Expanded(
                   child: Text(
-                    'Spectral Sanity Checks 🛡️',
+                    'Spectral Sanity Checks',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
                   ),
                 ),
@@ -2317,7 +2317,7 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
                   ),
                   const SizedBox(width: 8),
                   const Text(
-                    '🤏 Pinch & Pan',
+                    'Pinch & Pan',
                     style: TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
                   ),
                 ],

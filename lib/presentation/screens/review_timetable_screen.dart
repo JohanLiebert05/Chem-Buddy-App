@@ -327,7 +327,7 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
       messenger.showSnackBar(
         SnackBar(
           backgroundColor: AppColors.success,
-          content: Text('✓ Saved ${entries.length} class slots to your timetable schedule!'),
+          content: Text('Saved ${entries.length} class slots to your timetable schedule.'),
         ),
       );
       Navigator.pop(context, true);

@@ -133,7 +133,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             icon: const Icon(Icons.notifications_active_rounded),
-            label: const Text('🔔 Send Test Notification Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            label: const Text('Send Test Notification Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
             onPressed: () async {
               final repo = ref.read(chemRepositoryProvider);
               final stats = repo.overallStats();
@@ -162,7 +162,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             icon: const Icon(Icons.psychology_rounded),
-            label: const Text('🧠 Send Psychology Fact Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            label: const Text('Send Psychology Fact Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
             onPressed: () async {
               await NotificationService.instance.sendTestPsychologyFactNotification();
               if (!context.mounted) return;

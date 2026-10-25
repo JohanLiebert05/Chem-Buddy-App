@@ -46,7 +46,7 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text('MSc Chemistry Toolkit ⚗️', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          title: const Text('MSc Chemistry Toolkit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),

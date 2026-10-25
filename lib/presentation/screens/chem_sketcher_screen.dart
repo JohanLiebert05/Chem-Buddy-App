@@ -909,7 +909,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             ),
             const SizedBox(height: 16),
             _buildAiOption(
-              title: 'Reaction Predictor & Mechanism Viewer ⚡',
+              title: 'Reaction Predictor & Mechanism Viewer',
               subtitle: 'Deterministic forward prediction, curved electron-pushing SVG player & MSc pedagogy.',
               icon: Icons.bolt_rounded,
               onTap: () {
@@ -1123,7 +1123,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.help_outline_rounded, color: AppColors.accentCyan, size: 21),
-              tooltip: 'ChemDraw Guide & Masterclass 💡',
+              tooltip: 'ChemDraw Guide & Masterclass',
               onPressed: () => ChemDrawGuideDialog.show(context, onLoadExample: _loadSmiles),
             ),
             PopupMenuButton<String>(
@@ -1246,7 +1246,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                               )
                             : const Icon(Icons.auto_awesome_rounded, size: 16, color: AppColors.accentCyan),
                         label: Text(
-                          _isPredicting ? 'Predicting...' : 'Predict Product ⚡',
+                          _isPredicting ? 'Predicting...' : 'Predict Product',
                           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
                         ),
                       ),
@@ -1271,7 +1271,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                               )
                             : const Icon(Icons.biotech_outlined, size: 15),
                         label: const Text(
-                          'RDKit 🧪',
+                          'RDKit',
                           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11.5),
                         ),
                       ),
@@ -1293,7 +1293,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                         },
                         icon: const Icon(Icons.chat_bubble_outline_rounded, size: 15, color: AppColors.brandBright),
                         label: const Text(
-                          'Ask AI 💬',
+                          'Ask AI',
                           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11.5),
                         ),
                       ),

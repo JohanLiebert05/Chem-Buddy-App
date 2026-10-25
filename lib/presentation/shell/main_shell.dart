@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,7 +31,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   static const _tabs = [
     HomeScreen(), // 0: Home
     ClassesHubScreen(), // 1: Classes & Attendance
-    AskChemBuddyScreen(), // 2: Ask AI (Center Elevated)
+    AskChemBuddyScreen(), // 2: Ask AI
     ResourcesScreen(), // 3: Library
     ProfileScreen(), // 4: Profile
   ];
@@ -40,11 +39,8 @@ class _MainShellState extends ConsumerState<MainShell> {
   void _goTo(int i) {
     final current = ref.read(shellTabProvider);
     final clamped = i.clamp(0, _tabs.length - 1);
-    debugPrint('[MainShell] Tab switch: from $current (${_tabNames[current.clamp(0, 4)]}) to $clamped (${_tabNames[clamped]})');
-    if (current == clamped) {
-      debugPrint('[MainShell] Tab $clamped is already active; ignoring redundant tap');
-      return;
-    }
+    if (current == clamped) return;
+
     if (clamped == 2) {
       AppHaptics.confirm();
     } else {
@@ -57,9 +53,6 @@ class _MainShellState extends ConsumerState<MainShell> {
   Widget build(BuildContext context) {
     final rawIndex = ref.watch(shellTabProvider);
     final safeIndex = rawIndex.clamp(0, _tabs.length - 1);
-    if (rawIndex != safeIndex) {
-      debugPrint('[MainShell] Warning: raw tab index $rawIndex out of bounds, clamped to $safeIndex');
-    }
 
     return HexBackground(
       child: Scaffold(
@@ -77,21 +70,24 @@ class _MainShellState extends ConsumerState<MainShell> {
             ],
           ),
         ),
-        extendBody: true,
-        bottomNavigationBar: _ModernBottomNav(
-            selectedIndex: safeIndex,
-            onTabSelected: _goTo,
-          ),
+        bottomNavigationBar: _Material3ExpressiveNavBar(
+          selectedIndex: safeIndex,
+          onTabSelected: _goTo,
+        ),
       ),
     );
   }
 }
 
-class _ModernBottomNav extends StatelessWidget {
+/// Pixel Material 3 Expressive Bottom Navigation Bar
+///
+/// Features clean tonal pill indicators, expressive icons, readable typography,
+/// and smooth selection states without excessive neon glows.
+class _Material3ExpressiveNavBar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
 
-  const _ModernBottomNav({
+  const _Material3ExpressiveNavBar({
     required this.selectedIndex,
     required this.onTabSelected,
   });
@@ -99,58 +95,45 @@ class _ModernBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+
     return Container(
-      margin: EdgeInsets.fromLTRB(14, 0, 14, max(10, bottomInset)),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xF2100E20), // bg-1 with high opacity
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: AppColors.borderHighlight, width: 0.9),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.60),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        border: Border(
+          top: BorderSide(
+            color: AppColors.borderSubtle,
+            width: 0.6,
           ),
-          BoxShadow(
-            color: AppColors.brandPrimary.withValues(alpha: 0.16),
-            blurRadius: 24,
-            spreadRadius: -4,
-          ),
-        ],
+        ),
       ),
+      padding: EdgeInsets.fromLTRB(8, 6, 8, bottomInset > 0 ? bottomInset : 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          // 0: Home
-          _buildFlatNavItem(
+          _buildNavItem(
             index: 0,
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
             label: 'Home',
           ),
-
-          // 1: Classes & Attendance
-          _buildFlatNavItem(
+          _buildNavItem(
             index: 1,
             icon: Icons.calendar_month_outlined,
             activeIcon: Icons.calendar_month_rounded,
             label: 'Classes',
           ),
-
-          // 2: Center Elevated Floating "Ask AI"
-          _buildElevatedAiButton(),
-
-          // 3: Library
-          _buildFlatNavItem(
+          _buildAiNavItem(
+            index: 2,
+            icon: Icons.auto_awesome_rounded,
+            label: 'Ask AI',
+          ),
+          _buildNavItem(
             index: 3,
             icon: Icons.menu_book_outlined,
             activeIcon: Icons.menu_book_rounded,
             label: 'Library',
           ),
-
-          // 4: Profile
-          _buildFlatNavItem(
+          _buildNavItem(
             index: 4,
             icon: Icons.person_outline_rounded,
             activeIcon: Icons.person_rounded,
@@ -161,138 +144,112 @@ class _ModernBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _buildFlatNavItem({
+  Widget _buildNavItem({
     required int index,
     required IconData icon,
     required IconData activeIcon,
     required String label,
   }) {
     final isSelected = selectedIndex == index;
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => onTabSelected(index),
-          borderRadius: BorderRadius.circular(16),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.brandPrimary.withValues(alpha: 0.18) : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-              border: isSelected
-                  ? Border.all(color: AppColors.brandBright.withValues(alpha: 0.35), width: 0.8)
-                  : null,
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.brandPrimary.withValues(alpha: 0.20),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedScale(
-                  scale: isSelected ? 1.15 : 1.0,
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutBack,
-                  child: Icon(
-                    isSelected ? activeIcon : icon,
-                    size: 20,
-                    color: isSelected ? AppColors.brandBright : AppColors.textMuted,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOutCubic,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textMuted,
-                    letterSpacing: -0.2,
-                  ),
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.fade,
-                    softWrap: false,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildElevatedAiButton() {
-    final isSelected = selectedIndex == 2;
-    return GestureDetector(
-      onTap: () => onTabSelected(2),
-      child: AnimatedScale(
-        scale: isSelected ? 1.06 : 1.0,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutBack,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.brandPrimary.withValues(alpha: isSelected ? 0.65 : 0.35),
-                blurRadius: isSelected ? 18 : 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-            border: Border.all(
-              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.30),
-              width: isSelected ? 1.4 : 0.8,
-            ),
-          ),
-          child: Row(
+    return InkWell(
+        onTap: () => onTabSelected(index),
+        borderRadius: BorderRadius.circular(16),
+        splashColor: AppColors.brandPrimary.withValues(alpha: 0.1),
+        highlightColor: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.auto_awesome_rounded,
-                size: 16,
-                color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.95),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.brandPrimary.withValues(alpha: 0.16)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  isSelected ? activeIcon : icon,
+                  size: 22,
+                  color: isSelected ? AppColors.brandBright : AppColors.textMuted,
+                ),
               ),
-              const SizedBox(width: 5),
+              const SizedBox(height: 3),
               Text(
-                'Ask AI',
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
-                  fontSize: 12,
-                  letterSpacing: -0.2,
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
+                  letterSpacing: -0.1,
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
+      );
+  }
+
+  Widget _buildAiNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+  }) {
+    final isSelected = selectedIndex == index;
+
+    return InkWell(
+        onTap: () => onTabSelected(index),
+        borderRadius: BorderRadius.circular(16),
+        splashColor: AppColors.brandPrimary.withValues(alpha: 0.1),
+        highlightColor: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.brandPrimary
+                      : AppColors.brandPrimary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: isSelected ? Colors.white : AppColors.brandBright,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? AppColors.brandBright : AppColors.textSecondary,
+                  letterSpacing: -0.1,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
   }
 }
 
 /// Fluid, state-preserving animated switcher that transitions between tabs
-/// using Google Pixel Material 3 expressive easing and subtle forward scale,
-/// while keeping underlying widget state and scroll positions completely intact.
+/// using Google Pixel Material 3 expressive easing and subtle forward scale.
 class _AnimatedFadeIndexedStack extends StatefulWidget {
   final int index;
   final List<Widget> children;
@@ -319,12 +276,12 @@ class _AnimatedFadeIndexedStackState extends State<_AnimatedFadeIndexedStack>
     _activeChildIndex = widget.index;
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 200),
     );
-    _fadeAnimation = Tween<double>(begin: 0.35, end: 1.0).animate(
+    _fadeAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
-    _scaleAnimation = Tween<double>(begin: 0.985, end: 1.0).animate(
+    _scaleAnimation = Tween<double>(begin: 0.99, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
     _controller.value = 1.0;
@@ -361,4 +318,3 @@ class _AnimatedFadeIndexedStackState extends State<_AnimatedFadeIndexedStack>
     );
   }
 }
-

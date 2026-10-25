@@ -76,7 +76,7 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '${overallStats.reviewedToday} done today ✓',
+                        '${overallStats.reviewedToday} completed today',
                         style: const TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w700),
                       ),
                     ),
@@ -123,7 +123,7 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text(
-                    'All cards reviewed for today! 🎉',
+                    'All cards reviewed for today',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 13),
                   ),

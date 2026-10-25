@@ -26,16 +26,16 @@ import 'spectroscopy_hub_screen.dart';
 import 'syllabus_browser_screen.dart';
 
 enum LibrarySection {
-  pdfs('PDFs', '📄', 'Textbooks, research papers & notes'),
-  reactions('Reactions', '🧪', 'Curated mechanisms & vector diagrams'),
-  flashcards('Flashcards', '🗂', 'Active recall decks & spaced repetition'),
-  quizzes('Quizzes', '📝', 'Topic mastery & exam practice papers'),
-  tools('Tools', '🧮', 'Calculators, spectroscopy & solvers'),
-  notes('Notes & Deadlines', '📓', 'Personal notes, seminars & test dates');
+  pdfs('PDFs', Icons.picture_as_pdf_outlined, 'Textbooks, research papers & notes'),
+  reactions('Reactions', Icons.science_outlined, 'Curated mechanisms & vector diagrams'),
+  flashcards('Flashcards', Icons.style_outlined, 'Active recall decks & spaced repetition'),
+  quizzes('Quizzes', Icons.quiz_outlined, 'Topic mastery & exam practice papers'),
+  tools('Tools', Icons.calculate_outlined, 'Calculators, spectroscopy & solvers'),
+  notes('Notes & Deadlines', Icons.note_alt_outlined, 'Personal notes, seminars & test dates');
 
   const LibrarySection(this.title, this.icon, this.description);
   final String title;
-  final String icon;
+  final IconData icon;
   final String description;
 }
 
@@ -161,7 +161,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                         ),
                         child: Row(
                           children: [
-                            Text(section.icon, style: const TextStyle(fontSize: 18)),
+                            Icon(section.icon, size: 20, color: isSelected ? AppColors.brandBright : AppColors.textSecondary),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -333,7 +333,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    avatar: Text(section.icon, style: const TextStyle(fontSize: 13)),
+                    avatar: Icon(section.icon, size: 16, color: isSel ? Colors.white : AppColors.brandBright),
                     label: Text(
                       section.title,
                       style: TextStyle(
@@ -463,7 +463,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 
         // Reactions
         if (matchedReactions.isNotEmpty) ...[
-          const _SearchResultHeader(title: 'Reactions', icon: '🧪'),
+          const _SearchResultHeader(title: 'Reactions', icon: Icons.science_outlined),
           ...matchedReactions.map((r) => _SearchResultTile(
                 title: r.name,
                 subtitle: r.summary,
@@ -479,7 +479,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 
         // Tools
         if (matchedTools.isNotEmpty) ...[
-          const _SearchResultHeader(title: 'Tools & Solvers', icon: '🧮'),
+          const _SearchResultHeader(title: 'Tools & Solvers', icon: Icons.calculate_outlined),
           ...matchedTools.map((t) => _SearchResultTile(
                 title: t.$1,
                 subtitle: t.$2,
@@ -504,7 +504,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 
         // PDFs
         if (matchedPdfs.isNotEmpty) ...[
-          const _SearchResultHeader(title: 'PDF Documents', icon: '📄'),
+          const _SearchResultHeader(title: 'PDF Documents', icon: Icons.picture_as_pdf_outlined),
           ...matchedPdfs.map((p) => _SearchResultTile(
                 title: p.displayName,
                 subtitle: 'Added ${DateFormat("d MMM yyyy").format(p.dateAdded)} · ${(p.fileSize / (1024 * 1024)).toStringAsFixed(1)} MB',
@@ -520,7 +520,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 
         // Notes
         if (matchedNotes.isNotEmpty) ...[
-          const _SearchResultHeader(title: 'Notes', icon: '📓'),
+          const _SearchResultHeader(title: 'Notes', icon: Icons.menu_book_outlined),
           ...matchedNotes.map((n) => _SearchResultTile(
                 title: n.title,
                 subtitle: n.body,
@@ -540,7 +540,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 class _SearchResultHeader extends StatelessWidget {
   const _SearchResultHeader({required this.title, required this.icon});
   final String title;
-  final String icon;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -548,7 +548,7 @@ class _SearchResultHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6, top: 4),
       child: Row(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 14)),
+          Icon(icon, size: 16, color: AppColors.purpleBright),
           const SizedBox(width: 6),
           Text(
             title,
@@ -786,7 +786,7 @@ class _ReactionLibrarySectionState extends State<_ReactionLibrarySection> {
                         color: AppColors.purple.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Text('⚗️', style: TextStyle(fontSize: 18)),
+                      child: const Icon(Icons.science_outlined, size: 20, color: AppColors.purpleBright),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -974,7 +974,7 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
 
         // 1. CALCULATIONS CATEGORY
         if (_shouldShow('calculations', ['molar mass', 'stoichiometry', 'moles', 'yield', 'conversion', 'molarity', 'normality', 'dilution', 'ph', 'buffer', 'titration'])) ...[
-          const _ToolCategoryHeader(title: 'CALCULATIONS & STOICHIOMETRY', icon: '🧮'),
+          const _ToolCategoryHeader(title: 'CALCULATIONS & STOICHIOMETRY', icon: Icons.calculate_outlined),
           _ToolListTile(
             title: 'Stoichiometry & Unit Conversions',
             subtitle: 'Mass ⇄ mole ⇄ particles, gas volume at STP, percent yield & chemical units',
@@ -1015,7 +1015,7 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
 
         // 2. PHYSICAL / INORGANIC
         if (_shouldShow('physical', ['gibbs', 'delta g', 'nernst', 'cell potential', 'arrhenius', 'kinetics', 'beer lambert', 'thermo'])) ...[
-          const _ToolCategoryHeader(title: 'PHYSICAL / INORGANIC', icon: '⚡'),
+          const _ToolCategoryHeader(title: 'PHYSICAL / INORGANIC', icon: Icons.bolt_outlined),
           _ToolListTile(
             title: 'Gibbs Free Energy (ΔG = ΔH - TΔS)',
             subtitle: 'Spontaneity analysis, enthalpy, entropy & temperature dependence',
@@ -1049,7 +1049,7 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
 
         // 3. SPECTROSCOPY
         if (_shouldShow('spectroscopy', ['dbe', 'ihd', 'nmr', 'ir', 'mass spec', 'spectroscopy', 'structure solver'])) ...[
-          const _ToolCategoryHeader(title: 'SPECTROSCOPY', icon: '🧲'),
+          const _ToolCategoryHeader(title: 'SPECTROSCOPY', icon: Icons.waves_outlined),
           _ToolListTile(
             title: 'DBE / IHD Calculator',
             subtitle: 'Degree of unsaturation with valence limits & halogen support',
@@ -1076,7 +1076,7 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
 
         // 4. ORGANIC & ADVANCED
         if (_shouldShow('organic', ['reactions', 'pericyclic', 'fmo', 'woodward', 'predict', 'pyq', 'syllabus'])) ...[
-          const _ToolCategoryHeader(title: 'ORGANIC & ADVANCED', icon: '🌀'),
+          const _ToolCategoryHeader(title: 'ORGANIC & ADVANCED', icon: Icons.biotech_outlined),
           _ToolListTile(
             title: 'Reaction Mechanisms & Vector SVGs',
             subtitle: 'Curated reaction database, curved electron arrows & conditions',
@@ -1120,7 +1120,7 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
 class _ToolCategoryHeader extends StatelessWidget {
   const _ToolCategoryHeader({required this.title, required this.icon});
   final String title;
-  final String icon;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -1128,7 +1128,7 @@ class _ToolCategoryHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8, top: 4),
       child: Row(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 14)),
+          Icon(icon, size: 15, color: AppColors.textSecondary),
           const SizedBox(width: 6),
           Text(
             title,
@@ -1293,7 +1293,7 @@ class _QuizzesAndMasteryTab extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('University Exam Pattern Paper 📝', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white)),
+                  Text('University Exam Pattern Paper', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white)),
                   SizedBox(height: 2),
                   Text('Practice authentic 2M, 5M, and 10M questions with model marking schemes.', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
                 ],
@@ -1317,7 +1317,7 @@ class _QuizzesAndMasteryTab extends ConsumerWidget {
                 Text('No Quiz History Yet', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                 SizedBox(height: 8),
                 Text(
-                  'Take a quiz from any uploaded PDF notes to track your Strong 🟢, Moderate 🟡, and Weak 🔴 chemistry topic mastery here.',
+                  'Take a quiz from any uploaded PDF notes to track your topic mastery across performance tiers here.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
                 ),
@@ -1332,7 +1332,7 @@ class _QuizzesAndMasteryTab extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         examCard,
-        const Text('Chemistry Topic Mastery 🧠', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        const Text('Chemistry Topic Mastery', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         const SizedBox(height: 8),
         const Text(
           'Adaptive tracking based on your PDF quiz performance:',

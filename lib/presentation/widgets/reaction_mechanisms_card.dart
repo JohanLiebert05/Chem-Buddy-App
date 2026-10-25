@@ -42,7 +42,7 @@ class ReactionMechanismsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (compact) {
       return GlowCard(
-        borderColor: AppColors.purple.withValues(alpha: 0.35),
+        borderColor: AppColors.borderSubtle,
         padding: const EdgeInsets.all(14),
         onTap: () => _openMechanisms(context),
         child: Column(
@@ -52,12 +52,12 @@ class ReactionMechanismsCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
-                    color: AppColors.brandPrimary.withValues(alpha: 0.15),
+                    color: AppColors.brandPrimary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('⚗️', style: TextStyle(fontSize: 16)),
+                  child: const Icon(Icons.science_rounded, size: 16, color: AppColors.brandBright),
                 ),
                 const SizedBox(width: 8),
                 const Expanded(
@@ -65,8 +65,8 @@ class ReactionMechanismsCard extends StatelessWidget {
                     'REACTION MECHANISMS',
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
-                      fontSize: 12.5,
-                      letterSpacing: 0.6,
+                      fontSize: 12,
+                      letterSpacing: 0.5,
                       color: AppColors.brandBright,
                     ),
                   ),
@@ -74,15 +74,14 @@ class ReactionMechanismsCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.success.withValues(alpha: 0.5)),
+                    color: AppColors.statusSuccess.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Text(
-                    'MSc VERIFIED',
+                    'VERIFIED',
                     style: TextStyle(
-                      color: AppColors.success,
-                      fontWeight: FontWeight.w800,
+                      color: AppColors.statusSuccess,
+                      fontWeight: FontWeight.w700,
                       fontSize: 9.5,
                       letterSpacing: 0.4,
                     ),
@@ -101,18 +100,17 @@ class ReactionMechanismsCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.purple.withValues(alpha: 0.2),
+                    color: AppColors.brandPrimary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.polyline_rounded, size: 13, color: AppColors.purpleBright),
+                      Icon(Icons.account_tree_outlined, size: 13, color: AppColors.brandBright),
                       SizedBox(width: 6),
                       Text(
-                        '10+ Diagrams Active ➔',
-                        style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 11.5),
+                        '10+ Diagrams Active',
+                        style: TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w600, fontSize: 11.5),
                       ),
                     ],
                   ),
@@ -125,8 +123,8 @@ class ReactionMechanismsCard extends StatelessWidget {
     }
 
     return GlowCard(
-      borderColor: AppColors.purple.withValues(alpha: 0.35),
-      padding: const EdgeInsets.all(18),
+      borderColor: AppColors.borderSubtle,
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -135,34 +133,28 @@ class ReactionMechanismsCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.brandPrimary.withValues(alpha: 0.25),
-                      AppColors.brandBright.withValues(alpha: 0.08),
-                    ],
-                  ),
+                  color: AppColors.brandPrimary.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.brandPrimary.withValues(alpha: 0.25)),
                 ),
-                child: const Text('⚗️', style: TextStyle(fontSize: 24)),
+                child: const Icon(Icons.science_rounded, size: 24, color: AppColors.brandBright),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'REACTION MECHANISMS',
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                        letterSpacing: 0.8,
-                        color: Colors.white,
+                        fontSize: 14,
+                        letterSpacing: 0.5,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Curated MSc Organic Mechanisms with Vector Diagrams & Curved Arrows',
+                    SizedBox(height: 2),
+                    Text(
+                      'Curated organic mechanisms with vector diagrams and arrow pushing',
                       style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                     ),
                   ],
@@ -170,12 +162,12 @@ class ReactionMechanismsCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           const Text(
-            'Explore 10+ core MSc reaction mechanisms complete with curved electron arrows, transition states, pinch-to-zoom vector diagrams, and synthetic applications.',
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 13, height: 1.4),
+            'Explore 10+ core MSc reaction mechanisms complete with curved electron arrows, transition states, vector diagrams, and synthetic applications.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.4),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -186,16 +178,16 @@ class ReactionMechanismsCard extends StatelessWidget {
                 onTap: () => _openMechanisms(context, id),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceElevated,
+                    color: AppColors.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: AppColors.borderSubtle),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.bolt_rounded, size: 12, color: AppColors.accentGold),
+                      const Icon(Icons.arrow_outward_rounded, size: 12, color: AppColors.accentCyan),
                       const SizedBox(width: 5),
                       Text(
                         name,
@@ -214,19 +206,18 @@ class ReactionMechanismsCard extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
                 backgroundColor: AppColors.brandPrimary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               onPressed: () => _openMechanisms(context),
               icon: const Icon(Icons.hub_rounded, size: 18),
               label: const Text(
-                'Explore Reaction Mechanisms ⚗️',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                'Explore Reaction Mechanisms',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
               ),
             ),
           ),
@@ -235,6 +226,3 @@ class ReactionMechanismsCard extends StatelessWidget {
     );
   }
 }
-
-
-

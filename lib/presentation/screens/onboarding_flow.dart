@@ -235,7 +235,7 @@ class _SplashPageState extends State<_SplashPage> with SingleTickerProviderState
                   border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.35), width: 1),
                 ),
                 child: const Text(
-                  '✨ MSc CHEMISTRY INTELLIGENCE',
+                  'MSC CHEMISTRY INTELLIGENCE',
                   style: TextStyle(
                     color: AppColors.purpleBright,
                     fontWeight: FontWeight.w800,

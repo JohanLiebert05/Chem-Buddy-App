@@ -53,7 +53,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('STEP 1 OF 7'), findsOneWidget);
-      expect(find.text('Welcome to ChemBuddy 🧪'), findsOneWidget);
+      expect(find.text('Welcome to ChemBuddy'), findsOneWidget);
       expect(find.text('ChemDraw Canvas'), findsOneWidget);
       expect(find.text('ChemBuddy AI Tutor'), findsOneWidget);
 
@@ -61,7 +61,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('STEP 2 OF 7'), findsOneWidget);
-      expect(find.text('Interactive Chemical Sketcher 🎨'), findsOneWidget);
+      expect(find.text('Interactive Chemical Sketcher'), findsOneWidget);
       expect(find.text('Ring Templates & Fused Systems'), findsOneWidget);
       expect(find.text('Functional Groups & Smart Snapping'), findsOneWidget);
       expect(find.text('Reaction Arrows & Predictor'), findsOneWidget);
@@ -70,37 +70,37 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('STEP 3 OF 7'), findsOneWidget);
-      expect(find.text('Intelligent Academic Tutor ⚡'), findsOneWidget);
-      expect(find.text('✨ General AI & Internet Access'), findsOneWidget);
+      expect(find.text('Intelligent Academic Tutor'), findsOneWidget);
+      expect(find.text('General AI & Internet Access'), findsOneWidget);
       expect(find.text('Step-by-Step Reaction Mechanisms'), findsOneWidget);
 
       await tester.tap(find.text('Next →'));
       await tester.pumpAndSettle();
 
       expect(find.text('STEP 4 OF 7'), findsOneWidget);
-      expect(find.text('Handwritten Notes → Flashcards 📸'), findsOneWidget);
+      expect(find.text('Handwritten Notes → Flashcards'), findsOneWidget);
       expect(find.text('Multi-Page Photo Scanning'), findsOneWidget);
 
       await tester.tap(find.text('Next →'));
       await tester.pumpAndSettle();
 
       expect(find.text('STEP 5 OF 7'), findsOneWidget);
-      expect(find.text('Stay Confidently Above 75% 📊'), findsOneWidget);
+      expect(find.text('Stay Confidently Above 75%'), findsOneWidget);
       expect(find.text('Live "Can Skip" Buffer'), findsOneWidget);
 
       await tester.tap(find.text('Next →'));
       await tester.pumpAndSettle();
 
       expect(find.text('STEP 6 OF 7'), findsOneWidget);
-      expect(find.text('Your Daily Command Center 📅'), findsOneWidget);
+      expect(find.text('Your Daily Command Center'), findsOneWidget);
       expect(find.text('MSc Timetable Presets'), findsOneWidget);
 
       await tester.tap(find.text('Next →'));
       await tester.pumpAndSettle();
 
       expect(find.text('STEP 7 OF 7'), findsOneWidget);
-      expect(find.text('The 5-Step Academic Routine 🚀'), findsOneWidget);
-      expect(find.text('Start Using ChemBuddy 🚀'), findsOneWidget);
+      expect(find.text('The 5-Step Academic Routine'), findsOneWidget);
+      expect(find.text('Start Using ChemBuddy'), findsOneWidget);
     });
   });
 }

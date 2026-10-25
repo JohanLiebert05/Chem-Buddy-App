@@ -179,7 +179,7 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          '📝 $docQuizzes Quiz${docQuizzes == 1 ? "" : "zes"}',
+                          '$docQuizzes Quiz${docQuizzes == 1 ? "" : "zes"}',
                           style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -191,7 +191,7 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          '🃏 $docFlashcards Deck${docFlashcards == 1 ? "" : "s"}',
+                          '$docFlashcards Deck${docFlashcards == 1 ? "" : "s"}',
                           style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -205,8 +205,8 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                           ),
                           child: Text(
                             ocrBundle.overallQuality == PageQuality.digitalText
-                                ? '📄 Digital'
-                                : (ocrBundle.overallQuality == PageQuality.handwritten ? '📝 Handwritten' : '📷 Scanned'),
+                                ? 'Digital'
+                                : (ocrBundle.overallQuality == PageQuality.handwritten ? 'Handwritten' : 'Scanned'),
                             style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w700),
                           ),
                         ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
+/// Clean ambient background with a very subtle molecular hex grid accent.
 class HexBackground extends StatelessWidget {
   const HexBackground({super.key, required this.child});
 
@@ -17,30 +18,33 @@ class HexBackground extends StatelessWidget {
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: RadialGradient(
-              center: Alignment(0, -0.6),
-              radius: 1.2,
-              colors: [Color(0xFF1E1A2E), AppColors.background],
+              center: Alignment(0, -0.7),
+              radius: 1.4,
+              colors: [
+                Color(0xFF171329), // Subtle dark violet top aura
+                AppColors.bg0,     // Deep canvas base
+              ],
             ),
           ),
         ),
-        const CustomPaint(painter: _HexPainter(), size: Size.infinite),
+        const CustomPaint(painter: _SubtleHexPainter(), size: Size.infinite),
         child,
       ],
     );
   }
 }
 
-class _HexPainter extends CustomPainter {
-  const _HexPainter();
+class _SubtleHexPainter extends CustomPainter {
+  const _SubtleHexPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = const Color(0x0DA78BFA);
+      ..strokeWidth = 0.6
+      ..color = const Color(0x06A78BFA); // Extremely faint, whisper-level accent
 
-    const radius = 28.0;
+    const radius = 34.0;
     final h = radius * math.sqrt(3);
     for (var row = 0; row < size.height / h + 2; row++) {
       for (var col = 0; col < size.width / (radius * 1.5) + 2; col++) {

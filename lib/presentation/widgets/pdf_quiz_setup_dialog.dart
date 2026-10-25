@@ -253,7 +253,7 @@ class _PdfQuizSetupDialogState extends ConsumerState<PdfQuizSetupDialog> {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Text('· Strict PDF Grounding 🔒', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                        const Text('· Strict PDF Grounding', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
                       ],
                     ),
                   ],
@@ -274,19 +274,19 @@ class _PdfQuizSetupDialogState extends ConsumerState<PdfQuizSetupDialog> {
             children: [
               _buildModeOption(
                 mode: QuizMode.smartQuiz,
-                title: '✨ Smart Quiz',
+                title: 'Adaptive Quiz',
                 subtitle: 'Auto-balanced',
               ),
               const SizedBox(width: 8),
               _buildModeOption(
                 mode: QuizMode.importantTopics,
-                title: '🔥 High Priority',
+                title: 'High Priority',
                 subtitle: 'Exam Core',
               ),
               const SizedBox(width: 8),
               _buildModeOption(
                 mode: QuizMode.custom,
-                title: '⚙️ Custom',
+                title: 'Custom',
                 subtitle: 'Full Control',
               ),
             ],
@@ -440,7 +440,7 @@ class _PdfQuizSetupDialogState extends ConsumerState<PdfQuizSetupDialog> {
                   const Icon(Icons.rocket_launch_rounded, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'Generate $_selectedCount Questions 🚀',
+                    'Generate $_selectedCount Questions',
                     style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
                   ),
                 ],

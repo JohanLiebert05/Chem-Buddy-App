@@ -611,7 +611,7 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: Text(
-                  _currentIndex == total - 1 ? 'View Quiz Results 📊' : 'Next Question →',
+                  _currentIndex == total - 1 ? 'View Quiz Results' : 'Next Question →',
                   style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                 ),
               ),
@@ -642,7 +642,7 @@ class _PdfQuizScreenState extends ConsumerState<PdfQuizScreen> {
               child: Column(
                 children: [
                   Text(
-                    result.accuracy >= 70 ? '🎉 Great Job!' : '📚 Study Review Needed',
+                    result.accuracy >= 70 ? 'Great Job!' : 'Study Review Needed',
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
                   ),
                   const SizedBox(height: 12),
