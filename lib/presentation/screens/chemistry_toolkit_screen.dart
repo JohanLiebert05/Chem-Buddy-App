@@ -8,6 +8,23 @@ import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../data/services/chemical_name_database.dart';
+import '../../core/widgets/liquid_glass.dart';
+
+class _ToolkitToolInfo {
+  final int categoryIndex;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<String> keywords;
+
+  const _ToolkitToolInfo({
+    required this.categoryIndex,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.keywords,
+  });
+}
 
 class ChemistryToolkitScreen extends StatefulWidget {
   const ChemistryToolkitScreen({super.key, this.initialCategory = 0});
@@ -32,6 +49,235 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
     'Analytical & Error',
   ];
 
+  static const _categoryDescriptions = [
+    'Solutions & Concentration: Calculate molar mass, molarity, normality, and prepare dilutions.',
+    'Stoichiometry & Units: Reaction quantities, limiting reagents, and unit conversions.',
+    'Inorganic & CFT: Crystal field splitting (10 Dq), CFSE, and d-orbital spin states.',
+    'Acids, Bases & Buffers: Hydronium concentration, buffer pH, and laboratory recipes.',
+    'Thermodynamics & Kinetics: Gibbs free energy (ΔG), Arrhenius activation (Ea), and rate laws.',
+    'Quantum Chemistry: Particle in a 1D box wavefunctions, energy eigenvalues, and nodes.',
+    'Spectroscopy & Light: Beer-Lambert absorbance (A = εbc), photon energy, and wavelengths.',
+    'Electrochemistry: Nernst equation, non-standard potentials, and galvanic cell voltages.',
+    'Analytical Chemistry: HPLC calibration curves, regression metrics, and Van Deemter efficiency.',
+  ];
+
+  static const _toolsCatalog = [
+    _ToolkitToolInfo(categoryIndex: 0, title: 'Molar Mass Calculator', subtitle: 'Parse formulas & compute molecular/repeat-unit mass', icon: Icons.scale_rounded, keywords: ['molar mass', 'molecular weight', 'formula', 'polymer', 'benzoic acid']),
+    _ToolkitToolInfo(categoryIndex: 0, title: 'Molarity & Normality', subtitle: 'Compute moles per litre of solution & equivalent normality', icon: Icons.water_drop_rounded, keywords: ['molarity', 'normality', 'concentration', 'solution', 'mass', 'volume']),
+    _ToolkitToolInfo(categoryIndex: 0, title: 'Dilution Law (C1·V1 = C2·V2)', subtitle: 'Find required stock volume or target concentration upon dilution', icon: Icons.opacity_rounded, keywords: ['dilution', 'stock', 'volume', 'm1v1', 'm2v2', 'aliquot']),
+    _ToolkitToolInfo(categoryIndex: 1, title: 'Stoichiometry & Yield', subtitle: 'Determine theoretical yield, limiting reagent, and percent yield', icon: Icons.balance_rounded, keywords: ['stoichiometry', 'limiting reagent', 'yield', 'reaction', 'moles']),
+    _ToolkitToolInfo(categoryIndex: 1, title: 'Unit Conversion', subtitle: 'Convert pressure, energy, temperature, and concentration units', icon: Icons.swap_horiz_rounded, keywords: ['units', 'conversion', 'atm', 'bar', 'joule', 'kelvin', 'celsius']),
+    _ToolkitToolInfo(categoryIndex: 2, title: 'Crystal Field Theory (CFT)', subtitle: 'Calculate 10 Dq splitting, CFSE, and spin pairing states', icon: Icons.grain_rounded, keywords: ['cft', 'crystal field', '10 dq', 'cfse', 'octahedral', 'tetrahedral', 'd orbitals']),
+    _ToolkitToolInfo(categoryIndex: 3, title: 'pH & pOH Calculator', subtitle: 'Calculate hydronium/hydroxide concentration, pH, and pOH', icon: Icons.science_rounded, keywords: ['ph', 'poh', 'acid', 'base', 'h+', 'oh-', 'hydronium']),
+    _ToolkitToolInfo(categoryIndex: 3, title: 'Henderson-Hasselbalch & Buffers', subtitle: 'Calculate buffer pH and formulate laboratory buffer recipes in grams', icon: Icons.biotech_rounded, keywords: ['buffer', 'henderson', 'hasselbalch', 'pka', 'recipe', 'formulation', 'acetate']),
+    _ToolkitToolInfo(categoryIndex: 4, title: 'Gibbs Free Energy (ΔG)', subtitle: 'Evaluate thermodynamic spontaneity from enthalpy (ΔH) and entropy (ΔS)', icon: Icons.local_fire_department_rounded, keywords: ['gibbs', 'delta g', 'free energy', 'spontaneous', 'enthalpy', 'entropy']),
+    _ToolkitToolInfo(categoryIndex: 4, title: 'Arrhenius Kinetics (Ea)', subtitle: 'Calculate activation energy and rate constant temperature dependence', icon: Icons.speed_rounded, keywords: ['arrhenius', 'activation energy', 'ea', 'rate constant', 'kinetics']),
+    _ToolkitToolInfo(categoryIndex: 4, title: 'Integrated Rate Laws', subtitle: 'Determine 0th, 1st, or 2nd order kinetics, half-life, and time dependence', icon: Icons.timeline_rounded, keywords: ['rate law', 'half life', 'kinetics', 'first order', 'second order']),
+    _ToolkitToolInfo(categoryIndex: 5, title: 'Quantum Chemistry (1D Box)', subtitle: 'Solve particle-in-a-box energy eigenstates, transition wavelengths, and nodes', icon: Icons.blur_on_rounded, keywords: ['quantum', 'particle in a box', 'wavefunction', 'nodes', 'energy levels', 'planck']),
+    _ToolkitToolInfo(categoryIndex: 6, title: 'Beer-Lambert Law (A = εbc)', subtitle: 'Calculate absorbance, molar absorptivity, path length, and concentration', icon: Icons.lightbulb_rounded, keywords: ['beer', 'lambert', 'absorbance', 'spectroscopy', 'absorptivity', 'transmittance']),
+    _ToolkitToolInfo(categoryIndex: 6, title: 'Photon Energy & Wavelength', subtitle: 'Relate photon energy (E = hc/λ), frequency (ν), and wavenumber (cm⁻¹)', icon: Icons.waves_rounded, keywords: ['photon', 'energy', 'wavelength', 'wavenumber', 'frequency', 'planck']),
+    _ToolkitToolInfo(categoryIndex: 7, title: 'Nernst Equation', subtitle: 'Estimate non-standard electrode potential from reaction quotient (Q)', icon: Icons.bolt_rounded, keywords: ['nernst', 'cell potential', 'voltage', 'electrode', 'reaction quotient', 'q']),
+    _ToolkitToolInfo(categoryIndex: 7, title: 'Standard Cell Potential (E°cell)', subtitle: 'Calculate galvanic cell voltage from reduction potentials', icon: Icons.electric_bolt_rounded, keywords: ['cell potential', 'galvanic', 'e cell', 'reduction potential', 'cathode', 'anode']),
+    _ToolkitToolInfo(categoryIndex: 8, title: 'Analytical Error & Uncertainty', subtitle: 'Calculate absolute and relative error, standard deviation, and propagation', icon: Icons.calculate_rounded, keywords: ['error', 'uncertainty', 'accuracy', 'precision', 'standard deviation', 'relative error']),
+    _ToolkitToolInfo(categoryIndex: 8, title: 'Van Deemter Equation', subtitle: 'Optimize chromatographic column height equivalent to theoretical plate (HETP)', icon: Icons.filter_alt_rounded, keywords: ['van deemter', 'hetp', 'chromatography', 'column efficiency', 'flow rate']),
+    _ToolkitToolInfo(categoryIndex: 8, title: 'HPLC Calibration Curve Plotter', subtitle: 'Plot regression line, calculate R², LOD, LOQ, and quantify unknown sample concentration', icon: Icons.analytics_rounded, keywords: ['hplc', 'calibration', 'regression', 'r2', 'lod', 'loq', 'chromatogram']),
+  ];
+
+  void _openToolSearchSheet(BuildContext context) {
+    AppHaptics.selection();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        String searchQuery = '';
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final filtered = _toolsCatalog.where((tool) {
+              if (searchQuery.isEmpty) return true;
+              final q = searchQuery.toLowerCase();
+              return tool.title.toLowerCase().contains(q) ||
+                  tool.subtitle.toLowerCase().contains(q) ||
+                  tool.keywords.any((k) => k.toLowerCase().contains(q));
+            }).toList();
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(ctx).bottom,
+              ),
+              child: LiquidGlassContainer(
+                enableBlur: true,
+                blurSigma: 20,
+                borderRadius: 0,
+                customBorderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                backgroundColor: AppColors.surfaceContainerLow.withValues(alpha: 0.94),
+                borderColor: Colors.white.withValues(alpha: 0.14),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(ctx).height * 0.75,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Search Chemistry Tools',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
+                            onPressed: () => Navigator.pop(sheetContext),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        autofocus: true,
+                        style: const TextStyle(fontSize: 14, color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Search by tool, formula, or concept (e.g. Nernst, pH, M1V1)...',
+                          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.brandBright, size: 20),
+                          filled: true,
+                          fillColor: AppColors.surfaceContainerHigh,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: AppColors.borderSubtle),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: AppColors.borderSubtle),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: AppColors.brandBright),
+                          ),
+                        ),
+                        onChanged: (val) {
+                          setSheetState(() => searchQuery = val.trim());
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 32),
+                                  child: Text(
+                                    'No chemistry tools matched your search.',
+                                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                itemCount: filtered.length,
+                                separatorBuilder: (ctx, idx) => const SizedBox(height: 8),
+                                itemBuilder: (ctx, idx) {
+                                  final tool = filtered[idx];
+                                  final catName = _categories[tool.categoryIndex];
+                                  return InkWell(
+                                    onTap: () {
+                                      Navigator.pop(sheetContext);
+                                      setState(() => _selectedCategory = tool.categoryIndex);
+                                      AppHaptics.confirm();
+                                    },
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surfaceContainerHigh.withValues(alpha: 0.6),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.brandPrimary.withValues(alpha: 0.14),
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Icon(tool.icon, size: 20, color: AppColors.brandBright),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        tool.title,
+                                                        style: const TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight: FontWeight.w700,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: AppColors.surfaceContainerHighest,
+                                                        borderRadius: BorderRadius.circular(6),
+                                                      ),
+                                                      child: Text(
+                                                        catName,
+                                                        style: const TextStyle(fontSize: 10, color: AppColors.brandBright, fontWeight: FontWeight.w600),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  tool.subtitle,
+                                                  style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,11 +292,74 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text('MSc Chemistry Toolkit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          title: const Text('Chemistry Toolkit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search_rounded),
+              tooltip: 'Search Calculators',
+              onPressed: () => _openToolSearchSheet(context),
+            ),
+          ],
         ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
           children: [
+            // Pedagogical Header
+            const Text(
+              'Chemistry Toolkit',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
+                letterSpacing: -0.4,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Choose a problem type or search for a calculator.',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Liquid Glass Search Trigger Pill
+            LiquidGlassContainer(
+              borderRadius: 16,
+              backgroundColor: AppColors.surfaceContainerHigh.withValues(alpha: 0.72),
+              borderColor: AppColors.borderSubtle,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: InkWell(
+                onTap: () => _openToolSearchSheet(context),
+                borderRadius: BorderRadius.circular(16),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search_rounded, size: 20, color: AppColors.brandBright),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Search calculators, formulas, or concepts...',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        '19 Tools',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // Category Chips
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -75,6 +384,29 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
                     ),
                   );
                 }).toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Category Description Banner
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.brandBright),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _categoryDescriptions[_selectedCategory],
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -700,7 +1032,24 @@ class _DilutionCalculatorState extends State<_DilutionCalculator> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
-              child: Text('Final Concentration C2 = ${_c2!.toStringAsFixed(4)} M', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Final Concentration C2 = ${_c2!.toStringAsFixed(4)} M', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Worked steps: C2 = (C1 × V1) / V2 = (${_c1.text} M × ${_v1.text} mL) / ${_v2.text} mL',
+                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    (double.tryParse(_v2.text) ?? 0) > (double.tryParse(_v1.text) ?? 0)
+                        ? 'Sanity check: Final volume exceeds initial volume (solution is diluted).'
+                        : 'Note: Final volume is less than or equal to initial volume.',
+                    style: const TextStyle(fontSize: 11, color: AppColors.accentCyan),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
@@ -1520,6 +1869,18 @@ class _GibbsFreeEnergyCalculatorState extends State<_GibbsFreeEnergyCalculator> 
                   Text('ΔG = ${_deltaG!.toStringAsFixed(2)} kJ/mol', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: _deltaG! < 0 ? AppColors.success : AppColors.danger)),
                   const SizedBox(height: 4),
                   Text(_deltaG! < 0 ? '✓ Spontaneous Reaction at this temperature' : '✗ Non-Spontaneous (requires energy input)', style: TextStyle(fontSize: 12, color: _deltaG! < 0 ? AppColors.success : AppColors.danger)),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Worked steps: ΔG = ΔH - (T × ΔS / 1000) = ${_deltaH.text} kJ/mol - (${_temp.text} K × ${_deltaS.text} J/mol·K / 1000) = ${_deltaG!.toStringAsFixed(2)} kJ/mol',
+                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _deltaG! < 0
+                        ? 'Sanity check: Exergonic process (ΔG < 0); products are thermodynamically favored.'
+                        : 'Sanity check: Endergonic process (ΔG > 0); reaction is non-spontaneous in forward direction.',
+                    style: const TextStyle(fontSize: 11, color: AppColors.accentCyan),
+                  ),
                 ],
               ),
             ),
@@ -1975,7 +2336,24 @@ class _NernstCalculatorState extends State<_NernstCalculator> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
-              child: Text('Cell Potential E = ${_eCell!.toStringAsFixed(4)} V', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Cell Potential E = ${_eCell!.toStringAsFixed(4)} V', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Worked steps: E = E° - (0.0592 / n) × log10(Q) = ${_eStd.text} V - (0.0592 / ${_nElectrons.text}) × log10(${_qRatio.text}) = ${_eCell!.toStringAsFixed(4)} V',
+                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _eCell! > 0
+                        ? 'Sanity check: E_cell > 0 V indicates galvanic cell operates spontaneously in forward direction.'
+                        : 'Sanity check: E_cell ≤ 0 V indicates reaction has reached equilibrium or requires external electrical energy.',
+                    style: const TextStyle(fontSize: 11, color: AppColors.accentCyan),
+                  ),
+                ],
+              ),
             ),
           ],
         ],

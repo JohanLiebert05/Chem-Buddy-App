@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_error_boundary.dart';
 import '../../core/widgets/hex_background.dart';
+import '../../core/widgets/liquid_glass.dart';
 import '../providers/app_providers.dart';
 import '../screens/ask_chembuddy_screen.dart';
 import '../screens/classes_hub_screen.dart';
@@ -96,16 +97,21 @@ class _Material3ExpressiveNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        border: Border(
-          top: BorderSide(
-            color: AppColors.borderSubtle,
-            width: 0.6,
-          ),
+    return LiquidGlassContainer(
+      enableBlur: true,
+      blurSigma: 16,
+      borderRadius: 0,
+      customBorderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+      backgroundColor: AppColors.surfaceContainerLow.withValues(alpha: 0.82),
+      borderColor: Colors.white.withValues(alpha: 0.10),
+      borderWidth: 0.8,
+      shadows: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.35),
+          blurRadius: 16,
+          offset: const Offset(0, -4),
         ),
-      ),
+      ],
       padding: EdgeInsets.fromLTRB(8, 6, 8, bottomInset > 0 ? bottomInset : 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,

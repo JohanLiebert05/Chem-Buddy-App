@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/glow_card.dart';
+import '../../core/widgets/liquid_glass.dart';
 import '../../data/models/models.dart';
 import '../../data/models/pdf_study_models.dart';
 import '../../data/models/reaction_models.dart';
@@ -84,18 +85,32 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: LiquidGlassContainer(
+            enableBlur: true,
+            blurSigma: 20,
+            borderRadius: 0,
+            customBorderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            backgroundColor: AppColors.surfaceContainerLow.withValues(alpha: 0.94),
+            borderColor: Colors.white.withValues(alpha: 0.14),
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
