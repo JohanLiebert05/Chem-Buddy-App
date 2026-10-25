@@ -48,6 +48,8 @@ jobs:
 
       - name: Copy Named APK
         run: |
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.2.3-by-Prajwal-A-Kambar.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.2.3-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.5.2-by-Prajwal-A-Kambar.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v3.5.2-Release.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "Chem-Buddy-MSc-Release.apk"
@@ -55,8 +57,8 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chem-buddy-v3.5.2-apk
-          path: ChemBuddy-v3.5.2-by-Prajwal-A-Kambar.apk
+          name: chem-buddy-v3.2.3-apk
+          path: ChemBuddy-v3.2.3-by-Prajwal-A-Kambar.apk
           retention-days: 30
 
       - name: Create GitHub Release (Tags only)
@@ -64,6 +66,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
+            ChemBuddy-v3.2.3-by-Prajwal-A-Kambar.apk
+            ChemBuddy-v3.2.3-Release.apk
             ChemBuddy-v3.5.2-by-Prajwal-A-Kambar.apk
             ChemBuddy-v3.5.2-Release.apk
             Chem-Buddy-MSc-Release.apk
