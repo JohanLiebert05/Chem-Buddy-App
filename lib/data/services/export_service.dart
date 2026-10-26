@@ -1,11 +1,15 @@
 import 'dart:io';
 import 'dart:ui';
+import 'dart:ui' as ui;
+
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import '../../core/utils/attendance_math.dart';
+import '../../core/chemistry/svg_marker_expander.dart';
 import '../models/models.dart';
 import '../models/reaction_models.dart';
 import '../repositories/chem_repository.dart';
@@ -35,12 +39,36 @@ class ExportService {
     final pageSize = page.getClientSize();
 
     // Fonts
-    final titleFont = PdfStandardFont(PdfFontFamily.helvetica, 18, style: PdfFontStyle.bold);
-    final sectionFont = PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.bold);
-    final subFont = PdfStandardFont(PdfFontFamily.helvetica, 10, style: PdfFontStyle.regular);
-    final boldSubFont = PdfStandardFont(PdfFontFamily.helvetica, 10, style: PdfFontStyle.bold);
-    final kpiValFont = PdfStandardFont(PdfFontFamily.helvetica, 16, style: PdfFontStyle.bold);
-    final footerFont = PdfStandardFont(PdfFontFamily.helvetica, 8, style: PdfFontStyle.italic);
+    final titleFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      18,
+      style: PdfFontStyle.bold,
+    );
+    final sectionFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      12,
+      style: PdfFontStyle.bold,
+    );
+    final subFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      10,
+      style: PdfFontStyle.regular,
+    );
+    final boldSubFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      10,
+      style: PdfFontStyle.bold,
+    );
+    final kpiValFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      16,
+      style: PdfFontStyle.bold,
+    );
+    final footerFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      8,
+      style: PdfFontStyle.italic,
+    );
 
     // Color palette
     final primaryColor = PdfColor(76, 29, 149); // Deep Purple
@@ -88,22 +116,68 @@ class ExportService {
     final infoY1 = y + 8;
     final infoY2 = y + 28;
 
-    final studentName = profile.fullName.trim().isEmpty ? 'MSc Chemistry Scholar' : profile.fullName;
-    final regNo = profile.registerNumber.trim().isEmpty ? 'N/A' : profile.registerNumber;
-    final uni = profile.university.trim().isEmpty ? 'Autonomous University' : profile.university;
+    final studentName = profile.fullName.trim().isEmpty
+        ? 'MSc Chemistry Scholar'
+        : profile.fullName;
+    final regNo = profile.registerNumber.trim().isEmpty
+        ? 'N/A'
+        : profile.registerNumber;
+    final uni = profile.university.trim().isEmpty
+        ? 'Autonomous University'
+        : profile.university;
     final dateStr = DateFormat('dd MMMM yyyy, hh:mm a').format(DateTime.now());
 
-    page.graphics.drawString('Student Name: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX, infoY1, 100, 16));
-    page.graphics.drawString(_cleanForPdf(studentName), subFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX + 90, infoY1, 200, 16));
+    page.graphics.drawString(
+      'Student Name: ',
+      boldSubFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(leftColX, infoY1, 100, 16),
+    );
+    page.graphics.drawString(
+      _cleanForPdf(studentName),
+      subFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(leftColX + 90, infoY1, 200, 16),
+    );
 
-    page.graphics.drawString('Reg. Number: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX, infoY2, 100, 16));
-    page.graphics.drawString(_cleanForPdf(regNo), subFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX + 90, infoY2, 200, 16));
+    page.graphics.drawString(
+      'Reg. Number: ',
+      boldSubFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(leftColX, infoY2, 100, 16),
+    );
+    page.graphics.drawString(
+      _cleanForPdf(regNo),
+      subFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(leftColX + 90, infoY2, 200, 16),
+    );
 
-    page.graphics.drawString('University: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX, infoY1, 80, 16));
-    page.graphics.drawString(_cleanForPdf('$uni (Sem ${profile.semester})'), subFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX + 75, infoY1, 200, 16));
+    page.graphics.drawString(
+      'University: ',
+      boldSubFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(rightColX, infoY1, 80, 16),
+    );
+    page.graphics.drawString(
+      _cleanForPdf('$uni (Sem ${profile.semester})'),
+      subFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(rightColX + 75, infoY1, 200, 16),
+    );
 
-    page.graphics.drawString('Generated: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX, infoY2, 80, 16));
-    page.graphics.drawString(_cleanForPdf(dateStr), subFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX + 75, infoY2, 200, 16));
+    page.graphics.drawString(
+      'Generated: ',
+      boldSubFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(rightColX, infoY2, 80, 16),
+    );
+    page.graphics.drawString(
+      _cleanForPdf(dateStr),
+      subFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(rightColX + 75, infoY2, 200, 16),
+    );
 
     y += studentCardHeight + 16;
 
@@ -111,7 +185,12 @@ class ExportService {
     final overallStats = repository.overallStats();
     final risk = overallStats.riskTier();
 
-    page.graphics.drawString('Executive Summary & Target Standing', sectionFont, brush: darkBrush, bounds: Rect.fromLTWH(0, y, pageSize.width, 18));
+    page.graphics.drawString(
+      'Executive Summary & Target Standing',
+      sectionFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(0, y, pageSize.width, 18),
+    );
     y += 22;
 
     final kpiBoxWidth = (pageSize.width - 24) / 3;
@@ -129,7 +208,9 @@ class ExportService {
       valueFont: kpiValFont,
       labelFont: subFont,
       borderPen: borderPen,
-      valueColor: overallStats.percent >= 75 ? PdfColor(16, 185, 129) : PdfColor(239, 68, 68),
+      valueColor: overallStats.percent >= 75
+          ? PdfColor(16, 185, 129)
+          : PdfColor(239, 68, 68),
     );
 
     // KPI 2: Sessions Count
@@ -145,7 +226,9 @@ class ExportService {
       labelFont: subFont,
       borderPen: borderPen,
       valueColor: PdfColor(76, 29, 149),
-      subtitle: _cleanForPdf('Missed: ${overallStats.absent} - Excused/OD: ${overallStats.excused}'),
+      subtitle: _cleanForPdf(
+        'Missed: ${overallStats.absent} - Excused/OD: ${overallStats.excused}',
+      ),
     );
 
     // KPI 3: Academic Standing
@@ -157,31 +240,46 @@ class ExportService {
       height: kpiBoxHeight,
       label: 'Academic Standing',
       value: _cleanForPdf(risk.displayName),
-      valueFont: PdfStandardFont(PdfFontFamily.helvetica, 13, style: PdfFontStyle.bold),
+      valueFont: PdfStandardFont(
+        PdfFontFamily.helvetica,
+        13,
+        style: PdfFontStyle.bold,
+      ),
       labelFont: subFont,
       borderPen: borderPen,
-      valueColor: overallStats.percent >= 80 ? PdfColor(16, 185, 129) : PdfColor(245, 158, 11),
-      subtitle: _cleanForPdf(overallStats.percent >= 75
-          ? 'Buffer: +${overallStats.canSkip} skips allowed'
-          : 'Prescription: Attend ${overallStats.attendToReach75} straight'),
+      valueColor: overallStats.percent >= 80
+          ? PdfColor(16, 185, 129)
+          : PdfColor(245, 158, 11),
+      subtitle: _cleanForPdf(
+        overallStats.percent >= 75
+            ? 'Buffer: +${overallStats.canSkip} skips allowed'
+            : 'Prescription: Attend ${overallStats.attendToReach75} straight',
+      ),
     );
 
     y += kpiBoxHeight + 20;
 
     // Subject Breakdown Table
-    page.graphics.drawString(_cleanForPdf('Coursework & Subject-Wise Performance'), sectionFont, brush: darkBrush, bounds: Rect.fromLTWH(0, y, pageSize.width, 18));
+    page.graphics.drawString(
+      _cleanForPdf('Coursework & Subject-Wise Performance'),
+      sectionFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(0, y, pageSize.width, 18),
+    );
     y += 22;
 
     final subjects = repository.subjects();
     final grid = PdfGrid();
     grid.columns.add(count: 7);
     grid.columns[0].width = 150; // Subject
-    grid.columns[1].width = 50;  // Code
-    grid.columns[2].width = 45;  // Pres
-    grid.columns[3].width = 45;  // Abs
-    grid.columns[4].width = 45;  // Exc
-    grid.columns[5].width = 50;  // Pct
-    grid.columns[6].width = pageSize.width - (150 + 50 + 45 + 45 + 45 + 50); // Status / Prescription
+    grid.columns[1].width = 50; // Code
+    grid.columns[2].width = 45; // Pres
+    grid.columns[3].width = 45; // Abs
+    grid.columns[4].width = 45; // Exc
+    grid.columns[5].width = 50; // Pct
+    grid.columns[6].width =
+        pageSize.width -
+        (150 + 50 + 45 + 45 + 45 + 50); // Status / Prescription
 
     // Header
     grid.headers.add(1);
@@ -220,18 +318,21 @@ class ExportService {
       }
     }
 
-    grid.draw(
-      page: page,
-      bounds: Rect.fromLTWH(0, y, pageSize.width, 0),
-    );
+    grid.draw(page: page, bounds: Rect.fromLTWH(0, y, pageSize.width, 0));
 
     // Footer on all pages
     for (int i = 0; i < doc.pages.count; i++) {
       final p = doc.pages[i];
       final pSize = p.getClientSize();
-      p.graphics.drawLine(borderPen, Offset(0, pSize.height - 18), Offset(pSize.width, pSize.height - 18));
+      p.graphics.drawLine(
+        borderPen,
+        Offset(0, pSize.height - 18),
+        Offset(pSize.width, pSize.height - 18),
+      );
       p.graphics.drawString(
-        _cleanForPdf('Chem Buddy by Prajwal A Kambar - Verified MSc Chemistry Study Suite - Page ${i + 1} of ${doc.pages.count}'),
+        _cleanForPdf(
+          'Chem Buddy by Prajwal A Kambar - Verified MSc Chemistry Study Suite - Page ${i + 1} of ${doc.pages.count}',
+        ),
         footerFont,
         brush: mutedBrush,
         bounds: Rect.fromLTWH(0, pSize.height - 14, pSize.width, 14),
@@ -242,7 +343,8 @@ class ExportService {
     doc.dispose();
 
     final targetDir = outputDirectory ?? await getTemporaryDirectory();
-    final fileName = 'ChemBuddy_Attendance_Report_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
+    final fileName =
+        'ChemBuddy_Attendance_Report_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
     final file = File('${targetDir.path}/$fileName');
     await file.writeAsBytes(bytes, flush: true);
     return file;
@@ -259,9 +361,15 @@ class ExportService {
     buffer.write('\uFEFF');
 
     final overall = repository.overallStats();
-    final studentName = profile.fullName.trim().isEmpty ? 'MSc Chemistry Scholar' : profile.fullName;
-    final regNo = profile.registerNumber.trim().isEmpty ? 'N/A' : profile.registerNumber;
-    final uni = profile.university.trim().isEmpty ? 'Autonomous University' : profile.university;
+    final studentName = profile.fullName.trim().isEmpty
+        ? 'MSc Chemistry Scholar'
+        : profile.fullName;
+    final regNo = profile.registerNumber.trim().isEmpty
+        ? 'N/A'
+        : profile.registerNumber;
+    final uni = profile.university.trim().isEmpty
+        ? 'Autonomous University'
+        : profile.university;
 
     // Header metadata
     buffer.writeln('CHEM BUDDY - ATTENDANCE & COURSEWORK AUDIT REPORT');
@@ -269,8 +377,12 @@ class ExportService {
     buffer.writeln('Register Number,"${_escapeCsv(regNo)}"');
     buffer.writeln('University,"${_escapeCsv(uni)}"');
     buffer.writeln('Semester,"Semester ${profile.semester}"');
-    buffer.writeln('Generated Date,"${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}"');
-    buffer.writeln('Overall Attendance,"${overall.percent.toStringAsFixed(2)}%"');
+    buffer.writeln(
+      'Generated Date,"${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}"',
+    );
+    buffer.writeln(
+      'Overall Attendance,"${overall.percent.toStringAsFixed(2)}%"',
+    );
     buffer.writeln('Total Counted Classes,"${overall.counted}"');
     buffer.writeln('Total Attended,"${overall.present}"');
     buffer.writeln('Total Missed,"${overall.absent}"');
@@ -279,7 +391,9 @@ class ExportService {
 
     // Subject Breakdown
     buffer.writeln('SUBJECT BREAKDOWN');
-    buffer.writeln('Subject Name,Subject Code,Teacher,Attended,Missed,Excused / OD,Total Counted,Attendance %,Status,Safe Skips (75%),Classes Needed (75%),Safe Skips (80%),Classes Needed (80%)');
+    buffer.writeln(
+      'Subject Name,Subject Code,Teacher,Attended,Missed,Excused / OD,Total Counted,Attendance %,Status,Safe Skips (75%),Classes Needed (75%),Safe Skips (80%),Classes Needed (80%)',
+    );
 
     for (final s in repository.subjects()) {
       final stats = repository.statsFor(s.id);
@@ -287,7 +401,9 @@ class ExportService {
       final need75 = stats.attendToReach75;
       final skip80 = stats.canSkipForTarget(80.0);
       final need80 = stats.attendToReachTarget(80.0);
-      final status = stats.percent >= 80 ? 'Safe' : (stats.percent >= 75 ? 'Warning' : 'Critical');
+      final status = stats.percent >= 80
+          ? 'Safe'
+          : (stats.percent >= 75 ? 'Warning' : 'Critical');
 
       buffer.writeln(
         '"${_escapeCsv(s.name)}",'
@@ -318,8 +434,10 @@ class ExportService {
       final statusStr = r.status == AttendanceStatus.present
           ? 'Present'
           : (r.status == AttendanceStatus.absent
-              ? 'Absent'
-              : (r.status == AttendanceStatus.excused ? 'Excused / OD' : 'Postponed'));
+                ? 'Absent'
+                : (r.status == AttendanceStatus.excused
+                      ? 'Excused / OD'
+                      : 'Postponed'));
       final isExcused = r.status == AttendanceStatus.excused ? 'Yes' : 'No';
 
       buffer.writeln(
@@ -332,7 +450,8 @@ class ExportService {
     }
 
     final targetDir = outputDirectory ?? await getTemporaryDirectory();
-    final fileName = 'ChemBuddy_Attendance_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.csv';
+    final fileName =
+        'ChemBuddy_Attendance_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.csv';
     final file = File('${targetDir.path}/$fileName');
     await file.writeAsString(buffer.toString(), flush: true);
     return file;
@@ -354,11 +473,31 @@ class ExportService {
     final page = doc.pages.add();
     final pageSize = page.getClientSize();
 
-    final titleFont = PdfStandardFont(PdfFontFamily.helvetica, 18, style: PdfFontStyle.bold);
-    final sectionFont = PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.bold);
-    final subFont = PdfStandardFont(PdfFontFamily.helvetica, 10, style: PdfFontStyle.regular);
-    final boldSubFont = PdfStandardFont(PdfFontFamily.helvetica, 10, style: PdfFontStyle.bold);
-    final footerFont = PdfStandardFont(PdfFontFamily.helvetica, 8, style: PdfFontStyle.italic);
+    final titleFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      18,
+      style: PdfFontStyle.bold,
+    );
+    final sectionFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      12,
+      style: PdfFontStyle.bold,
+    );
+    final subFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      10,
+      style: PdfFontStyle.regular,
+    );
+    final boldSubFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      10,
+      style: PdfFontStyle.bold,
+    );
+    final footerFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      8,
+      style: PdfFontStyle.italic,
+    );
 
     final primaryColor = PdfColor(76, 29, 149);
     final primaryBrush = PdfSolidBrush(primaryColor);
@@ -405,21 +544,67 @@ class ExportService {
     final infoY1 = y + 8;
     final infoY2 = y + 28;
 
-    final studentName = profile.fullName.trim().isEmpty ? 'MSc Chemistry Scholar' : profile.fullName;
-    final regNo = profile.registerNumber.trim().isEmpty ? 'N/A' : profile.registerNumber;
-    final uni = profile.university.trim().isEmpty ? 'Autonomous University' : profile.university;
+    final studentName = profile.fullName.trim().isEmpty
+        ? 'MSc Chemistry Scholar'
+        : profile.fullName;
+    final regNo = profile.registerNumber.trim().isEmpty
+        ? 'N/A'
+        : profile.registerNumber;
+    final uni = profile.university.trim().isEmpty
+        ? 'Autonomous University'
+        : profile.university;
 
-    page.graphics.drawString('Student Name: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX, infoY1, 100, 16));
-    page.graphics.drawString(_cleanForPdf(studentName), subFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX + 90, infoY1, 200, 16));
+    page.graphics.drawString(
+      'Student Name: ',
+      boldSubFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(leftColX, infoY1, 100, 16),
+    );
+    page.graphics.drawString(
+      _cleanForPdf(studentName),
+      subFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(leftColX + 90, infoY1, 200, 16),
+    );
 
-    page.graphics.drawString('Reg. Number: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX, infoY2, 100, 16));
-    page.graphics.drawString(_cleanForPdf(regNo), subFont, brush: darkBrush, bounds: Rect.fromLTWH(leftColX + 90, infoY2, 200, 16));
+    page.graphics.drawString(
+      'Reg. Number: ',
+      boldSubFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(leftColX, infoY2, 100, 16),
+    );
+    page.graphics.drawString(
+      _cleanForPdf(regNo),
+      subFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(leftColX + 90, infoY2, 200, 16),
+    );
 
-    page.graphics.drawString('University: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX, infoY1, 80, 16));
-    page.graphics.drawString(_cleanForPdf(uni), subFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX + 75, infoY1, 180, 16));
+    page.graphics.drawString(
+      'University: ',
+      boldSubFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(rightColX, infoY1, 80, 16),
+    );
+    page.graphics.drawString(
+      _cleanForPdf(uni),
+      subFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(rightColX + 75, infoY1, 180, 16),
+    );
 
-    page.graphics.drawString('Audit Date: ', boldSubFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX, infoY2, 80, 16));
-    page.graphics.drawString(DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now()), subFont, brush: darkBrush, bounds: Rect.fromLTWH(rightColX + 75, infoY2, 180, 16));
+    page.graphics.drawString(
+      'Audit Date: ',
+      boldSubFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(rightColX, infoY2, 80, 16),
+    );
+    page.graphics.drawString(
+      DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now()),
+      subFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(rightColX + 75, infoY2, 180, 16),
+    );
 
     y += studentCardHeight + 16;
 
@@ -435,11 +620,18 @@ class ExportService {
       height: kpiBoxHeight,
       label: 'Quiz Accuracy',
       value: '${analytics.overallQuizAccuracy.toStringAsFixed(1)}%',
-      valueFont: PdfStandardFont(PdfFontFamily.helvetica, 15, style: PdfFontStyle.bold),
+      valueFont: PdfStandardFont(
+        PdfFontFamily.helvetica,
+        15,
+        style: PdfFontStyle.bold,
+      ),
       labelFont: subFont,
       borderPen: borderPen,
-      valueColor: analytics.overallQuizAccuracy >= 70 ? PdfColor(16, 185, 129) : PdfColor(245, 158, 11),
-      subtitle: '${analytics.totalCorrectAnswers}/${analytics.totalQuestionsAnswered} correct',
+      valueColor: analytics.overallQuizAccuracy >= 70
+          ? PdfColor(16, 185, 129)
+          : PdfColor(245, 158, 11),
+      subtitle:
+          '${analytics.totalCorrectAnswers}/${analytics.totalQuestionsAnswered} correct',
     );
 
     _drawKpiCard(
@@ -450,7 +642,11 @@ class ExportService {
       height: kpiBoxHeight,
       label: 'Quizzes Taken',
       value: '${analytics.totalQuizzesTaken}',
-      valueFont: PdfStandardFont(PdfFontFamily.helvetica, 15, style: PdfFontStyle.bold),
+      valueFont: PdfStandardFont(
+        PdfFontFamily.helvetica,
+        15,
+        style: PdfFontStyle.bold,
+      ),
       labelFont: subFont,
       borderPen: borderPen,
       valueColor: PdfColor(76, 29, 149),
@@ -465,7 +661,11 @@ class ExportService {
       height: kpiBoxHeight,
       label: 'Flashcards Mastered',
       value: '${analytics.flashcardsMatureCount}',
-      valueFont: PdfStandardFont(PdfFontFamily.helvetica, 15, style: PdfFontStyle.bold),
+      valueFont: PdfStandardFont(
+        PdfFontFamily.helvetica,
+        15,
+        style: PdfFontStyle.bold,
+      ),
       labelFont: subFont,
       borderPen: borderPen,
       valueColor: PdfColor(56, 189, 248),
@@ -480,7 +680,11 @@ class ExportService {
       height: kpiBoxHeight,
       label: 'Active Streak',
       value: '${analytics.studyStreakDays} Days',
-      valueFont: PdfStandardFont(PdfFontFamily.helvetica, 15, style: PdfFontStyle.bold),
+      valueFont: PdfStandardFont(
+        PdfFontFamily.helvetica,
+        15,
+        style: PdfFontStyle.bold,
+      ),
       labelFont: subFont,
       borderPen: borderPen,
       valueColor: PdfColor(234, 88, 12),
@@ -490,10 +694,19 @@ class ExportService {
     y += kpiBoxHeight + 20;
 
     // Topic Mastery Table
-    page.graphics.drawString(_cleanForPdf('Topic Mastery & Subject Competency'), sectionFont, brush: darkBrush, bounds: Rect.fromLTWH(0, y, pageSize.width, 18));
+    page.graphics.drawString(
+      _cleanForPdf('Topic Mastery & Subject Competency'),
+      sectionFont,
+      brush: darkBrush,
+      bounds: Rect.fromLTWH(0, y, pageSize.width, 18),
+    );
     y += 22;
 
-    final allTopics = [...analytics.strongTopics, ...analytics.moderateTopics, ...analytics.weakTopics];
+    final allTopics = [
+      ...analytics.strongTopics,
+      ...analytics.moderateTopics,
+      ...analytics.weakTopics,
+    ];
 
     if (allTopics.isNotEmpty) {
       final topicGrid = PdfGrid();
@@ -528,13 +741,21 @@ class ExportService {
         }
       }
 
-      final topicResult = topicGrid.draw(page: page, bounds: Rect.fromLTWH(0, y, pageSize.width, 0));
+      final topicResult = topicGrid.draw(
+        page: page,
+        bounds: Rect.fromLTWH(0, y, pageSize.width, 0),
+      );
       y = topicResult!.bounds.bottom + 16;
     }
 
     // Recent Quiz History Table
     if (analytics.recentQuizResults.isNotEmpty && y < pageSize.height - 120) {
-      page.graphics.drawString(_cleanForPdf('Recent Quiz Evaluations'), sectionFont, brush: darkBrush, bounds: Rect.fromLTWH(0, y, pageSize.width, 18));
+      page.graphics.drawString(
+        _cleanForPdf('Recent Quiz Evaluations'),
+        sectionFont,
+        brush: darkBrush,
+        bounds: Rect.fromLTWH(0, y, pageSize.width, 18),
+      );
       y += 22;
 
       final quizGrid = PdfGrid();
@@ -563,7 +784,10 @@ class ExportService {
         row.cells[3].value = '${q.accuracy.toStringAsFixed(1)}%';
       }
 
-      final qResult = quizGrid.draw(page: page, bounds: Rect.fromLTWH(0, y, pageSize.width, 0));
+      final qResult = quizGrid.draw(
+        page: page,
+        bounds: Rect.fromLTWH(0, y, pageSize.width, 0),
+      );
       y = qResult!.bounds.bottom + 14;
     }
 
@@ -571,9 +795,15 @@ class ExportService {
     for (int i = 0; i < doc.pages.count; i++) {
       final p = doc.pages[i];
       final pSize = p.getClientSize();
-      p.graphics.drawLine(borderPen, Offset(0, pSize.height - 18), Offset(pSize.width, pSize.height - 18));
+      p.graphics.drawLine(
+        borderPen,
+        Offset(0, pSize.height - 18),
+        Offset(pSize.width, pSize.height - 18),
+      );
       p.graphics.drawString(
-        _cleanForPdf('Chem Buddy by Prajwal A Kambar - MSc Chemistry Academic Audit - Page ${i + 1} of ${doc.pages.count}'),
+        _cleanForPdf(
+          'Chem Buddy by Prajwal A Kambar - MSc Chemistry Academic Audit - Page ${i + 1} of ${doc.pages.count}',
+        ),
         footerFont,
         brush: mutedBrush,
         bounds: Rect.fromLTWH(0, pSize.height - 14, pSize.width, 14),
@@ -584,7 +814,8 @@ class ExportService {
     doc.dispose();
 
     final targetDir = outputDirectory ?? await getTemporaryDirectory();
-    final fileName = 'ChemBuddy_Coursework_Audit_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
+    final fileName =
+        'ChemBuddy_Coursework_Audit_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
     final file = File('${targetDir.path}/$fileName');
     await file.writeAsBytes(bytes, flush: true);
     return file;
@@ -603,22 +834,40 @@ class ExportService {
     buffer.writeln('"Student Name","${_escapeCsv(profile.fullName)}"');
     buffer.writeln('"Register Number","${_escapeCsv(profile.registerNumber)}"');
     buffer.writeln('"University","${_escapeCsv(profile.university)}"');
-    buffer.writeln('"Generated At","${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}"');
+    buffer.writeln(
+      '"Generated At","${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}"',
+    );
     buffer.writeln();
 
     buffer.writeln('"=== OVERALL STUDY & MASTERY METRICS ==="');
-    buffer.writeln('"Overall Quiz Accuracy %","${analytics.overallQuizAccuracy.toStringAsFixed(1)}"');
-    buffer.writeln('"Total Questions Answered","${analytics.totalQuestionsAnswered}"');
-    buffer.writeln('"Total Correct Answers","${analytics.totalCorrectAnswers}"');
-    buffer.writeln('"Total Quizzes Attempted","${analytics.totalQuizzesTaken}"');
-    buffer.writeln('"Flashcards Mastered (Mature)","${analytics.flashcardsMatureCount}"');
+    buffer.writeln(
+      '"Overall Quiz Accuracy %","${analytics.overallQuizAccuracy.toStringAsFixed(1)}"',
+    );
+    buffer.writeln(
+      '"Total Questions Answered","${analytics.totalQuestionsAnswered}"',
+    );
+    buffer.writeln(
+      '"Total Correct Answers","${analytics.totalCorrectAnswers}"',
+    );
+    buffer.writeln(
+      '"Total Quizzes Attempted","${analytics.totalQuizzesTaken}"',
+    );
+    buffer.writeln(
+      '"Flashcards Mastered (Mature)","${analytics.flashcardsMatureCount}"',
+    );
     buffer.writeln('"Total Flashcards","${analytics.totalFlashcards}"');
     buffer.writeln('"Study Streak (Days)","${analytics.studyStreakDays}"');
     buffer.writeln();
 
     buffer.writeln('"=== TOPIC MASTERY BREAKDOWN ==="');
-    buffer.writeln('"Topic","Correct Answers","Total Questions","Accuracy %","Status"');
-    final allTopics = [...analytics.strongTopics, ...analytics.moderateTopics, ...analytics.weakTopics];
+    buffer.writeln(
+      '"Topic","Correct Answers","Total Questions","Accuracy %","Status"',
+    );
+    final allTopics = [
+      ...analytics.strongTopics,
+      ...analytics.moderateTopics,
+      ...analytics.weakTopics,
+    ];
     for (final t in allTopics) {
       buffer.writeln(
         '"${_escapeCsv(t.topic)}",${t.correctQuestions},${t.totalQuestions},"${t.accuracy.toStringAsFixed(1)}%","${t.isStrong ? 'Mastered' : (t.isModerate ? 'Moderate' : 'Needs Review')}"',
@@ -627,7 +876,9 @@ class ExportService {
     buffer.writeln();
 
     buffer.writeln('"=== RECENT QUIZ EVALUATION LOG ==="');
-    buffer.writeln('"Quiz Title","Completed Date","Score","Total Questions","Accuracy %"');
+    buffer.writeln(
+      '"Quiz Title","Completed Date","Score","Total Questions","Accuracy %"',
+    );
     for (final q in analytics.recentQuizResults) {
       buffer.writeln(
         '"${_escapeCsv(q.quizTitle)}","${DateFormat('yyyy-MM-dd HH:mm').format(q.completedAt)}",${q.score},${q.totalQuestions},"${q.accuracy.toStringAsFixed(1)}%"',
@@ -635,7 +886,8 @@ class ExportService {
     }
 
     final targetDir = outputDirectory ?? await getTemporaryDirectory();
-    final fileName = 'ChemBuddy_Coursework_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.csv';
+    final fileName =
+        'ChemBuddy_Coursework_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.csv';
     final file = File('${targetDir.path}/$fileName');
     await file.writeAsString(buffer.toString(), flush: true);
     return file;
@@ -656,13 +908,41 @@ class ExportService {
 
     final list = singleReaction != null ? [singleReaction] : (reactions ?? []);
 
-    final titleFont = PdfStandardFont(PdfFontFamily.helvetica, 18, style: PdfFontStyle.bold);
-    final h2Font = PdfStandardFont(PdfFontFamily.helvetica, 13, style: PdfFontStyle.bold);
-    final boldFont = PdfStandardFont(PdfFontFamily.helvetica, 10, style: PdfFontStyle.bold);
-    final regularFont = PdfStandardFont(PdfFontFamily.helvetica, 9.5, style: PdfFontStyle.regular);
-    final subFont = PdfStandardFont(PdfFontFamily.helvetica, 8.5, style: PdfFontStyle.regular);
-    final boldSubFont = PdfStandardFont(PdfFontFamily.helvetica, 8.5, style: PdfFontStyle.bold);
-    final footerFont = PdfStandardFont(PdfFontFamily.helvetica, 8, style: PdfFontStyle.italic);
+    final titleFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      18,
+      style: PdfFontStyle.bold,
+    );
+    final h2Font = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      13,
+      style: PdfFontStyle.bold,
+    );
+    final boldFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      10,
+      style: PdfFontStyle.bold,
+    );
+    final regularFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      9.5,
+      style: PdfFontStyle.regular,
+    );
+    final subFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      8.5,
+      style: PdfFontStyle.regular,
+    );
+    final boldSubFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      8.5,
+      style: PdfFontStyle.bold,
+    );
+    final footerFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      8,
+      style: PdfFontStyle.italic,
+    );
 
     final primaryColor = PdfColor(76, 29, 149); // Deep Purple
     final primaryBrush = PdfSolidBrush(primaryColor);
@@ -677,19 +957,29 @@ class ExportService {
       double y = 0;
 
       // 1. Header Accent Bar
-      page.graphics.drawRectangle(brush: primaryBrush, bounds: Rect.fromLTWH(0, y, pageSize.width, 5));
+      page.graphics.drawRectangle(
+        brush: primaryBrush,
+        bounds: Rect.fromLTWH(0, y, pageSize.width, 5),
+      );
       y += 12;
 
       // 2. Category Tag & Title
       page.graphics.drawString(
-        _cleanForPdf('CHEM BUDDY - MSc ORGANIC CHEMISTRY - ${m.category.displayName.toUpperCase()}'),
+        _cleanForPdf(
+          'CHEM BUDDY - MSc ORGANIC CHEMISTRY - ${m.category.displayName.toUpperCase()}',
+        ),
         subFont,
         brush: primaryBrush,
         bounds: Rect.fromLTWH(0, y, pageSize.width, 12),
       );
       y += 14;
 
-      page.graphics.drawString(_cleanForPdf(m.name), titleFont, brush: darkBrush, bounds: Rect.fromLTWH(0, y, pageSize.width, 22));
+      page.graphics.drawString(
+        _cleanForPdf(m.name),
+        titleFont,
+        brush: darkBrush,
+        bounds: Rect.fromLTWH(0, y, pageSize.width, 22),
+      );
       y += 24;
 
       if (m.aliases.isNotEmpty) {
@@ -735,7 +1025,8 @@ class ExportService {
       final cleanReactants = _cleanForPdf(m.reactants);
       final cleanReagents = _cleanForPdf(m.reagentsAndConditions);
       final cleanProducts = _cleanForPdf(m.products);
-      final schemeText = '$cleanReactants   ───[ $cleanReagents ]───>   $cleanProducts';
+      final schemeText =
+          '$cleanReactants   ───[ $cleanReagents ]───>   $cleanProducts';
 
       page.graphics.drawString(
         schemeText,
@@ -744,17 +1035,53 @@ class ExportService {
         bounds: Rect.fromLTWH(8, y + 20, pageSize.width - 16, 16),
       );
 
-      final svgCode = m.svgContent ?? ReactionDiagramSvgCatalog.getSvgFor(m.id);
-      final svgStatus = svgCode.isNotEmpty
-          ? 'Vector SVG Diagram: Available & Verified for Academic Publishing'
-          : 'Vector Diagram: Chemical Formula Scheme';
-      page.graphics.drawString(
-        svgStatus,
-        subFont,
-        brush: mutedBrush,
-        bounds: Rect.fromLTWH(8, y + 36, pageSize.width - 16, 12),
-      );
       y += schemeBoxHeight + 12;
+
+      final svgCode = m.svgContent ?? ReactionDiagramSvgCatalog.getSvgFor(m.id);
+      if (svgCode.isNotEmpty) {
+        final picture = await vg.loadPicture(
+          SvgStringLoader(expandSvgArrowMarkers(svgCode)),
+          null,
+        );
+        try {
+          final drawWidth = pageSize.width;
+          final drawHeight =
+              (drawWidth * picture.size.height / picture.size.width).clamp(
+                80.0,
+                220.0,
+              );
+          final recorder = ui.PictureRecorder();
+          final canvas = ui.Canvas(recorder);
+          canvas.scale(
+            drawWidth * 3 / picture.size.width,
+            drawHeight * 3 / picture.size.height,
+          );
+          canvas.drawPicture(picture.picture);
+          final scaledPicture = recorder.endRecording();
+          final image = await scaledPicture.toImage(
+            (drawWidth * 3).ceil(),
+            (drawHeight * 3).ceil(),
+          );
+          try {
+            final bytes = await image.toByteData(
+              format: ui.ImageByteFormat.png,
+            );
+            if (bytes == null) {
+              throw StateError('Unable to render reaction diagram.');
+            }
+            page.graphics.drawImage(
+              PdfBitmap(bytes.buffer.asUint8List()),
+              Rect.fromLTWH(0, y, drawWidth, drawHeight),
+            );
+          } finally {
+            image.dispose();
+            scaledPicture.dispose();
+          }
+          y += drawHeight + 12;
+        } finally {
+          picture.picture.dispose();
+        }
+      }
 
       // 5. Chemistry Reaction Details Grid
       final detailGrid = PdfGrid();
@@ -766,17 +1093,38 @@ class ExportService {
       _addDetailRow(detailGrid, 'Reagents & Conditions:', cleanReagents);
       _addDetailRow(detailGrid, 'Products:', cleanProducts);
       if (m.regioselectivity != null && m.regioselectivity!.isNotEmpty) {
-        _addDetailRow(detailGrid, 'Regioselectivity:', _cleanForPdf(m.regioselectivity));
+        _addDetailRow(
+          detailGrid,
+          'Regioselectivity:',
+          _cleanForPdf(m.regioselectivity),
+        );
       }
       if (m.stereochemistry != null && m.stereochemistry!.isNotEmpty) {
-        _addDetailRow(detailGrid, 'Stereochemistry:', _cleanForPdf(m.stereochemistry));
+        _addDetailRow(
+          detailGrid,
+          'Stereochemistry:',
+          _cleanForPdf(m.stereochemistry),
+        );
       }
       if (m.drivingForce != null && m.drivingForce!.isNotEmpty) {
-        _addDetailRow(detailGrid, 'Thermodynamic Driving Force:', _cleanForPdf(m.drivingForce));
+        _addDetailRow(
+          detailGrid,
+          'Thermodynamic Driving Force:',
+          _cleanForPdf(m.drivingForce),
+        );
       }
 
-      final detailResult = detailGrid.draw(page: page, bounds: Rect.fromLTWH(0, y, pageSize.width, 0));
-      y = detailResult!.bounds.bottom + 14;
+      final detailResult = detailGrid.draw(
+        page: page,
+        bounds: Rect.fromLTWH(0, y, pageSize.width, 0),
+        format: PdfLayoutFormat(layoutType: PdfLayoutType.paginate),
+      );
+      page = detailResult!.page;
+      y = detailResult.bounds.bottom + 14;
+      if (y > pageSize.height - 100) {
+        page = doc.pages.add();
+        y = 20;
+      }
 
       // 6. Step-by-Step Breakdown Table
       page.graphics.drawString(
@@ -791,7 +1139,8 @@ class ExportService {
       stepGrid.columns.add(count: 3);
       stepGrid.columns[0].width = 52; // Step #
       stepGrid.columns[1].width = 190; // Title & Notes
-      stepGrid.columns[2].width = pageSize.width - (52 + 190); // Curved arrow & intermediate
+      stepGrid.columns[2].width =
+          pageSize.width - (52 + 190); // Curved arrow & intermediate
 
       stepGrid.headers.add(1);
       final sHeader = stepGrid.headers[0];
@@ -806,8 +1155,10 @@ class ExportService {
         final row = stepGrid.rows.add();
         row.style.font = subFont;
         row.cells[0].value = 'Step ${step.stepNumber}';
-        row.cells[1].value = '${_cleanForPdf(step.title)}\n\n${_cleanForPdf(step.description)}';
-        row.cells[2].value = 'Curved Arrow Movement:\n${_cleanForPdf(step.curvedArrowNotes ?? "N/A")}\n\nIntermediate / Species:\n${_cleanForPdf(step.intermediate ?? "N/A")}';
+        row.cells[1].value =
+            '${_cleanForPdf(step.title)}\n\n${_cleanForPdf(step.description)}';
+        row.cells[2].value =
+            'Curved Arrow Movement:\n${_cleanForPdf(step.curvedArrowNotes ?? "N/A")}\n\nIntermediate / Species:\n${_cleanForPdf(step.intermediate ?? "N/A")}';
       }
 
       final stepResult = stepGrid.draw(
@@ -826,20 +1177,40 @@ class ExportService {
         }
 
         if (m.keyApplications.isNotEmpty) {
-          page.graphics.drawString(_cleanForPdf('Synthetic Applications:'), boldFont, brush: darkBrush, bounds: Rect.fromLTWH(0, y, pageSize.width, 14));
+          page.graphics.drawString(
+            _cleanForPdf('Synthetic Applications:'),
+            boldFont,
+            brush: darkBrush,
+            bounds: Rect.fromLTWH(0, y, pageSize.width, 14),
+          );
           y += 14;
           for (final app in m.keyApplications) {
-            page.graphics.drawString(_cleanForPdf('- $app'), subFont, brush: darkBrush, bounds: Rect.fromLTWH(8, y, pageSize.width - 16, 12));
+            page.graphics.drawString(
+              _cleanForPdf('- $app'),
+              subFont,
+              brush: darkBrush,
+              bounds: Rect.fromLTWH(8, y, pageSize.width - 16, 12),
+            );
             y += 13;
           }
           y += 6;
         }
 
         if (m.limitations.isNotEmpty && y < pageSize.height - 40) {
-          page.graphics.drawString(_cleanForPdf('Limitations & Side Reactions:'), boldFont, brush: darkBrush, bounds: Rect.fromLTWH(0, y, pageSize.width, 14));
+          page.graphics.drawString(
+            _cleanForPdf('Limitations & Side Reactions:'),
+            boldFont,
+            brush: darkBrush,
+            bounds: Rect.fromLTWH(0, y, pageSize.width, 14),
+          );
           y += 14;
           for (final lim in m.limitations) {
-            page.graphics.drawString(_cleanForPdf('- $lim'), subFont, brush: darkBrush, bounds: Rect.fromLTWH(8, y, pageSize.width - 16, 12));
+            page.graphics.drawString(
+              _cleanForPdf('- $lim'),
+              subFont,
+              brush: darkBrush,
+              bounds: Rect.fromLTWH(8, y, pageSize.width - 16, 12),
+            );
             y += 13;
           }
         }
@@ -850,9 +1221,15 @@ class ExportService {
     for (int i = 0; i < doc.pages.count; i++) {
       final p = doc.pages[i];
       final pSize = p.getClientSize();
-      p.graphics.drawLine(borderPen, Offset(0, pSize.height - 18), Offset(pSize.width, pSize.height - 18));
+      p.graphics.drawLine(
+        borderPen,
+        Offset(0, pSize.height - 18),
+        Offset(pSize.width, pSize.height - 18),
+      );
       p.graphics.drawString(
-        _cleanForPdf('Chem Buddy by Prajwal A Kambar - MSc Chemistry Reaction Dossier - Page ${i + 1} of ${doc.pages.count}'),
+        _cleanForPdf(
+          'Chem Buddy by Prajwal A Kambar - MSc Chemistry Reaction Dossier - Page ${i + 1} of ${doc.pages.count}',
+        ),
         footerFont,
         brush: PdfSolidBrush(PdfColor(148, 163, 184)),
         bounds: Rect.fromLTWH(0, pSize.height - 14, pSize.width, 14),
@@ -864,7 +1241,8 @@ class ExportService {
 
     final targetDir = outputDirectory ?? await getTemporaryDirectory();
     final slug = singleReaction != null ? singleReaction.id : 'msc_compendium';
-    final fileName = 'ChemBuddy_Reaction_${slug}_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf';
+    final fileName =
+        'ChemBuddy_Reaction_${slug}_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf';
     final file = File('${targetDir.path}/$fileName');
     await file.writeAsBytes(bytes, flush: true);
     return file;
@@ -888,16 +1266,28 @@ class ExportService {
       buffer.writeln('Category,"${_escapeCsv(m.category.displayName)}"');
       buffer.writeln('Aliases,"${_escapeCsv(m.aliases.join('; '))}"');
       buffer.writeln('Reactants,"${_escapeCsv(m.reactants)}"');
-      buffer.writeln('Reagents & Conditions,"${_escapeCsv(m.reagentsAndConditions)}"');
+      buffer.writeln(
+        'Reagents & Conditions,"${_escapeCsv(m.reagentsAndConditions)}"',
+      );
       buffer.writeln('Products,"${_escapeCsv(m.products)}"');
-      if (m.regioselectivity != null) buffer.writeln('Regioselectivity,"${_escapeCsv(m.regioselectivity!)}"');
-      if (m.stereochemistry != null) buffer.writeln('Stereochemistry,"${_escapeCsv(m.stereochemistry!)}"');
-      if (m.drivingForce != null) buffer.writeln('Driving Force,"${_escapeCsv(m.drivingForce!)}"');
-      buffer.writeln('Generated Date,"${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}"');
+      if (m.regioselectivity != null) {
+        buffer.writeln('Regioselectivity,"${_escapeCsv(m.regioselectivity!)}"');
+      }
+      if (m.stereochemistry != null) {
+        buffer.writeln('Stereochemistry,"${_escapeCsv(m.stereochemistry!)}"');
+      }
+      if (m.drivingForce != null) {
+        buffer.writeln('Driving Force,"${_escapeCsv(m.drivingForce!)}"');
+      }
+      buffer.writeln(
+        'Generated Date,"${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}"',
+      );
       buffer.writeln('');
 
       buffer.writeln('STEP-BY-STEP REACTION MECHANISM & ELECTRON MOVEMENT');
-      buffer.writeln('Step Number,Step Title,Chemical Transformation,Curved Arrow Movement (Electron Flow),Intermediate / Reactive Species');
+      buffer.writeln(
+        'Step Number,Step Title,Chemical Transformation,Curved Arrow Movement (Electron Flow),Intermediate / Reactive Species',
+      );
 
       for (final s in m.steps) {
         buffer.writeln(
@@ -929,16 +1319,23 @@ class ExportService {
     } else {
       buffer.writeln('CHEM BUDDY - MSC REACTION MECHANISMS CATALOG');
       buffer.writeln('Total Reactions,${mechanisms.length}');
-      buffer.writeln('Generated Date,"${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}"');
+      buffer.writeln(
+        'Generated Date,"${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}"',
+      );
       buffer.writeln('');
 
-      buffer.writeln('Reaction ID,Reaction Name,Category,Aliases,Reactants,Reagents & Conditions,Products,Regioselectivity,Stereochemistry,Driving Force,Steps Count,Detailed Step-by-Step Mechanism,SVG Vector Diagram,Key Applications,Limitations');
+      buffer.writeln(
+        'Reaction ID,Reaction Name,Category,Aliases,Reactants,Reagents & Conditions,Products,Regioselectivity,Stereochemistry,Driving Force,Steps Count,Detailed Step-by-Step Mechanism,SVG Vector Diagram,Key Applications,Limitations',
+      );
 
       for (final m in mechanisms) {
         final svg = m.svgContent ?? ReactionDiagramSvgCatalog.getSvgFor(m.id);
-        final stepsDetail = m.steps.map((s) =>
-          'Step ${s.stepNumber}: ${s.title} - ${s.description} [Flow: ${s.curvedArrowNotes ?? "N/A"}; Intermediate: ${s.intermediate ?? "N/A"}]'
-        ).join(' | ');
+        final stepsDetail = m.steps
+            .map(
+              (s) =>
+                  'Step ${s.stepNumber}: ${s.title} - ${s.description} [Flow: ${s.curvedArrowNotes ?? "N/A"}; Intermediate: ${s.intermediate ?? "N/A"}]',
+            )
+            .join(' | ');
 
         buffer.writeln(
           '"${_escapeCsv(m.id)}",'
@@ -962,7 +1359,8 @@ class ExportService {
 
     final targetDir = outputDirectory ?? await getTemporaryDirectory();
     final slug = mechanisms.length == 1 ? mechanisms.first.id : 'Catalog';
-    final fileName = 'ChemBuddy_Reactions_${slug}_${DateFormat('yyyyMMdd').format(DateTime.now())}.csv';
+    final fileName =
+        'ChemBuddy_Reactions_${slug}_${DateFormat('yyyyMMdd').format(DateTime.now())}.csv';
     final file = File('${targetDir.path}/$fileName');
     await file.writeAsString(buffer.toString(), flush: true);
     return file;
@@ -973,13 +1371,20 @@ class ExportService {
     required ReactionMechanism mechanism,
     Directory? outputDirectory,
   }) async {
-    final svg = (mechanism.svgContent != null && mechanism.svgContent!.isNotEmpty)
+    final svg =
+        (mechanism.svgContent != null && mechanism.svgContent!.isNotEmpty)
         ? mechanism.svgContent!
         : ReactionDiagramSvgCatalog.getSvgFor(mechanism.id);
     final targetDir = outputDirectory ?? await getTemporaryDirectory();
-    final fileName = 'ChemBuddy_Reaction_${mechanism.id}_${DateFormat('yyyyMMdd').format(DateTime.now())}.svg';
+    final fileName =
+        'ChemBuddy_Reaction_${mechanism.id}_${DateFormat('yyyyMMdd').format(DateTime.now())}.svg';
     final file = File('${targetDir.path}/$fileName');
-    await file.writeAsString(svg.isNotEmpty ? svg : '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><text x="20" y="40">${mechanism.name}</text></svg>', flush: true);
+    await file.writeAsString(
+      svg.isNotEmpty
+          ? svg
+          : '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><text x="20" y="40">${mechanism.name}</text></svg>',
+      flush: true,
+    );
     return file;
   }
 
@@ -1001,7 +1406,9 @@ class ExportService {
   /// and strips out unsupported or invisible Unicode codepoints (such as 8290 invisible times)
   /// that would trigger font layout exceptions in Syncfusion PDF.
   static String _cleanForPdf(String? input) {
-    if (input == null || input.isEmpty) return '';
+    if (input == null || input.isEmpty) {
+      return '';
+    }
     var text = input
         .replaceAll(r'\text{', '')
         .replaceAll(r'}', '')
@@ -1067,7 +1474,10 @@ class ExportService {
     for (int i = 0; i < text.length; i++) {
       final code = text.codeUnitAt(i);
       // Keep standard ASCII printable (32 to 126), line breaks and tabs
-      if ((code >= 32 && code <= 126) || code == 10 || code == 13 || code == 9) {
+      if ((code >= 32 && code <= 126) ||
+          code == 10 ||
+          code == 13 ||
+          code == 9) {
         sb.writeCharCode(code);
       } else if (code == 160) {
         // Non-breaking space
@@ -1125,7 +1535,11 @@ class ExportService {
   static void _addDetailRow(PdfGrid grid, String label, String value) {
     final row = grid.rows.add();
     row.cells[0].value = label;
-    row.cells[0].style.font = PdfStandardFont(PdfFontFamily.helvetica, 9, style: PdfFontStyle.bold);
+    row.cells[0].style.font = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      9,
+      style: PdfFontStyle.bold,
+    );
     row.cells[1].value = value;
     row.cells[1].style.font = PdfStandardFont(PdfFontFamily.helvetica, 9);
   }

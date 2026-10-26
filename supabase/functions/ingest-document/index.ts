@@ -1,13 +1,11 @@
+import { AccessError, requireAdmin } from "../_shared/access.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: cors() });
   }
 
   try {
-    const auth = req.headers.get("Authorization") ?? "";
-    if (!auth.toLowerCase().startsWith("bearer ")) {
-      return json({ error: "Authorization required." }, 401);
-    }
+    await requireAdmin(req);
 
     const body = await req.json();
     const documentId = String(body.documentId ?? "").trim();
@@ -20,7 +18,7 @@ Deno.serve(async (req) => {
     const pagesInput = body.pages as Array<{ pageNumber: number; text: string }> | null;
     const legacyText = String(body.text ?? "").trim();
 
-    if (!documentId) {
+    if (!/^[0-9a-f-]{36}$/i.test(documentId)) {
       return json({ error: "Document ID is required." }, 400);
     }
 
@@ -198,6 +196,7 @@ Deno.serve(async (req) => {
       pagesProcessed: pages.length,
     });
   } catch (error) {
+    if (error instanceof AccessError) return json({ error: error.message }, error.status);
     console.error("ingest-document error:", error);
     return json({ error: "Document ingestion failed.", detail: String(error) }, 500);
   }
@@ -256,11 +255,7 @@ function cleanText(raw: string): string {
 }
 
 // ─── Key Pool & Multi-Key Failover Engine ─────────────────────
-const GEMINI_API_KEYS_FALLBACK = [
-  atob("QVEuQWI4Uk42TFdoRHRwWlppYkYzY08wbjJ0RVdGOWt2enlNVzUwcjRfVE9sZkVpUF9jSHc="),
-  atob("QVEuQWI4Uk42TFloMi01alpsTUFkdl9CaXE0cHMzZ2RxeXlpSDVBNV95c09kMktyZWptVHc="),
-  atob("QVEuQWI4Uk42THB0RlUxXzdBR3NKbnZ6cVpaeVpYRDZCSnlzNzlkWmJKUGpENEpjWnhVUHc="),
-];
+const GEMINI_API_KEYS_FALLBACK: string[] = []; // Server secrets only; no embedded provider credentials.
 
 function getGeminiKeyPool(): string[] {
   const envKeys = (Deno.env.get("GEMINI_API_KEYS") ?? "")
@@ -305,7 +300,7 @@ async function fetchGeminiWithRotation(
     let lastErrorText = "";
     let lastStatus = 500;
     const activeControllers: AbortController[] = [];
-    const scheduledTimeouts: number[] = [];
+    const scheduledTimeouts: Array<ReturnType<typeof setTimeout>> = [];
     const launched = new Set<number>();
 
     function settleSuccess(data: any) {

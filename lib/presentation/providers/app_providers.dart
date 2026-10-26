@@ -29,7 +29,9 @@ final chemRepositoryProvider = Provider<ChemRepository>((ref) {
   );
 });
 
-final appControllerProvider = NotifierProvider<AppController, AppState>(AppController.new);
+final appControllerProvider = NotifierProvider<AppController, AppState>(
+  AppController.new,
+);
 
 final pdfAiStudyServiceProvider = Provider<PdfAiStudyService>((ref) {
   return PdfAiStudyService(
@@ -121,9 +123,16 @@ class AppController extends Notifier<AppState> {
 
   Future<void> reload() async {
     state = _snapshot();
+    await _repo.sync.flush();
     final localStore = _repo.store;
-    final smartCards = localStore.all(localStore.smartCards).map(SmartFlashcard.fromJson).toList();
-    final flashcardSets = localStore.all(localStore.smartSets).map(SmartFlashcardSet.fromJson).toList();
+    final smartCards = localStore
+        .all(localStore.smartCards)
+        .map(SmartFlashcard.fromJson)
+        .toList();
+    final flashcardSets = localStore
+        .all(localStore.smartSets)
+        .map(SmartFlashcardSet.fromJson)
+        .toList();
 
     // Map subject attendance stats by id, code, and name for precise notification banter
     final Map<String, SubjectAttendanceStats> subjectStats = {};
@@ -140,7 +149,9 @@ class AppController extends Notifier<AppState> {
     final overallStats = _repo.overallStats();
 
     await NotificationService.instance.resync(
-      prefs: state.notificationPrefs,
+      prefs: state.profile.loggedIn
+          ? state.notificationPrefs
+          : state.notificationPrefs.copyWith(enabled: false),
       entries: state.entries,
       events: state.events,
       reminders: state.reminders,
@@ -164,7 +175,11 @@ class AppController extends Notifier<AppState> {
     String electiveName = 'Open Elective',
   }) async {
     await _repo.saveProfile(
-      _repo.profile().copyWith(university: university, semester: semester, onboarded: true),
+      _repo.profile().copyWith(
+        university: university,
+        semester: semester,
+        onboarded: true,
+      ),
     );
     if (_repo.subjects().isEmpty) {
       await _repo.seedSubjects(selectedSeeds, electiveName: electiveName);
@@ -183,13 +198,25 @@ class AppController extends Notifier<AppState> {
       await reload();
       return null;
     }
-    final error = await _repo.loginRemote(registerNumber, password, signUp: signUp, name: name);
+    final error = await _repo.loginRemote(
+      registerNumber,
+      password,
+      signUp: signUp,
+      name: name,
+    );
     if (error == null) {
       final p = _repo.profile();
-      await _repo.saveProfile(p.copyWith(fullName: name.isEmpty ? p.fullName : name));
+      await _repo.saveProfile(
+        p.copyWith(fullName: name.isEmpty ? p.fullName : name),
+      );
     }
     await reload();
     return error;
+  }
+
+  Future<void> enterGuest() async {
+    await _repo.enterGuest();
+    await reload();
   }
 
   Future<void> logout() async {
@@ -203,7 +230,12 @@ class AppController extends Notifier<AppState> {
     required AttendanceStatus status,
     String? slotId,
   }) async {
-    await _repo.markAttendance(subjectId: subjectId, date: date, status: status, slotId: slotId);
+    await _repo.markAttendance(
+      subjectId: subjectId,
+      date: date,
+      status: status,
+      slotId: slotId,
+    );
     await reload();
   }
 

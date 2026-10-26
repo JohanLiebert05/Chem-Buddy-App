@@ -39,30 +39,51 @@ class FlashcardAiEvaluation {
   }
 
   Map<String, dynamic> toJson() => {
-        'match_percentage': matchPercentage,
-        'covered_terms': coveredTerms,
-        'missed_terms': missedTerms,
-        'feedback': feedback,
-        'recommended_action': recommendedAction.name,
-      };
+    'match_percentage': matchPercentage,
+    'covered_terms': coveredTerms,
+    'missed_terms': missedTerms,
+    'feedback': feedback,
+    'recommended_action': recommendedAction.name,
+  };
 
   factory FlashcardAiEvaluation.fromJson(Map<String, dynamic> json) {
-    final rawScore = json['match_percentage'] ?? json['matchPercentage'] ?? json['score'] ?? 0;
+    final rawScore =
+        json['match_percentage'] ??
+        json['matchPercentage'] ??
+        json['score'] ??
+        0;
     final matchPercentage = (rawScore as num).toInt().clamp(0, 100);
 
-    final rawCovered = json['covered_terms'] ?? json['coveredTerms'] ?? json['matched_terms'] ?? [];
+    final rawCovered =
+        json['covered_terms'] ??
+        json['coveredTerms'] ??
+        json['matched_terms'] ??
+        [];
     final coveredTerms = (rawCovered is List)
-        ? rawCovered.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList()
+        ? rawCovered
+              .map((e) => e.toString().trim())
+              .where((e) => e.isNotEmpty)
+              .toList()
         : <String>[];
 
-    final rawMissed = json['missed_terms'] ?? json['missedTerms'] ?? json['unmatched_terms'] ?? [];
+    final rawMissed =
+        json['missed_terms'] ??
+        json['missedTerms'] ??
+        json['unmatched_terms'] ??
+        [];
     final missedTerms = (rawMissed is List)
-        ? rawMissed.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList()
+        ? rawMissed
+              .map((e) => e.toString().trim())
+              .where((e) => e.isNotEmpty)
+              .toList()
         : <String>[];
 
-    final feedback = (json['feedback'] ?? json['notes'] ?? '').toString().trim();
+    final feedback = (json['feedback'] ?? json['notes'] ?? '')
+        .toString()
+        .trim();
 
-    final explicitAction = json['recommended_action'] ?? json['recommendedAction'];
+    final explicitAction =
+        json['recommended_action'] ?? json['recommendedAction'];
     FlashcardRating rating;
     if (explicitAction != null && explicitAction.toString().trim().isNotEmpty) {
       final act = explicitAction.toString().trim().toLowerCase();
@@ -96,10 +117,10 @@ class FlashcardAiEvaluation {
       feedback: feedback.isNotEmpty
           ? feedback
           : (matchPercentage >= 80
-              ? 'Excellent recall! Your answer accurately captures the core chemical concepts and terminology.'
-              : (matchPercentage >= 50
-                  ? 'Good conceptual grasp. Review the missed terms to ensure complete exam-level precision.'
-                  : 'Key reaction mechanisms or definitions were missing. Revisit the model answer and retry.')),
+                ? 'Excellent recall! Your answer accurately captures the core chemical concepts and terminology.'
+                : (matchPercentage >= 50
+                      ? 'Good conceptual grasp. Review the missed terms to ensure complete exam-level precision.'
+                      : 'Key reaction mechanisms or definitions were missing. Revisit the model answer and retry.')),
       recommendedAction: rating,
     );
   }

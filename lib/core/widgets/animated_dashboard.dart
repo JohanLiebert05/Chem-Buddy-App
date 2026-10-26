@@ -43,7 +43,8 @@ class AnimatedDashboardList extends StatelessWidget {
     return ListView(
       padding: padding,
       children: [
-        for (var i = 0; i < children.length; i++) FadeSlideIn(index: i, child: children[i]),
+        for (var i = 0; i < children.length; i++)
+          FadeSlideIn(index: i, child: children[i]),
       ],
     );
   }

@@ -1,4 +1,7 @@
+import 'expressive_motion.dart';
+
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -28,17 +31,15 @@ class FlipCard3D extends StatefulWidget {
   State<FlipCard3D> createState() => FlipCard3DState();
 }
 
-class FlipCard3DState extends State<FlipCard3D> with SingleTickerProviderStateMixin {
+class FlipCard3DState extends State<FlipCard3D>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
     );
@@ -68,7 +69,9 @@ class FlipCard3DState extends State<FlipCard3D> with SingleTickerProviderStateMi
 
   void flip() {
     AppHaptics.selection();
-    if (_controller.isAnimating) return;
+    if (_controller.isAnimating) {
+      return;
+    }
     if (_controller.value < 0.5) {
       _flipToBack();
       widget.onFlip?.call(true);
@@ -88,32 +91,34 @@ class FlipCard3DState extends State<FlipCard3D> with SingleTickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.canTapToFlip ? flip : null,
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          final angle = _animation.value * math.pi;
-          final isShowingFront = angle <= (math.pi / 2);
+    return SpringPress(
+      child: GestureDetector(
+        onTap: widget.canTapToFlip ? flip : null,
+        child: AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            final angle = _animation.value * math.pi;
+            final isShowingFront = angle <= (math.pi / 2);
 
-          // 3D perspective matrix
-          final transform = Matrix4.identity()
-            ..setEntry(3, 2, 0.0012) // Perspective depth
-            ..rotateY(angle);
+            // 3D perspective matrix
+            final transform = Matrix4.identity()
+              ..setEntry(3, 2, 0.0012) // Perspective depth
+              ..rotateY(angle);
 
-          // Correct inversion for back of card
-          if (!isShowingFront) {
-            transform.rotateY(math.pi);
-          }
+            // Correct inversion for back of card
+            if (!isShowingFront) {
+              transform.rotateY(math.pi);
+            }
 
-          return Transform(
-            transform: transform,
-            alignment: Alignment.center,
-            child: isShowingFront
-                ? _buildCardSide(widget.front, isFront: true)
-                : _buildCardSide(widget.back, isFront: false),
-          );
-        },
+            return Transform(
+              transform: transform,
+              alignment: Alignment.center,
+              child: isShowingFront
+                  ? _buildCardSide(widget.front, isFront: true)
+                  : _buildCardSide(widget.back, isFront: false),
+            );
+          },
+        ),
       ),
     );
   }
@@ -129,7 +134,8 @@ class FlipCard3DState extends State<FlipCard3D> with SingleTickerProviderStateMi
             offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: AppColors.brandPrimary.withValues(alpha: 0.12),
+            color: Theme.of(context).colorScheme.primary
+                .withValues(alpha: 0.12),
             blurRadius: 20,
             spreadRadius: -2,
           ),
@@ -145,9 +151,13 @@ class FlipCard3DState extends State<FlipCard3D> with SingleTickerProviderStateMi
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.bg2.withValues(alpha: 0.85),
+                color: Theme.of(context).colorScheme.surfaceContainerHigh
+                    .withValues(alpha: 0.85),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderHighlight, width: 0.6),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 0.6,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -155,7 +165,9 @@ class FlipCard3DState extends State<FlipCard3D> with SingleTickerProviderStateMi
                   Icon(
                     Icons.flip_camera_android_rounded,
                     size: 12,
-                    color: isFront ? AppColors.brandBright : AppColors.statusSuccess,
+                    color: isFront
+                        ? Theme.of(context).colorScheme.primary
+                        : AppColors.adaptive(context, AppColors.statusSuccess),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -163,7 +175,12 @@ class FlipCard3DState extends State<FlipCard3D> with SingleTickerProviderStateMi
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: isFront ? AppColors.brandBright : AppColors.statusSuccess,
+                      color: isFront
+                          ? Theme.of(context).colorScheme.primary
+                          : AppColors.adaptive(
+                              context,
+                              AppColors.statusSuccess,
+                            ),
                     ),
                   ),
                 ],

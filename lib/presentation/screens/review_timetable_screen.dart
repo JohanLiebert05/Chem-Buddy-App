@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -42,9 +44,9 @@ class ReviewTimetableScreen extends ConsumerStatefulWidget {
     );
   }
 
-
   @override
-  ConsumerState<ReviewTimetableScreen> createState() => _ReviewTimetableScreenState();
+  ConsumerState<ReviewTimetableScreen> createState() =>
+      _ReviewTimetableScreenState();
 }
 
 class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
@@ -93,7 +95,9 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
               subjectName: e.subject,
               teacherName: e.teacherName,
               room: e.room,
-              type: _classTypes.contains(e.type.toLowerCase()) ? e.type.toLowerCase() : 'lecture',
+              type: _classTypes.contains(e.type.toLowerCase())
+                  ? e.type.toLowerCase()
+                  : 'lecture',
             ),
           )
           .toList();
@@ -103,7 +107,8 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
   static String _normalizeDay(String raw) {
     final lower = raw.trim().toLowerCase();
     for (final day in _daysOfWeek) {
-      if (day.toLowerCase() == lower || lower.startsWith(day.substring(0, 3).toLowerCase())) {
+      if (day.toLowerCase() == lower ||
+          lower.startsWith(day.substring(0, 3).toLowerCase())) {
         return day;
       }
     }
@@ -139,10 +144,12 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Removed ${removed.subjectName.isNotEmpty ? removed.subjectName : "Class Slot"}'),
+        content: Text(
+          'Removed ${removed.subjectName.isNotEmpty ? removed.subjectName : "Class Slot"}',
+        ),
         action: SnackBarAction(
           label: 'Undo',
-          textColor: AppColors.purpleBright,
+          textColor: Theme.of(context).colorScheme.primary,
           onPressed: () {
             setState(() {
               _slots.insert(index, removed);
@@ -161,15 +168,23 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
 
     final stripped = clean.replaceAll(RegExp(r'[^\d:]'), '');
     final parts = stripped.split(':');
-    if (parts.isEmpty) return null;
+    if (parts.isEmpty) {
+      return null;
+    }
 
     final hour = int.tryParse(parts[0]);
-    if (hour == null) return null;
+    if (hour == null) {
+      return null;
+    }
     final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
 
     var totalHours = hour;
-    if (isPm && totalHours != 12) totalHours += 12;
-    if (isAm && totalHours == 12) totalHours = 0;
+    if (isPm && totalHours != 12) {
+      totalHours += 12;
+    }
+    if (isAm && totalHours == 12) {
+      totalHours = 0;
+    }
 
     return totalHours * 60 + minute;
   }
@@ -177,24 +192,33 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
   bool _isTimeRangeValid(String start, String end) {
     final startMin = _parseTimeToMinutes(start);
     final endMin = _parseTimeToMinutes(end);
-    if (startMin == null || endMin == null) return true; // If unparseable, don't hard-block
+    if (startMin == null || endMin == null) {
+      return true;
+    } // If unparseable, don't hard-block
     return startMin < endMin;
   }
 
   List<int> _findOverlappingSlots(int slotIndex) {
-    if (slotIndex >= _slots.length) return const [];
+    if (slotIndex >= _slots.length) {
+      return const [];
+    }
     final current = _slots[slotIndex];
     final currentStart = _parseTimeToMinutes(current.startTime);
     final currentEnd = _parseTimeToMinutes(current.endTime);
-    if (currentStart == null || currentEnd == null || currentStart >= currentEnd) {
+    if (currentStart == null ||
+        currentEnd == null ||
+        currentStart >= currentEnd) {
       return const [];
     }
 
     final overlaps = <int>[];
     for (var i = 0; i < _slots.length; i++) {
-      if (i == slotIndex) continue;
+      if (i == slotIndex) {
+        continue;
+      }
       final other = _slots[i];
-      if (other.dayOfWeek.trim().toLowerCase() != current.dayOfWeek.trim().toLowerCase()) {
+      if (other.dayOfWeek.trim().toLowerCase() !=
+          current.dayOfWeek.trim().toLowerCase()) {
         continue;
       }
 
@@ -226,7 +250,11 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
     return false;
   }
 
-  Future<void> _pickTime(BuildContext context, _EditableSlot slot, bool isStart) async {
+  Future<void> _pickTime(
+    BuildContext context,
+    _EditableSlot slot,
+    bool isStart,
+  ) async {
     AppHaptics.tap();
     final currentStr = isStart ? slot.startTime : slot.endTime;
     TimeOfDay initialTime = TimeOfDay.now();
@@ -242,10 +270,10 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.purpleBright,
+            colorScheme: ColorScheme.dark(
+              primary: Theme.of(context).colorScheme.primary,
               onPrimary: Colors.white,
-              surface: AppColors.surface,
+              surface: Theme.of(context).colorScheme.surfaceContainerLow,
               onSurface: Colors.white,
             ),
           ),
@@ -274,7 +302,9 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
     AppHaptics.confirm();
     if (_slots.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one class slot before saving.')),
+        const SnackBar(
+          content: Text('Please add at least one class slot before saving.'),
+        ),
       );
       return;
     }
@@ -284,13 +314,21 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
       final s = _slots[i];
       if (s.subjectCode.trim().isEmpty && s.subjectName.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Slot #${i + 1} requires a Subject Name or Subject Code.')),
+          SnackBar(
+            content: Text(
+              'Slot #${i + 1} requires a Subject Name or Subject Code.',
+            ),
+          ),
         );
         return;
       }
       if (!_isTimeRangeValid(s.startTime, s.endTime)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Slot #${i + 1} (${s.subjectName.isNotEmpty ? s.subjectName : s.subjectCode}) has an invalid time range (Start must be before End).')),
+          SnackBar(
+            content: Text(
+              'Slot #${i + 1} (${s.subjectName.isNotEmpty ? s.subjectName : s.subjectCode}) has an invalid time range (Start must be before End).',
+            ),
+          ),
         );
         return;
       }
@@ -323,16 +361,22 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
         }
       }
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       messenger.showSnackBar(
         SnackBar(
-          backgroundColor: AppColors.success,
-          content: Text('Saved ${entries.length} class slots to your timetable schedule.'),
+          backgroundColor: AppColors.adaptive(context, AppColors.success),
+          content: Text(
+            'Saved ${entries.length} class slots to your timetable schedule.',
+          ),
         ),
       );
       Navigator.pop(context, true);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() => _saving = false);
       messenger.showSnackBar(
         SnackBar(content: Text('Error saving timetable: $e')),
@@ -342,7 +386,13 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final validSlotsCount = _slots.where((s) => (s.subjectCode.isNotEmpty || s.subjectName.isNotEmpty) && _isTimeRangeValid(s.startTime, s.endTime)).length;
+    final validSlotsCount = _slots
+        .where(
+          (s) =>
+              (s.subjectCode.isNotEmpty || s.subjectName.isNotEmpty) &&
+              _isTimeRangeValid(s.startTime, s.endTime),
+        )
+        .length;
 
     return HexBackground(
       child: Scaffold(
@@ -359,15 +409,26 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
               child: Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.purple.withValues(alpha: 0.2),
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Text(
                     '${_slots.length} Slots',
-                    style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),
@@ -386,36 +447,58 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                   child: GlowCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    borderColor: AppColors.brandPrimary.withValues(alpha: 0.35),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    borderColor: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.35),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.school_rounded, color: AppColors.purpleBright, size: 16),
+                            Icon(
+                              Icons.school_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 16,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 widget.metadata!.institution.isNotEmpty
                                     ? widget.metadata!.institution
                                     : widget.metadata!.department,
-                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
-                        if (widget.metadata!.semester.isNotEmpty || widget.metadata!.department.isNotEmpty) ...[
+                        if (widget.metadata!.semester.isNotEmpty ||
+                            widget.metadata!.department.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
                             [
-                              if (widget.metadata!.department.isNotEmpty && widget.metadata!.institution.isNotEmpty)
+                              if (widget.metadata!.department.isNotEmpty &&
+                                  widget.metadata!.institution.isNotEmpty)
                                 widget.metadata!.department,
-                              if (widget.metadata!.semester.isNotEmpty) widget.metadata!.semester,
-                              if (widget.metadata!.effectiveDate.isNotEmpty) 'w.e.f. ${widget.metadata!.effectiveDate}',
+                              if (widget.metadata!.semester.isNotEmpty)
+                                widget.metadata!.semester,
+                              if (widget.metadata!.effectiveDate.isNotEmpty)
+                                'w.e.f. ${widget.metadata!.effectiveDate}',
                             ].join(' • '),
-                            style: const TextStyle(color: AppColors.purpleBright, fontSize: 11.5, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ],
@@ -427,25 +510,38 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                 child: GlowCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  borderColor: AppColors.purple.withValues(alpha: 0.3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  borderColor: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.3),
                   child: Row(
                     children: [
-                      const Icon(Icons.verified_outlined, color: AppColors.purpleBright, size: 20),
+                      Icon(
+                        Icons.verified_outlined,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           widget.rawText.isNotEmpty
                               ? 'OCR recognized ${_slots.length} class slots with auto-resolved faculty. Edit, correct, or add lectures.'
                               : 'Edit, correct, and organize your weekly chemistry routine.',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.3),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 12.5,
+                            height: 1.3,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-
 
               // Editable Class Slots List
               Expanded(
@@ -456,27 +552,50 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                     if (index == _slots.length) {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8, bottom: 20),
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.purpleBright,
-                            side: const BorderSide(color: AppColors.purpleBright, width: 1.2),
-                            backgroundColor: AppColors.purple.withValues(alpha: 0.08),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                          onPressed: _addSlot,
-                          icon: const Icon(Icons.add_circle_outline, size: 20),
-                          label: const Text(
-                            '+ Add Class Slot',
-                            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                        child: SpringPress(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primary,
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 1.2,
+                              ),
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.08),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            onPressed: _addSlot,
+                            icon: const Icon(
+                              Icons.add_circle_outline,
+                              size: 20,
+                            ),
+                            label: const Text(
+                              '+ Add Class Slot',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
                         ),
                       );
                     }
 
                     final slot = _slots[index];
-                    final isTimeValid = _isTimeRangeValid(slot.startTime, slot.endTime);
-                    final isSubjectValid = slot.subjectCode.trim().isNotEmpty || slot.subjectName.trim().isNotEmpty;
+                    final isTimeValid = _isTimeRangeValid(
+                      slot.startTime,
+                      slot.endTime,
+                    );
+                    final isSubjectValid =
+                        slot.subjectCode.trim().isNotEmpty ||
+                        slot.subjectName.trim().isNotEmpty;
                     final overlaps = _findOverlappingSlots(index);
                     final hasOverlap = overlaps.isNotEmpty;
 
@@ -484,10 +603,16 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                       padding: const EdgeInsets.only(bottom: 14),
                       child: GlowCard(
                         borderColor: (!isTimeValid || !isSubjectValid)
-                            ? AppColors.danger.withValues(alpha: 0.6)
+                            ? AppColors.adaptive(
+                                context,
+                                AppColors.danger,
+                              ).withValues(alpha: 0.6)
                             : hasOverlap
-                                ? AppColors.warning.withValues(alpha: 0.8)
-                                : AppColors.border,
+                            ? AppColors.adaptive(
+                                context,
+                                AppColors.warning,
+                              ).withValues(alpha: 0.8)
+                            : Theme.of(context).colorScheme.outlineVariant,
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,30 +623,60 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: AppColors.purple.withValues(alpha: 0.2),
+                                    color: Theme.of(context).colorScheme.primary
+                                        .withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
                                     '#${index + 1}',
-                                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.purpleBright, fontSize: 12),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.surfaceElevated,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHigh,
                                       borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: AppColors.border),
+                                      border: Border.all(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .outlineVariant,
+                                      ),
                                     ),
                                     child: DropdownButtonHideUnderline(
                                       child: DropdownButton<String>(
                                         value: slot.dayOfWeek,
                                         isDense: true,
-                                        dropdownColor: AppColors.surfaceElevated,
-                                        icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textMuted, size: 18),
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                                        dropdownColor: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHigh,
+                                        icon: Icon(
+                                          Icons.keyboard_arrow_down,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                          size: 18,
+                                        ),
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13,
+                                        ),
                                         items: _daysOfWeek.map((day) {
                                           return DropdownMenuItem(
                                             value: day,
@@ -530,7 +685,9 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                         }).toList(),
                                         onChanged: (val) {
                                           if (val != null) {
-                                            setState(() => slot.dayOfWeek = val);
+                                            setState(
+                                              () => slot.dayOfWeek = val,
+                                            );
                                           }
                                         },
                                       ),
@@ -538,10 +695,19 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 22),
-                                  tooltip: 'Delete Slot',
-                                  onPressed: () => _removeSlot(index),
+                                SpringPress(
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.delete_outline,
+                                      color: AppColors.adaptive(
+                                        context,
+                                        AppColors.danger,
+                                      ),
+                                      size: 22,
+                                    ),
+                                    tooltip: 'Delete Slot',
+                                    onPressed: () => _removeSlot(index),
+                                  ),
                                 ),
                               ],
                             ),
@@ -551,59 +717,154 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                             Row(
                               children: [
                                 Expanded(
-                                  child: InkWell(
-                                    onTap: () => _pickTime(context, slot, true),
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surfaceElevated,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: isTimeValid ? AppColors.border : AppColors.danger),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.access_time, size: 16, color: AppColors.purpleBright),
-                                          const SizedBox(width: 8),
-                                          Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const Text('START', style: TextStyle(color: AppColors.textMuted, fontSize: 9.5, fontWeight: FontWeight.w800)),
-                                              Text(slot.startTime, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12.5)),
-                                            ],
+                                  child: SpringPress(
+                                    child: InkWell(
+                                      onTap: () =>
+                                          _pickTime(context, slot, true),
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainerHigh,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
-                                        ],
+                                          border: Border.all(
+                                            color: isTimeValid
+                                                ? Theme.of(context)
+                                                      .colorScheme
+                                                      .outlineVariant
+                                                : AppColors.adaptive(
+                                                    context,
+                                                    AppColors.danger,
+                                                  ),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.access_time,
+                                              size: 16,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'START',
+                                                  style: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                                    fontSize: 9.5,
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  slot.startTime,
+                                                  style: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 12.5,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                                const Padding(
+                                Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 8),
-                                  child: Icon(Icons.arrow_forward, color: AppColors.textMuted, size: 16),
+                                  child: Icon(
+                                    Icons.arrow_forward,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    size: 16,
+                                  ),
                                 ),
                                 Expanded(
-                                  child: InkWell(
-                                    onTap: () => _pickTime(context, slot, false),
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surfaceElevated,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: isTimeValid ? AppColors.border : AppColors.danger),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.access_time_filled, size: 16, color: AppColors.blue),
-                                          const SizedBox(width: 8),
-                                          Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const Text('END', style: TextStyle(color: AppColors.textMuted, fontSize: 9.5, fontWeight: FontWeight.w800)),
-                                              Text(slot.endTime, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12.5)),
-                                            ],
+                                  child: SpringPress(
+                                    child: InkWell(
+                                      onTap: () =>
+                                          _pickTime(context, slot, false),
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainerHigh,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
-                                        ],
+                                          border: Border.all(
+                                            color: isTimeValid
+                                                ? Theme.of(context)
+                                                      .colorScheme
+                                                      .outlineVariant
+                                                : AppColors.adaptive(
+                                                    context,
+                                                    AppColors.danger,
+                                                  ),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.access_time_filled,
+                                              size: 16,
+                                              color: AppColors.adaptive(
+                                                context,
+                                                AppColors.blue,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'END',
+                                                  style: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                                    fontSize: 9.5,
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  slot.endTime,
+                                                  style: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 12.5,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -612,13 +873,27 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                             ),
                             if (!isTimeValid) ...[
                               const SizedBox(height: 6),
-                              const Row(
+                              Row(
                                 children: [
-                                  Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 14),
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: AppColors.adaptive(
+                                      context,
+                                      AppColors.danger,
+                                    ),
+                                    size: 14,
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     'Start time must be before End time.',
-                                    style: TextStyle(color: AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600),
+                                    style: TextStyle(
+                                      color: AppColors.adaptive(
+                                        context,
+                                        AppColors.danger,
+                                      ),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -626,20 +901,45 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                             if (hasOverlap) ...[
                               const SizedBox(height: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.warning.withValues(alpha: 0.15),
+                                  color: AppColors.adaptive(
+                                    context,
+                                    AppColors.warning,
+                                  ).withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: AppColors.warning.withValues(alpha: 0.5)),
+                                  border: Border.all(
+                                    color: AppColors.adaptive(
+                                      context,
+                                      AppColors.warning,
+                                    ).withValues(alpha: 0.5),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 15),
+                                    Icon(
+                                      Icons.warning_amber_rounded,
+                                      color: AppColors.adaptive(
+                                        context,
+                                        AppColors.warning,
+                                      ),
+                                      size: 15,
+                                    ),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
                                         'Time Conflict: Overlaps with Slot #${overlaps.map((i) => i + 1).join(', #')} on ${slot.dayOfWeek}',
-                                        style: const TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.w700),
+                                        style: TextStyle(
+                                          color: AppColors.adaptive(
+                                            context,
+                                            AppColors.warning,
+                                          ),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -659,18 +959,58 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                     onChanged: (v) => slot.subjectName = v,
                                     minLines: 1,
                                     maxLines: 2,
-                                    style: const TextStyle(fontSize: 13.5, color: Colors.white),
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
                                     decoration: InputDecoration(
                                       labelText: 'Subject Name',
                                       hintText: 'e.g. Organic Chemistry',
-                                      labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                      labelStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                        fontSize: 12,
+                                      ),
+                                      hintStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                        fontSize: 12,
+                                      ),
                                       filled: true,
-                                      fillColor: AppColors.surfaceElevated,
+                                      fillColor: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHigh,
                                       isDense: true,
-                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.border)),
-                                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isSubjectValid ? AppColors.border : AppColors.danger)),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .outlineVariant,
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                          color: isSubjectValid
+                                              ? Theme.of(context)
+                                                    .colorScheme
+                                                    .outlineVariant
+                                              : AppColors.adaptive(
+                                                  context,
+                                                  AppColors.danger,
+                                                ),
+                                        ),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
                                     ),
                                   ),
                                 ),
@@ -680,18 +1020,58 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                   child: TextFormField(
                                     initialValue: slot.subjectCode,
                                     onChanged: (v) => slot.subjectCode = v,
-                                    style: const TextStyle(fontSize: 13.5, color: Colors.white),
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
                                     decoration: InputDecoration(
                                       labelText: 'Code',
                                       hintText: 'CHE-501',
-                                      labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                      labelStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                        fontSize: 12,
+                                      ),
+                                      hintStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                        fontSize: 12,
+                                      ),
                                       filled: true,
-                                      fillColor: AppColors.surfaceElevated,
+                                      fillColor: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHigh,
                                       isDense: true,
-                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.border)),
-                                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isSubjectValid ? AppColors.border : AppColors.danger)),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .outlineVariant,
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                          color: isSubjectValid
+                                              ? Theme.of(context)
+                                                    .colorScheme
+                                                    .outlineVariant
+                                              : AppColors.adaptive(
+                                                  context,
+                                                  AppColors.danger,
+                                                ),
+                                        ),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
                                     ),
                                   ),
                                 ),
@@ -699,13 +1079,27 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                             ),
                             if (!isSubjectValid) ...[
                               const SizedBox(height: 6),
-                              const Row(
+                              Row(
                                 children: [
-                                  Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 14),
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: AppColors.adaptive(
+                                      context,
+                                      AppColors.danger,
+                                    ),
+                                    size: 14,
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     'Subject Name or Subject Code is required.',
-                                    style: TextStyle(color: AppColors.danger, fontSize: 11, fontWeight: FontWeight.w600),
+                                    style: TextStyle(
+                                      color: AppColors.adaptive(
+                                        context,
+                                        AppColors.danger,
+                                      ),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -721,17 +1115,45 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                     onChanged: (v) => slot.teacherName = v,
                                     minLines: 1,
                                     maxLines: 2,
-                                    style: const TextStyle(fontSize: 12.5, color: Colors.white),
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
                                     decoration: InputDecoration(
                                       labelText: 'Teacher',
                                       hintText: 'e.g. Dr. Sharma',
-                                      labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
-                                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                                      labelStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                        fontSize: 11.5,
+                                      ),
+                                      hintStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                        fontSize: 11.5,
+                                      ),
                                       filled: true,
-                                      fillColor: AppColors.surfaceElevated,
+                                      fillColor: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHigh,
                                       isDense: true,
-                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.border)),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .outlineVariant,
+                                        ),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 8,
+                                          ),
                                     ),
                                   ),
                                 ),
@@ -742,17 +1164,45 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                                     onChanged: (v) => slot.room = v,
                                     minLines: 1,
                                     maxLines: 2,
-                                    style: const TextStyle(fontSize: 12.5, color: Colors.white),
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
                                     decoration: InputDecoration(
                                       labelText: 'Room / Hall',
                                       hintText: 'e.g. Lab 3 / Room 204',
-                                      labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
-                                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                                      labelStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                        fontSize: 11.5,
+                                      ),
+                                      hintStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                        fontSize: 11.5,
+                                      ),
                                       filled: true,
-                                      fillColor: AppColors.surfaceElevated,
+                                      fillColor: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHigh,
                                       isDense: true,
-                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.border)),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .outlineVariant,
+                                        ),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 8,
+                                          ),
                                     ),
                                   ),
                                 ),
@@ -763,31 +1213,57 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                             // Class Type selector chips
                             Row(
                               children: [
-                                const Text('Type: ', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                                Text(
+                                  'Type: ',
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                                 const SizedBox(width: 6),
                                 ...['lecture', 'lab', 'tutorial'].map((type) {
-                                  final isSelected = slot.type.toLowerCase() == type;
+                                  final isSelected =
+                                      slot.type.toLowerCase() == type;
                                   return Padding(
                                     padding: const EdgeInsets.only(right: 6),
-                                    child: ChoiceChip(
-                                      label: Text(
-                                        type[0].toUpperCase() + type.substring(1),
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: isSelected ? Colors.white : AppColors.textSecondary,
+                                    child: SpringPress(
+                                      child: ChoiceChip(
+                                        label: Text(
+                                          type[0].toUpperCase() +
+                                              type.substring(1),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: isSelected
+                                                ? Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                : Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                          ),
                                         ),
+                                        selected: isSelected,
+                                        selectedColor: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        backgroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHigh,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 0,
+                                        ),
+                                        visualDensity: VisualDensity.compact,
+                                        onSelected: (selected) {
+                                          if (selected) {
+                                            setState(() => slot.type = type);
+                                          }
+                                        },
                                       ),
-                                      selected: isSelected,
-                                      selectedColor: AppColors.purple,
-                                      backgroundColor: AppColors.surfaceElevated,
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
-                                      visualDensity: VisualDensity.compact,
-                                      onSelected: (selected) {
-                                        if (selected) {
-                                          setState(() => slot.type = type);
-                                        }
-                                      },
                                     ),
                                   );
                                 }),
@@ -805,13 +1281,27 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
         ),
         bottomSheet: Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border(top: BorderSide(color: AppColors.purple.withValues(alpha: 0.3))),
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            border: Border(
+              top: BorderSide(
+                color: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.3),
+              ),
+            ),
             boxShadow: const [
-              BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, -2)),
+              BoxShadow(
+                color: Colors.black45,
+                blurRadius: 10,
+                offset: Offset(0, -2),
+              ),
             ],
           ),
-          padding: EdgeInsets.fromLTRB(16, 12, 16, max(14.0, MediaQuery.paddingOf(context).bottom)),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            12,
+            16,
+            max(14.0, MediaQuery.paddingOf(context).bottom),
+          ),
           child: Row(
             children: [
               Expanded(
@@ -824,37 +1314,65 @@ class _ReviewTimetableScreenState extends ConsumerState<ReviewTimetableScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 13,
-                        color: (validSlotsCount == _slots.length && !_hasAnyValidationErrors) ? AppColors.success : AppColors.warning,
+                        color:
+                            (validSlotsCount == _slots.length &&
+                                !_hasAnyValidationErrors)
+                            ? AppColors.adaptive(context, AppColors.success)
+                            : AppColors.adaptive(context, AppColors.warning),
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      widget.replaceAll ? 'Overwrites routine' : 'Appends to routine',
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                      widget.replaceAll
+                          ? 'Overwrites routine'
+                          : 'Appends to routine',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.purple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  elevation: 4,
+              SpringPress(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer,
+                    foregroundColor: Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 4,
+                  ),
+                  onPressed: (_saving || _hasAnyValidationErrors)
+                      ? null
+                      : _confirmAndSave,
+                  child: _saving
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        )
+                      : const Text(
+                          'Confirm & Save Schedule →',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                          ),
+                        ),
                 ),
-                onPressed: (_saving || _hasAnyValidationErrors) ? null : _confirmAndSave,
-                child: _saving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text(
-                        'Confirm & Save Schedule →',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
-                      ),
               ),
             ],
           ),

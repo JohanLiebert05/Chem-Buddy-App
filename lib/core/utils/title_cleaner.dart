@@ -1,6 +1,6 @@
 /// Utility to clean file names and study material titles for professional UI display.
 String cleanStudyMaterialTitle(String? raw) {
-  if (raw == null || raw.trim().isEmpty) return 'Chemistry Notes';
+  if (raw == null || raw.trim().isEmpty) {return 'Chemistry Notes';}
 
   var title = raw.trim();
 
@@ -16,6 +16,6 @@ String cleanStudyMaterialTitle(String? raw) {
   // 4. Clean duplicated spaces
   title = title.replaceAll(RegExp(r'\s+'), ' ').trim();
 
-  if (title.isEmpty) return 'Chemistry Notes';
+  if (title.isEmpty) {return 'Chemistry Notes';}
   return title;
 }

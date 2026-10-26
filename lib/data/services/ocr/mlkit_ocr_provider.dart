@@ -1,5 +1,7 @@
 import 'dart:io';
+
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+
 import 'ocr_provider.dart';
 
 /// On-Device ML Kit OCR Provider for mobile devices.

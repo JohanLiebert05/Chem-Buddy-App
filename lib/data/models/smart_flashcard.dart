@@ -134,8 +134,8 @@ class SmartFlashcard {
   bool get isLearning => srState == FlashcardSrState.learning || srState == FlashcardSrState.lapse;
   bool get isMature => srState == FlashcardSrState.mature || intervalDays >= 21;
   bool get isDue {
-    if (isNew) return false;
-    if (nextReviewAt == null) return true;
+    if (isNew) {return false;}
+    if (nextReviewAt == null) {return true;}
     return !nextReviewAt!.isAfter(DateTime.now());
   }
 

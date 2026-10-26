@@ -1,8 +1,7 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:uuid/uuid.dart';
@@ -69,13 +68,17 @@ class NotificationService {
     priority: Priority.high,
   );
 
+  bool get _supported =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
+
   Future<void> init() async {
+    if (!_supported) {return;}
     try {
       tzdata.initializeTimeZones();
-      final name = await FlutterTimezone.getLocalTimezone();
-      // Force IST (Asia/Kolkata) if timezone detection fails or returns empty
-      final tzName = name.isNotEmpty ? name : 'Asia/Kolkata';
-      tz.setLocalLocation(tz.getLocation(tzName));
+      tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
     } catch (_) {
       tzdata.initializeTimeZones();
       // Fallback: Force IST timezone for Indian students
@@ -90,10 +93,7 @@ class NotificationService {
         DarwinNotificationCategory(
           'attendance_actions',
           actions: <DarwinNotificationAction>[
-            DarwinNotificationAction.plain(
-              'mark_present',
-              'Present ✅',
-            ),
+            DarwinNotificationAction.plain('mark_present', 'Present ✅'),
             DarwinNotificationAction.plain(
               'mark_absent',
               'Absent ❌',
@@ -107,43 +107,57 @@ class NotificationService {
     );
     await _plugin.initialize(
       InitializationSettings(android: android, iOS: darwin),
-      onDidReceiveNotificationResponse: NotificationService.handleAttendanceAction,
+      onDidReceiveNotificationResponse:
+          NotificationService.handleAttendanceAction,
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin != null) {
       // Explicitly register Android 8.0+ notification channels
-      await androidPlugin.createNotificationChannel(const AndroidNotificationChannel(
-        'chem_buddy_classes',
-        'Class reminders',
-        description: 'Upcoming lecture and lab reminders',
-        importance: Importance.high,
-      ));
-      await androidPlugin.createNotificationChannel(const AndroidNotificationChannel(
-        'chem_buddy_daily',
-        'Daily timetable',
-        description: 'Morning overview of today’s classes',
-        importance: Importance.defaultImportance,
-      ));
-      await androidPlugin.createNotificationChannel(const AndroidNotificationChannel(
-        'chem_buddy_deadlines',
-        'Tests & assignments',
-        description: 'Reminders for upcoming chemistry deadlines',
-        importance: Importance.high,
-      ));
-      await androidPlugin.createNotificationChannel(const AndroidNotificationChannel(
-        'chem_buddy_flashcards',
-        'Study & Flashcards',
-        description: 'Spaced repetition flashcard review reminders',
-        importance: Importance.high,
-      ));
-      await androidPlugin.createNotificationChannel(const AndroidNotificationChannel(
-        'chem_buddy_psychology_facts',
-        'Daily Psychology Facts',
-        description: 'Fascinating daily insights into human behavior, memory, and cognitive psychology',
-        importance: Importance.high,
-      ));
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'chem_buddy_classes',
+          'Class reminders',
+          description: 'Upcoming lecture and lab reminders',
+          importance: Importance.high,
+        ),
+      );
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'chem_buddy_daily',
+          'Daily timetable',
+          description: 'Morning overview of today’s classes',
+          importance: Importance.defaultImportance,
+        ),
+      );
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'chem_buddy_deadlines',
+          'Tests & assignments',
+          description: 'Reminders for upcoming chemistry deadlines',
+          importance: Importance.high,
+        ),
+      );
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'chem_buddy_flashcards',
+          'Study & Flashcards',
+          description: 'Spaced repetition flashcard review reminders',
+          importance: Importance.high,
+        ),
+      );
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'chem_buddy_psychology_facts',
+          'Daily Psychology Facts',
+          description: 'Fascinating daily insights into human behavior, memory, and cognitive psychology',
+          importance: Importance.high,
+        ),
+      );
 
       await androidPlugin.requestNotificationsPermission();
       try {
@@ -153,11 +167,17 @@ class NotificationService {
       }
     }
     ready = true;
-    debugPrint('[NotificationService] Initialized with 5 channels and permissions');
+    debugPrint(
+      '[NotificationService] Initialized with 5 channels and permissions',
+    );
   }
 
   Future<bool> requestPermission() async {
-    final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (!_supported) {return false;}
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     final granted = await android?.requestNotificationsPermission() ?? true;
     try {
       await android?.requestExactAlarmsPermission();
@@ -165,11 +185,13 @@ class NotificationService {
     return granted;
   }
 
-  static Future<void> handleAttendanceAction(NotificationResponse details) async {
+  static Future<void> handleAttendanceAction(
+    NotificationResponse details,
+  ) async {
     final action = details.actionId;
-    if (action != 'mark_present' && action != 'mark_absent') return;
+    if (action != 'mark_present' && action != 'mark_absent') {return;}
     final payload = details.payload;
-    if (payload == null || payload.isEmpty) return;
+    if (payload == null || payload.isEmpty) {return;}
 
     Map<String, dynamic> data;
     try {
@@ -181,19 +203,27 @@ class NotificationService {
     final subjectId = data['subjectId'] as String?;
     final subjectName = data['subjectName'] as String? ?? 'Class';
     final slotId = data['slotId'] as String?;
-    if (subjectId == null || subjectId.isEmpty) return;
+    if (subjectId == null || subjectId.isEmpty) {return;}
 
-    final status = action == 'mark_present' ? AttendanceStatus.present : AttendanceStatus.absent;
+    final status = action == 'mark_present'
+        ? AttendanceStatus.present
+        : AttendanceStatus.absent;
 
     try {
       await HiveBoxes.openAll();
     } catch (_) {}
 
+    if (HiveBoxes.activeAccount == 'guest' ||
+        data['account'] != HiveBoxes.activeAccount) {
+      return;
+    }
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
-    final box = Hive.box(HiveBoxes.attendance);
+    final box = HiveBoxes.box(HiveBoxes.attendance);
     String? existingId;
     for (final key in box.keys) {
       final raw = box.get(key);
@@ -201,7 +231,9 @@ class NotificationService {
         final d = raw['date'] as String?;
         final sId = raw['subjectId'] as String?;
         final slot = raw['slotId'] as String?;
-        if (sId == subjectId && slot == slotId && (d?.startsWith(todayStr) ?? false)) {
+        if (sId == subjectId &&
+            slot == slotId &&
+            (d?.startsWith(todayStr) ?? false)) {
           existingId = key.toString();
           break;
         }
@@ -216,7 +248,8 @@ class NotificationService {
       status: status,
       slotId: slotId,
       markedAt: now,
-      note: 'Marked via notification (${status == AttendanceStatus.present ? "Present" : "Absent"})',
+      note:
+          'Marked via notification (${status == AttendanceStatus.present ? "Present" : "Absent"})',
     );
 
     await box.put(recordId, record.toJson());
@@ -261,7 +294,8 @@ class NotificationService {
     String? testSubjectId,
     String? testSubjectName,
   }) async {
-    if (!ready) await init();
+    if (!_supported) {return;}
+    if (!ready) {await init();}
     debugPrint('[NotificationService] Triggering test notification');
     const androidDetails = AndroidNotificationDetails(
       'chem_buddy_classes',
@@ -299,6 +333,7 @@ class NotificationService {
 
     final payload = jsonEncode({
       'type': 'attendance_prompt',
+      'account': HiveBoxes.activeAccount,
       'subjectId': subId,
       'subjectName': subName,
       'slotId': 'test_slot_0',
@@ -314,8 +349,10 @@ class NotificationService {
     );
   }
 
-  Future<void> sendTestPsychologyFactNotification({PsychologyFact? fact}) async {
-    if (!ready) await init();
+  Future<void> sendTestPsychologyFactNotification({
+    PsychologyFact? fact,
+  }) async {
+    if (!ready) {await init();}
     final pFact = fact ?? PsychologyFactsService.instance.getTodayFact();
     final title = '${pFact.emoji} Psychology Fact: ${pFact.title}';
     final body = '${pFact.fact}\n\n💡 Insight: ${pFact.takeaway}';
@@ -358,10 +395,14 @@ class NotificationService {
     Map<String, SubjectAttendanceStats>? subjectStats,
     SubjectAttendanceStats? overallStats,
   }) async {
-    if (!ready) await init();
+    if (!_supported) {return;}
+    if (!ready) {await init();}
+    if (!ready) {return;}
     await _plugin.cancelAll();
     if (!prefs.enabled) {
-      debugPrint('[NotificationService] Notifications disabled in preferences; cleared all alarms');
+      debugPrint(
+        '[NotificationService] Notifications disabled in preferences; cleared all alarms',
+      );
       return;
     }
 
@@ -370,14 +411,18 @@ class NotificationService {
     if (prefs.classReminders || prefs.attendancePromptAtClassStart) {
       for (final entry in entries) {
         // Resolve subject stats by code, name, or id
-        final stats = subjectStats?[entry.subjectCode.trim().toUpperCase()] ??
+        final stats =
+            subjectStats?[entry.subjectCode.trim().toUpperCase()] ??
             subjectStats?[entry.subject.trim().toUpperCase()] ??
             subjectStats?[entry.id];
 
         final matchedSubject = subjects?.where((s) {
-          final codeMatch = s.code.trim().isNotEmpty &&
-              s.code.trim().toUpperCase() == entry.subjectCode.trim().toUpperCase();
-          final nameMatch = s.name.trim().isNotEmpty &&
+          final codeMatch =
+              s.code.trim().isNotEmpty &&
+              s.code.trim().toUpperCase() ==
+                  entry.subjectCode.trim().toUpperCase();
+          final nameMatch =
+              s.name.trim().isNotEmpty &&
               s.name.trim().toUpperCase() == entry.subject.trim().toUpperCase();
           final idMatch = s.id == entry.subjectCode || s.id == entry.id;
           return codeMatch || nameMatch || idMatch;
@@ -403,8 +448,8 @@ class NotificationService {
     if (prefs.assignmentReminders || prefs.examReminders) {
       for (final event in events.where((e) => !e.completed)) {
         final isExam = event.type == EventType.test;
-        if (isExam && !prefs.examReminders) continue;
-        if (!isExam && !prefs.assignmentReminders) continue;
+        if (isExam && !prefs.examReminders) {continue;}
+        if (!isExam && !prefs.assignmentReminders) {continue;}
         await scheduleEvent(event);
         scheduledCount++;
       }
@@ -415,7 +460,10 @@ class NotificationService {
     }
 
     if (prefs.studyReminders && smartCards != null && smartCards.isNotEmpty) {
-      final scheduledSets = await _scheduleFlashcardReviews(smartCards, flashcardSets ?? const []);
+      final scheduledSets = await _scheduleFlashcardReviews(
+        smartCards,
+        flashcardSets ?? const [],
+      );
       scheduledCount += scheduledSets;
     }
 
@@ -424,13 +472,20 @@ class NotificationService {
       scheduledCount += scheduledFacts;
     }
 
-    debugPrint('[NotificationService] Resync complete. Scheduled $scheduledCount active notifications/alarms.');
+    debugPrint(
+      '[NotificationService] Resync complete. Scheduled $scheduledCount active notifications/alarms.',
+    );
   }
 
-  Future<int> _scheduleFlashcardReviews(List<SmartFlashcard> cards, List<SmartFlashcardSet> sets) async {
+  Future<int> _scheduleFlashcardReviews(
+    List<SmartFlashcard> cards,
+    List<SmartFlashcardSet> sets,
+  ) async {
     final now = DateTime.now();
-    final upcomingCards = cards.where((c) => c.nextReviewAt != null && c.nextReviewAt!.isAfter(now)).toList();
-    if (upcomingCards.isEmpty) return 0;
+    final upcomingCards = cards
+        .where((c) => c.nextReviewAt != null && c.nextReviewAt!.isAfter(now))
+        .toList();
+    if (upcomingCards.isEmpty) {return 0;}
 
     final Map<String, List<SmartFlashcard>> grouped = {};
     for (final card in upcomingCards) {
@@ -443,10 +498,12 @@ class NotificationService {
       final setCards = entry.value;
       setCards.sort((a, b) => a.nextReviewAt!.compareTo(b.nextReviewAt!));
       final earliest = setCards.first.nextReviewAt!;
-      final setName = sets.where((s) => s.id == setId).firstOrNull?.title ?? 'Chemistry Deck';
+      final setName =
+          sets.where((s) => s.id == setId).firstOrNull?.title ??
+          'Chemistry Deck';
 
       final fire = tz.TZDateTime.from(earliest, tz.local);
-      if (fire.isBefore(tz.TZDateTime.now(tz.local))) continue;
+      if (fire.isBefore(tz.TZDateTime.now(tz.local))) {continue;}
 
       final titles = [
         '🧠 Your brain cells are getting rusty!',
@@ -460,9 +517,13 @@ class NotificationService {
         title,
         '${setCards.length} card(s) due! Memory decays exponentially without review—don\'t let your chemistry evaporate!',
         fire,
-        const NotificationDetails(android: flashcardChannel, iOS: DarwinNotificationDetails()),
+        const NotificationDetails(
+          android: flashcardChannel,
+          iOS: DarwinNotificationDetails(),
+        ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
       );
       count++;
     }
@@ -558,7 +619,9 @@ class NotificationService {
     bool scheduleReminder = true,
     bool scheduleAttendancePrompt = true,
   }) async {
-    final title = entry.displayName.isEmpty ? 'Chemistry Class' : entry.displayName;
+    final title = entry.displayName.isEmpty
+        ? 'Chemistry Class'
+        : entry.displayName;
 
     // 1. Advance reminder before class — NOW with 1-tap attendance actions
     if (scheduleReminder) {
@@ -574,7 +637,7 @@ class NotificationService {
       while (reminderHour < 0) {
         reminderHour += 24;
         reminderWeekday -= 1;
-        if (reminderWeekday < 1) reminderWeekday = 7;
+        if (reminderWeekday < 1) {reminderWeekday = 7;}
       }
       final next = _nextWeekday(reminderWeekday, reminderHour, reminderMinute);
       final banter = _buildClassBanter(
@@ -588,6 +651,7 @@ class NotificationService {
       // Advance reminder payload for 1-tap attendance marking
       final advancePayload = jsonEncode({
         'type': 'attendance_prompt',
+        'account': HiveBoxes.activeAccount,
         'subjectId': subjectId ?? entry.subjectCode,
         'subjectName': title,
         'slotId': entry.id,
@@ -626,10 +690,14 @@ class NotificationService {
         banter.title,
         banter.body,
         next,
-        const NotificationDetails(android: androidAdvanceReminder, iOS: iosAdvanceReminder),
+        const NotificationDetails(
+          android: androidAdvanceReminder,
+          iOS: iosAdvanceReminder,
+        ),
         payload: advancePayload,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
       );
     }
@@ -638,9 +706,15 @@ class NotificationService {
     if (scheduleAttendancePrompt) {
       final startHour = entry.startMinutes ~/ 60;
       final startMinute = entry.startMinutes % 60;
-      final classStart = _nextWeekday(entry.weekdayNumber, startHour, startMinute);
+      final classStart = _nextWeekday(
+        entry.weekdayNumber,
+        startHour,
+        startMinute,
+      );
 
-      final pct = stats != null && stats.counted > 0 ? ' (${stats.percent.toStringAsFixed(1)}%)' : '';
+      final pct = stats != null && stats.counted > 0
+          ? ' (${stats.percent.toStringAsFixed(1)}%)'
+          : '';
       final quips = [
         'Are you seated in class$pct or planning a stealth bunk? Tap to mark attendance:',
         'Class is starting! Tap Present ✅ or Absent ❌ right here—no excuses:',
@@ -651,6 +725,7 @@ class NotificationService {
 
       final payload = jsonEncode({
         'type': 'attendance_prompt',
+        'account': HiveBoxes.activeAccount,
         'subjectId': subjectId ?? entry.subjectCode,
         'subjectName': title,
         'slotId': entry.id,
@@ -689,10 +764,14 @@ class NotificationService {
         '🧪 $title is starting now!',
         promptBody,
         classStart,
-        const NotificationDetails(android: androidAttendance, iOS: iosAttendance),
+        const NotificationDetails(
+          android: androidAttendance,
+          iOS: iosAttendance,
+        ),
         payload: payload,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
       );
     }
@@ -744,22 +823,28 @@ class NotificationService {
 
     final count = entries.length;
     final scheduleLines = entries
-        .map((e) => '• ${e.startTime} ${e.displayName}${e.room.trim().isNotEmpty ? " (${e.room.trim()})" : ""}')
+        .map(
+          (e) =>
+              '• ${e.startTime} ${e.displayName}${e.room.trim().isNotEmpty ? " (${e.room.trim()})" : ""}',
+        )
         .join('\n');
 
     final pctInfo = overallPctStr != null ? ' · $overallPctStr' : '';
 
     if (overallPctStr != null) {
-      final pctNum = double.tryParse(overallPctStr.replaceAll('%', '').trim()) ?? 100.0;
+      final pctNum =
+          double.tryParse(overallPctStr.replaceAll('%', '').trim()) ?? 100.0;
       if (pctNum < 75.0) {
         return (
           title: '🚨 $dayName Alert: $count class(es) today · $overallPctStr',
-          body: 'Attendance danger zone! Zero bunks permitted today. Class timetable:\n$scheduleLines',
+          body:
+              'Attendance danger zone! Zero bunks permitted today. Class timetable:\n$scheduleLines',
         );
       } else if (pctNum >= 85.0) {
         return (
           title: '🌟 $dayName Briefing: $count class(es) today$pctInfo',
-          body: 'High yield academic weapon! Let\'s keep that streak alive:\n$scheduleLines',
+          body:
+              'High yield academic weapon! Let\'s keep that streak alive:\n$scheduleLines',
         );
       }
     }
@@ -768,22 +853,26 @@ class NotificationService {
       case DateTime.monday:
         return (
           title: '⚗️ Monday Kickoff: $count class(es) today$pctInfo',
-          body: 'Synthesize that morning momentum! Activation energy is high, but passing is better:\n$scheduleLines',
+          body:
+              'Synthesize that morning momentum! Activation energy is high, but passing is better:\n$scheduleLines',
         );
       case DateTime.wednesday:
         return (
           title: '⚡ Midweek Reaction: $count class(es) today$pctInfo',
-          body: 'Transition state reached! Keep driving the equilibrium forward:\n$scheduleLines',
+          body:
+              'Transition state reached! Keep driving the equilibrium forward:\n$scheduleLines',
         );
       case DateTime.friday:
         return (
           title: '🎉 Friday Sprint: $count class(es) today$pctInfo',
-          body: 'Final reaction cycle before the weekend! Knock these out:\n$scheduleLines',
+          body:
+              'Final reaction cycle before the weekend! Knock these out:\n$scheduleLines',
         );
       default:
         return (
           title: '🌅 $dayName Briefing: $count class(es) today$pctInfo',
-          body: 'Your bed has high entropy, but lectures build stability. Today\'s lineup:\n$scheduleLines',
+          body:
+              'Your bed has high entropy, but lectures build stability. Today\'s lineup:\n$scheduleLines',
         );
     }
   }
@@ -798,8 +887,9 @@ class NotificationService {
 
     for (int weekday = 1; weekday <= 7; weekday++) {
       final next = _nextWeekday(weekday, 8, 30);
-      final dayEntries = entries.where((e) => e.weekdayNumber == weekday).toList()
-        ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+      final dayEntries =
+          entries.where((e) => e.weekdayNumber == weekday).toList()
+            ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
 
       final dayName = _weekdayName(weekday);
       final briefing = _buildDailyBriefing(
@@ -814,9 +904,13 @@ class NotificationService {
         briefing.title,
         briefing.body,
         next,
-        const NotificationDetails(android: dailyChannel, iOS: DarwinNotificationDetails()),
+        const NotificationDetails(
+          android: dailyChannel,
+          iOS: DarwinNotificationDetails(),
+        ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
       );
     }
@@ -830,7 +924,14 @@ class NotificationService {
 
     // Schedule for the next 30 days so each day gets a distinct, non-repeating psychology fact
     for (int dayOffset = 0; dayOffset < 30; dayOffset++) {
-      var candidate = tz.TZDateTime(tz.local, now.year, now.month, now.day + dayOffset, hour, minute);
+      var candidate = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day + dayOffset,
+        hour,
+        minute,
+      );
       if (candidate.isBefore(now)) {
         continue;
       }
@@ -859,7 +960,8 @@ class NotificationService {
         ),
         payload: payload,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
       );
       scheduled++;
     }
@@ -868,22 +970,42 @@ class NotificationService {
 
   tz.TZDateTime _nextWeekday(int weekday, int hour, int minute) {
     final now = tz.TZDateTime.now(tz.local);
-    var candidate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    var candidate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
     while (candidate.weekday != weekday || candidate.isBefore(now)) {
       candidate = candidate.add(const Duration(days: 1));
-      candidate = tz.TZDateTime(tz.local, candidate.year, candidate.month, candidate.day, hour, minute);
+      candidate = tz.TZDateTime(
+        tz.local,
+        candidate.year,
+        candidate.month,
+        candidate.day,
+        hour,
+        minute,
+      );
     }
     return candidate;
   }
 
   Future<void> scheduleEvent(AcademicEvent event) async {
-    if (!ready || event.completed) return;
-    final when = tz.TZDateTime.from(event.dueDate, tz.local).subtract(const Duration(days: 1));
+    if (!ready || event.completed) {return;}
+    final when = tz.TZDateTime.from(
+      event.dueDate,
+      tz.local,
+    ).subtract(const Duration(days: 1));
     final now = tz.TZDateTime.now(tz.local);
     var fire = when.isBefore(now)
-        ? tz.TZDateTime.from(event.dueDate, tz.local).subtract(const Duration(hours: 2))
+        ? tz.TZDateTime.from(
+            event.dueDate,
+            tz.local,
+          ).subtract(const Duration(hours: 2))
         : when.add(const Duration(hours: 9));
-    if (fire.isBefore(now)) return;
+    if (fire.isBefore(now)) {return;}
 
     final dueStr =
         '${event.dueDate.day}/${event.dueDate.month}/${event.dueDate.year}';
@@ -904,7 +1026,8 @@ class NotificationService {
       ];
       body = quips[event.title.hashCode.abs() % quips.length];
     } else {
-      body = 'Coming up on $dueStr. Don\'t let this slip through like a volatile solvent! 💨';
+      body =
+          'Coming up on $dueStr. Don\'t let this slip through like a volatile solvent! 💨';
     }
 
     await _plugin.zonedSchedule(
@@ -912,24 +1035,32 @@ class NotificationService {
       '${event.type.name.toUpperCase()}: ${event.title}',
       body,
       fire,
-      const NotificationDetails(android: deadlineChannel, iOS: DarwinNotificationDetails()),
+      const NotificationDetails(
+        android: deadlineChannel,
+        iOS: DarwinNotificationDetails(),
+      ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
   Future<void> scheduleReminder(AppReminder reminder) async {
-    if (!ready) return;
+    if (!ready) {return;}
     final fire = tz.TZDateTime.from(reminder.when, tz.local);
-    if (fire.isBefore(tz.TZDateTime.now(tz.local))) return;
+    if (fire.isBefore(tz.TZDateTime.now(tz.local))) {return;}
     await _plugin.zonedSchedule(
       reminder.id.hashCode,
       reminder.title,
       _friendlyReminderBody(reminder),
       fire,
-      const NotificationDetails(android: deadlineChannel, iOS: DarwinNotificationDetails()),
+      const NotificationDetails(
+        android: deadlineChannel,
+        iOS: DarwinNotificationDetails(),
+      ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -937,7 +1068,9 @@ class NotificationService {
   String _friendlyReminderBody(AppReminder reminder) {
     final kind = reminder.kind.toLowerCase().trim();
     final title = reminder.title.trim();
-    if (kind.contains('exam') || kind.contains('test') || kind.contains('viva')) {
+    if (kind.contains('exam') ||
+        kind.contains('test') ||
+        kind.contains('viva')) {
       final quips = [
         'Your neurons won\'t fire themselves. Time to crack open those notes! ⚗️',
         'The periodic table isn\'t going to memorise itself. Get studying! 🧪',
@@ -953,7 +1086,9 @@ class NotificationService {
         'Procrastination has a higher energy barrier than the assignment itself. Just do it. 🎯',
       ];
       return quips[title.hashCode.abs() % quips.length];
-    } else if (kind.contains('study') || kind.contains('revision') || kind.contains('review')) {
+    } else if (kind.contains('study') ||
+        kind.contains('revision') ||
+        kind.contains('review')) {
       final quips = [
         'Your hippocampus is begging you to revise before the long-term potentiation fades. 🧠',
         'Even Le Chatelier shifts equilibrium when you study more. Get to it! ⚖️',
@@ -980,5 +1115,7 @@ class NotificationService {
     }
   }
 
-  Future<void> cancel(String id) => _plugin.cancel(id.hashCode);
+  Future<void> cancel(String id) async {
+    if (_supported) {await _plugin.cancel(id.hashCode);}
+  }
 }

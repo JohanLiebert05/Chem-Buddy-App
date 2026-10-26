@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
+import 'presentation/providers/appearance_provider.dart';
 import 'core/widgets/app_error_boundary.dart';
+import 'core/widgets/exit_confirmation.dart';
 import 'core/widgets/hex_background.dart';
 import 'presentation/providers/app_providers.dart';
 import 'presentation/screens/admin/admin_shell.dart';
@@ -18,9 +20,9 @@ class ChemBuddyApp extends ConsumerWidget {
     Widget home;
     if (profile.loggedIn) {
       if (profile.role == 'admin') {
-        home = const AdminShell();
+        home = AdminShell(key: ValueKey(profile.id ?? profile.registerNumber));
       } else {
-        home = const MainShell();
+        home = MainShell(key: ValueKey(profile.id ?? profile.registerNumber));
       }
     } else if (profile.onboarded) {
       home = const HexBackground(
@@ -36,12 +38,21 @@ class ChemBuddyApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Chem Buddy by Prajwal A Kambar',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
+      theme: AppTheme.fromAppearance(
+        ref.watch(appearanceProvider),
+        brightness: Brightness.light,
+      ),
+      darkTheme: AppTheme.fromAppearance(
+        ref.watch(appearanceProvider),
+        brightness: Brightness.dark,
+      ),
+      themeMode: ref.watch(appearanceProvider).mode,
+      themeAnimationDuration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 300),
       scrollBehavior: AppTheme.scrollBehavior,
-      home: AppErrorBoundary(
-        screenName: 'ChemBuddy Home',
-        child: home,
+      home: ExitConfirmation(
+        child: AppErrorBoundary(screenName: 'ChemBuddy Home', child: home),
       ),
     );
   }

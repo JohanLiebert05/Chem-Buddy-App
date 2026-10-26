@@ -11,6 +11,8 @@ import '../models/timetable_entry.dart';
 import '../remote/notification_service.dart';
 import '../remote/supabase_service.dart';
 import '../services/timetable_parser_service.dart';
+import '../services/gemini_orchestrator.dart';
+import '../services/pending_sync_service.dart';
 
 class ChemRepository {
   ChemRepository({
@@ -23,6 +25,7 @@ class ChemRepository {
   final SupabaseService remote;
   final NotificationService notifications;
   final _uuid = const Uuid();
+  PendingSyncService get sync => PendingSyncService(store, remote);
 
   UserProfile profile() {
     final json = store.getProfile();
@@ -33,7 +36,7 @@ class ChemRepository {
     await store.saveProfile(profile.toJson());
     final uid = remote.userId ?? profile.id;
     if (uid != null) {
-      await remote.upsert('profiles', {
+      await sync.upsert('profiles', {
         'id': uid,
         'full_name': profile.fullName,
         'university': profile.university,
@@ -42,13 +45,14 @@ class ChemRepository {
     }
   }
 
-  List<Subject> subjects() => store.all(store.subjects).map(Subject.fromJson).toList();
+  List<Subject> subjects() =>
+      store.all(store.subjects).map(Subject.fromJson).toList();
 
   Future<void> upsertSubject(Subject subject) async {
     await store.put(store.subjects, subject.id, subject.toJson());
     final uid = remote.userId;
     if (uid != null) {
-      await remote.upsert('subjects', {
+      await sync.upsert('subjects', {
         'id': subject.id,
         'user_id': uid,
         'name': subject.name,
@@ -62,10 +66,13 @@ class ChemRepository {
 
   Future<void> deleteSubject(String id) async {
     await store.delete(store.subjects, id);
-    await remote.remove('subjects', id);
+    await sync.remove('subjects', id);
   }
 
-  Future<void> seedSubjects(List<SeedSubject> selected, {String electiveName = 'Open Elective'}) async {
+  Future<void> seedSubjects(
+    List<SeedSubject> selected, {
+    String electiveName = 'Open Elective',
+  }) async {
     var i = 0;
     for (final seed in selected) {
       final subject = Subject(
@@ -73,7 +80,8 @@ class ChemRepository {
         name: seed.isElective ? electiveName : seed.name,
         code: seed.code,
         isElective: seed.isElective,
-        colorHex: AppColors.subjectPalette[i % AppColors.subjectPalette.length].toARGB32(),
+        colorHex: AppColors.subjectPalette[i % AppColors.subjectPalette.length]
+            .toARGB32(),
       );
       await upsertSubject(subject);
       i++;
@@ -88,7 +96,9 @@ class ChemRepository {
     final all = timetable();
     final entries = timetableEntries();
     if (entries.isNotEmpty) {
-      final dayEntries = entries.where((e) => e.weekdayNumber == day.weekday).toList();
+      final dayEntries = entries
+          .where((e) => e.weekdayNumber == day.weekday)
+          .toList();
       if (dayEntries.isNotEmpty) {
         final subList = subjects();
         final slotMap = {for (final s in all) s.id: s};
@@ -98,11 +108,13 @@ class ChemRepository {
           }
           Subject? sub;
           for (final s in subList) {
-            if (s.code.isNotEmpty && s.code.toUpperCase() == e.subjectCode.trim().toUpperCase()) {
+            if (s.code.isNotEmpty &&
+                s.code.toUpperCase() == e.subjectCode.trim().toUpperCase()) {
               sub = s;
               break;
             }
-            if (s.name.isNotEmpty && s.name.toUpperCase() == e.subject.trim().toUpperCase()) {
+            if (s.name.isNotEmpty &&
+                s.name.toUpperCase() == e.subject.trim().toUpperCase()) {
               sub = s;
               break;
             }
@@ -112,11 +124,12 @@ class ChemRepository {
             subjectId: sub?.id ?? e.id,
             weekday: e.weekdayNumber,
             startMinutes: e.startMinutes,
-            endMinutes: e.endMinutes <= e.startMinutes ? e.startMinutes + 60 : e.endMinutes,
+            endMinutes: e.endMinutes <= e.startMinutes
+                ? e.startMinutes + 60
+                : e.endMinutes,
             room: e.room.isNotEmpty ? e.room : e.teacherName,
           );
-        }).toList()
-          ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+        }).toList()..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
       }
     }
     return all.where((s) => s.weekday == day.weekday).toList()
@@ -131,9 +144,18 @@ class ChemRepository {
       if (slots.isEmpty) {
         if (subjectId != null) {
           final sub = subjects().where((s) => s.id == subjectId).firstOrNull;
-          final count = entries.where((e) =>
-              (sub != null && sub.code.isNotEmpty && e.subjectCode.toUpperCase() == sub.code.toUpperCase()) ||
-              (sub != null && sub.name.isNotEmpty && e.subject.toUpperCase() == sub.name.toUpperCase())).length;
+          final count = entries
+              .where(
+                (e) =>
+                    (sub != null &&
+                        sub.code.isNotEmpty &&
+                        e.subjectCode.toUpperCase() ==
+                            sub.code.toUpperCase()) ||
+                    (sub != null &&
+                        sub.name.isNotEmpty &&
+                        e.subject.toUpperCase() == sub.name.toUpperCase()),
+              )
+              .length;
           return count * 4;
         }
         return entries.length * 4;
@@ -150,10 +172,15 @@ class ChemRepository {
   List<AttendanceRecord> attendance() =>
       store.all(store.attendance).map(AttendanceRecord.fromJson).toList();
 
-  AttendanceRecord? recordFor({required String slotId, required DateTime date}) {
+  AttendanceRecord? recordFor({
+    required String slotId,
+    required DateTime date,
+  }) {
     final key = _dayKey(date);
     for (final r in attendance()) {
-      if (r.slotId == slotId && _dayKey(r.date) == key) return r;
+      if (r.slotId == slotId && _dayKey(r.date) == key) {
+        return r;
+      }
     }
     return null;
   }
@@ -182,7 +209,7 @@ class ChemRepository {
     await store.put(store.attendance, record.id, record.toJson());
     final uid = remote.userId;
     if (uid != null) {
-      await remote.upsert('attendance_records', {
+      await sync.upsert('attendance_records', {
         'id': record.id,
         'user_id': uid,
         'subject_id': subjectId,
@@ -211,7 +238,9 @@ class ChemRepository {
 
   TimetableSlot? nextUpcomingSlot(DateTime now) {
     final slots = slotsFor(now);
-    if (slots.isEmpty) return null;
+    if (slots.isEmpty) {
+      return null;
+    }
     final nowMinutes = now.hour * 60 + now.minute;
     for (final slot in slots) {
       if (slot.endMinutes > nowMinutes) {
@@ -226,7 +255,9 @@ class ChemRepository {
     return SubjectAttendanceStats(
       present: rows.where((r) => r.status == AttendanceStatus.present).length,
       absent: rows.where((r) => r.status == AttendanceStatus.absent).length,
-      postponed: rows.where((r) => r.status == AttendanceStatus.postponed).length,
+      postponed: rows
+          .where((r) => r.status == AttendanceStatus.postponed)
+          .length,
       excused: rows.where((r) => r.status == AttendanceStatus.excused).length,
     );
   }
@@ -236,19 +267,24 @@ class ChemRepository {
     return SubjectAttendanceStats(
       present: rows.where((r) => r.status == AttendanceStatus.present).length,
       absent: rows.where((r) => r.status == AttendanceStatus.absent).length,
-      postponed: rows.where((r) => r.status == AttendanceStatus.postponed).length,
+      postponed: rows
+          .where((r) => r.status == AttendanceStatus.postponed)
+          .length,
       excused: rows.where((r) => r.status == AttendanceStatus.excused).length,
     );
   }
 
   int streak() {
-    final presents = attendance()
-        .where((r) => r.status == AttendanceStatus.present)
-        .map((r) => _dayKey(r.date))
-        .toSet()
-        .toList()
-      ..sort();
-    if (presents.isEmpty) return 0;
+    final presents =
+        attendance()
+            .where((r) => r.status == AttendanceStatus.present)
+            .map((r) => _dayKey(r.date))
+            .toSet()
+            .toList()
+          ..sort();
+    if (presents.isEmpty) {
+      return 0;
+    }
     var count = 0;
     var cursor = DateTime.now();
     while (presents.contains(_dayKey(cursor))) {
@@ -271,11 +307,23 @@ class ChemRepository {
   List<double> lastSevenDayPercents() {
     final now = DateTime.now();
     return List.generate(7, (i) {
-      final day = DateTime(now.year, now.month, now.day).subtract(Duration(days: 6 - i));
+      final day = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: 6 - i));
       final rows = attendance().where((r) => _dayKey(r.date) == _dayKey(day));
-      final counted = rows.where((r) => r.status != AttendanceStatus.postponed);
-      if (counted.isEmpty) return 0;
-      final present = counted.where((r) => r.status == AttendanceStatus.present).length;
+      final counted = rows.where(
+        (r) =>
+            r.status == AttendanceStatus.present ||
+            r.status == AttendanceStatus.absent,
+      );
+      if (counted.isEmpty) {
+        return 0;
+      }
+      final present = counted
+          .where((r) => r.status == AttendanceStatus.present)
+          .length;
       return present / counted.length * 100;
     });
   }
@@ -291,7 +339,7 @@ class ChemRepository {
     await notifications.scheduleEvent(event);
     final uid = remote.userId;
     if (uid != null) {
-      await remote.upsert('academic_events', {
+      await sync.upsert('academic_events', {
         'id': event.id,
         'user_id': uid,
         'subject_id': event.subjectId,
@@ -307,7 +355,7 @@ class ChemRepository {
   Future<void> deleteEvent(String id) async {
     await store.delete(store.events, id);
     await notifications.cancel(id);
-    await remote.remove('academic_events', id);
+    await sync.remove('academic_events', id);
   }
 
   List<NoteItem> notes() {
@@ -320,7 +368,7 @@ class ChemRepository {
     await store.put(store.notes, note.id, note.toJson());
     final uid = remote.userId;
     if (uid != null) {
-      await remote.upsert('notes', {
+      await sync.upsert('notes', {
         'id': note.id,
         'user_id': uid,
         'subject_id': note.subjectId,
@@ -333,7 +381,7 @@ class ChemRepository {
 
   Future<void> deleteNote(String id) async {
     await store.delete(store.notes, id);
-    await remote.remove('notes', id);
+    await sync.remove('notes', id);
   }
 
   Future<void> applyScannedTimetable(List<TimetableEntry> entries) async {
@@ -354,20 +402,30 @@ class ChemRepository {
   }
 
   List<TimetableEntry> timetableEntries() {
-    var list = store.all(store.timetableEntries).map(TimetableEntry.fromJson).toList();
+    var list = store
+        .all(store.timetableEntries)
+        .map(TimetableEntry.fromJson)
+        .toList();
     if (list.isEmpty) {
       final defaultEntries = TimetableParserService.getOrganicPresetEntries();
       for (final entry in defaultEntries) {
         store.put(store.timetableEntries, entry.id, entry.toJson());
         final code = entry.subjectCode.trim().toUpperCase();
-        var subject = subjects().where((s) => s.code.toUpperCase() == code).firstOrNull;
+        var subject = subjects()
+            .where((s) => s.code.toUpperCase() == code)
+            .firstOrNull;
         if (subject == null) {
           subject = Subject(
             id: _uuid.v4(),
-            name: entry.subject.trim().isNotEmpty ? entry.subject.trim() : (code.isEmpty ? 'Class' : code),
+            name: entry.subject.trim().isNotEmpty
+                ? entry.subject.trim()
+                : (code.isEmpty ? 'Class' : code),
             code: code.isEmpty ? 'SCAN' : code,
             teacher: entry.teacherName,
-            colorHex: AppColors.subjectPalette[subjects().length % AppColors.subjectPalette.length].toARGB32(),
+            colorHex: AppColors
+                .subjectPalette[subjects().length %
+                    AppColors.subjectPalette.length]
+                .toARGB32(),
           );
           store.put(store.subjects, subject.id, subject.toJson());
         }
@@ -376,16 +434,23 @@ class ChemRepository {
           subjectId: subject.id,
           weekday: entry.weekdayNumber,
           startMinutes: entry.startMinutes,
-          endMinutes: entry.endMinutes <= entry.startMinutes ? entry.startMinutes + 60 : entry.endMinutes,
+          endMinutes: entry.endMinutes <= entry.startMinutes
+              ? entry.startMinutes + 60
+              : entry.endMinutes,
           room: entry.room.isNotEmpty ? entry.room : entry.teacherName,
         );
         store.put(store.timetable, slot.id, slot.toJson());
       }
-      list = store.all(store.timetableEntries).map(TimetableEntry.fromJson).toList();
+      list = store
+          .all(store.timetableEntries)
+          .map(TimetableEntry.fromJson)
+          .toList();
     }
     list.sort((a, b) {
       final d = a.weekdayNumber.compareTo(b.weekdayNumber);
-      if (d != 0) return d;
+      if (d != 0) {
+        return d;
+      }
       return a.startMinutes.compareTo(b.startMinutes);
     });
     return list;
@@ -399,7 +464,9 @@ class ChemRepository {
       subjectId: subject.id,
       weekday: entry.weekdayNumber,
       startMinutes: entry.startMinutes,
-      endMinutes: entry.endMinutes <= entry.startMinutes ? entry.startMinutes + 60 : entry.endMinutes,
+      endMinutes: entry.endMinutes <= entry.startMinutes
+          ? entry.startMinutes + 60
+          : entry.endMinutes,
       room: entry.room.isNotEmpty ? entry.room : entry.teacherName,
     );
     await store.put(store.timetable, slot.id, slot.toJson());
@@ -429,7 +496,9 @@ class ChemRepository {
           : (code.isEmpty ? 'Class' : code),
       code: code.isEmpty ? 'SCAN' : code,
       teacher: entry.teacherName,
-      colorHex: AppColors.subjectPalette[subjects().length % AppColors.subjectPalette.length].toARGB32(),
+      colorHex: AppColors
+          .subjectPalette[subjects().length % AppColors.subjectPalette.length]
+          .toARGB32(),
     );
     await upsertSubject(created);
     return created;
@@ -441,12 +510,16 @@ class ChemRepository {
     return list;
   }
 
-  Future<void> upsertPdf(PdfDoc doc) => store.put(store.pdfs, doc.id, doc.toJson());
+  Future<void> upsertPdf(PdfDoc doc) =>
+      store.put(store.pdfs, doc.id, doc.toJson());
 
   Future<void> deletePdf(String id) => store.delete(store.pdfs, id);
 
   List<FlashcardDraft> flashcards() {
-    final list = store.all(store.flashcards).map(FlashcardDraft.fromJson).toList();
+    final list = store
+        .all(store.flashcards)
+        .map(FlashcardDraft.fromJson)
+        .toList();
     list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return list;
   }
@@ -469,25 +542,68 @@ class ChemRepository {
 
   NotificationPrefs notificationPrefs() {
     final raw = store.settings.get('notifications');
-    if (raw is Map) return NotificationPrefs.fromJson(Map<String, dynamic>.from(raw));
+    if (raw is Map) {
+      return NotificationPrefs.fromJson(Map<String, dynamic>.from(raw));
+    }
     return const NotificationPrefs();
   }
 
   Future<void> saveNotificationPrefs(NotificationPrefs prefs) =>
       store.settings.put('notifications', prefs.toJson());
 
-  Future<void> loginLocal({required String registerNumber, required String name, String role = 'student'}) async {
+  Future<void> enterGuest() async {
+    final setup = profile();
+    final setupSubjects = !setup.loggedIn && setup.id == null
+        ? subjects()
+        : <Subject>[];
+    if (remote.userId != null) {
+      await remote.signOut();
+    }
+    GeminiOrchestrator.instance.clearCache();
+    await HiveBoxes.switchAccount('guest:local');
+    final saved = profile();
+    if (subjects().isEmpty) {
+      for (final subject in setupSubjects) {
+        await store.put(store.subjects, subject.id, subject.toJson());
+      }
+    }
+    await store.saveProfile(
+      UserProfile(
+        fullName: saved.fullName.isEmpty ? 'Guest' : saved.fullName,
+        university: saved.university.isEmpty
+            ? setup.university
+            : saved.university,
+        semester: saved.university.isEmpty ? setup.semester : saved.semester,
+        loggedIn: true,
+        onboarded: true,
+        isGuest: true,
+      ).toJson(),
+    );
+  }
+
+  Future<void> loginLocal({
+    required String registerNumber,
+    required String name,
+    String role = 'student',
+  }) async {
+    final account = remote.userId != null
+        ? 'user:${remote.userId}'
+        : 'local:${registerNumber.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '')}';
+    await HiveBoxes.switchAccount(account, registerNumber: registerNumber);
+    GeminiOrchestrator.instance.clearCache();
     final current = profile();
     String resolvedName = name.trim();
     bool isRollNumber(String s) =>
-        RegExp(r'^[0-9A-Za-z]{2,4}\d{2,8}$').hasMatch(s) || RegExp(r'^\d+$').hasMatch(s);
+        RegExp(r'^[0-9A-Za-z]{2,4}\d{2,8}$').hasMatch(s) ||
+        RegExp(r'^\d+$').hasMatch(s);
 
     if (resolvedName.isEmpty || isRollNumber(resolvedName)) {
       if (current.fullName.trim().isNotEmpty &&
           !isRollNumber(current.fullName.trim()) &&
           current.fullName.trim() != registerNumber.trim()) {
         resolvedName = current.fullName.trim();
-      } else if (registerNumber.trim().isNotEmpty && !RegExp(r'^\d+$').hasMatch(registerNumber.trim())) {
+      } else if (registerNumber.trim().isNotEmpty &&
+          !RegExp(r'^\d+$').hasMatch(registerNumber.trim())) {
         resolvedName = registerNumber.trim();
       } else {
         resolvedName = isRollNumber(name.trim()) ? '' : name.trim();
@@ -495,22 +611,30 @@ class ChemRepository {
     }
 
     if (resolvedName.isEmpty) {
-      resolvedName = 'Prajwal';
+      resolvedName = 'Student';
     }
 
     await saveProfile(
       current.copyWith(
-        registerNumber: registerNumber.isNotEmpty ? registerNumber : '2024MSC001',
+        registerNumber: registerNumber.isNotEmpty
+            ? registerNumber
+            : '2024MSC001',
         fullName: resolvedName,
         role: role,
+        isGuest: false,
         loggedIn: true,
         onboarded: true,
-        id: current.id ?? _uuid.v4(),
+        id: remote.userId ?? current.id ?? _uuid.v4(),
       ),
     );
   }
 
-  Future<String?> loginRemote(String registerNumber, String password, {required bool signUp, required String name}) async {
+  Future<String?> loginRemote(
+    String registerNumber,
+    String password, {
+    required bool signUp,
+    required String name,
+  }) async {
     if (!remote.configured) {
       await loginLocal(registerNumber: registerNumber, name: name);
       return null;
@@ -521,7 +645,7 @@ class ChemRepository {
       } else {
         await remote.signInWithRegisterNumber(registerNumber, password);
       }
-      
+
       String role = 'student';
       String resolvedName = name.trim();
       final remoteProfile = await remote.fetchProfile();
@@ -531,11 +655,17 @@ class ChemRepository {
         }
         if (resolvedName.isEmpty && remoteProfile['full_name'] != null) {
           final rName = (remoteProfile['full_name'] as String).trim();
-          if (rName.isNotEmpty) resolvedName = rName;
+          if (rName.isNotEmpty) {
+            resolvedName = rName;
+          }
         }
       }
-      
-      await loginLocal(registerNumber: registerNumber, name: resolvedName, role: role);
+
+      await loginLocal(
+        registerNumber: registerNumber,
+        name: resolvedName,
+        role: role,
+      );
       return null;
     } catch (e) {
       return e.toString();
@@ -545,7 +675,10 @@ class ChemRepository {
   Future<void> logout() async {
     await remote.signOut();
     final current = profile();
-    await saveProfile(current.copyWith(loggedIn: false));
+    await store.saveProfile(current.copyWith(loggedIn: false).toJson());
+    GeminiOrchestrator.instance.clearCache();
+    await HiveBoxes.switchAccount('guest');
+    await store.saveProfile(const UserProfile(onboarded: true).toJson());
   }
 
   // --- Tutorial & First-Time Onboarding State ---
@@ -560,12 +693,17 @@ class ChemRepository {
   // --- PDF Study Persistence ---
   PdfSummary? getPdfSummary(String docId) {
     final raw = store.pdfSummaries.get(docId);
-    if (raw is Map) return PdfSummary.fromJson(Map<String, dynamic>.from(raw));
+    if (raw is Map) {
+      return PdfSummary.fromJson(Map<String, dynamic>.from(raw));
+    }
     return null;
   }
 
-  Future<void> savePdfSummary(PdfSummary summary) =>
-      store.put(store.pdfSummaries, summary.docId.isNotEmpty ? summary.docId : summary.id, summary.toJson());
+  Future<void> savePdfSummary(PdfSummary summary) => store.put(
+    store.pdfSummaries,
+    summary.docId.isNotEmpty ? summary.docId : summary.id,
+    summary.toJson(),
+  );
 
   List<ImportantTopic> getPdfTopics(String docId) {
     final raw = store.pdfTopics.get(docId);
@@ -582,8 +720,13 @@ class ChemRepository {
       store.pdfTopics.put(docId, topics.map((t) => t.toJson()).toList());
 
   List<ChemistryQuiz> getPdfQuizzes(String docId) {
-    final all = store.all(store.pdfQuizzes).map(ChemistryQuiz.fromJson).toList();
-    if (docId.isEmpty) return all;
+    final all = store
+        .all(store.pdfQuizzes)
+        .map(ChemistryQuiz.fromJson)
+        .toList();
+    if (docId.isEmpty) {
+      return all;
+    }
     return all.where((q) => q.docId == docId).toList();
   }
 
@@ -593,7 +736,9 @@ class ChemRepository {
   List<QuizResult> getQuizResults(String? quizId) {
     final all = store.all(store.quizResults).map(QuizResult.fromJson).toList();
     all.sort((a, b) => b.completedAt.compareTo(a.completedAt));
-    if (quizId == null) return all;
+    if (quizId == null) {
+      return all;
+    }
     return all.where((r) => r.quizId == quizId).toList();
   }
 

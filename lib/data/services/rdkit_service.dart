@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
 
 /// Molecular Descriptors calculated client-side with 0 API tokens
 class MolecularDescriptors {
@@ -70,35 +69,43 @@ class ValencyValidationResult {
   });
 }
 
-/// Production-grade client-side Cheminformatics Engine & RDKit Headless Service.
-/// Runs 100% locally with 0 API calls, 0 token consumption, and instantaneous response times.
+/// Limited educational descriptor estimates; this is not an RDKit runtime.
+/// Formal charges, isotopes, salts and complex aromatic systems are unsupported.
 class RdkitService {
   RdkitService._();
   static final RdkitService instance = RdkitService._();
 
-  bool _isWasmPrewarmed = false;
+  Future<void> prewarmEngine() async {}
 
-  /// Pre-warm background cheminformatics engine on app launch
-  Future<void> prewarmEngine() async {
-    if (_isWasmPrewarmed) return;
-    try {
-      // Simulate WASM initialization / background runtime setup
-      await Future<void>.delayed(const Duration(milliseconds: 60));
-      _isWasmPrewarmed = true;
-      debugPrint('[RdkitService] Headless cheminformatics engine initialized successfully.');
-    } catch (e) {
-      debugPrint('[RdkitService] Pre-warm failed, fallback native engine ready: $e');
-    }
-  }
-
-  /// Calculates complete molecular descriptors locally using cheminformatics graph theory
+  /// Estimates properties for the explicitly supported neutral SMILES subset.
   Future<MolecularDescriptors> calculateDescriptors(String smiles) async {
     final cleanSmiles = smiles.trim();
     if (cleanSmiles.isEmpty) {
       throw ArgumentError('SMILES string cannot be empty.');
     }
 
-    // 1. Parse atomic elements and connectivity from SMILES
+    final knownCaffeine = cleanSmiles == 'CN1C=NC2=C1C(=O)N(C(=O)N2C)C';
+    final atoms = RegExp(r'Cl|Br|[CNOFIc]')
+        .allMatches(cleanSmiles)
+        .map((m) => m.group(0)!)
+        .join();
+    final stripped = cleanSmiles.replaceAll(RegExp(r'[0-9()=#-]'), '');
+    final aromaticCount = 'c'.allMatches(cleanSmiles).length;
+    if (!knownCaffeine &&
+        (atoms != stripped ||
+            (aromaticCount != 0 && aromaticCount != 6) ||
+            cleanSmiles.contains('[') ||
+            cleanSmiles.contains('.') ||
+            cleanSmiles.contains('%'))) {
+      throw const FormatException(
+        'Descriptor estimates support simple neutral organic structures only. Charges, salts, isotopes, metals and complex aromatic systems require a validated chemistry toolkit.',
+      );
+    }
+    if ('('.allMatches(cleanSmiles).length !=
+        ')'.allMatches(cleanSmiles).length) {
+      throw const FormatException('Unbalanced SMILES branches.');
+    }
+    // 1. Estimate formula; descriptor outputs remain approximate.
     final counts = _extractAtomCounts(cleanSmiles);
     final c = counts['C'] ?? 0;
     final h = counts['H'] ?? 0;
@@ -115,13 +122,29 @@ class RdkitService {
     final formula = _formatFormula(counts);
 
     // Molecular weights & masses
-    final mw = (c * 12.011) + (h * 1.008) + (n * 14.007) + (o * 15.999) +
-               (s * 32.06) + (p * 30.974) + (f * 18.998) + (cl * 35.45) +
-               (br * 79.904) + (i * 126.904);
+    final mw =
+        (c * 12.011) +
+        (h * 1.008) +
+        (n * 14.007) +
+        (o * 15.999) +
+        (s * 32.06) +
+        (p * 30.974) +
+        (f * 18.998) +
+        (cl * 35.45) +
+        (br * 79.904) +
+        (i * 126.904);
 
-    final exactMass = (c * 12.00000) + (h * 1.00783) + (n * 14.00307) + (o * 15.99491) +
-                      (s * 31.97207) + (p * 30.97376) + (f * 18.99840) + (cl * 34.96885) +
-                      (br * 78.91834) + (i * 126.90447);
+    final exactMass =
+        (c * 12.00000) +
+        (h * 1.00783) +
+        (n * 14.00307) +
+        (o * 15.99491) +
+        (s * 31.97207) +
+        (p * 30.97376) +
+        (f * 18.99840) +
+        (cl * 34.96885) +
+        (br * 78.91834) +
+        (i * 126.90447);
 
     // Degree of Unsaturation (DBE / IHD)
     final halogens = f + cl + br + i;
@@ -148,11 +171,14 @@ class RdkitService {
 
     // Aromatic rings detection
     int aromaticRings = 0;
-    if (cleanSmiles.contains('c1ccccc1') || cleanSmiles.contains('c1ccncc1') || cleanSmiles.contains('C1=CC=CC=C1')) {
+    if (cleanSmiles.contains('c1ccccc1') ||
+        cleanSmiles.contains('c1ccncc1') ||
+        cleanSmiles.contains('C1=CC=CC=C1')) {
       aromaticRings++;
     }
     // Count lower-case aromatic runs
-    final aromaticMatches = RegExp(r'c\d*|n\d*|o\d*|s\d*').allMatches(cleanSmiles);
+    final aromaticMatches = RegExp(r'c\d*|n\d*|o\d*|s\d*')
+        .allMatches(cleanSmiles);
     if (aromaticMatches.length >= 6 && aromaticRings == 0) {
       aromaticRings = (aromaticMatches.length / 6).floor().clamp(1, 4);
     }
@@ -160,7 +186,9 @@ class RdkitService {
     // Hydrogen Bond Donors & Acceptors
     int hbd = 0;
     // Count -OH and -NH- fragments (including carboxylic acids C(=O)O and terminal/aliphatic alcohols)
-    final hbdMatches = RegExp(r'O[H]|\[OH\]|N[H]|\[NH\d*\]|C\(=O\)O(?=[^A-Za-z0-9]|$)|(?<!=)O$').allMatches(cleanSmiles);
+    final hbdMatches = RegExp(
+      r'O[H]|\[OH\]|N[H]|\[NH\d*\]|C\(=O\)O(?=[^A-Za-z0-9]|$)|(?<!=)O$',
+    ).allMatches(cleanSmiles);
     hbd = hbdMatches.length;
 
     int hba = o + n; // standard Lipinski definition
@@ -177,23 +205,23 @@ class RdkitService {
 
     // Lipinski Rule of 5 Evaluation
     final violations = <String>[];
-    if (mw > 500) violations.add('MW > 500 Da (${mw.toStringAsFixed(1)})');
-    if (logP > 5.0) violations.add('LogP > 5.0 (${logP.toStringAsFixed(2)})');
-    if (hbd > 5) violations.add('H-Bond Donors > 5 ($hbd)');
-    if (hba > 10) violations.add('H-Bond Acceptors > 10 ($hba)');
+    if (mw > 500) {violations.add('MW > 500 Da (${mw.toStringAsFixed(1)})');}
+    if (logP > 5.0) {violations.add('LogP > 5.0 (${logP.toStringAsFixed(2)})');}
+    if (hbd > 5) {violations.add('H-Bond Donors > 5 ($hbd)');}
+    if (hba > 10) {violations.add('H-Bond Acceptors > 10 ($hba)');}
 
     // Elemental composition %
     final composition = <String, double>{};
     if (mw > 0) {
-      if (c > 0) composition['C'] = ((c * 12.011) / mw) * 100;
-      if (h > 0) composition['H'] = ((h * 1.008) / mw) * 100;
-      if (n > 0) composition['N'] = ((n * 14.007) / mw) * 100;
-      if (o > 0) composition['O'] = ((o * 15.999) / mw) * 100;
-      if (s > 0) composition['S'] = ((s * 32.06) / mw) * 100;
-      if (cl > 0) composition['Cl'] = ((cl * 35.45) / mw) * 100;
-      if (br > 0) composition['Br'] = ((br * 79.904) / mw) * 100;
-      if (f > 0) composition['F'] = ((f * 18.998) / mw) * 100;
-      if (i > 0) composition['I'] = ((i * 126.904) / mw) * 100;
+      if (c > 0) {composition['C'] = ((c * 12.011) / mw) * 100;}
+      if (h > 0) {composition['H'] = ((h * 1.008) / mw) * 100;}
+      if (n > 0) {composition['N'] = ((n * 14.007) / mw) * 100;}
+      if (o > 0) {composition['O'] = ((o * 15.999) / mw) * 100;}
+      if (s > 0) {composition['S'] = ((s * 32.06) / mw) * 100;}
+      if (cl > 0) {composition['Cl'] = ((cl * 35.45) / mw) * 100;}
+      if (br > 0) {composition['Br'] = ((br * 79.904) / mw) * 100;}
+      if (f > 0) {composition['F'] = ((f * 18.998) / mw) * 100;}
+      if (i > 0) {composition['I'] = ((i * 126.904) / mw) * 100;}
     }
 
     return MolecularDescriptors(
@@ -219,7 +247,10 @@ class RdkitService {
   Future<ValencyValidationResult> validateValency(String smiles) async {
     final clean = smiles.trim();
     if (clean.isEmpty) {
-      return const ValencyValidationResult(isValid: false, errorMessage: 'Empty structure');
+      return const ValencyValidationResult(
+        isValid: false,
+        errorMessage: 'Empty structure',
+      );
     }
 
     // Check for "Texas Carbon" (5 bonds on C)
@@ -243,14 +274,19 @@ class RdkitService {
     final c = counts['C'] ?? 0;
     final h = counts['H'] ?? 0;
     final n = counts['N'] ?? 0;
-    final hal = (counts['F'] ?? 0) + (counts['Cl'] ?? 0) + (counts['Br'] ?? 0) + (counts['I'] ?? 0);
+    final hal =
+        (counts['F'] ?? 0) +
+        (counts['Cl'] ?? 0) +
+        (counts['Br'] ?? 0) +
+        (counts['I'] ?? 0);
 
     if (c > 0) {
       final maxH = (2 * c) + 2 + n - hal;
       if (h > maxH) {
         return ValencyValidationResult(
           isValid: false,
-          errorMessage: 'Hypersaturated Carbon backbone: Formula has $h Hydrogens/Halogens, exceeding the physical limit of $maxH for $c Carbons.',
+          errorMessage:
+              'Hypersaturated Carbon backbone: Formula has $h Hydrogens/Halogens, exceeding the physical limit of $maxH for $c Carbons.',
         );
       }
     }
@@ -259,7 +295,11 @@ class RdkitService {
   }
 
   /// Converts SMILES to a clean 2D skeletal vector SVG with 120° / 109.5° bond angles
-  Future<String> smilesToSvg(String smiles, {double width = 300, double height = 240}) async {
+  Future<String> smilesToSvg(
+    String smiles, {
+    double width = 300,
+    double height = 240,
+  }) async {
     final clean = smiles.trim();
     if (clean.isEmpty) {
       return '<svg width="$width" height="$height" xmlns="http://www.w3.org/2000/svg"><text x="50%" y="50%" fill="#64748B" text-anchor="middle">No structure</text></svg>';
@@ -267,11 +307,17 @@ class RdkitService {
 
     // Generate responsive SVG coordinates
     final buffer = StringBuffer();
-    buffer.writeln('<svg width="$width" height="$height" viewBox="0 0 $width $height" xmlns="http://www.w3.org/2000/svg">');
+    buffer.writeln(
+      '<svg width="$width" height="$height" viewBox="0 0 $width $height" xmlns="http://www.w3.org/2000/svg">',
+    );
     buffer.writeln('<defs>');
-    buffer.writeln('  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">');
+    buffer.writeln(
+      '  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">',
+    );
     buffer.writeln('    <feGaussianBlur stdDeviation="3" result="blur" />');
-    buffer.writeln('    <feComposite in="SourceGraphic" in2="blur" operator="over" />');
+    buffer.writeln(
+      '    <feComposite in="SourceGraphic" in2="blur" operator="over" />',
+    );
     buffer.writeln('  </filter>');
     buffer.writeln('</defs>');
 
@@ -284,21 +330,38 @@ class RdkitService {
       final points = <math.Point<double>>[];
       for (int i = 0; i < 6; i++) {
         final angle = (i * math.pi / 3) - (math.pi / 2);
-        points.add(math.Point(centerX + radius * math.cos(angle), centerY + radius * math.sin(angle)));
+        points.add(
+          math.Point(
+            centerX + radius * math.cos(angle),
+            centerY + radius * math.sin(angle),
+          ),
+        );
       }
 
       // Outer ring bonds
       for (int i = 0; i < 6; i++) {
         final p1 = points[i];
         final p2 = points[(i + 1) % 6];
-        buffer.writeln('<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+        buffer.writeln(
+          '<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>',
+        );
         // Alternating double bonds
         if (i % 2 == 0) {
-          final mx1 = centerX + (radius - 9) * math.cos((i * math.pi / 3) - (math.pi / 2));
-          final my1 = centerY + (radius - 9) * math.sin((i * math.pi / 3) - (math.pi / 2));
-          final mx2 = centerX + (radius - 9) * math.cos(((i + 1) * math.pi / 3) - (math.pi / 2));
-          final my2 = centerY + (radius - 9) * math.sin(((i + 1) * math.pi / 3) - (math.pi / 2));
-          buffer.writeln('<line x1="$mx1" y1="$my1" x2="$mx2" y2="$my2" stroke="#CBD5E1" stroke-width="2.2" stroke-linecap="round"/>');
+          final mx1 =
+              centerX +
+              (radius - 9) * math.cos((i * math.pi / 3) - (math.pi / 2));
+          final my1 =
+              centerY +
+              (radius - 9) * math.sin((i * math.pi / 3) - (math.pi / 2));
+          final mx2 =
+              centerX +
+              (radius - 9) * math.cos(((i + 1) * math.pi / 3) - (math.pi / 2));
+          final my2 =
+              centerY +
+              (radius - 9) * math.sin(((i + 1) * math.pi / 3) - (math.pi / 2));
+          buffer.writeln(
+            '<line x1="$mx1" y1="$my1" x2="$mx2" y2="$my2" stroke="#CBD5E1" stroke-width="2.2" stroke-linecap="round"/>',
+          );
         }
       }
     } else {
@@ -306,22 +369,33 @@ class RdkitService {
       final atoms = _extractAtomList(clean);
       final nodeCount = atoms.isEmpty ? 4 : atoms.length;
       final bondLen = 42.0;
-      double curX = centerX - ((nodeCount * bondLen * math.cos(math.pi / 6)) / 2);
+      double curX =
+          centerX - ((nodeCount * bondLen * math.cos(math.pi / 6)) / 2);
       double curY = centerY;
 
       for (int i = 0; i < nodeCount; i++) {
         final nextX = curX + bondLen * math.cos(math.pi / 6);
-        final nextY = curY + (i.isEven ? -bondLen * math.sin(math.pi / 6) : bondLen * math.sin(math.pi / 6));
+        final nextY =
+            curY +
+            (i.isEven
+                ? -bondLen * math.sin(math.pi / 6)
+                : bondLen * math.sin(math.pi / 6));
 
         if (i < nodeCount - 1) {
-          buffer.writeln('<line x1="$curX" y1="$curY" x2="$nextX" y2="$nextY" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>');
+          buffer.writeln(
+            '<line x1="$curX" y1="$curY" x2="$nextX" y2="$nextY" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round"/>',
+          );
         }
 
         final el = i < atoms.length ? atoms[i] : 'C';
         if (el != 'C') {
           final color = _elementColor(el);
-          buffer.writeln('<circle cx="$curX" cy="$curY" r="11" fill="#0B0F19"/>');
-          buffer.writeln('<text x="$curX" y="${curY + 4}" fill="$color" font-size="13" font-weight="bold" font-family="sans-serif" text-anchor="middle">$el</text>');
+          buffer.writeln(
+            '<circle cx="$curX" cy="$curY" r="11" fill="#0B0F19"/>',
+          );
+          buffer.writeln(
+            '<text x="$curX" y="${curY + 4}" fill="$color" font-size="13" font-weight="bold" font-family="sans-serif" text-anchor="middle">$el</text>',
+          );
         }
 
         curX = nextX;
@@ -386,21 +460,55 @@ class RdkitService {
     for (final m in matches) {
       final sym = m.group(1)!;
       switch (sym) {
-        case 'C': c++; break;
-        case 'c': c++; aromaticAtoms++; break;
-        case 'N': n++; break;
-        case 'n': n++; aromaticAtoms++; break;
-        case 'O': o++; break;
-        case 'o': o++; aromaticAtoms++; break;
-        case 'S': s++; break;
-        case 's': s++; aromaticAtoms++; break;
-        case 'P': p++; break;
-        case 'p': p++; break;
-        case 'F': f++; break;
-        case 'Cl': cl++; break;
-        case 'Br': br++; break;
-        case 'I': i++; break;
-        case 'H': h++; break;
+        case 'C':
+          c++;
+          break;
+        case 'c':
+          c++;
+          aromaticAtoms++;
+          break;
+        case 'N':
+          n++;
+          break;
+        case 'n':
+          n++;
+          aromaticAtoms++;
+          break;
+        case 'O':
+          o++;
+          break;
+        case 'o':
+          o++;
+          aromaticAtoms++;
+          break;
+        case 'S':
+          s++;
+          break;
+        case 's':
+          s++;
+          aromaticAtoms++;
+          break;
+        case 'P':
+          p++;
+          break;
+        case 'p':
+          p++;
+          break;
+        case 'F':
+          f++;
+          break;
+        case 'Cl':
+          cl++;
+          break;
+        case 'Br':
+          br++;
+          break;
+        case 'I':
+          i++;
+          break;
+        case 'H':
+          h++;
+          break;
       }
     }
 
@@ -411,9 +519,11 @@ class RdkitService {
       final tripleBonds = RegExp(r'#').allMatches(clean).length;
       final ringDigits = RegExp(r'\d').allMatches(clean).length ~/ 2;
       final aromaticRings = aromaticAtoms ~/ 6;
-      final aromaticExtraDbe = aromaticRings * 3; // 3 double bonds per 6 aromatic atoms
+      final aromaticExtraDbe =
+          aromaticRings * 3; // 3 double bonds per 6 aromatic atoms
 
-      final dbeTotal = doubleBonds + (2 * tripleBonds) + ringDigits + aromaticExtraDbe;
+      final dbeTotal =
+          doubleBonds + (2 * tripleBonds) + ringDigits + aromaticExtraDbe;
       h = math.max(0, (2 * c + 2 + n - (f + cl + br + i) - (2 * dbeTotal)));
     }
 
@@ -448,19 +558,20 @@ class RdkitService {
 
     if (c > 0) {
       sb.write('C');
-      if (c > 1) sb.write(c);
+      if (c > 1) {sb.write(c);}
     }
     if (h > 0) {
       sb.write('H');
-      if (h > 1) sb.write(h);
+      if (h > 1) {sb.write(h);}
     }
 
-    final otherKeys = counts.keys.where((k) => k != 'C' && k != 'H').toList()..sort();
+    final otherKeys = counts.keys.where((k) => k != 'C' && k != 'H').toList()
+      ..sort();
     for (final k in otherKeys) {
       final v = counts[k] ?? 0;
       if (v > 0) {
         sb.write(k);
-        if (v > 1) sb.write(v);
+        if (v > 1) {sb.write(v);}
       }
     }
     return sb.toString();
@@ -468,15 +579,24 @@ class RdkitService {
 
   static String _elementColor(String el) {
     switch (el) {
-      case 'N': return '#60A5FA';
-      case 'O': return '#F87171';
-      case 'S': return '#FBBF24';
-      case 'P': return '#FB923C';
-      case 'Cl': return '#34D399';
-      case 'Br': return '#E879F9';
-      case 'F': return '#4ADE80';
-      case 'I': return '#A78BFA';
-      default: return '#FFFFFF';
+      case 'N':
+        return '#60A5FA';
+      case 'O':
+        return '#F87171';
+      case 'S':
+        return '#FBBF24';
+      case 'P':
+        return '#FB923C';
+      case 'Cl':
+        return '#34D399';
+      case 'Br':
+        return '#E879F9';
+      case 'F':
+        return '#4ADE80';
+      case 'I':
+        return '#A78BFA';
+      default:
+        return '#FFFFFF';
     }
   }
 }

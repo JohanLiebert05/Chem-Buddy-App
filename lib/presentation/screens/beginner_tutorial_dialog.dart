@@ -1,8 +1,10 @@
+import '../../core/widgets/expressive_motion.dart';
+import '../../core/theme/app_colors.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../providers/app_providers.dart';
@@ -20,10 +22,12 @@ class BeginnerTutorialDialog extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<BeginnerTutorialDialog> createState() => _BeginnerTutorialDialogState();
+  ConsumerState<BeginnerTutorialDialog> createState() =>
+      _BeginnerTutorialDialogState();
 }
 
-class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog> {
+class _BeginnerTutorialDialogState
+    extends ConsumerState<BeginnerTutorialDialog> {
   final PageController _controller = PageController();
   int _step = 0;
   static const int _totalSteps = 7;
@@ -66,7 +70,10 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
         decoration: BoxDecoration(
           color: const Color(0xF5161822),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.purple.withValues(alpha: 0.3), width: 1.2),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.6),
@@ -74,7 +81,8 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
               offset: const Offset(0, 8),
             ),
             BoxShadow(
-              color: AppColors.purple.withValues(alpha: 0.15),
+              color: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.15),
               blurRadius: 30,
               spreadRadius: -4,
             ),
@@ -89,8 +97,8 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
                 children: [
                   Text(
                     'STEP ${_step + 1} OF $_totalSteps',
-                    style: const TextStyle(
-                      color: AppColors.purpleBright,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
                       fontSize: 11,
@@ -98,16 +106,26 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
                   ),
                   const Spacer(),
                   if (_step < _totalSteps - 1)
-                    TextButton(
-                      onPressed: _finish,
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text(
-                        'Skip',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    SpringPress(
+                      child: TextButton(
+                        onPressed: _finish,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Skip',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ),
                 ],
@@ -122,7 +140,9 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
                 child: LinearProgressIndicator(
                   value: (_step + 1) / _totalSteps,
                   backgroundColor: Colors.white10,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.purpleBright),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
                   minHeight: 4,
                 ),
               ),
@@ -151,32 +171,57 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
               child: Row(
                 children: [
                   if (_step > 0) ...[
-                    OutlinedButton(
-                      onPressed: _prev,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.textSecondary,
-                        side: const BorderSide(color: AppColors.border),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    SpringPress(
+                      child: OutlinedButton(
+                        onPressed: _prev,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Text('Back'),
                       ),
-                      child: const Text('Back'),
                     ),
                     const SizedBox(width: 10),
                   ],
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: _next,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.purple,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        elevation: 4,
-                        shadowColor: AppColors.purple.withValues(alpha: 0.5),
-                      ),
-                      child: Text(
-                        _step == _totalSteps - 1 ? 'Start Using ChemBuddy' : 'Next →',
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                    child: SpringPress(
+                      child: ElevatedButton(
+                        onPressed: _next,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .primaryContainer,
+                          foregroundColor: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          elevation: 4,
+                          shadowColor: Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.5),
+                        ),
+                        child: Text(
+                          _step == _totalSteps - 1
+                              ? 'Start Using ChemBuddy'
+                              : 'Next →',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -204,27 +249,31 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
             style: GoogleFonts.plusJakartaSans(
               fontSize: 21,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Chem Buddy by Prajwal A Kambar\nattendance, tests, and notes for MSc Chemistry students.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: AppColors.purpleBright,
+              color: Theme.of(context).colorScheme.primary,
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
               height: 1.35,
             ),
           ),
           const SizedBox(height: 14),
-          const GlowCard(
+          GlowCard(
             padding: EdgeInsets.all(14),
             child: Text(
               'Your all-in-one companion for postgraduate chemistry. Calculate attendance & safe bunk limits, switch Organic & Inorganic timetables, study reference PDFs, sketch molecules in ChemDraw, and master mechanisms with ChemBuddy AI.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.45),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12.5,
+                height: 1.45,
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -233,12 +282,30 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
             runSpacing: 8,
             alignment: WrapAlignment.center,
             children: const [
-              _FeatureChip(icon: Icons.analytics_rounded, label: 'Attendance & Safe Bunks'),
-              _FeatureChip(icon: Icons.calendar_month_rounded, label: 'Timetable Presets'),
-              _FeatureChip(icon: Icons.menu_book_rounded, label: 'PDF Library & Notes'),
-              _FeatureChip(icon: Icons.gesture_rounded, label: 'ChemDraw Canvas'),
-              _FeatureChip(icon: Icons.auto_awesome_rounded, label: 'ChemBuddy AI Tutor'),
-              _FeatureChip(icon: Icons.camera_alt_rounded, label: 'Notes to Flashcards'),
+              _FeatureChip(
+                icon: Icons.analytics_rounded,
+                label: 'Attendance & Safe Bunks',
+              ),
+              _FeatureChip(
+                icon: Icons.calendar_month_rounded,
+                label: 'Timetable Presets',
+              ),
+              _FeatureChip(
+                icon: Icons.menu_book_rounded,
+                label: 'PDF Library & Notes',
+              ),
+              _FeatureChip(
+                icon: Icons.gesture_rounded,
+                label: 'ChemDraw Canvas',
+              ),
+              _FeatureChip(
+                icon: Icons.auto_awesome_rounded,
+                label: 'ChemBuddy AI Tutor',
+              ),
+              _FeatureChip(
+                icon: Icons.camera_alt_rounded,
+                label: 'Notes to Flashcards',
+              ),
               _FeatureChip(icon: Icons.quiz_rounded, label: 'Tests & Quizzes'),
             ],
           ),
@@ -254,16 +321,28 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _badge('NEW · CHEMDRAW CANVAS', Icons.draw_rounded, color: const Color(0xFF06B6D4)),
+          _badge(
+            'NEW · CHEMDRAW CANVAS',
+            Icons.draw_rounded,
+            color: const Color(0xFF06B6D4),
+          ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Interactive Chemical Sketcher',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Draw molecules and reaction mechanisms with a touch-first canvas.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: 12),
           const _TourCard(
@@ -298,16 +377,28 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _badge('CHEMBUDDY AI TUTOR', Icons.auto_awesome_rounded, color: const Color(0xFFA855F7)),
+          _badge(
+            'CHEMBUDDY AI TUTOR',
+            Icons.auto_awesome_rounded,
+            color: const Color(0xFFA855F7),
+          ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Intelligent Academic Tutor',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Powered by intelligent academic reasoning with dedicated modes for MSc studies.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: 12),
           const _TourCard(
@@ -342,16 +433,28 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _badge('AI OCR & FLASHCARDS', Icons.document_scanner_rounded, color: const Color(0xFF3B82F6)),
+          _badge(
+            'AI OCR & FLASHCARDS',
+            Icons.document_scanner_rounded,
+            color: const Color(0xFF3B82F6),
+          ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Handwritten Notes → Flashcards',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Convert classroom notes and blackboard photos into study sets in seconds.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: 12),
           const _TourCard(
@@ -386,16 +489,28 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _badge('ATTENDANCE INTELLIGENCE', Icons.how_to_reg_rounded, color: const Color(0xFF10B981)),
+          _badge(
+            'ATTENDANCE INTELLIGENCE',
+            Icons.how_to_reg_rounded,
+            color: const Color(0xFF10B981),
+          ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Stay Confidently Above 75%',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Real-time calculations so you never risk university attendance shortages.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: 12),
           const _TourCard(
@@ -430,16 +545,28 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _badge('SMART TIMETABLE', Icons.calendar_month_rounded, color: const Color(0xFFF59E0B)),
+          _badge(
+            'SMART TIMETABLE',
+            Icons.calendar_month_rounded,
+            color: const Color(0xFFF59E0B),
+          ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Your Daily Command Center',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Your day at a glance. Class timings, room locations, and lecture alerts.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: 12),
           const _TourCard(
@@ -474,27 +601,60 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _badge('STUDY ROUTINE', Icons.rocket_launch_rounded, color: const Color(0xFFA855F7)),
+          _badge(
+            'STUDY ROUTINE',
+            Icons.rocket_launch_rounded,
+            color: const Color(0xFFA855F7),
+          ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'The 5-Step Academic Routine',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Proven daily routine for top marks in university exams.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: 12),
           const GlowCard(
             padding: EdgeInsets.all(12),
             child: Column(
               children: [
-                _RoutineRow(num: '1', title: 'Morning Schedule', text: 'Check today\'s classes, timings, and lecture halls.'),
-                _RoutineRow(num: '2', title: 'Mark Attendance', text: 'Tap Present right after each lecture to update your safe bunk buffer.'),
-                _RoutineRow(num: '3', title: 'Sketch & Scan', text: 'Draw structures in ChemDraw or snap photos of lecture notes.'),
-                _RoutineRow(num: '4', title: 'Active Recall', text: 'Review 10 flashcards daily to cement reaction mechanisms.'),
-                _RoutineRow(num: '5', title: 'Exam Readiness', text: 'Test yourself with AI quizzes and review weak topic diagnostics.', isLast: true),
+                _RoutineRow(
+                  num: '1',
+                  title: 'Morning Schedule',
+                  text: 'Check today\'s classes, timings, and lecture halls.',
+                ),
+                _RoutineRow(
+                  num: '2',
+                  title: 'Mark Attendance',
+                  text: 'Tap Present right after each lecture to update your safe bunk buffer.',
+                ),
+                _RoutineRow(
+                  num: '3',
+                  title: 'Sketch & Scan',
+                  text: 'Draw structures in ChemDraw or snap photos of lecture notes.',
+                ),
+                _RoutineRow(
+                  num: '4',
+                  title: 'Active Recall',
+                  text: 'Review 10 flashcards daily to cement reaction mechanisms.',
+                ),
+                _RoutineRow(
+                  num: '5',
+                  title: 'Exam Readiness',
+                  text: 'Test yourself with AI quizzes and review weak topic diagnostics.',
+                  isLast: true,
+                ),
               ],
             ),
           ),
@@ -504,7 +664,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
   }
 
   Widget _badge(String title, IconData icon, {Color? color}) {
-    final c = color ?? AppColors.purpleBright;
+    final c = color ?? Theme.of(context).colorScheme.primary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -520,7 +680,7 @@ class _BeginnerTutorialDialogState extends ConsumerState<BeginnerTutorialDialog>
           Text(
             title,
             style: TextStyle(
-              color: c,
+              color: AppColors.readableText(context, c),
               fontWeight: FontWeight.w800,
               fontSize: 10.5,
               letterSpacing: 0.8,
@@ -550,7 +710,8 @@ class _TourCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated.withValues(alpha: 0.7),
+        color: Theme.of(context).colorScheme.surfaceContainerHigh
+            .withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
@@ -573,12 +734,20 @@ class _TourCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11.5,
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),
@@ -599,18 +768,22 @@ class _FeatureChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppColors.purpleBright),
+          Icon(icon, size: 14, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 5),
           Text(
             label,
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -643,13 +816,21 @@ class _RoutineRow extends StatelessWidget {
             height: 22,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppColors.purple.withValues(alpha: 0.2),
+              color: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.2),
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.4),
+              ),
             ),
             child: Text(
               num,
-              style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 11),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 11,
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -659,12 +840,20 @@ class _RoutineRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: Colors.white),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 1),
                 Text(
                   text,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.3),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11.5,
+                    height: 1.3,
+                  ),
                 ),
               ],
             ),

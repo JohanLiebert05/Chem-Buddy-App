@@ -1,6 +1,9 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
@@ -8,10 +11,7 @@ import '../../core/widgets/glow_card.dart';
 import '../../data/remote/supabase_service.dart';
 
 class VivaPracticeDialog extends ConsumerStatefulWidget {
-  const VivaPracticeDialog({
-    super.key,
-    this.initialTopic,
-  });
+  const VivaPracticeDialog({super.key, this.initialTopic});
 
   final String? initialTopic;
 
@@ -95,7 +95,8 @@ class _VivaPracticeDialogState extends ConsumerState<VivaPracticeDialog> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialTopic != null && _vivaTopics.contains(widget.initialTopic)) {
+    if (widget.initialTopic != null &&
+        _vivaTopics.contains(widget.initialTopic)) {
       _selectedTopic = widget.initialTopic!;
     }
   }
@@ -108,7 +109,8 @@ class _VivaPracticeDialogState extends ConsumerState<VivaPracticeDialog> {
 
   void _startViva() {
     AppHaptics.selection();
-    final questions = _topicQuestions[_selectedTopic] ?? _topicQuestions.values.first;
+    final questions =
+        _topicQuestions[_selectedTopic] ?? _topicQuestions.values.first;
     setState(() {
       _started = true;
       _questionIndex = 0;
@@ -120,12 +122,15 @@ class _VivaPracticeDialogState extends ConsumerState<VivaPracticeDialog> {
 
   Future<void> _submitAnswer() async {
     final answer = _answerController.text.trim();
-    if (answer.isEmpty) return;
+    if (answer.isEmpty) {
+      return;
+    }
 
     AppHaptics.tap();
     setState(() => _evaluating = true);
 
-    final cacheKey = 'viva_eval_${_selectedTopic.hashCode}_${_questionIndex}_${answer.toLowerCase().trim().hashCode}';
+    final cacheKey =
+        'viva_eval_${_selectedTopic.hashCode}_${_questionIndex}_${answer.toLowerCase().trim().hashCode}';
 
     // Check offline cache first to conserve free-tier Gemini API calls
     try {
@@ -147,7 +152,8 @@ class _VivaPracticeDialogState extends ConsumerState<VivaPracticeDialog> {
 
       if (remote.configured && remote.userId != null) {
         final raw = await remote.invokeFunction('ask-chembuddy', {
-          'question': '''You are an MSc Chemistry Viva Examiner.
+          'question':
+              '''You are an MSc Chemistry Viva Examiner.
 Topic: $_selectedTopic
 Question: $_currentQuestion
 Student's Viva Answer: "$answer"
@@ -190,7 +196,8 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
 
   void _nextQuestion() {
     AppHaptics.selection();
-    final questions = _topicQuestions[_selectedTopic] ?? _topicQuestions.values.first;
+    final questions =
+        _topicQuestions[_selectedTopic] ?? _topicQuestions.values.first;
     if (_questionIndex + 1 < questions.length) {
       setState(() {
         _questionIndex += 1;
@@ -201,26 +208,37 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
     } else {
       // Completed viva
       setState(() {
-        _feedback = '**Viva Completed!**\n\nYou answered $scoreString questions in $_selectedTopic with solid MSc conceptual depth. Keep revising key equations and mechanisms!';
+        _feedback =
+            '**Viva Completed!**\n\nYou answered $scoreString questions in $_selectedTopic with solid MSc conceptual depth. Keep revising key equations and mechanisms!';
       });
     }
   }
 
-  String get scoreString => '$_score / ${(_topicQuestions[_selectedTopic] ?? []).length}';
+  String get scoreString =>
+      '$_score / ${(_topicQuestions[_selectedTopic] ?? []).length}';
 
   @override
   Widget build(BuildContext context) {
-    final questions = _topicQuestions[_selectedTopic] ?? _topicQuestions.values.first;
+    final questions =
+        _topicQuestions[_selectedTopic] ?? _topicQuestions.values.first;
     final total = questions.length;
-    final isFinished = _feedback != null && _questionIndex + 1 >= total && _feedback!.contains('Viva Completed');
+    final isFinished =
+        _feedback != null &&
+        _questionIndex + 1 >= total &&
+        _feedback!.contains('Viva Completed');
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: AppColors.background,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        16,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -229,7 +247,10 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
             child: Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -240,51 +261,100 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.purple.withValues(alpha: 0.15),
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.record_voice_over_outlined, color: AppColors.purpleBright, size: 20),
+                child: Icon(
+                  Icons.record_voice_over_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('MSc Chemistry Viva Practice', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white)),
-                    Text('Oral Exam Simulator with Instant Conceptual Feedback', style: TextStyle(color: AppColors.textSecondary, fontSize: 11.5)),
+                    Text(
+                      'MSc Chemistry Viva Practice',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    Text(
+                      'Oral Exam Simulator with Instant Conceptual Feedback',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11.5,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.close, color: AppColors.textMuted, size: 20),
-                onPressed: () => Navigator.pop(context),
+              SpringPress(
+                child: IconButton(
+                  icon: Icon(
+                    Icons.close,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 20,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 14),
 
           if (!_started) ...[
-            const Text('Select Viva Domain:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w700)),
+            Text(
+              'Select Viva Domain:',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(height: 8),
-            ..._vivaTopics.map((t) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+            ..._vivaTopics.map(
+              (t) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SpringPress(
                   child: InkWell(
                     onTap: () => setState(() => _selectedTopic = t),
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
-                        color: _selectedTopic == t ? AppColors.purple.withValues(alpha: 0.2) : AppColors.surfaceElevated,
+                        color: _selectedTopic == t
+                            ? Theme.of(context).colorScheme.primary
+                                  .withValues(alpha: 0.2)
+                            : Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _selectedTopic == t ? AppColors.purpleBright : AppColors.border,
+                          color: _selectedTopic == t
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outlineVariant,
                         ),
                       ),
                       child: Row(
                         children: [
                           Icon(
-                            _selectedTopic == t ? Icons.radio_button_checked : Icons.radio_button_off,
-                            color: _selectedTopic == t ? AppColors.purpleBright : AppColors.textMuted,
+                            _selectedTopic == t
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_off,
+                            color: _selectedTopic == t
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                             size: 18,
                           ),
                           const SizedBox(width: 10),
@@ -292,8 +362,12 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
                             child: Text(
                               t,
                               style: TextStyle(
-                                fontWeight: _selectedTopic == t ? FontWeight.w700 : FontWeight.w500,
-                                color: _selectedTopic == t ? Colors.white : AppColors.textPrimary,
+                                fontWeight: _selectedTopic == t
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: _selectedTopic == t
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Theme.of(context).colorScheme.onSurface,
                                 fontSize: 13.5,
                               ),
                             ),
@@ -302,26 +376,53 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
                       ),
                     ),
                   ),
-                )),
-            const Spacer(),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.purple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
               ),
-              onPressed: _startViva,
-              icon: const Icon(Icons.play_arrow_rounded, size: 22),
-              label: const Text('Start Viva Exam', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+            ),
+            const Spacer(),
+            SpringPress(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer,
+                  foregroundColor: Theme.of(context)
+                      .colorScheme
+                      .onPrimaryContainer,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: _startViva,
+                icon: const Icon(Icons.play_arrow_rounded, size: 22),
+                label: const Text(
+                  'Start Viva Exam',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                ),
+              ),
             ),
           ] else ...[
             // Progress Bar
             Row(
               children: [
-                Text('Question ${_questionIndex + 1} of $total', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: AppColors.purpleBright)),
+                Text(
+                  'Question ${_questionIndex + 1} of $total',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 const Spacer(),
-                Text('Score: $_score', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+                Text(
+                  'Score: $_score',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 6),
@@ -329,8 +430,12 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: (_questionIndex + 1) / total,
-                backgroundColor: AppColors.surfaceElevated,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.purpleBright),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHigh,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.primary,
+                ),
                 minHeight: 4,
               ),
             ),
@@ -343,22 +448,40 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     GlowCard(
-                      borderColor: AppColors.purple.withValues(alpha: 0.3),
+                      borderColor: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.3),
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.school, size: 16, color: AppColors.purpleBright),
+                              Icon(
+                                Icons.school,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                               const SizedBox(width: 6),
-                              Text('Examiner asks:', style: TextStyle(color: AppColors.purpleBright.withValues(alpha: 0.9), fontSize: 12, fontWeight: FontWeight.w700)),
+                              Text(
+                                'Examiner asks:',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary
+                                      .withValues(alpha: 0.9),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 8),
                           ChemistryMarkdownView(
                             text: _currentQuestion,
-                            textStyle: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, height: 1.35),
+                            textStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              height: 1.35,
+                            ),
                           ),
                         ],
                       ),
@@ -369,35 +492,81 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
                       TextField(
                         controller: _answerController,
                         maxLines: 4,
-                        style: const TextStyle(color: Colors.white, fontSize: 13.5),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 13.5,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Type your viva answer with key terms, mechanisms, and conditions...',
-                          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                          hintStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 13,
+                          ),
                           filled: true,
-                          fillColor: AppColors.surfaceElevated,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.purpleBright)),
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
                         ),
                       ),
                     ] else ...[
                       // Feedback Card
                       GlowCard(
-                        borderColor: AppColors.success.withValues(alpha: 0.4),
+                        borderColor: AppColors.adaptive(
+                          context,
+                          AppColors.success,
+                        ).withValues(alpha: 0.4),
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Row(
+                            Row(
                               children: [
-                                Icon(Icons.fact_check_outlined, size: 16, color: AppColors.success),
+                                Icon(
+                                  Icons.fact_check_outlined,
+                                  size: 16,
+                                  color: AppColors.adaptive(
+                                    context,
+                                    AppColors.success,
+                                  ),
+                                ),
                                 SizedBox(width: 6),
-                                Text('Examiner Assessment', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w800, fontSize: 12.5)),
+                                Text(
+                                  'Examiner Assessment',
+                                  style: TextStyle(
+                                    color: AppColors.adaptive(
+                                      context,
+                                      AppColors.success,
+                                    ),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12.5,
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             ChemistryMarkdownView(
                               text: _feedback!,
-                              textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13, height: 1.4),
+                              textStyle: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 13,
+                                height: 1.4,
+                              ),
                             ),
                           ],
                         ),
@@ -411,42 +580,84 @@ Format with clean bullet points and Unicode chemistry notation (no LaTeX).''',
             const SizedBox(height: 12),
 
             if (_feedback == null)
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.purple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              SpringPress(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer,
+                    foregroundColor: Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _evaluating ? null : _submitAnswer,
+                  icon: _evaluating
+                      ? SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        )
+                      : const Icon(Icons.send_rounded, size: 18),
+                  label: Text(
+                    _evaluating ? 'Evaluating answer...' : 'Submit Viva Answer',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
-                onPressed: _evaluating ? null : _submitAnswer,
-                icon: _evaluating
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.send_rounded, size: 18),
-                label: Text(_evaluating ? 'Evaluating answer...' : 'Submit Viva Answer', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
               )
             else if (!isFinished && _questionIndex + 1 < total)
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.purple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              SpringPress(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer,
+                    foregroundColor: Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _nextQuestion,
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                  label: const Text(
+                    'Next Viva Question',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  ),
                 ),
-                onPressed: _nextQuestion,
-                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                label: const Text('Next Viva Question', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
               )
             else
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.success,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              SpringPress(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.adaptive(
+                      context,
+                      AppColors.success,
+                    ),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: const Text(
+                    'Finish Viva Session',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  ),
                 ),
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.check_circle_outline, size: 18),
-                label: const Text('Finish Viva Session', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
               ),
           ],
         ],

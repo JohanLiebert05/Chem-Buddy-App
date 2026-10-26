@@ -41,19 +41,31 @@ class PredictedReactionResult {
 
     // 1. REACTION EQUATION BOX
     buffer.writeln('#### **1. Overall Chemical Reaction & Balanced Equation**');
-    buffer.writeln(r'$$\mathbf{' + _formatLatexEquation(reactants, reagentsAndConditions, majorProductFormula) + r'}$$');
+    buffer.writeln(
+      r'$$\mathbf{' +
+          _formatLatexEquation(
+            reactants,
+            reagentsAndConditions,
+            majorProductFormula,
+          ) +
+          r'}$$',
+    );
     buffer.writeln('* **Substrate / Reactants**: $reactants');
     buffer.writeln('* **Reagents & Conditions**: $reagentsAndConditions');
     buffer.writeln();
 
     // 2. END-PRODUCT PREDICTION (MAJOR & MINOR)
     buffer.writeln('#### **2. Predicted End-Products & Selectivity**');
-    buffer.writeln('* 🏆 **Major Product**: **$majorProduct** (`$majorProductFormula`)');
+    buffer.writeln(
+      '* 🏆 **Major Product**: **$majorProduct** (`$majorProductFormula`)',
+    );
     if (minorProducts != null && minorProducts!.isNotEmpty) {
       buffer.writeln('* ⚖️ **Minor Product(s) / Byproducts**: $minorProducts');
     }
     buffer.writeln('* 🔍 **Regio- & Stereochemical Outcome**: $selectivity');
-    buffer.writeln('* ⚡ **Thermodynamic / Kinetic Driving Force**: $drivingForce');
+    buffer.writeln(
+      '* ⚡ **Thermodynamic / Kinetic Driving Force**: $drivingForce',
+    );
     buffer.writeln();
 
     // 3. STEP-BY-STEP REACTION MECHANISM WITH CURVED ARROWS
@@ -62,10 +74,14 @@ class PredictedReactionResult {
       buffer.writeln('##### **Step ${step.stepNumber}: ${step.title}**');
       buffer.writeln(step.description);
       if (step.curvedArrowNotes != null && step.curvedArrowNotes!.isNotEmpty) {
-        buffer.writeln('* 🏹 **Electron Movement (Curved Arrows)**: ${step.curvedArrowNotes}');
+        buffer.writeln(
+          '* 🏹 **Electron Movement (Curved Arrows)**: ${step.curvedArrowNotes}',
+        );
       }
       if (step.intermediate != null && step.intermediate!.isNotEmpty) {
-        buffer.writeln('* 🧪 **Key Intermediate / Transition State**: ${step.intermediate}');
+        buffer.writeln(
+          '* 🧪 **Key Intermediate / Transition State**: ${step.intermediate}',
+        );
       }
       buffer.writeln();
     }
@@ -75,12 +91,18 @@ class PredictedReactionResult {
     buffer.writeln(syntheticNotes);
     buffer.writeln();
     buffer.writeln('---');
-    buffer.writeln('*Predicted by ChemBuddy Autonomous MSc Chemistry Intelligence Engine.*');
+    buffer.writeln(
+      '*Predicted by ChemBuddy Autonomous MSc Chemistry Intelligence Engine.*',
+    );
 
     return buffer.toString();
   }
 
-  static String _formatLatexEquation(String reactants, String reagents, String products) {
+  static String _formatLatexEquation(
+    String reactants,
+    String reagents,
+    String products,
+  ) {
     final cleanR = reactants.replaceAll(r'$', '').trim();
     final cleanCond = reagents.replaceAll(r'$', '').trim();
     final cleanP = products.replaceAll(r'$', '').trim();
@@ -114,132 +136,265 @@ class ReactionPredictorEngine {
   }
 
   static bool _isGeneralReactionQuery(String q) {
-    final hasReactants = q.contains('+') || q.contains(' react') || q.contains(' treated with ') || q.contains(' with ') || q.contains(' in presence of ');
-    final hasAction = q.contains('mechanism') || q.contains('product') || q.contains('predict') || q.contains('yield') || q.contains('reaction of') || q.contains('what happens when');
+    final hasReactants =
+        q.contains('+') ||
+        q.contains(' react') ||
+        q.contains(' treated with ') ||
+        q.contains(' with ') ||
+        q.contains(' in presence of ');
+    final hasAction =
+        q.contains('mechanism') ||
+        q.contains('product') ||
+        q.contains('predict') ||
+        q.contains('yield') ||
+        q.contains('reaction of') ||
+        q.contains('what happens when');
     return hasReactants && hasAction;
   }
 
   static final List<_ReactionPatternHandler> _reactionPatterns = [
     // 1. EAS
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('benzene') || q.contains('toluene') || q.contains('phenol') || q.contains('anisole')) &&
-          (q.contains('hno3') || q.contains('nitrat') || (q.contains('nitric') && q.contains('sulfuric'))),
+      matcher: (q) =>
+          (q.contains('benzene') ||
+              q.contains('toluene') ||
+              q.contains('phenol') ||
+              q.contains('anisole')) &&
+          (q.contains('hno3') ||
+              q.contains('nitrat') ||
+              (q.contains('nitric') && q.contains('sulfuric'))),
       generator: (q) => _buildNitrationPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('benzene') || q.contains('arene')) &&
-          (q.contains('h2so4') || q.contains('so3') || q.contains('sulfonat') || q.contains('sulphonat')),
+      matcher: (q) =>
+          (q.contains('benzene') || q.contains('arene')) &&
+          (q.contains('h2so4') ||
+              q.contains('so3') ||
+              q.contains('sulfonat') ||
+              q.contains('sulphonat')),
       generator: (q) => _buildSulphonationPrediction(),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('benzene') || q.contains('toluene')) &&
+      matcher: (q) =>
+          (q.contains('benzene') || q.contains('toluene')) &&
           (q.contains('br2') || q.contains('cl2') || q.contains('halogenat')) &&
-          (q.contains('febr3') || q.contains('alcl3') || q.contains('fe') || q.contains('lewis acid')),
+          (q.contains('febr3') ||
+              q.contains('alcl3') ||
+              q.contains('fe') ||
+              q.contains('lewis acid')),
       generator: (q) => _buildHalogenationPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('benzene') || q.contains('toluene')) &&
-          (q.contains('friedel') || q.contains('alcl3') || q.contains('alkylat')) &&
-          (q.contains('ch3cl') || q.contains('ch3ch2cl') || q.contains('alkyl halide') || q.contains('propyl') || q.contains('chloropropane')),
+      matcher: (q) =>
+          (q.contains('benzene') || q.contains('toluene')) &&
+          (q.contains('friedel') ||
+              q.contains('alcl3') ||
+              q.contains('alkylat')) &&
+          (q.contains('ch3cl') ||
+              q.contains('ch3ch2cl') ||
+              q.contains('alkyl halide') ||
+              q.contains('propyl') ||
+              q.contains('chloropropane')),
       generator: (q) => _buildFriedelCraftsAlkylationPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('benzene') || q.contains('toluene') || q.contains('anisole')) &&
-          (q.contains('friedel') || q.contains('acydat') || q.contains('acylat') || q.contains('ch3cocl') || q.contains('acetyl chloride') || q.contains('acetic anhydride')),
+      matcher: (q) =>
+          (q.contains('benzene') ||
+              q.contains('toluene') ||
+              q.contains('anisole')) &&
+          (q.contains('friedel') ||
+              q.contains('acydat') ||
+              q.contains('acylat') ||
+              q.contains('ch3cocl') ||
+              q.contains('acetyl chloride') ||
+              q.contains('acetic anhydride')),
       generator: (q) => _buildFriedelCraftsAcylationPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => q.contains('phenol') && (q.contains('chcl3') || q.contains('chloroform') || q.contains('reimer') || q.contains('tiemann')),
+      matcher: (q) =>
+          q.contains('phenol') &&
+          (q.contains('chcl3') ||
+              q.contains('chloroform') ||
+              q.contains('reimer') ||
+              q.contains('tiemann')),
       generator: (q) => _buildReimerTiemannPrediction(),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => q.contains('phenol') && (q.contains('co2') || q.contains('kolbe') || q.contains('salicylic')),
+      matcher: (q) =>
+          q.contains('phenol') &&
+          (q.contains('co2') || q.contains('kolbe') || q.contains('salicylic')),
       generator: (q) => _buildKolbeSchmittPrediction(),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('toluene') || q.contains('methylbenzene')) && (q.contains('cro2cl2') || q.contains('etard') || q.contains('chromyl chloride')),
+      matcher: (q) =>
+          (q.contains('toluene') || q.contains('methylbenzene')) &&
+          (q.contains('cro2cl2') ||
+              q.contains('etard') ||
+              q.contains('chromyl chloride')),
       generator: (q) => _buildEtardPrediction(),
     ),
 
     // 2. ALKENE ADDITIONS
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('propene') || q.contains('prop-1-ene') || q.contains('alkene') || q.contains('isobutylene')) &&
+      matcher: (q) =>
+          (q.contains('propene') ||
+              q.contains('prop-1-ene') ||
+              q.contains('alkene') ||
+              q.contains('isobutylene')) &&
           q.contains('hbr') &&
-          (q.contains('peroxide') || q.contains('roor') || q.contains('anti-markovnikov') || q.contains('kharasch')),
+          (q.contains('peroxide') ||
+              q.contains('roor') ||
+              q.contains('anti-markovnikov') ||
+              q.contains('kharasch')),
       generator: (q) => _buildAntiMarkovnikovHBrPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('propene') || q.contains('alkene') || q.contains('isobutylene') || q.contains('2-methylpropene') || q.contains('1-butene')) &&
-          (q.contains('hbr') || q.contains('hcl') || q.contains('hi') || q.contains('markovnikov')),
+      matcher: (q) =>
+          (q.contains('propene') ||
+              q.contains('alkene') ||
+              q.contains('isobutylene') ||
+              q.contains('2-methylpropene') ||
+              q.contains('1-butene')) &&
+          (q.contains('hbr') ||
+              q.contains('hcl') ||
+              q.contains('hi') ||
+              q.contains('markovnikov')),
       generator: (q) => _buildMarkovnikovAdditionPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('alkene') || q.contains('propene') || q.contains('cyclohexene') || q.contains('methylcyclohexene')) &&
-          (q.contains('bh3') || q.contains('hydroboration') || (q.contains('b2h6') && q.contains('h2o2'))),
+      matcher: (q) =>
+          (q.contains('alkene') ||
+              q.contains('propene') ||
+              q.contains('cyclohexene') ||
+              q.contains('methylcyclohexene')) &&
+          (q.contains('bh3') ||
+              q.contains('hydroboration') ||
+              (q.contains('b2h6') && q.contains('h2o2'))),
       generator: (q) => _buildHydroborationOxidationPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('alkene') || q.contains('butene') || q.contains('propene') || q.contains('ozonolysis') || q.contains('o3')),
+      matcher: (q) =>
+          (q.contains('alkene') ||
+          q.contains('butene') ||
+          q.contains('propene') ||
+          q.contains('ozonolysis') ||
+          q.contains('o3')),
       generator: (q) => _buildOzonolysisPrediction(q),
     ),
 
     // 3. CARBONYL CONDENSATIONS & REARRANGEMENTS
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('aldol') || (q.contains('acetaldehyde') && (q.contains('naoh') || q.contains('koh') || q.contains('base')))) ||
-          (q.contains('acetone') && q.contains('benzaldehyde') && (q.contains('naoh') || q.contains('base'))),
+      matcher: (q) =>
+          (q.contains('aldol') ||
+              (q.contains('acetaldehyde') &&
+                  (q.contains('naoh') ||
+                      q.contains('koh') ||
+                      q.contains('base')))) ||
+          (q.contains('acetone') &&
+              q.contains('benzaldehyde') &&
+              (q.contains('naoh') || q.contains('base'))),
       generator: (q) => _buildAldolCondensationPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('cannizzaro') || (q.contains('benzaldehyde') && (q.contains('50%') || q.contains('conc')) && (q.contains('koh') || q.contains('naoh')))) ||
-          (q.contains('formaldehyde') && (q.contains('conc') || q.contains('50%')) && q.contains('base')),
+      matcher: (q) =>
+          (q.contains('cannizzaro') ||
+              (q.contains('benzaldehyde') &&
+                  (q.contains('50%') || q.contains('conc')) &&
+                  (q.contains('koh') || q.contains('naoh')))) ||
+          (q.contains('formaldehyde') &&
+              (q.contains('conc') || q.contains('50%')) &&
+              q.contains('base')),
       generator: (q) => _buildCannizzaroPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('wittig') || q.contains('ph3p') || q.contains('ylide') || q.contains('phosphonium')),
+      matcher: (q) =>
+          (q.contains('wittig') ||
+          q.contains('ph3p') ||
+          q.contains('ylide') ||
+          q.contains('phosphonium')),
       generator: (q) => _buildWittigPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('benzoin') || (q.contains('benzaldehyde') && (q.contains('kcn') || q.contains('nacn')))),
+      matcher: (q) =>
+          (q.contains('benzoin') ||
+          (q.contains('benzaldehyde') &&
+              (q.contains('kcn') || q.contains('nacn')))),
       generator: (q) => _buildBenzoinPrediction(),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('perkin') || (q.contains('benzaldehyde') && q.contains('acetic anhydride') && q.contains('sodium acetate'))),
+      matcher: (q) =>
+          (q.contains('perkin') ||
+          (q.contains('benzaldehyde') &&
+              q.contains('acetic anhydride') &&
+              q.contains('sodium acetate'))),
       generator: (q) => _buildPerkinPrediction(),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('beckmann') || (q.contains('oxime') && (q.contains('h2so4') || q.contains('pcl5') || q.contains('acid')))),
+      matcher: (q) =>
+          (q.contains('beckmann') ||
+          (q.contains('oxime') &&
+              (q.contains('h2so4') ||
+                  q.contains('pcl5') ||
+                  q.contains('acid')))),
       generator: (q) => _buildBeckmannPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('hofmann') || q.contains('bromamide') || (q.contains('amide') && q.contains('br2') && q.contains('koh'))),
+      matcher: (q) =>
+          (q.contains('hofmann') ||
+          q.contains('bromamide') ||
+          (q.contains('amide') && q.contains('br2') && q.contains('koh'))),
       generator: (q) => _buildHofmannBromamidePrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('pinacol') || (q.contains('diol') && q.contains('h2so4') && q.contains('pinacolone'))),
+      matcher: (q) =>
+          (q.contains('pinacol') ||
+          (q.contains('diol') &&
+              q.contains('h2so4') &&
+              q.contains('pinacolone'))),
       generator: (q) => _buildPinacolPinacolonePrediction(),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('diels') && q.contains('alder')) ||
+      matcher: (q) =>
+          (q.contains('diels') && q.contains('alder')) ||
           (q.contains('diene') && q.contains('dienophile')) ||
           (q.contains('butadiene') && q.contains('maleic')) ||
-          ((q.contains('cyclopentadiene') || q.contains('diene')) && (q.contains('maleic') || q.contains('dienophile') || q.contains('anhydride'))),
+          ((q.contains('cyclopentadiene') || q.contains('diene')) &&
+              (q.contains('maleic') ||
+                  q.contains('dienophile') ||
+                  q.contains('anhydride'))),
       generator: (q) => _buildDielsAlderPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('clemmensen') || (q.contains('ketone') && q.contains('zn-hg') && q.contains('hcl')) || (q.contains('acetophenone') && q.contains('zn-hg'))),
+      matcher: (q) =>
+          (q.contains('clemmensen') ||
+          (q.contains('ketone') && q.contains('zn-hg') && q.contains('hcl')) ||
+          (q.contains('acetophenone') && q.contains('zn-hg'))),
       generator: (q) => _buildClemmensenPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('wolff') && q.contains('kishner')) || (q.contains('nh2nh2') && q.contains('koh') && q.contains('glycol')),
+      matcher: (q) =>
+          (q.contains('wolff') && q.contains('kishner')) ||
+          (q.contains('nh2nh2') && q.contains('koh') && q.contains('glycol')),
       generator: (q) => _buildWolffKishnerPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('grignard') || q.contains('mgbr') || q.contains('mgcl') || q.contains('organomagnesium')),
+      matcher: (q) =>
+          (q.contains('grignard') ||
+          q.contains('mgbr') ||
+          q.contains('mgcl') ||
+          q.contains('organomagnesium')),
       generator: (q) => _buildGrignardPrediction(q),
     ),
     _ReactionPatternHandler(
-      matcher: (q) => (q.contains('2-bromobutane') || q.contains('alkyl halide') || q.contains('elimination')) &&
-          (q.contains('koh') || q.contains('t-buok') || q.contains('zaitsev') || q.contains('saytzeff') || q.contains('hofmann elimination')),
+      matcher: (q) =>
+          (q.contains('2-bromobutane') ||
+              q.contains('alkyl halide') ||
+              q.contains('elimination')) &&
+          (q.contains('koh') ||
+              q.contains('t-buok') ||
+              q.contains('zaitsev') ||
+              q.contains('saytzeff') ||
+              q.contains('hofmann elimination')),
       generator: (q) => _buildZaitsevVsHofmannEliminationPrediction(q),
     ),
   ];
@@ -270,7 +425,8 @@ class ReactionPredictorEngine {
             title: r'Electrophilic Attack on Toluene (Rate-Determining Step)',
             description: r'The aromatic $\pi$-electron cloud of toluene attacks $\text{NO}_2^+$ to form a resonance-stabilized arenium ion (Wheland / $\sigma$-complex). Ortho and para attacks produce an exceptionally stable $3^\circ$ carbocation contributor directly adjacent to the methyl group.',
             curvedArrowNotes: r'$\pi$-electrons of the aromatic ring attack the electrophilic nitrogen of $\text{NO}_2^+$, pushing an electron pair onto oxygen.',
-            intermediate: r'Resonance-stabilized $\sigma$-complex (Wheland Intermediate)',
+            intermediate:
+                r'Resonance-stabilized $\sigma$-complex (Wheland Intermediate)',
           ),
           ReactionStep(
             stepNumber: 3,
@@ -289,7 +445,8 @@ class ReactionPredictorEngine {
     return const PredictedReactionResult(
       reactionName: 'Electrophilic Aromatic Nitration of Benzene',
       category: 'Electrophilic Aromatic Substitution (EAS)',
-      reactants: r'Benzene ($\text{C}_6\text{H}_6$) + Nitric Acid ($\text{HNO}_3$)',
+      reactants:
+          r'Benzene ($\text{C}_6\text{H}_6$) + Nitric Acid ($\text{HNO}_3$)',
       reagentsAndConditions: r'Concentrated $\text{H}_2\text{SO}_4$, $50^\circ\text{C} - 55^\circ\text{C}$',
       majorProduct: 'Nitrobenzene',
       majorProductFormula: r'\text{C}_6\text{H}_5\text{NO}_2',
@@ -301,7 +458,8 @@ class ReactionPredictorEngine {
           title: r'Electrophile Activation: Formation of Nitronium Ion ($\text{NO}_2^+$)',
           description: r'Sulfuric acid acts as a Brønsted acid and protonates nitric acid. Subsequent elimination of $\text{H}_2\text{O}$ generates the strong electrophile $\text{NO}_2^+$.',
           curvedArrowNotes: r'Lone pair on $\text{HNO}_3$ oxygen attacks $\text{H}^+$ of $\text{H}_2\text{SO}_4$; $\text{H}_2\text{O}$ leaves.',
-          intermediate: r'$\text{NO}_2^+$ (Linear Electrophile, Bond Angle $180^\circ$)',
+          intermediate:
+              r'$\text{NO}_2^+$ (Linear Electrophile, Bond Angle $180^\circ$)',
         ),
         ReactionStep(
           stepNumber: 2,
@@ -315,7 +473,8 @@ class ReactionPredictorEngine {
           title: r'Deprotonation by $\text{HSO}_4^-$ to Restore Aromaticity (Fast)',
           description: r'$\text{HSO}_4^-$ abstracts the proton from the $sp^3$ ring carbon, collapsing the C-H bond electrons back into the ring to regenerate the aromatic sextet.',
           curvedArrowNotes: r'$\text{HSO}_4^-$ lone pair takes proton; C-H bonding pair re-establishes aromatic ring.',
-          intermediate: r'Nitrobenzene + $\text{H}_2\text{SO}_4$ (Catalyst regenerated)',
+          intermediate:
+              r'Nitrobenzene + $\text{H}_2\text{SO}_4$ (Catalyst regenerated)',
         ),
       ],
       drivingForce: r'Restoration of the aromatic resonance sextet ($\approx 36\text{ kcal/mol}$ aromatic stabilization energy).',
@@ -347,13 +506,15 @@ class ReactionPredictorEngine {
           title: r'Proton Loss & Rearomatization',
           description: r'Base abstracts the ring proton to re-aromatize the system into benzenesulfonate anion.',
           curvedArrowNotes: r'Base takes ring $H^+$; electrons restore aromatic delocalization.',
-          intermediate: r'$\text{C}_6\text{H}_5\text{SO}_3^-$ Benzenesulfonate ion',
+          intermediate:
+              r'$\text{C}_6\text{H}_5\text{SO}_3^-$ Benzenesulfonate ion',
         ),
         ReactionStep(
           stepNumber: 3,
           title: r'Protonation of Sulfonate Oxygen',
           description: r'The sulfonate oxygen is protonated by acid to yield the final neutral benzenesulfonic acid product.',
-          curvedArrowNotes: r'Negative oxygen abstracts $H^+$ from $\text{H}_3\text{O}^+$.',
+          curvedArrowNotes:
+              r'Negative oxygen abstracts $H^+$ from $\text{H}_3\text{O}^+$.',
           intermediate: r'Benzenesulfonic acid ($\text{C}_6\text{H}_5\text{SO}_3\text{H}$)',
         ),
       ],
@@ -367,13 +528,21 @@ class ReactionPredictorEngine {
     final halSym = isBromination ? 'Br' : 'Cl';
 
     return PredictedReactionResult(
-      reactionName: isBromination ? 'Electrophilic Aromatic Bromination of Benzene' : 'Electrophilic Aromatic Chlorination of Benzene',
+      reactionName: isBromination
+          ? 'Electrophilic Aromatic Bromination of Benzene'
+          : 'Electrophilic Aromatic Chlorination of Benzene',
       category: 'Electrophilic Aromatic Substitution (EAS)',
-      reactants: isBromination ? r'Benzene ($\text{C}_6\text{H}_6$) + Bromine ($\text{Br}_2$)' : r'Benzene ($\text{C}_6\text{H}_6$) + Chlorine ($\text{Cl}_2$)',
-      reagentsAndConditions: isBromination ? r'Lewis Acid Catalyst ($\text{FeBr}_3$), Room Temperature' : r'Lewis Acid Catalyst ($\text{AlCl}_3$), Room Temperature',
+      reactants: isBromination
+          ? r'Benzene ($\text{C}_6\text{H}_6$) + Bromine ($\text{Br}_2$)'
+          : r'Benzene ($\text{C}_6\text{H}_6$) + Chlorine ($\text{Cl}_2$)',
+      reagentsAndConditions: isBromination
+          ? r'Lewis Acid Catalyst ($\text{FeBr}_3$), Room Temperature'
+          : r'Lewis Acid Catalyst ($\text{AlCl}_3$), Room Temperature',
       majorProduct: isBromination ? 'Bromobenzene' : 'Chlorobenzene',
       majorProductFormula: '\\text{C}_6\\text{H}_5\\text{$halSym}',
-      minorProducts: isBromination ? r'Hydrogen Bromide ($\text{HBr}$)' : r'Hydrogen Chloride ($\text{HCl}$)',
+      minorProducts: isBromination
+          ? r'Hydrogen Bromide ($\text{HBr}$)'
+          : r'Hydrogen Chloride ($\text{HCl}$)',
       selectivity: r'Monosubstitution is cleanly achieved. Halogen atoms are unique: they are deactivating due to $-\text{I}$ inductive electron withdrawal, but ortho/para directing due to $+\text{M}$ lone pair resonance donation.',
       mechanismSteps: [
         ReactionStep(
@@ -382,15 +551,20 @@ class ReactionPredictorEngine {
           description: isBromination
               ? r'The bromine molecule coordinates with $\text{FeBr}_3$ to form the polarized complex $[\text{Br}^{\delta+}\cdots\text{Br-FeBr}_3^{\delta-}]$, generating an electrophilic bromine center.'
               : r'The chlorine molecule coordinates with $\text{AlCl}_3$ to form the polarized complex $[\text{Cl}^{\delta+}\cdots\text{Cl-AlCl}_3^{\delta-}]$, generating an electrophilic chlorine center.',
-          curvedArrowNotes: r'Halogen lone pair coordinates into vacant orbital of Fe/Al.',
-          intermediate: isBromination ? r'Polarized $[\text{Br-FeBr}_4]^-$ Lewis acid complex' : r'Polarized $[\text{Cl-AlCl}_4]^-$ Lewis acid complex',
+          curvedArrowNotes:
+              r'Halogen lone pair coordinates into vacant orbital of Fe/Al.',
+          intermediate: isBromination
+              ? r'Polarized $[\text{Br-FeBr}_4]^-$ Lewis acid complex'
+              : r'Polarized $[\text{Cl-AlCl}_4]^-$ Lewis acid complex',
         ),
         ReactionStep(
           stepNumber: 2,
           title: 'Aromatic Ring Attack on Polarized Halogen (RDS)',
           description: r'Benzene $\pi$-cloud attacks the terminal positive halogen, forming the resonance-delocalized Wheland intermediate.',
           curvedArrowNotes: r'$\pi$-electrons attack halogen; halogen-Lewis acid bond cleaves.',
-          intermediate: isBromination ? r'$[\text{C}_6\text{H}_6\text{Br}]^+$ Arenium cation' : r'$[\text{C}_6\text{H}_6\text{Cl}]^+$ Arenium cation',
+          intermediate: isBromination
+              ? r'$[\text{C}_6\text{H}_6\text{Br}]^+$ Arenium cation'
+              : r'$[\text{C}_6\text{H}_6\text{Cl}]^+$ Arenium cation',
         ),
         ReactionStep(
           stepNumber: 3,
@@ -399,7 +573,9 @@ class ReactionPredictorEngine {
               ? r'The $[\text{FeBr}_4]^-$ complex abstracts the ring proton, regenerating the active $\text{FeBr}_3$ catalyst and forming $\text{HBr}$.'
               : r'The $[\text{AlCl}_4]^-$ complex abstracts the ring proton, regenerating the active $\text{AlCl}_3$ catalyst and forming $\text{HCl}$.',
           curvedArrowNotes: r'Halide from Lewis acid removes proton; electrons restore aromatic sextet.',
-          intermediate: isBromination ? r'Bromobenzene + $\text{HBr}$ + $\text{FeBr}_3$' : r'Chlorobenzene + $\text{HCl}$ + $\text{AlCl}_3$',
+          intermediate: isBromination
+              ? r'Bromobenzene + $\text{HBr}$ + $\text{FeBr}_3$'
+              : r'Chlorobenzene + $\text{HCl}$ + $\text{AlCl}_3$',
         ),
       ],
       drivingForce: r'Restoration of aromatic sextet ($36\text{ kcal/mol}$).',
@@ -407,14 +583,21 @@ class ReactionPredictorEngine {
     );
   }
 
-  static PredictedReactionResult _buildFriedelCraftsAlkylationPrediction(String q) {
+  static PredictedReactionResult _buildFriedelCraftsAlkylationPrediction(
+    String q,
+  ) {
     final lowerQ = q.toLowerCase();
-    final isPropyl = lowerQ.contains('propyl') || lowerQ.contains('propane') || lowerQ.contains('chloropropane') || lowerQ.contains('ch3ch2ch2cl');
+    final isPropyl =
+        lowerQ.contains('propyl') ||
+        lowerQ.contains('propane') ||
+        lowerQ.contains('chloropropane') ||
+        lowerQ.contains('ch3ch2ch2cl');
 
     if (isPropyl) {
       return const PredictedReactionResult(
         reactionName: 'Friedel-Crafts Alkylation with 1-Chloropropane (Carbocation Rearrangement)',
-        category: 'Electrophilic Aromatic Substitution with Skeletal Rearrangement',
+        category:
+            'Electrophilic Aromatic Substitution with Skeletal Rearrangement',
         reactants: r'Benzene ($\text{C}_6\text{H}_6$) + 1-Chloropropane ($\text{CH}_3\text{CH}_2\text{CH}_2\text{Cl}$)',
         reagentsAndConditions: r'Anhydrous $\text{AlCl}_3$ (Lewis Acid catalyst), $0^\circ\text{C} - 25^\circ\text{C}$',
         majorProduct: r'Isopropylbenzene (Cumene, $\approx 70\%$) — Formed via 1,2-Hydride Shift',
@@ -427,13 +610,15 @@ class ReactionPredictorEngine {
             title: r'1,2-Hydride Shift to Secondary Carbocation',
             description: r'Coordination of $\text{CH}_3\text{CH}_2\text{CH}_2\text{Cl}$ with $\text{AlCl}_3$ induces a spontaneous 1,2-hydride shift: the hydride ($\text{H}^-$) migrates from C2 to C1, transforming the high-energy $1^\circ$ carbocation into a much more stable $2^\circ$ isopropyl carbocation $(\text{CH}_3)_2\text{CH}^+$.',
             curvedArrowNotes: r'C2-H bonding pair migrates to C1 with concomitant cleavage of C1-Cl bond toward $\text{AlCl}_3$.',
-            intermediate: r'Secondary Isopropyl Carbocation $(\text{CH}_3)_2\text{CH}^+$',
+            intermediate:
+                r'Secondary Isopropyl Carbocation $(\text{CH}_3)_2\text{CH}^+$',
           ),
           ReactionStep(
             stepNumber: 2,
             title: r'Electrophilic Attack on Benzene',
             description: r'Benzene attacks the isopropyl carbocation, forming the resonance-stabilized Wheland complex.',
-            curvedArrowNotes: r'Benzene $\pi$-cloud attacks $C^+$ of isopropyl cation.',
+            curvedArrowNotes:
+                r'Benzene $\pi$-cloud attacks $C^+$ of isopropyl cation.',
             intermediate: r'$[\text{C}_6\text{H}_6-\text{CH(CH}_3)_2]^+$ $\sigma$-complex',
           ),
           ReactionStep(
@@ -456,14 +641,16 @@ class ReactionPredictorEngine {
       reagentsAndConditions: r'Anhydrous $\text{AlCl}_3$ Catalyst, $0^\circ\text{C} - 25^\circ\text{C}$',
       majorProduct: 'Toluene (Methylbenzene)',
       majorProductFormula: r'\text{C}_6\text{H}_5\text{CH}_3',
-      minorProducts: r'Polyalkylated arenes (Xylenes, Mesitylene), $\text{HCl}$',
+      minorProducts:
+          r'Polyalkylated arenes (Xylenes, Mesitylene), $\text{HCl}$',
       selectivity: r'Prone to Polyalkylation: Because methyl is an activating group ($+\text{I}$), the toluene product is more nucleophilic than benzene and competes for alkylation.',
       mechanismSteps: [
         ReactionStep(
           stepNumber: 1,
           title: r'Carbocation / Polarized Complex Formation',
           description: r'$\text{CH}_3\text{Cl}$ coordinates to Lewis acid $\text{AlCl}_3$ to form a highly polarized electrophilic methyl donor $\text{CH}_3^{\delta+}\cdots\text{Cl-AlCl}_3^{\delta-}$.',
-          curvedArrowNotes: r'Chlorine lone pair coordinates to empty p-orbital of Al.',
+          curvedArrowNotes:
+              r'Chlorine lone pair coordinates to empty p-orbital of Al.',
           intermediate: r'$[\text{CH}_3-\text{Cl}-\text{AlCl}_3]$ Complex',
         ),
         ReactionStep(
@@ -479,7 +666,9 @@ class ReactionPredictorEngine {
     );
   }
 
-  static PredictedReactionResult _buildFriedelCraftsAcylationPrediction(String q) {
+  static PredictedReactionResult _buildFriedelCraftsAcylationPrediction(
+    String q,
+  ) {
     return const PredictedReactionResult(
       reactionName: 'Friedel-Crafts Acylation of Benzene',
       category: 'Electrophilic Aromatic Substitution (EAS)',
@@ -533,14 +722,16 @@ class ReactionPredictorEngine {
           title: r'Generation of Dichlorocarbene Electrophile via $\alpha$-Elimination',
           description: r'Hydroxide ion deprotonates $\text{CHCl}_3$ to generate the trichloromethyl carbanion $^-\text{CCl}_3$, which undergoes rapid $\alpha$-elimination of $\text{Cl}^-$ to form the neutral, electron-deficient singlet dichlorocarbene electrophile $(:\text{CCl}_2)$.',
           curvedArrowNotes: r'$\text{OH}^-$ takes $H^+$ from $\text{CHCl}_3$; $\text{Cl}^-$ departs from $^-\text{CCl}_3$ with lone pair.',
-          intermediate: r'$:\text{CCl}_2$ (Singlet Dichlorocarbene, 6-electron valence)',
+          intermediate:
+              r'$:\text{CCl}_2$ (Singlet Dichlorocarbene, 6-electron valence)',
         ),
         ReactionStep(
           stepNumber: 2,
           title: r'Electrophilic Attack of Dichlorocarbene on Phenolate Ion',
           description: r'Phenol is deprotonated to resonance-stabilized phenolate anion. The electron-rich ortho carbon attacks the vacant orbital of $:\text{CCl}_2$, generating a non-aromatic intermediate with a $-\text{CHCl}_2$ precursor.',
           curvedArrowNotes: r'Phenolate oxygen pushes electrons into the ring; ortho carbon attacks $:\text{CCl}_2$.',
-          intermediate: r'Cyclohexadienone intermediate with $-\text{CCl}_2^-$ group',
+          intermediate:
+              r'Cyclohexadienone intermediate with $-\text{CCl}_2^-$ group',
         ),
         ReactionStep(
           stepNumber: 3,
@@ -591,7 +782,8 @@ class ReactionPredictorEngine {
           stepNumber: 3,
           title: r'Acidification',
           description: r'Treatment with mineral acid ($\text{H}_2\text{SO}_4$) protonates the carboxylate and phenoxide groups to precipitate pure salicylic acid crystals.',
-          curvedArrowNotes: r'$\text{H}^+$ protonates $-\text{COO}^-$ and $-\text{O}^-$.',
+          curvedArrowNotes:
+              r'$\text{H}^+$ protonates $-\text{COO}^-$ and $-\text{O}^-$.',
           intermediate: r'Salicylic Acid ($\text{C}_7\text{H}_6\text{O}_3$)',
         ),
       ],
@@ -626,7 +818,8 @@ class ReactionPredictorEngine {
           intermediate: r'Benzaldehyde ($\text{C}_6\text{H}_5\text{CHO}$)',
         ),
       ],
-      drivingForce: r'Precipitation of the insoluble chromium coordination complex.',
+      drivingForce:
+          r'Precipitation of the insoluble chromium coordination complex.',
       syntheticNotes: r'Standard laboratory and exam method to convert methyl arenes directly into benzaldehydes without over-oxidation.',
     );
   }
@@ -675,15 +868,22 @@ class ReactionPredictorEngine {
     final halSym = isHI ? 'I' : (isHCl ? 'Cl' : 'Br');
 
     return PredictedReactionResult(
-      reactionName: 'Markovnikov Electrophilic Addition of Hydrogen Halide to Alkene',
+      reactionName:
+          'Markovnikov Electrophilic Addition of Hydrogen Halide to Alkene',
       category: 'Electrophilic Addition via Carbocation Intermediate',
       reactants: isHI
           ? r'Propene ($\text{CH}_3\text{CH=CH}_2$) + $\text{HI}$'
-          : (isHCl ? r'Propene ($\text{CH}_3\text{CH=CH}_2$) + $\text{HCl}$' : r'Propene ($\text{CH}_3\text{CH=CH}_2$) + $\text{HBr}$'),
+          : (isHCl
+                ? r'Propene ($\text{CH}_3\text{CH=CH}_2$) + $\text{HCl}$'
+                : r'Propene ($\text{CH}_3\text{CH=CH}_2$) + $\text{HBr}$'),
       reagentsAndConditions: r'Polar solvent ($\text{CH}_2\text{Cl}_2$ or acetic acid), Room temperature, absence of peroxides',
-      majorProduct: isHI ? '2-Iodopropane' : (isHCl ? '2-Chloropropane' : '2-Bromopropane'),
+      majorProduct: isHI
+          ? '2-Iodopropane'
+          : (isHCl ? '2-Chloropropane' : '2-Bromopropane'),
       majorProductFormula: '\\text{CH}_3\\text{CH($halSym)CH}_3',
-      minorProducts: isHI ? '1-Iodopropane' : (isHCl ? '1-Chloropropane' : '1-Bromopropane'),
+      minorProducts: isHI
+          ? '1-Iodopropane'
+          : (isHCl ? '1-Chloropropane' : '1-Bromopropane'),
       selectivity: r'Markovnikov’s Rule: Electrophilic proton ($H^+$) adds to the carbon with more hydrogen atoms (C1) to produce the more stable secondary carbocation intermediate (C2).',
       mechanismSteps: [
         ReactionStep(
@@ -697,7 +897,8 @@ class ReactionPredictorEngine {
           stepNumber: 2,
           title: 'Nucleophilic Attack of Halide Ion',
           description: r'Halide ion rapidly attacks the vacant p-orbital of the carbocation to form 2-halopropane.',
-          curvedArrowNotes: r'Lone pair on halide attacks $C^+$ from top or bottom face.',
+          curvedArrowNotes:
+              r'Lone pair on halide attacks $C^+$ from top or bottom face.',
           intermediate: r'2-Halopropane product',
         ),
       ],
@@ -706,7 +907,9 @@ class ReactionPredictorEngine {
     );
   }
 
-  static PredictedReactionResult _buildHydroborationOxidationPrediction(String q) {
+  static PredictedReactionResult _buildHydroborationOxidationPrediction(
+    String q,
+  ) {
     return const PredictedReactionResult(
       reactionName: 'Hydroboration-Oxidation of Alkene',
       category: 'Regiospecific & Stereospecific Anti-Markovnikov Hydration',
@@ -728,7 +931,8 @@ class ReactionPredictorEngine {
           stepNumber: 2,
           title: r'Hydroperoxide Ion Attack on Trialkylborane',
           description: r'Hydroperoxide anion ($^-\text{O-OH}$, formed from $\text{H}_2\text{O}_2 + \text{NaOH}$) attacks the empty p-orbital of trialkylborane to form a negative borate complex.',
-          curvedArrowNotes: r'Lone pair of $^-\text{OOH}$ coordinates to boron atom.',
+          curvedArrowNotes:
+              r'Lone pair of $^-\text{OOH}$ coordinates to boron atom.',
           intermediate: r'$[\text{R}_3\text{B-O-OH}]^-$ Borate complex',
         ),
         ReactionStep(
@@ -751,7 +955,8 @@ class ReactionPredictorEngine {
       return const PredictedReactionResult(
         reactionName: 'Reductive Ozonolysis of 2-Butene',
         category: 'Alkene Oxidative Cleavage',
-        reactants: r'2-Butene ($\text{CH}_3\text{CH=CHCH}_3$) + Ozone ($\text{O}_3$)',
+        reactants:
+            r'2-Butene ($\text{CH}_3\text{CH=CHCH}_3$) + Ozone ($\text{O}_3$)',
         reagentsAndConditions: r'1) $\text{O}_3$ in $\text{CH}_2\text{Cl}_2$ ($-78^\circ\text{C}$); 2) Reductive workup with $\text{Zn} / \text{H}_2\text{O}$ or Dimethyl sulfide ($\text{Me}_2\text{S}$)',
         majorProduct: 'Acetaldehyde (Ethanal, 2 equivalents)',
         majorProductFormula: r'2\text{ CH}_3\text{CHO}',
@@ -788,7 +993,8 @@ class ReactionPredictorEngine {
     return const PredictedReactionResult(
       reactionName: 'Ozonolysis of Alkenes',
       category: 'Oxidative Cleavage of Carbon-Carbon Double Bonds',
-      reactants: r'Alkene ($\text{R}_2\text{C=CHR\x27}$) + Ozone ($\text{O}_3$)',
+      reactants:
+          r'Alkene ($\text{R}_2\text{C=CHR\x27}$) + Ozone ($\text{O}_3$)',
       reagentsAndConditions: r'1) $\text{O}_3$ in $\text{CH}_2\text{Cl}_2$ at $-78^\circ\text{C}$; 2) Reductive workup ($\text{Zn/H}_2\text{O}$ or $\text{Me}_2\text{S}$)',
       majorProduct: 'Ketone and Aldehyde Mixture',
       majorProductFormula: r'\text{R}_2\text{C=O} + \text{R\x27CHO}',
@@ -799,7 +1005,8 @@ class ReactionPredictorEngine {
           stepNumber: 1,
           title: r'Formation of Molozonide via 1,3-Dipolar Cycloaddition',
           description: r'Ozone undergoes a concerted [3+2] cycloaddition with the alkene to form the unstable 1,2,3-trioxolane.',
-          curvedArrowNotes: r'Concerted curved arrows from ozone onto alkene carbons.',
+          curvedArrowNotes:
+              r'Concerted curved arrows from ozone onto alkene carbons.',
           intermediate: r'Primary Molozonide',
         ),
         ReactionStep(
@@ -813,7 +1020,8 @@ class ReactionPredictorEngine {
           stepNumber: 3,
           title: r'Reductive Hydrolysis',
           description: r'Reduction of the peroxide bridge by $\text{Zn}$ or $\text{Me}_2\text{S}$ liberates the corresponding carbonyl fragments.',
-          curvedArrowNotes: r'Nucleophilic attack by reducing agent on peroxide oxygen.',
+          curvedArrowNotes:
+              r'Nucleophilic attack by reducing agent on peroxide oxygen.',
           intermediate: r'Carbonyl compounds',
         ),
       ],
@@ -868,7 +1076,8 @@ class ReactionPredictorEngine {
       category: 'Carbonyl Carbon-Carbon Bond Formation',
       reactants: r'Acetaldehyde ($2\text{ CH}_3\text{CHO}$)',
       reagentsAndConditions: r'Dilute $\text{NaOH}$ ($10\%$), $0^\circ\text{C} - 10^\circ\text{C}$ (for aldol) or heat (for condensation)',
-      majorProduct: r'Crotonaldehyde (But-2-enal, $\alpha,\beta$-unsaturated aldehyde)',
+      majorProduct:
+          r'Crotonaldehyde (But-2-enal, $\alpha,\beta$-unsaturated aldehyde)',
       majorProductFormula: r'\text{CH}_3\text{CH=CHCHO}',
       minorProducts: r'3-Hydroxybutanal (Aldol intermediate before heating), $\text{H}_2\text{O}$',
       selectivity: r'Stereoselective for the more stable (E)-isomer (trans) due to minimization of steric clash between methyl and formyl groups.',
@@ -877,14 +1086,16 @@ class ReactionPredictorEngine {
           stepNumber: 1,
           title: r'Enolate Anion Formation',
           description: r'Base abstracts $\alpha\text{-H}$ from one molecule of acetaldehyde.',
-          curvedArrowNotes: r'$\text{OH}^-$ takes $\alpha\text{-H}$; enolate forms.',
+          curvedArrowNotes:
+              r'$\text{OH}^-$ takes $\alpha\text{-H}$; enolate forms.',
           intermediate: r'$^-\text{CH}_2\text{CHO} \longleftrightarrow \text{CH}_2=\text{CH-O}^-$',
         ),
         ReactionStep(
           stepNumber: 2,
           title: r'Nucleophilic Addition to Second Acetaldehyde Molecule',
           description: r'Enolate carbon attacks the carbonyl carbon of the second un-ionized acetaldehyde.',
-          curvedArrowNotes: r'Enolate attacks carbonyl carbon; $\text{C=O}$ opens.',
+          curvedArrowNotes:
+              r'Enolate attacks carbonyl carbon; $\text{C=O}$ opens.',
           intermediate: r'Alkoxide intermediate $\rightarrow$ 3-Hydroxybutanal',
         ),
         ReactionStep(
@@ -929,7 +1140,8 @@ class ReactionPredictorEngine {
           stepNumber: 3,
           title: r'Rapid Proton Transfer',
           description: r'Benzyloxide abstracts a proton from water or benzoic acid to yield benzyl alcohol and benzoate salt.',
-          curvedArrowNotes: r'Benzyloxide oxygen takes $H^+$ to yield neutral alcohol.',
+          curvedArrowNotes:
+              r'Benzyloxide oxygen takes $H^+$ to yield neutral alcohol.',
           intermediate: r'Benzyl Alcohol + Benzoate Salt',
         ),
       ],
@@ -958,9 +1170,11 @@ class ReactionPredictorEngine {
         ),
         ReactionStep(
           stepNumber: 2,
-          title: r'Retro-[2+2] Cycloreversion to Alkene & $\text{Ph}_3\text{P=O}$',
+          title:
+              r'Retro-[2+2] Cycloreversion to Alkene & $\text{Ph}_3\text{P=O}$',
           description: r'The 4-membered ring collapses spontaneously via a concerted cycloreversion, expelling triphenylphosphine oxide and yielding the alkene.',
-          curvedArrowNotes: r'P-C bond breaks toward C=C; C-O bond breaks toward P=O.',
+          curvedArrowNotes:
+              r'P-C bond breaks toward C=C; C-O bond breaks toward P=O.',
           intermediate: r'Styrene + $\text{Ph}_3\text{P=O}$',
         ),
       ],
@@ -998,7 +1212,8 @@ class ReactionPredictorEngine {
           stepNumber: 3,
           title: r'Proton Shift & Expulsion of Cyanide Catalyst',
           description: r'Proton transfer followed by collapse of the $-\text{OH}$ oxygen lone pair expels $\text{CN}^-$ as a leaving group, regenerating the cyanide catalyst and yielding Benzoin.',
-          curvedArrowNotes: r'Oxygen lone pair forms $\text{C=O}$; $\text{CN}^-$ departs.',
+          curvedArrowNotes:
+              r'Oxygen lone pair forms $\text{C=O}$; $\text{CN}^-$ departs.',
           intermediate: r'Benzoin + $\text{CN}^-$ (Catalyst regenerated)',
         ),
       ],
@@ -1063,7 +1278,8 @@ class ReactionPredictorEngine {
             stepNumber: 1,
             title: r'Protonation of Oxime Hydroxyl Group',
             description: r'Sulfuric acid protonates the oxime $-\text{OH}$ to convert it into the excellent leaving group $-\text{OH}_2^+$.',
-            curvedArrowNotes: r'Oxime OH lone pair attacks $H^+$ of sulfuric acid.',
+            curvedArrowNotes:
+                r'Oxime OH lone pair attacks $H^+$ of sulfuric acid.',
             intermediate: r'Protonated Oxime $[\text{R}_2\text{C=N-OH}_2]^+$',
           ),
           ReactionStep(
@@ -1114,7 +1330,8 @@ class ReactionPredictorEngine {
           stepNumber: 3,
           title: r'Hydration to Secondary Amide',
           description: r'Attack of water on nitrilium carbon followed by tautomerization produces the secondary amide.',
-          curvedArrowNotes: r'Water attacks carbon; keto-enol tautomerism gives amide.',
+          curvedArrowNotes:
+              r'Water attacks carbon; keto-enol tautomerism gives amide.',
           intermediate: r'Acetanilide ($\text{CH}_3\text{CONHC}_6\text{H}_5$)',
         ),
       ],
@@ -1138,15 +1355,18 @@ class ReactionPredictorEngine {
           stepNumber: 1,
           title: r'N-Bromination of Amide',
           description: r'Base abstracts an amide proton to form an anion, which attacks bromine to form N-bromobenzamide.',
-          curvedArrowNotes: r'$\text{OH}^-$ takes $H^+$; amide anion attacks $\text{Br}_2$.',
-          intermediate: r'N-Bromobenzamide ($\text{C}_6\text{H}_5\text{CONHBr}$)',
+          curvedArrowNotes:
+              r'$\text{OH}^-$ takes $H^+$; amide anion attacks $\text{Br}_2$.',
+          intermediate:
+              r'N-Bromobenzamide ($\text{C}_6\text{H}_5\text{CONHBr}$)',
         ),
         ReactionStep(
           stepNumber: 2,
           title: r'Concerted Alkyl/Aryl Migration to Isocyanate (RDS)',
           description: r'Base removes the second proton from nitrogen to form an unstable bromoamide anion. The phenyl group migrates with its bonding electrons onto nitrogen with simultaneous departure of $\text{Br}^-$, yielding phenyl isocyanate.',
           curvedArrowNotes: r'Phenyl C-C bond migrates to nitrogen as bromide leaves; forms $\text{N=C=O}$.',
-          intermediate: r'Phenyl Isocyanate ($\text{C}_6\text{H}_5\text{-N=C=O}$)',
+          intermediate:
+              r'Phenyl Isocyanate ($\text{C}_6\text{H}_5\text{-N=C=O}$)',
         ),
         ReactionStep(
           stepNumber: 3,
@@ -1166,7 +1386,8 @@ class ReactionPredictorEngine {
       reactionName: 'Pinacol-Pinacolone Rearrangement',
       category: 'Acid-Catalyzed Vicinal Diol Rearrangement',
       reactants: r'Pinacol (2,3-Dimethylbutane-2,3-diol)',
-      reagentsAndConditions: r'Concentrated $\text{H}_2\text{SO}_4$, $100^\circ\text{C}$',
+      reagentsAndConditions:
+          r'Concentrated $\text{H}_2\text{SO}_4$, $100^\circ\text{C}$',
       majorProduct: 'Pinacolone (3,3-Dimethylbutan-2-one)',
       majorProductFormula: r'\text{CH}_3\text{COC(CH}_3)_3',
       minorProducts: r'Water ($\text{H}_2\text{O}$)',
@@ -1215,7 +1436,8 @@ class ReactionPredictorEngine {
         mechanismSteps: [
           ReactionStep(
             stepNumber: 1,
-            title: r'Concerted 6-Electron Suprafacial Pericyclic Transition State',
+            title:
+                r'Concerted 6-Electron Suprafacial Pericyclic Transition State',
             description: r'The reaction occurs in a single concerted step through a cyclic 6-membered boat-like transition state involving the overlap of the diene HOMO and dienophile LUMO ($4\pi_s + 2\pi_s$, Woodward-Hoffmann allowed under thermal conditions).',
             curvedArrowNotes: r'Three pairs of curved arrows trace around the 6-membered ring: two $\pi$-bonds form two new $\sigma$-bonds and one new $\pi$-bond.',
             intermediate: r'Concerted 6-Electron Cyclic Transition State (Aromatic, $6\pi$ electrons)',
@@ -1273,7 +1495,8 @@ class ReactionPredictorEngine {
           stepNumber: 1,
           title: r'Heterogeneous Electron Transfer from Zinc Surface',
           description: r'Two-electron transfer from the amalgamated zinc surface to the protonated carbonyl carbon generates a zinc-carbenoid intermediate on the metal surface.',
-          curvedArrowNotes: r'Zn transfers 2 electrons to protonated carbonyl carbon.',
+          curvedArrowNotes:
+              r'Zn transfers 2 electrons to protonated carbonyl carbon.',
           intermediate: r'Organozinc / Zinc-Carbenoid surface intermediate',
         ),
         ReactionStep(
@@ -1297,7 +1520,8 @@ class ReactionPredictorEngine {
       reagentsAndConditions: r'Strong Base ($\text{KOH}$), High-boiling solvent (Ethylene glycol), $180^\circ\text{C} - 200^\circ\text{C}$',
       majorProduct: 'Hydrocarbon',
       majorProductFormula: r'\text{R}_2\text{CH}_2',
-      minorProducts: r'Nitrogen Gas ($\text{N}_2 \uparrow$), $\text{H}_2\text{O}$',
+      minorProducts:
+          r'Nitrogen Gas ($\text{N}_2 \uparrow$), $\text{H}_2\text{O}$',
       selectivity: r'Complete Deoxygenation in Strongly Basic Media: Ideal complement to Clemmensen reduction for acid-sensitive compounds.',
       mechanismSteps: [
         ReactionStep(
@@ -1343,13 +1567,15 @@ class ReactionPredictorEngine {
           title: r'Nucleophilic Carbanion Addition',
           description: r'The strongly polarized nucleophilic alkyl carbanion ($\text{CH}_3^{\delta-}$) attacks the electrophilic carbonyl carbon via a 6-membered magnesium-coordinated transition state, opening the $\text{C=O}$ $\pi$-bond to form a magnesium alkoxide.',
           curvedArrowNotes: r'$\text{C-Mg}$ bonding electrons attack carbonyl carbon; $\text{C=O}$ opens onto $\text{Mg}^{2+}$.',
-          intermediate: r'Magnesium Alkoxide Complex $[\text{CH}_3\text{CH(OMgBr)CH}_3]$',
+          intermediate:
+              r'Magnesium Alkoxide Complex $[\text{CH}_3\text{CH(OMgBr)CH}_3]$',
         ),
         ReactionStep(
           stepNumber: 2,
           title: r'Aqueous Acidic Hydrolysis',
           description: r'Protonation of the alkoxide by aqueous $\text{NH}_4\text{Cl}$ releases the alcohol.',
-          curvedArrowNotes: r'Alkoxide oxygen abstracts $H^+$ from $\text{H}_3\text{O}^+$.',
+          curvedArrowNotes:
+              r'Alkoxide oxygen abstracts $H^+$ from $\text{H}_3\text{O}^+$.',
           intermediate: r'Secondary Alcohol + $\text{Mg(OH)Br}$',
         ),
       ],
@@ -1358,8 +1584,14 @@ class ReactionPredictorEngine {
     );
   }
 
-  static PredictedReactionResult _buildZaitsevVsHofmannEliminationPrediction(String q) {
-    final isBulky = q.contains('t-buok') || q.contains('tert-butoxide') || q.contains('bulky') || q.contains('hofmann');
+  static PredictedReactionResult _buildZaitsevVsHofmannEliminationPrediction(
+    String q,
+  ) {
+    final isBulky =
+        q.contains('t-buok') ||
+        q.contains('tert-butoxide') ||
+        q.contains('bulky') ||
+        q.contains('hofmann');
 
     if (isBulky) {
       return const PredictedReactionResult(
@@ -1408,11 +1640,16 @@ class ReactionPredictorEngine {
     );
   }
 
-  static PredictedReactionResult _generateDynamicPrediction(String q, String originalQuery) {
+  static PredictedReactionResult _generateDynamicPrediction(
+    String q,
+    String originalQuery,
+  ) {
     return PredictedReactionResult(
       reactionName: 'Chemical Reaction Prediction & Mechanism Analysis',
       category: 'Organic Reaction Mechanism & Product Solver',
-      reactants: originalQuery.contains('+') ? originalQuery.split('+').first.trim() : 'Reactant Substrates',
+      reactants: originalQuery.contains('+')
+          ? originalQuery.split('+').first.trim()
+          : 'Reactant Substrates',
       reagentsAndConditions: 'Standard Laboratory Conditions & Reagents',
       majorProduct: 'Predicted Major Organic Product',
       majorProductFormula: r'\text{Target Product}',
@@ -1430,7 +1667,8 @@ class ReactionPredictorEngine {
           stepNumber: 2,
           title: 'Nucleophilic Attack / Bond Rearrangement (Rate-Determining Step)',
           description: r'Attack of the nucleophilic electron pair onto the electrophilic center to forge the primary $\sigma$-bond.',
-          curvedArrowNotes: r'Curved arrow depicts displacement of electron pairs.',
+          curvedArrowNotes:
+              r'Curved arrow depicts displacement of electron pairs.',
           intermediate: r'Resonance-Stabilized Intermediate',
         ),
         ReactionStep(

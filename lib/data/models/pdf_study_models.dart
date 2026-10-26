@@ -494,7 +494,7 @@ class QuizQuestion {
         correctIdx = 3;
       } else {
         final found = optionsList.indexWhere((o) => o.toLowerCase() == rawCorrect.toLowerCase());
-        if (found != -1) correctIdx = found;
+        if (found != -1) {correctIdx = found;}
       }
     }
 

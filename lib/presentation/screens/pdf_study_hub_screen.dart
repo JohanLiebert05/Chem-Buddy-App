@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,7 +37,8 @@ class PdfStudyHubScreen extends ConsumerStatefulWidget {
   ConsumerState<PdfStudyHubScreen> createState() => _PdfStudyHubScreenState();
 }
 
-class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with SingleTickerProviderStateMixin {
+class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _extractedText;
   DocumentOcrBundle? _ocrBundle;
@@ -52,8 +55,13 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
   void initState() {
     super.initState();
     final safeInitial = widget.initialTab.clamp(0, 1);
-    _tabController = TabController(length: 2, vsync: this, initialIndex: safeInitial);
-    if (widget.initialExtractedText != null && widget.initialExtractedText!.trim().isNotEmpty) {
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: safeInitial,
+    );
+    if (widget.initialExtractedText != null &&
+        widget.initialExtractedText!.trim().isNotEmpty) {
       _extractedText = widget.initialExtractedText;
       _documentQuality = assessDocumentQuality(widget.initialExtractedText!);
     }
@@ -84,14 +92,16 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
 
   void _autoAttachDocToChat() {
     if (_extractedText != null && _extractedText!.isNotEmpty) {
-      ref.read(chatControllerProvider.notifier).attachDocument(
-        name: widget.doc.displayName,
-        text: _extractedText!,
-        path: widget.doc.localPath,
-        documentId: widget.doc.id,
-        size: widget.doc.fileSize,
-        pages: _ocrBundle?.totalPages,
-      );
+      ref
+          .read(chatControllerProvider.notifier)
+          .attachDocument(
+            name: widget.doc.displayName,
+            text: _extractedText!,
+            path: widget.doc.localPath,
+            documentId: widget.doc.id,
+            size: widget.doc.fileSize,
+            pages: _ocrBundle?.totalPages,
+          );
     }
   }
 
@@ -126,21 +136,23 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       _autoAttachDocToChat();
 
       // Auto-index PDF pages into RAG vector store in background when online & authenticated
-      if (SupabaseService.instance.configured && SupabaseService.instance.userId != null) {
-        ref.read(ragServiceProvider).ingestDocument(
-          documentId: widget.doc.id,
-          bundle: bundle,
-          documentTitle: widget.doc.displayName,
-          fileName: widget.doc.filename,
-        ).catchError((e) {
-          debugPrint('[AutoIngest] Background ingestion note: $e');
-        });
+      if (SupabaseService.instance.configured &&
+          SupabaseService.instance.userId != null) {
+        ref
+            .read(ragServiceProvider)
+            .ingestDocument(
+              documentId: widget.doc.id,
+              bundle: bundle,
+              documentTitle: widget.doc.displayName,
+              fileName: widget.doc.filename,
+            )
+            .catchError((e) {
+              debugPrint('[AutoIngest] Background ingestion note: $e');
+            });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = e is PdfExtractionException
-            ? e.message
-            : 'Could not extract text from this PDF. Ensure the file contains readable notes.';
+        _errorMessage = e is PdfExtractionException ? e.message : 'Could not extract text from this PDF. Ensure the file contains readable notes.';
       });
     } finally {
       if (mounted) {
@@ -193,7 +205,9 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
         _errorMessage = 'Could not create flashcards. Please check connection and try again.';
       });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -206,35 +220,53 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Study with ChemBuddy', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+              const Text(
+                'Study with ChemBuddy',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+              ),
               Text(
                 widget.doc.displayName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           actions: [
-            IconButton(
-              icon: const Icon(Icons.visibility_outlined, color: AppColors.blue),
-              tooltip: 'Read PDF',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: widget.doc)),
-                );
-              },
+            SpringPress(
+              child: IconButton(
+                icon: Icon(
+                  Icons.visibility_outlined,
+                  color: AppColors.adaptive(context, AppColors.blue),
+                ),
+                tooltip: 'Read PDF',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => PdfReaderScreen(doc: widget.doc),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
           bottom: TabBar(
             controller: _tabController,
-            indicatorColor: AppColors.purpleBright,
-            labelColor: AppColors.purpleBright,
-            unselectedLabelColor: AppColors.textMuted,
-            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant,
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13.5,
+            ),
             tabs: const [
               Tab(
                 icon: Icon(Icons.chat_bubble_outline_rounded, size: 18),
@@ -252,11 +284,16 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
             if (_loading)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF18122B).withValues(alpha: 0.92),
-                  border: const Border(
-                    bottom: BorderSide(color: AppColors.borderSubtle),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                 ),
                 child: Column(
@@ -264,7 +301,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                   children: [
                     ClaudeThinkingIndicator(
                       thoughts: _progressStatus.isNotEmpty
-                          ? [_progressStatus, ...ClaudeThinkingMicrocopy.summary]
+                          ? [
+                              _progressStatus,
+                              ...ClaudeThinkingMicrocopy.summary,
+                            ]
                           : ClaudeThinkingMicrocopy.summary,
                       isCard: false,
                       showSparkle: true,
@@ -276,8 +316,12 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: _progressFraction,
-                          backgroundColor: AppColors.surfaceElevated,
-                          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.purpleBright),
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.primary,
+                          ),
                           minHeight: 4,
                         ),
                       ),
@@ -291,18 +335,49 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.danger.withValues(alpha: 0.15),
+                  color: AppColors.adaptive(
+                    context,
+                    AppColors.danger,
+                  ).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.danger.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: AppColors.adaptive(
+                      context,
+                      AppColors.danger,
+                    ).withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 20),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppColors.adaptive(context, AppColors.danger),
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
-                    Expanded(child: Text(_errorMessage!, style: const TextStyle(color: AppColors.danger, fontSize: 12.5))),
-                    TextButton(
-                      onPressed: () => _extractText(forceReprocess: true),
-                      child: const Text('Try Again', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(
+                          color: AppColors.adaptive(context, AppColors.danger),
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
+                    SpringPress(
+                      child: TextButton(
+                        onPressed: () => _extractText(forceReprocess: true),
+                        child: Text(
+                          'Try Again',
+                          style: TextStyle(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.danger,
+                            ),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -315,10 +390,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
             Expanded(
               child: TabBarView(
                 controller: _tabController,
-                children: [
-                  _buildAskAiTab(),
-                  _buildFlashcardsTab(),
-                ],
+                children: [_buildAskAiTab(), _buildFlashcardsTab()],
               ),
             ),
           ],
@@ -339,25 +411,27 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
     switch (_documentQuality) {
       case PageQuality.digitalText:
         icon = Icons.text_snippet_outlined;
-        color = AppColors.accentCyan;
+        color = AppColors.adaptive(context, AppColors.accentCyan);
         title = 'Digital Text PDF (Native Text)';
         subtitle = '$pageCount Pages · Instant Text Parsing';
         break;
       case PageQuality.scannedImage:
         icon = Icons.document_scanner_outlined;
-        color = AppColors.purpleBright;
+        color = Theme.of(context).colorScheme.primary;
         title = 'Scanned Document (OCR Processed)';
-        subtitle = '$pageCount Pages · Chemistry Normalized${formulaCount > 0 ? ' · $formulaCount Formulas Detected' : ''}';
+        subtitle =
+            '$pageCount Pages · Chemistry Normalized${formulaCount > 0 ? ' · $formulaCount Formulas Detected' : ''}';
         break;
       case PageQuality.handwritten:
         icon = Icons.draw_outlined;
-        color = AppColors.purple;
+        color = Theme.of(context).colorScheme.primary;
         title = 'Handwritten Notes (OCR Processed)';
-        subtitle = '$pageCount Pages · Chemistry Normalized${formulaCount > 0 ? ' · $formulaCount Formulas Detected' : ''}';
+        subtitle =
+            '$pageCount Pages · Chemistry Normalized${formulaCount > 0 ? ' · $formulaCount Formulas Detected' : ''}';
         break;
       case PageQuality.mixed:
         icon = Icons.auto_stories_outlined;
-        color = AppColors.accentGold;
+        color = AppColors.adaptive(context, AppColors.accentGold);
         title = 'Mixed PDF (Native Text + OCR)';
         subtitle = '$pageCount Pages · Hybrid OCR Processing';
         break;
@@ -389,33 +463,64 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
               children: [
                 Text(
                   title,
-                  style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 11.5),
+                  style: TextStyle(
+                    color: AppColors.readableText(context, color),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 11.5,
+                  ),
                 ),
                 const SizedBox(height: 1),
                 Text(
                   subtitle,
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 10.5,
+                  ),
                 ),
               ],
             ),
           ),
           if (_ocrBundle != null && _ocrBundle!.pages.isNotEmpty)
-            TextButton.icon(
-              onPressed: _showExtractedPagesSheet,
-              icon: const Icon(Icons.visibility_outlined, size: 13, color: AppColors.blue),
-              label: const Text('Pages', style: TextStyle(fontSize: 11, color: AppColors.blue, fontWeight: FontWeight.w700)),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            SpringPress(
+              child: TextButton.icon(
+                onPressed: _showExtractedPagesSheet,
+                icon: Icon(
+                  Icons.visibility_outlined,
+                  size: 13,
+                  color: AppColors.adaptive(context, AppColors.blue),
+                ),
+                label: Text(
+                  'Pages',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.adaptive(context, AppColors.blue),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ),
-          IconButton(
-            onPressed: _loading ? null : () => _extractText(forceReprocess: true),
-            tooltip: 'Re-scan Document',
-            icon: const Icon(Icons.refresh, size: 15, color: AppColors.textMuted),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+          SpringPress(
+            child: IconButton(
+              onPressed: _loading
+                  ? null
+                  : () => _extractText(forceReprocess: true),
+              tooltip: 'Re-scan Document',
+              icon: Icon(
+                Icons.refresh,
+                size: 15,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+            ),
           ),
         ],
       ),
@@ -427,13 +532,13 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       (
         icon: Icons.chat_bubble_outline_rounded,
         label: 'Ask PDF AI',
-        color: AppColors.purpleBright,
+        color: Theme.of(context).colorScheme.primary,
         onTap: () => _tabController.animateTo(0),
       ),
       (
         icon: Icons.quiz_outlined,
         label: 'Smart Quiz',
-        color: AppColors.accentGold,
+        color: AppColors.adaptive(context, AppColors.accentGold),
         onTap: () => PdfQuizSetupDialog.show(
           context,
           documentTitle: widget.doc.displayName,
@@ -444,41 +549,47 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       (
         icon: Icons.style_outlined,
         label: 'Smart Flashcards',
-        color: AppColors.accentCyan,
+        color: AppColors.adaptive(context, AppColors.accentCyan),
         onTap: () => _tabController.animateTo(1),
       ),
       (
         icon: Icons.auto_stories_outlined,
         label: 'Summarize',
-        color: AppColors.brandBright,
+        color: Theme.of(context).colorScheme.primary,
         onTap: () {
           _tabController.animateTo(0);
           _autoAttachDocToChat();
-          ref.read(chatControllerProvider.notifier).sendMessage(
-            'Provide a clear, structured summary of the key chemistry concepts, equations, and topics in this document.',
-          );
+          ref
+              .read(chatControllerProvider.notifier)
+              .sendMessage(
+                'Provide a clear, structured summary of the key chemistry concepts, equations, and topics in this document.',
+              );
         },
       ),
       (
         icon: Icons.school_outlined,
         label: 'Exam Revision',
-        color: AppColors.statusWarning,
+        color: AppColors.adaptive(context, AppColors.statusWarning),
         onTap: () {
           _tabController.animateTo(0);
           _autoAttachDocToChat();
-          ref.read(chatControllerProvider.notifier).sendMessage(
-            'Extract high-yield 2-mark definitions and 5-mark explanation questions with model answers from this document for university exam revision.',
-          );
+          ref
+              .read(chatControllerProvider.notifier)
+              .sendMessage(
+                'Extract high-yield 2-mark definitions and 5-mark explanation questions with model answers from this document for university exam revision.',
+              );
         },
       ),
       (
         icon: Icons.menu_book_rounded,
         label: 'Read Document',
-        color: AppColors.blue,
+        color: AppColors.adaptive(context, AppColors.blue),
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: widget.doc)),
+            MaterialPageRoute<void>(
+              builder: (_) => PdfReaderScreen(doc: widget.doc),
+            ),
           );
         },
       ),
@@ -493,26 +604,38 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final a = actions[index];
-          return InkWell(
-            onTap: a.onTap,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: a.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: a.color.withValues(alpha: 0.3), width: 0.9),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(a.icon, size: 14, color: a.color),
-                  const SizedBox(width: 6),
-                  Text(
-                    a.label,
-                    style: TextStyle(color: a.color, fontSize: 11.5, fontWeight: FontWeight.w700),
+          return SpringPress(
+            child: InkWell(
+              onTap: a.onTap,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: a.color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: a.color.withValues(alpha: 0.3),
+                    width: 0.9,
                   ),
-                ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(a.icon, size: 14, color: a.color),
+                    const SizedBox(width: 6),
+                    Text(
+                      a.label,
+                      style: TextStyle(
+                        color: AppColors.readableText(context, a.color),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -523,13 +646,17 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
 
   void _showExtractedPagesSheet() {
     final pages = _ocrBundle?.pages ?? const [];
-    if (pages.isEmpty) return;
+    if (pages.isEmpty) {
+      return;
+    }
 
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) {
         return DraggableScrollableSheet(
           initialChildSize: 0.85,
@@ -547,7 +674,7 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: AppColors.borderSubtle,
+                        color: Theme.of(context).colorScheme.outlineVariant,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -555,17 +682,32 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Text('Extracted Document Pages', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white)),
+                      Text(
+                        'Extracted Document Pages',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.purple.withValues(alpha: 0.2),
+                          color: Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '${pages.length} Pages',
-                          style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 11),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                          ),
                         ),
                       ),
                     ],
@@ -573,7 +715,10 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                   const SizedBox(height: 4),
                   Text(
                     'Page-by-page OCR text with chemistry formula normalization for ${widget.doc.displayName}',
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Expanded(
@@ -593,25 +738,47 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                                   children: [
                                     Text(
                                       'Page ${page.pageNumber}',
-                                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13.5,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
                                     ),
                                     const SizedBox(width: 8),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.surfaceElevated,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHigh,
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
                                         '${page.quality.icon} ${page.quality.label}',
-                                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w700),
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
                                     const Spacer(),
                                     if (page.confidence < 1.0)
                                       Text(
                                         'OCR Confidence: ${(page.confidence * 100).toInt()}%',
-                                        style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5),
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                          fontSize: 10.5,
+                                        ),
                                       ),
                                   ],
                                 ),
@@ -620,17 +787,35 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                                   Wrap(
                                     spacing: 6,
                                     runSpacing: 4,
-                                    children: page.detectedFormulas.take(6).map((f) => Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.purple.withValues(alpha: 0.15),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        f,
-                                        style: const TextStyle(color: AppColors.purpleBright, fontSize: 10.5, fontWeight: FontWeight.w700),
-                                      ),
-                                    )).toList(),
+                                    children: page.detectedFormulas
+                                        .take(6)
+                                        .map(
+                                          (f) => Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                                  .withValues(alpha: 0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              f,
+                                              style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                                fontSize: 10.5,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
                                   ),
                                 ],
                                 const SizedBox(height: 8),
@@ -638,34 +823,65 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: AppColors.background,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .surface,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: AppColors.borderSubtle),
+                                    border: Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant,
+                                    ),
                                   ),
                                   child: Text(
-                                    page.cleanedText.isNotEmpty ? page.cleanedText : '(No text extracted for this page)',
+                                    page.cleanedText.isNotEmpty
+                                        ? page.cleanedText
+                                        : '(No text extracted for this page)',
                                     maxLines: 8,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.4),
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      fontSize: 11.5,
+                                      height: 1.4,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
                                 Align(
                                   alignment: Alignment.centerRight,
-                                  child: TextButton.icon(
-                                    onPressed: () {
-                                      Navigator.pop(ctx);
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute<void>(
-                                          builder: (_) => PdfReaderScreen(doc: widget.doc, initialPage: page.pageNumber),
+                                  child: SpringPress(
+                                    child: TextButton.icon(
+                                      onPressed: () {
+                                        Navigator.pop(ctx);
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute<void>(
+                                            builder: (_) => PdfReaderScreen(
+                                              doc: widget.doc,
+                                              initialPage: page.pageNumber,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: Icon(
+                                        Icons.open_in_new,
+                                        size: 13,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                      label: Text(
+                                        'Jump to Page ${page.pageNumber} in Reader',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w700,
                                         ),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.open_in_new, size: 13, color: AppColors.purpleBright),
-                                    label: Text(
-                                      'Jump to Page ${page.pageNumber} in Reader',
-                                      style: const TextStyle(color: AppColors.purpleBright, fontSize: 11.5, fontWeight: FontWeight.w700),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -693,16 +909,24 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: AppColors.purple.withValues(alpha: 0.1),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           child: Row(
             children: [
-              const Icon(Icons.auto_awesome, color: AppColors.purpleBright, size: 16),
+              Icon(
+                Icons.auto_awesome,
+                color: Theme.of(context).colorScheme.primary,
+                size: 16,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Strict Grounding Active: ${widget.doc.displayName}',
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 12),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
@@ -713,79 +937,147 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
             children: [
-              const GlowCard(
+              GlowCard(
                 child: Text(
                   '💡 Ask any question about this PDF. ChemBuddy uses this document as the single authoritative source of truth. If a concept is not present in these notes, ChemBuddy will inform you clearly.',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12.5,
+                    height: 1.35,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               ...chatState.messages.map((m) {
                 final isUser = m.role == 'user';
                 return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isUser
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.85,
+                    ),
                     child: GlowCard(
-                      borderColor: isUser ? AppColors.purple.withValues(alpha: 0.6) : AppColors.border,
+                      borderColor: isUser
+                          ? Theme.of(context).colorScheme.primary
+                                .withValues(alpha: 0.6)
+                          : Theme.of(context).colorScheme.outlineVariant,
                       padding: const EdgeInsets.all(12),
                       child: isUser
                           ? Text(
                               m.content,
-                              style: const TextStyle(color: Colors.white, fontSize: 13.5, height: 1.35),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 13.5,
+                                height: 1.35,
+                              ),
                             )
                           : Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 ChemistryMarkdownView(
                                   text: m.content,
-                                  textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13.5, height: 1.45),
+                                  textStyle: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface,
+                                    fontSize: 13.5,
+                                    height: 1.45,
+                                  ),
                                   selectable: true,
                                 ),
                                 ...() {
                                   // Extract page citations like "Page 3", "[Page 3]", "p. 3", "(p. 3)"
-                                  final pageMatches = RegExp(r'(?:\[|\()?(?:Page|p\.)\s*(\d+)(?:\]|\))?', caseSensitive: false).allMatches(m.content);
+                                  final pageMatches = RegExp(
+                                    r'(?:\[|\()?(?:Page|p\.)\s*(\d+)(?:\]|\))?',
+                                    caseSensitive: false,
+                                  ).allMatches(m.content);
                                   final pageNums = <int>{};
                                   for (final match in pageMatches) {
                                     final p = int.tryParse(match.group(1)!);
-                                    if (p != null) pageNums.add(p);
+                                    if (p != null) {
+                                      pageNums.add(p);
+                                    }
                                   }
-                                  if (pageNums.isEmpty) return const <Widget>[];
+                                  if (pageNums.isEmpty) {
+                                    return const <Widget>[];
+                                  }
                                   return [
                                     const SizedBox(height: 8),
-                                    const Divider(color: AppColors.borderSubtle, height: 12),
+                                    Divider(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant,
+                                      height: 12,
+                                    ),
                                     Wrap(
                                       spacing: 6,
                                       runSpacing: 4,
                                       children: pageNums.map((pn) {
-                                        return InkWell(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute<void>(
-                                                builder: (_) => PdfReaderScreen(doc: widget.doc, initialPage: pn),
-                                              ),
-                                            );
-                                          },
-                                          borderRadius: BorderRadius.circular(6),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.purple.withValues(alpha: 0.2),
-                                              borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Icon(Icons.bookmark_added_rounded, size: 12, color: AppColors.purpleBright),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  'Jump to Page $pn',
-                                                  style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 11),
+                                        return SpringPress(
+                                          child: InkWell(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute<void>(
+                                                  builder: (_) =>
+                                                      PdfReaderScreen(
+                                                        doc: widget.doc,
+                                                        initialPage: pn,
+                                                      ),
                                                 ),
-                                              ],
+                                              );
+                                            },
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 3,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withValues(alpha: 0.2),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                border: Border.all(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                      .withValues(alpha: 0.4),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons
+                                                        .bookmark_added_rounded,
+                                                    size: 12,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    'Jump to Page $pn',
+                                                    style: TextStyle(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 11,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         );
@@ -812,21 +1104,39 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                   controller: _askController,
                   decoration: const InputDecoration(
                     hintText: 'Ask a question about this PDF...',
-                    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton.filled(
-                style: IconButton.styleFrom(backgroundColor: AppColors.purple),
-                onPressed: () {
-                  final q = _askController.text.trim();
-                  if (q.isEmpty) return;
-                  _askController.clear();
-                  _autoAttachDocToChat();
-                  ref.read(chatControllerProvider.notifier).sendMessage(q);
-                },
-                icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+              SpringPress(
+                child: IconButton.filled(
+                  style: IconButton.styleFrom(
+                    foregroundColor: Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer,
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer,
+                  ),
+                  onPressed: () {
+                    final q = _askController.text.trim();
+                    if (q.isEmpty) {
+                      return;
+                    }
+                    _askController.clear();
+                    _autoAttachDocToChat();
+                    ref.read(chatControllerProvider.notifier).sendMessage(q);
+                  },
+                  icon: Icon(
+                    Icons.send_rounded,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    size: 18,
+                  ),
+                ),
               ),
             ],
           ),
@@ -851,19 +1161,32 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Generate Smart Flashcard Deck', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              const Text(
+                'Generate Smart Flashcard Deck',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+              ),
               const SizedBox(height: 8),
-              const Text('Select number of cards to synthesize from this PDF:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              Text(
+                'Select number of cards to synthesize from this PDF:',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [10, 15, 20].map((n) {
                   final active = _flashcardCount == n;
                   return Padding(
                     padding: const EdgeInsets.only(right: 10),
-                    child: ChoiceChip(
-                      label: Text('$n Cards'),
-                      selected: active,
-                      onSelected: _loading ? null : (_) => setState(() => _flashcardCount = n),
+                    child: SpringPress(
+                      child: ChoiceChip(
+                        label: Text('$n Cards'),
+                        selected: active,
+                        onSelected: _loading
+                            ? null
+                            : (_) => setState(() => _flashcardCount = n),
+                      ),
                     ),
                   );
                 }).toList(),
@@ -876,16 +1199,27 @@ class _PdfStudyHubScreenState extends ConsumerState<PdfStudyHubScreen> with Sing
                   thinkingHeader: 'Synthesizing Flashcards',
                 )
               else
-                ElevatedButton.icon(
-                  onPressed: _generateFlashcards,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.purple,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                SpringPress(
+                  child: ElevatedButton.icon(
+                    onPressed: _generateFlashcards,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
+                      foregroundColor: Theme.of(context)
+                          .colorScheme
+                          .onPrimaryContainer,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.style),
+                    label: Text(
+                      'Generate & Study Deck ($_flashcardCount Cards)',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
                   ),
-                  icon: const Icon(Icons.style),
-                  label: Text('Generate & Study Deck ($_flashcardCount Cards)', style: const TextStyle(fontWeight: FontWeight.w800)),
                 ),
             ],
           ),

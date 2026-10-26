@@ -1,7 +1,8 @@
+import 'expressive_motion.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
 import '../widgets/glow_card.dart';
 
 /// Error boundary widget that catches build and rendering exceptions in its subtree,
@@ -60,7 +61,9 @@ class _AppErrorBoundaryState extends State<AppErrorBoundary> {
   Widget build(BuildContext context) {
     if (_error != null) {
       return _ErrorFallbackCard(
-        title: widget.screenName != null ? 'Unable to load ${widget.screenName}' : 'Something went wrong',
+        title: widget.screenName != null
+            ? 'Unable to load ${widget.screenName}'
+            : 'Something went wrong',
         message: 'An unexpected issue occurred while displaying this section. Your progress and study notes are safe.',
         details: kDebugMode ? '$_error\n$_stackTrace' : null,
         onRetry: _reset,
@@ -111,52 +114,66 @@ class _ErrorFallbackCardState extends State<_ErrorFallbackCard> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.brandPrimary.withValues(alpha: 0.15),
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.science_outlined,
                     size: 36,
-                    color: AppColors.brandBright,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   widget.title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   widget.message,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     height: 1.4,
                   ),
                 ),
                 if (widget.details != null && widget.details!.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: () => setState(() => _showDetails = !_showDetails),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _showDetails ? 'Hide technical details' : 'Show details',
-                          style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-                        ),
-                        Icon(
-                          _showDetails ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                          size: 14,
-                          color: AppColors.textMuted,
-                        ),
-                      ],
+                  SpringPress(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _showDetails = !_showDetails),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _showDetails
+                                ? 'Hide technical details'
+                                : 'Show details',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                          ),
+                          Icon(
+                            _showDetails
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
+                            size: 14,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   if (_showDetails) ...[
@@ -171,7 +188,13 @@ class _ErrorFallbackCardState extends State<_ErrorFallbackCard> {
                       child: SingleChildScrollView(
                         child: Text(
                           widget.details!,
-                          style: const TextStyle(fontSize: 10, color: AppColors.textMuted, fontFamily: 'monospace'),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontFamily: 'monospace',
+                          ),
                         ),
                       ),
                     ),
@@ -182,27 +205,45 @@ class _ErrorFallbackCardState extends State<_ErrorFallbackCard> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (widget.canPop && widget.onBack != null) ...[
-                      OutlinedButton.icon(
-                        onPressed: widget.onBack,
-                        icon: const Icon(Icons.arrow_back, size: 16),
-                        label: const Text('Go Back'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white70,
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      SpringPress(
+                        child: OutlinedButton.icon(
+                          onPressed: widget.onBack,
+                          icon: const Icon(Icons.arrow_back, size: 16),
+                          label: const Text('Go Back'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            side: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.2),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
                     ],
                     if (widget.onRetry != null)
-                      ElevatedButton.icon(
-                        onPressed: widget.onRetry,
-                        icon: const Icon(Icons.refresh, size: 16),
-                        label: const Text('Try Again'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.brandPrimary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      SpringPress(
+                        child: ElevatedButton.icon(
+                          onPressed: widget.onRetry,
+                          icon: const Icon(Icons.refresh, size: 16),
+                          label: const Text('Try Again'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer,
+                            foregroundColor: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                          ),
                         ),
                       ),
                   ],

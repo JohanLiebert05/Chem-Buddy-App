@@ -581,7 +581,7 @@ Return strictly valid JSON matching this exact structure:
         }
       }
 
-      if (cleanOptions.length < 2) continue;
+      if (cleanOptions.length < 2) {continue;}
 
       // Ensure 4 distinct options
       final defaultDistractors = [
@@ -594,7 +594,7 @@ Return strictly valid JSON matching this exact structure:
       var distIdx = 0;
       while (cleanOptions.length < 4) {
         final d = defaultDistractors[distIdx % defaultDistractors.length];
-        if (!cleanOptions.contains(d)) cleanOptions.add(d);
+        if (!cleanOptions.contains(d)) {cleanOptions.add(d);}
         distIdx++;
       }
 
@@ -638,14 +638,14 @@ Return strictly valid JSON matching this exact structure:
     final lines = text.split('\n');
     for (final line in lines) {
       final trimmed = line.trim();
-      if (trimmed.isEmpty) continue;
+      if (trimmed.isEmpty) {continue;}
 
       // 1. If line has a colon (e.g. "Spectrochemical series: ..."), grab the term
       if (trimmed.contains(':')) {
         final prefix = trimmed.split(':').first.trim();
         if (prefix.length > 3 && prefix.length < 60) {
           results.add(ChemistryTextFormatter.format(prefix));
-          if (results.length >= 5) break;
+          if (results.length >= 5) {break;}
           continue;
         }
       }
@@ -653,7 +653,7 @@ Return strictly valid JSON matching this exact structure:
       // 2. Standalone short headings / title lines
       if (trimmed.length > 3 && trimmed.length < 65 && !trimmed.endsWith('.')) {
         results.add(ChemistryTextFormatter.format(trimmed));
-        if (results.length >= 5) break;
+        if (results.length >= 5) {break;}
         continue;
       }
 
@@ -664,7 +664,7 @@ Return strictly valid JSON matching this exact structure:
         final phrase = commaParts.first.trim();
         if (phrase.length > 4 && phrase.length < 50) {
           results.add(ChemistryTextFormatter.format(phrase));
-          if (results.length >= 5) break;
+          if (results.length >= 5) {break;}
         }
       }
     }
@@ -672,7 +672,7 @@ Return strictly valid JSON matching this exact structure:
     // 4. Fallback if still empty
     if (results.isEmpty && text.trim().isNotEmpty) {
       final words = text.trim().split(RegExp(r'\s+')).take(6).join(' ');
-      if (words.isNotEmpty) results.add(ChemistryTextFormatter.format(words));
+      if (words.isNotEmpty) {results.add(ChemistryTextFormatter.format(words));}
     }
     return results;
   }
@@ -783,10 +783,10 @@ Return strictly valid JSON matching this exact structure:
     if (analysis != null) {
       // 1A. Definitions found in THIS document
       for (final def in analysis.keyDefinitions) {
-        if (pool.length >= count) break;
+        if (pool.length >= count) {break;}
         final term = def['term'] ?? 'Concept';
         final explanation = def['definition'] ?? '';
-        if (explanation.length < 10) continue;
+        if (explanation.length < 10) {continue;}
 
         addQuestion(QuizQuestion(
           id: _uuid.v4(),
@@ -810,7 +810,7 @@ Return strictly valid JSON matching this exact structure:
 
       // 1B. Equations and formulas found in THIS document
       for (final eq in analysis.equationsAndFormulas) {
-        if (pool.length >= count) break;
+        if (pool.length >= count) {break;}
         addQuestion(QuizQuestion(
           id: _uuid.v4(),
           question: 'Which relationship in "$docTitle" is expressed by the equation: $eq?',
@@ -833,7 +833,7 @@ Return strictly valid JSON matching this exact structure:
 
       // 1C. Core topics identified from THIS document
       for (final topic in analysis.coreTopics) {
-        if (pool.length >= count) break;
+        if (pool.length >= count) {break;}
         addQuestion(QuizQuestion(
           id: _uuid.v4(),
           question: 'In the study of ${topic.concept} in "$docTitle", which statement is accurate based on the text?',
@@ -856,7 +856,7 @@ Return strictly valid JSON matching this exact structure:
 
       // 1D. Reactions and reagents found in THIS document
       for (final reaction in analysis.reactionsAndReagents) {
-        if (pool.length >= count) break;
+        if (pool.length >= count) {break;}
         addQuestion(QuizQuestion(
           id: _uuid.v4(),
           question: 'What is the role of "$reaction" as detailed in "$docTitle"?',
@@ -887,9 +887,9 @@ Return strictly valid JSON matching this exact structure:
           .toList();
 
       for (final sentence in sentences) {
-        if (pool.length >= count) break;
+        if (pool.length >= count) {break;}
         final words = sentence.split(RegExp(r'\s+')).where((w) => w.length > 3).take(4).join(' ');
-        if (words.isEmpty) continue;
+        if (words.isEmpty) {continue;}
 
         addQuestion(QuizQuestion(
           id: _uuid.v4(),
@@ -1000,7 +1000,7 @@ Return strictly valid JSON matching this exact structure:
           tags: t.tags,
         );
       }).toList();
-      if (result.isNotEmpty) return result;
+      if (result.isNotEmpty) {return result;}
     } catch (_) {}
     return _generateHeuristicTopics(text, 'Study Document');
   }
@@ -1020,14 +1020,14 @@ Return strictly valid JSON matching this exact structure:
         }
         return QuizQuestion.fromJson(qMap);
       }).toList();
-      if (result.isNotEmpty) return result;
+      if (result.isNotEmpty) {return result;}
     } catch (_) {}
     return [];
   }
 
   QuizQuestion _randomizeQuestionOptions(QuizQuestion q) {
     final validOptions = q.options.where((o) => o.trim().isNotEmpty).toList();
-    if (validOptions.length < 2) return q;
+    if (validOptions.length < 2) {return q;}
 
     // Distractors pool in case less than 4 options
     final defaultDistractors = [
@@ -1040,7 +1040,7 @@ Return strictly valid JSON matching this exact structure:
     var distIdx = 0;
     while (validOptions.length < 4) {
       final d = defaultDistractors[distIdx % defaultDistractors.length];
-      if (!validOptions.contains(d)) validOptions.add(d);
+      if (!validOptions.contains(d)) {validOptions.add(d);}
       distIdx++;
     }
 
@@ -1702,11 +1702,11 @@ class SubjectClassificationResult {
 
   String get detectedSubjectId {
     final lower = branchCategory.toLowerCase();
-    if (lower.contains('inorganic')) return 'inorganic';
-    if (lower.contains('organic')) return 'organic';
-    if (lower.contains('physical')) return 'physical';
-    if (lower.contains('analytical')) return 'analytical';
-    if (lower.contains('physics')) return 'physics';
+    if (lower.contains('inorganic')) {return 'inorganic';}
+    if (lower.contains('organic')) {return 'organic';}
+    if (lower.contains('physical')) {return 'physical';}
+    if (lower.contains('analytical')) {return 'analytical';}
+    if (lower.contains('physics')) {return 'physics';}
     return 'organic';
   }
 }
@@ -1763,7 +1763,7 @@ SubjectClassificationResult _classifyDocumentSubjectImpl(String sampleText, Stri
   int countMatches(List<String> keywords) {
     var score = 0;
     for (final kw in keywords) {
-      if (content.contains(kw)) score += 2;
+      if (content.contains(kw)) {score += 2;}
     }
     return score;
   }

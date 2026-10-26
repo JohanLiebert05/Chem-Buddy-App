@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -27,12 +29,36 @@ import 'spectroscopy_hub_screen.dart';
 import 'syllabus_browser_screen.dart';
 
 enum LibrarySection {
-  pdfs('PDFs', Icons.picture_as_pdf_outlined, 'Textbooks, research papers & notes'),
-  reactions('Reactions', Icons.science_outlined, 'Curated mechanisms & vector diagrams'),
-  flashcards('Flashcards', Icons.style_outlined, 'Active recall decks & spaced repetition'),
-  quizzes('Quizzes', Icons.quiz_outlined, 'Topic mastery & exam practice papers'),
-  tools('Tools', Icons.calculate_outlined, 'Calculators, spectroscopy & solvers'),
-  notes('Notes & Deadlines', Icons.note_alt_outlined, 'Personal notes, seminars & test dates');
+  pdfs(
+    'PDFs',
+    Icons.picture_as_pdf_outlined,
+    'Textbooks, research papers & notes',
+  ),
+  reactions(
+    'Reactions',
+    Icons.science_outlined,
+    'Curated mechanisms & vector diagrams',
+  ),
+  flashcards(
+    'Flashcards',
+    Icons.style_outlined,
+    'Active recall decks & spaced repetition',
+  ),
+  quizzes(
+    'Quizzes',
+    Icons.quiz_outlined,
+    'Topic mastery & exam practice papers',
+  ),
+  tools(
+    'Tools',
+    Icons.calculate_outlined,
+    'Calculators, spectroscopy & solvers',
+  ),
+  notes(
+    'Notes & Deadlines',
+    Icons.note_alt_outlined,
+    'Personal notes, seminars & test dates',
+  );
 
   const LibrarySection(this.title, this.icon, this.description);
   final String title;
@@ -92,8 +118,11 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
             enableBlur: true,
             blurSigma: 20,
             borderRadius: 0,
-            customBorderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            backgroundColor: AppColors.surfaceContainerLow.withValues(alpha: 0.94),
+            customBorderRadius: const BorderRadius.vertical(
+              top: Radius.circular(24),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow
+                .withValues(alpha: 0.94),
             borderColor: Colors.white.withValues(alpha: 0.14),
             padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
             child: Column(
@@ -114,18 +143,24 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Library Sections',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         letterSpacing: 0.3,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.textMuted, size: 20),
-                      onPressed: () => Navigator.pop(ctx),
+                    SpringPress(
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          size: 20,
+                        ),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
                     ),
                   ],
                 ),
@@ -156,71 +191,121 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 6),
-                    child: InkWell(
-                      onTap: () {
-                        AppHaptics.selection();
-                        setState(() => _currentSection = section);
-                        Navigator.pop(ctx);
-                      },
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.purple.withValues(alpha: 0.25)
-                              : AppColors.surfaceElevated.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isSelected ? AppColors.purpleBright : AppColors.borderSubtle,
+                    child: SpringPress(
+                      child: InkWell(
+                        onTap: () {
+                          AppHaptics.selection();
+                          setState(() => _currentSection = section);
+                          Navigator.pop(ctx);
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(section.icon, size: 20, color: isSelected ? AppColors.brandBright : AppColors.textSecondary),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    section.title,
-                                    style: TextStyle(
-                                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                      fontSize: 14,
-                                      color: isSelected ? Colors.white : AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  Text(
-                                    section.description,
-                                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-                                  ),
-                                ],
-                              ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                      .withValues(alpha: 0.25)
+                                : Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHigh
+                                      .withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                        .colorScheme
+                                        .outlineVariant,
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                section.icon,
+                                size: 20,
                                 color: isSelected
-                                    ? AppColors.purple.withValues(alpha: 0.4)
-                                    : AppColors.surfaceElevated,
-                                borderRadius: BorderRadius.circular(8),
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                               ),
-                              child: Text(
-                                countStr,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: isSelected ? AppColors.purpleBright : AppColors.textMuted,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      section.title,
+                                      style: TextStyle(
+                                        fontWeight: isSelected
+                                            ? FontWeight.w800
+                                            : FontWeight.w600,
+                                        fontSize: 14,
+                                        color: isSelected
+                                            ? Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                            : Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                      ),
+                                    ),
+                                    Text(
+                                      section.description,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              isSelected ? Icons.check_circle_rounded : Icons.chevron_right,
-                              size: 18,
-                              color: isSelected ? AppColors.purpleBright : AppColors.textMuted,
-                            ),
-                          ],
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                            .withValues(alpha: 0.4)
+                                      : Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHigh,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  countStr,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                isSelected
+                                    ? Icons.check_circle_rounded
+                                    : Icons.chevron_right,
+                                size: 18,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -248,7 +333,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -257,34 +342,42 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.2,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 SizedBox(height: 2),
                 Text(
                   'MSc Chemistry Knowledge Base',
-                  style: TextStyle(fontSize: 11.5, color: AppColors.textMuted, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
             Semantics(
               label: 'Library sections',
               button: true,
-              child: InkWell(
-                onTap: () => _showSectionPicker(context),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceElevated,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.borderSubtle),
-                  ),
-                  child: const Icon(
-                    Icons.more_vert,
-                    color: Colors.white,
-                    size: 20,
+              child: SpringPress(
+                child: InkWell(
+                  onTap: () => _showSectionPicker(context),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.more_vert,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      size: 20,
+                    ),
                   ),
                 ),
               ),
@@ -299,34 +392,60 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         // ==========================================
         TextField(
           controller: _searchController,
-          style: const TextStyle(fontSize: 13.5, color: Colors.white),
+          style: TextStyle(
+            fontSize: 13.5,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           decoration: InputDecoration(
             hintText: 'Search PDFs, reactions, flashcards, tools…',
-            hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-            prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+            hintStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 13,
+            ),
+            prefixIcon: Icon(
+              Icons.search,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 20,
+            ),
             suffixIcon: _searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear, color: AppColors.textMuted, size: 18),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                    },
+                ? SpringPress(
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.clear,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        size: 18,
+                      ),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    ),
                   )
                 : null,
             filled: true,
-            fillColor: AppColors.surfaceElevated,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.borderSubtle),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.borderSubtle),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.purpleBright, width: 1.5),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -347,28 +466,42 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                 final isSel = _currentSection == section;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    avatar: Icon(section.icon, size: 16, color: isSel ? Colors.white : AppColors.brandBright),
-                    label: Text(
-                      section.title,
-                      style: TextStyle(
-                        color: isSel ? Colors.white : AppColors.textSecondary,
-                        fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
-                        fontSize: 12.5,
+                  child: SpringPress(
+                    child: ChoiceChip(
+                      avatar: Icon(
+                        section.icon,
+                        size: 16,
+                        color: isSel
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.primary,
                       ),
+                      label: Text(
+                        section.title,
+                        style: TextStyle(
+                          color: isSel
+                              ? Theme.of(context).colorScheme.onSurface
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      selected: isSel,
+                      selectedColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHigh,
+                      side: BorderSide(
+                        color: isSel
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                      onSelected: (val) {
+                        if (val) {
+                          AppHaptics.selection();
+                          setState(() => _currentSection = section);
+                        }
+                      },
                     ),
-                    selected: isSel,
-                    selectedColor: AppColors.purple,
-                    backgroundColor: AppColors.surfaceElevated,
-                    side: BorderSide(
-                      color: isSel ? AppColors.purpleBright : AppColors.borderSubtle,
-                    ),
-                    onSelected: (val) {
-                      if (val) {
-                        AppHaptics.selection();
-                        setState(() => _currentSection = section);
-                      }
-                    },
                   ),
                 );
               }).toList(),
@@ -401,11 +534,13 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     final query = _searchQuery.toLowerCase();
 
     // 1. Filter Reactions
-    final matchedReactions = ReactionMechanismService.instance.mechanisms.where((m) {
-      return m.name.toLowerCase().contains(query) ||
-          m.summary.toLowerCase().contains(query) ||
-          m.aliases.any((a) => a.toLowerCase().contains(query));
-    }).toList();
+    final matchedReactions = ReactionMechanismService.instance.mechanisms.where(
+      (m) {
+        return m.name.toLowerCase().contains(query) ||
+            m.summary.toLowerCase().contains(query) ||
+            m.aliases.any((a) => a.toLowerCase().contains(query));
+      },
+    ).toList();
 
     // 2. Filter PDFs
     final matchedPdfs = state.pdfs.where((p) {
@@ -419,26 +554,44 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
       ('Molarity & Normality Calculator', 'Calculations', Icons.water_drop, 0),
       ('Dilution Calculator (M1V1 = M2V2)', 'Calculations', Icons.opacity, 0),
       ('pH & Buffer Calculator', 'Acid-Base', Icons.science, 1),
-      ('Gibbs Free Energy & Thermo', 'Thermodynamics', Icons.local_fire_department, 2),
+      (
+        'Gibbs Free Energy & Thermo',
+        'Thermodynamics',
+        Icons.local_fire_department,
+        2,
+      ),
       ('Arrhenius Kinetics (Ea)', 'Kinetics', Icons.speed, 2),
       ('Beer-Lambert & Spectroscopy', 'Spectroscopy', Icons.lightbulb, 3),
       ('Nernst Equation & Cell Potential', 'Electrochem', Icons.bolt, 4),
-      ('Degree of Unsaturation (DBE / IHD)', 'Spectroscopy', Icons.calculate, -1),
+      (
+        'Degree of Unsaturation (DBE / IHD)',
+        'Spectroscopy',
+        Icons.calculate,
+        -1,
+      ),
       ('Spectroscopy Structure Solver', 'Spectroscopy', Icons.analytics, -1),
-      ('Pericyclic Reactions & FMO Analysis', 'Advanced Organic', Icons.autorenew, -2),
+      (
+        'Pericyclic Reactions & FMO Analysis',
+        'Advanced Organic',
+        Icons.autorenew,
+        -2,
+      ),
       ('University Important PYQ Predictor', 'Exams', Icons.psychology, -3),
       ('MSc University Syllabus Browser', 'Curriculum', Icons.menu_book, -4),
     ];
     final matchedTools = toolsCatalog.where((t) {
-      return t.$1.toLowerCase().contains(query) || t.$2.toLowerCase().contains(query);
+      return t.$1.toLowerCase().contains(query) ||
+          t.$2.toLowerCase().contains(query);
     }).toList();
 
     // 4. Filter Notes
     final matchedNotes = state.notes.where((n) {
-      return n.title.toLowerCase().contains(query) || n.body.toLowerCase().contains(query);
+      return n.title.toLowerCase().contains(query) ||
+          n.body.toLowerCase().contains(query);
     }).toList();
 
-    final hasAny = matchedReactions.isNotEmpty ||
+    final hasAny =
+        matchedReactions.isNotEmpty ||
         matchedPdfs.isNotEmpty ||
         matchedTools.isNotEmpty ||
         matchedNotes.isNotEmpty;
@@ -449,17 +602,29 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
           padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
           child: Column(
             children: [
-              const Icon(Icons.search_off_rounded, size: 40, color: AppColors.textMuted),
+              Icon(
+                Icons.search_off_rounded,
+                size: 40,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: 12),
               Text(
                 'No matches found for "$_searchQuery"',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.white),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Try searching for a reaction name (e.g. "Beckmann"), formula ("C6H6"), tool ("DBE"), or topic.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
@@ -472,80 +637,134 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
       children: [
         Text(
           'Search Results (${matchedReactions.length + matchedPdfs.length + matchedTools.length + matchedNotes.length})',
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.textSecondary),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 10),
 
         // Reactions
         if (matchedReactions.isNotEmpty) ...[
-          const _SearchResultHeader(title: 'Reactions', icon: Icons.science_outlined),
-          ...matchedReactions.map((r) => _SearchResultTile(
-                title: r.name,
-                subtitle: r.summary,
-                badge: 'REACTION',
-                badgeColor: AppColors.purpleBright,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => ReactionMechanismsScreen(initialReactionId: r.id)),
+          const _SearchResultHeader(
+            title: 'Reactions',
+            icon: Icons.science_outlined,
+          ),
+          ...matchedReactions.map(
+            (r) => _SearchResultTile(
+              title: r.name,
+              subtitle: r.summary,
+              badge: 'REACTION',
+              badgeColor: Theme.of(context).colorScheme.primary,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      ReactionMechanismsScreen(initialReactionId: r.id),
                 ),
-              )),
+              ),
+            ),
+          ),
           const SizedBox(height: 12),
         ],
 
         // Tools
         if (matchedTools.isNotEmpty) ...[
-          const _SearchResultHeader(title: 'Tools & Solvers', icon: Icons.calculate_outlined),
-          ...matchedTools.map((t) => _SearchResultTile(
-                title: t.$1,
-                subtitle: t.$2,
-                badge: 'TOOL',
-                badgeColor: AppColors.accentCyan,
-                onTap: () {
-                  if (t.$4 == -1) {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SpectroscopyHubScreen()));
-                  } else if (t.$4 == -2) {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PericyclicHubScreen()));
-                  } else if (t.$4 == -3) {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PredictImportantQuestionsScreen()));
-                  } else if (t.$4 == -4) {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SyllabusBrowserScreen()));
-                  } else {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => ChemistryToolkitScreen(initialCategory: t.$4)));
-                  }
-                },
-              )),
+          const _SearchResultHeader(
+            title: 'Tools & Solvers',
+            icon: Icons.calculate_outlined,
+          ),
+          ...matchedTools.map(
+            (t) => _SearchResultTile(
+              title: t.$1,
+              subtitle: t.$2,
+              badge: 'TOOL',
+              badgeColor: AppColors.adaptive(context, AppColors.accentCyan),
+              onTap: () {
+                if (t.$4 == -1) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SpectroscopyHubScreen(),
+                    ),
+                  );
+                } else if (t.$4 == -2) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PericyclicHubScreen(),
+                    ),
+                  );
+                } else if (t.$4 == -3) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PredictImportantQuestionsScreen(),
+                    ),
+                  );
+                } else if (t.$4 == -4) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SyllabusBrowserScreen(),
+                    ),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ChemistryToolkitScreen(initialCategory: t.$4),
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
           const SizedBox(height: 12),
         ],
 
         // PDFs
         if (matchedPdfs.isNotEmpty) ...[
-          const _SearchResultHeader(title: 'PDF Documents', icon: Icons.picture_as_pdf_outlined),
-          ...matchedPdfs.map((p) => _SearchResultTile(
-                title: p.displayName,
-                subtitle: 'Added ${DateFormat("d MMM yyyy").format(p.dateAdded)} · ${(p.fileSize / (1024 * 1024)).toStringAsFixed(1)} MB',
-                badge: 'PDF',
-                badgeColor: AppColors.accentGold,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => PdfReaderScreen(doc: p)),
-                ),
-              )),
+          const _SearchResultHeader(
+            title: 'PDF Documents',
+            icon: Icons.picture_as_pdf_outlined,
+          ),
+          ...matchedPdfs.map(
+            (p) => _SearchResultTile(
+              title: p.displayName,
+              subtitle:
+                  'Added ${DateFormat("d MMM yyyy").format(p.dateAdded)} · ${(p.fileSize / (1024 * 1024)).toStringAsFixed(1)} MB',
+              badge: 'PDF',
+              badgeColor: AppColors.adaptive(context, AppColors.accentGold),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => PdfReaderScreen(doc: p)),
+              ),
+            ),
+          ),
           const SizedBox(height: 12),
         ],
 
         // Notes
         if (matchedNotes.isNotEmpty) ...[
-          const _SearchResultHeader(title: 'Notes', icon: Icons.menu_book_outlined),
-          ...matchedNotes.map((n) => _SearchResultTile(
-                title: n.title,
-                subtitle: n.body,
-                badge: 'NOTE',
-                badgeColor: AppColors.success,
-                onTap: () {
-                  setState(() => _currentSection = LibrarySection.notes);
-                  _searchController.clear();
-                },
-              )),
+          const _SearchResultHeader(
+            title: 'Notes',
+            icon: Icons.menu_book_outlined,
+          ),
+          ...matchedNotes.map(
+            (n) => _SearchResultTile(
+              title: n.title,
+              subtitle: n.body,
+              badge: 'NOTE',
+              badgeColor: AppColors.adaptive(context, AppColors.success),
+              onTap: () {
+                setState(() => _currentSection = LibrarySection.notes);
+                _searchController.clear();
+              },
+            ),
+          ),
         ],
       ],
     );
@@ -563,11 +782,15 @@ class _SearchResultHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6, top: 4),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.purpleBright),
+          Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 6),
           Text(
             title,
-            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Colors.white),
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
         ],
       ),
@@ -609,22 +832,35 @@ class _SearchResultTile extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: badgeColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
+                          border: Border.all(
+                            color: badgeColor.withValues(alpha: 0.4),
+                          ),
                         ),
                         child: Text(
                           badge,
-                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: badgeColor),
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.readableText(context, badgeColor),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           title,
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -634,7 +870,10 @@ class _SearchResultTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -642,7 +881,11 @@ class _SearchResultTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: AppColors.textMuted),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 13,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ],
         ),
       ),
@@ -657,7 +900,8 @@ class _ReactionLibrarySection extends StatefulWidget {
   const _ReactionLibrarySection();
 
   @override
-  State<_ReactionLibrarySection> createState() => _ReactionLibrarySectionState();
+  State<_ReactionLibrarySection> createState() =>
+      _ReactionLibrarySectionState();
 }
 
 class _ReactionLibrarySectionState extends State<_ReactionLibrarySection> {
@@ -678,10 +922,14 @@ class _ReactionLibrarySectionState extends State<_ReactionLibrarySection> {
       list = list.where((m) => m.category == _filterCategory).toList();
     }
     if (query.isNotEmpty) {
-      list = list.where((m) =>
-          m.name.toLowerCase().contains(query) ||
-          m.summary.toLowerCase().contains(query) ||
-          m.aliases.any((a) => a.toLowerCase().contains(query))).toList();
+      list = list
+          .where(
+            (m) =>
+                m.name.toLowerCase().contains(query) ||
+                m.summary.toLowerCase().contains(query) ||
+                m.aliases.any((a) => a.toLowerCase().contains(query)),
+          )
+          .toList();
     }
 
     return Column(
@@ -699,23 +947,39 @@ class _ReactionLibrarySectionState extends State<_ReactionLibrarySection> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.electricViolet.withValues(alpha: 0.2),
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.bolt_rounded, color: AppColors.brandPrimary, size: 22),
+                    child: Icon(
+                      Icons.bolt_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Reaction Predictor & Mechanism Viewer',
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
                         Text(
                           'Deterministic Forward Prediction • Vector SVG Arrows',
-                          style: TextStyle(color: Color(0xFF38BDF8), fontSize: 11.5, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: AppColors.readableText(
+                              context,
+                              Color(0xFF38BDF8),
+                            ),
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -723,29 +987,53 @@ class _ReactionLibrarySectionState extends State<_ReactionLibrarySection> {
                 ],
               ),
               const SizedBox(height: 10),
-              const Text(
+              Text(
                 'Draw or enter reactants and reagents to identify the reaction pathway, simulate curved electron flows step-by-step, and practice MSc exam viva questions.',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.4),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    AppHaptics.confirm();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const OrganicReactionPredictorScreen()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.electricViolet,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                child: SpringPress(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      AppHaptics.confirm();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const OrganicReactionPredictorScreen(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
+                      foregroundColor: Theme.of(context)
+                          .colorScheme
+                          .onPrimaryContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    icon: const Icon(
+                      Icons.play_circle_outline_rounded,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      'Open Predictor & Mechanism Viewer',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
-                  icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
-                  label: const Text('Open Predictor & Mechanism Viewer', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                 ),
               ),
             ],
@@ -760,89 +1048,131 @@ class _ReactionLibrarySectionState extends State<_ReactionLibrarySection> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              ChoiceChip(
-                label: const Text('All Mechanisms'),
-                selected: _filterCategory == null,
-                onSelected: (_) => setState(() => _filterCategory = null),
+              SpringPress(
+                child: ChoiceChip(
+                  label: const Text('All Mechanisms'),
+                  selected: _filterCategory == null,
+                  onSelected: (_) => setState(() => _filterCategory = null),
+                ),
               ),
               const SizedBox(width: 8),
-              ...ReactionCategory.values.map((cat) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
+              ...ReactionCategory.values.map(
+                (cat) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: SpringPress(
                     child: ChoiceChip(
                       label: Text(cat.displayName),
                       selected: _filterCategory == cat,
                       onSelected: (_) => setState(() => _filterCategory = cat),
                     ),
-                  )),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
 
         const SizedBox(height: 12),
 
-        ...list.map((m) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: GlowCard(
-                padding: const EdgeInsets.all(14),
-                onTap: () {
-                  AppHaptics.confirm();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ReactionMechanismsScreen(initialReactionId: m.id),
+        ...list.map(
+          (m) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: GlowCard(
+              padding: const EdgeInsets.all(14),
+              onTap: () {
+                AppHaptics.confirm();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ReactionMechanismsScreen(initialReactionId: m.id),
+                  ),
+                );
+              },
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  );
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.purple.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.science_outlined, size: 20, color: AppColors.purpleBright),
+                    child: Icon(
+                      Icons.science_outlined,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            m.name,
-                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          m.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            m.category.displayName,
-                            style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          m.category.displayName,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            m.summary,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          m.summary,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 11.5,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 20),
-                  ],
-                ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 20,
+                  ),
+                ],
               ),
-            )),
+            ),
+          ),
+        ),
 
         const SizedBox(height: 14),
-        const GlowCard(
+        GlowCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Why Verified Reaction SVGs?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5, color: Colors.white)),
+              Text(
+                'Why Verified Reaction SVGs?',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.5,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
               SizedBox(height: 8),
               Text(
                 'AI text generators often hallucinate chemical structures. ChemBuddy\'s Reaction Engine pairs curated, peer-reviewed reaction mechanisms rendered in vector SVG format with step-by-step electron arrow pushing for 100% academic precision.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.4),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12.5,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
@@ -886,69 +1216,165 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
-        const Text(
+        Text(
           'Chemistry Tools',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 2),
-        const Text(
+        Text(
           'Tools for calculations, reactions, spectroscopy & exams',
-          style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 12),
 
         // Tool Search Input
         TextField(
           controller: _toolSearchCtrl,
-          style: const TextStyle(fontSize: 13, color: Colors.white),
+          style: TextStyle(
+            fontSize: 13,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           decoration: InputDecoration(
             hintText: 'Search for a chemistry tool (e.g. molar mass, DBE, Nernst, pH)...',
-            hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-            prefixIcon: const Icon(Icons.build_circle_outlined, color: AppColors.purpleBright, size: 18),
+            hintStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12,
+            ),
+            prefixIcon: Icon(
+              Icons.build_circle_outlined,
+              color: Theme.of(context).colorScheme.primary,
+              size: 18,
+            ),
             suffixIcon: _toolQuery.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear, size: 16, color: AppColors.textMuted),
-                    onPressed: () => _toolSearchCtrl.clear(),
+                ? SpringPress(
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.clear,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: () => _toolSearchCtrl.clear(),
+                    ),
                   )
                 : null,
             filled: true,
-            fillColor: AppColors.surfaceElevated,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.borderSubtle)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.borderSubtle)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.purpleBright)),
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
           ),
         ),
 
         const SizedBox(height: 16),
 
         // RECENTLY USED
-        const Text(
+        Text(
           'RECENTLY USED',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textMuted, letterSpacing: 0.6),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            letterSpacing: 0.6,
+          ),
         ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           runSpacing: 6,
           children: [
-            ActionChip(
-              avatar: const Icon(Icons.scale, size: 14, color: AppColors.purpleBright),
-              label: const Text('Molar Mass', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
-              backgroundColor: AppColors.surfaceElevated,
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 0))),
+            SpringPress(
+              child: ActionChip(
+                avatar: Icon(
+                  Icons.scale,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: const Text(
+                  'Molar Mass',
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                ),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHigh,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const ChemistryToolkitScreen(initialCategory: 0),
+                  ),
+                ),
+              ),
             ),
-            ActionChip(
-              avatar: const Icon(Icons.calculate, size: 14, color: AppColors.accentCyan),
-              label: const Text('DBE / IHD Calculator', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
-              backgroundColor: AppColors.surfaceElevated,
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SpectroscopyHubScreen())),
+            SpringPress(
+              child: ActionChip(
+                avatar: Icon(
+                  Icons.calculate,
+                  size: 14,
+                  color: AppColors.adaptive(context, AppColors.accentCyan),
+                ),
+                label: const Text(
+                  'DBE / IHD Calculator',
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                ),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHigh,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SpectroscopyHubScreen(),
+                  ),
+                ),
+              ),
             ),
-            ActionChip(
-              avatar: const Icon(Icons.bolt, size: 14, color: AppColors.accentGold),
-              label: const Text('Nernst Equation', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
-              backgroundColor: AppColors.surfaceElevated,
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 4))),
+            SpringPress(
+              child: ActionChip(
+                avatar: Icon(
+                  Icons.bolt,
+                  size: 14,
+                  color: AppColors.adaptive(context, AppColors.accentGold),
+                ),
+                label: const Text(
+                  'Nernst Equation',
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                ),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHigh,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const ChemistryToolkitScreen(initialCategory: 7),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -956,9 +1382,14 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
         const SizedBox(height: 16),
 
         // FREQUENTLY USED
-        const Text(
+        Text(
           'FREQUENTLY USED',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textMuted, letterSpacing: 0.6),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            letterSpacing: 0.6,
+          ),
         ),
         const SizedBox(height: 8),
         Row(
@@ -968,8 +1399,14 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
                 title: 'Molarity & Dilution',
                 subtitle: 'Concentrations & solutions',
                 icon: Icons.water_drop,
-                iconColor: AppColors.blue,
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 0))),
+                iconColor: AppColors.adaptive(context, AppColors.blue),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const ChemistryToolkitScreen(initialCategory: 0),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -978,8 +1415,13 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
                 title: 'Structure Solver',
                 subtitle: '8-step IR/NMR deduction',
                 icon: Icons.analytics,
-                iconColor: AppColors.purpleBright,
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SpectroscopyHubScreen())),
+                iconColor: Theme.of(context).colorScheme.primary,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SpectroscopyHubScreen(),
+                  ),
+                ),
               ),
             ),
           ],
@@ -988,137 +1430,268 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
         const SizedBox(height: 20),
 
         // 1. CALCULATIONS CATEGORY
-        if (_shouldShow('calculations', ['molar mass', 'stoichiometry', 'moles', 'yield', 'conversion', 'molarity', 'normality', 'dilution', 'ph', 'buffer', 'titration'])) ...[
-          const _ToolCategoryHeader(title: 'CALCULATIONS & STOICHIOMETRY', icon: Icons.calculate_outlined),
+        if (_shouldShow('calculations', [
+          'molar mass',
+          'stoichiometry',
+          'moles',
+          'yield',
+          'conversion',
+          'molarity',
+          'normality',
+          'dilution',
+          'ph',
+          'buffer',
+          'titration',
+        ])) ...[
+          const _ToolCategoryHeader(
+            title: 'CALCULATIONS & STOICHIOMETRY',
+            icon: Icons.calculate_outlined,
+          ),
           _ToolListTile(
             title: 'Stoichiometry & Unit Conversions',
             subtitle: 'Mass ⇄ mole ⇄ particles, gas volume at STP, percent yield & chemical units',
             icon: Icons.sync_alt,
-            iconColor: AppColors.accentCyan,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 1))),
+            iconColor: AppColors.adaptive(context, AppColors.accentCyan),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ChemistryToolkitScreen(initialCategory: 1),
+              ),
+            ),
           ),
           _ToolListTile(
             title: 'Molar Mass Calculator',
             subtitle: 'Supports chemical names (e.g. benzoic acid) & formulas (CuSO4·5H2O)',
             icon: Icons.scale,
-            iconColor: AppColors.purpleBright,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 0))),
+            iconColor: Theme.of(context).colorScheme.primary,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ChemistryToolkitScreen(initialCategory: 0),
+              ),
+            ),
           ),
           _ToolListTile(
             title: 'Molarity & Normality',
             subtitle: 'Solute mass, volume, molarity and normality with valence factor',
             icon: Icons.water_drop_outlined,
-            iconColor: AppColors.blue,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 0))),
+            iconColor: AppColors.adaptive(context, AppColors.blue),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ChemistryToolkitScreen(initialCategory: 0),
+              ),
+            ),
           ),
           _ToolListTile(
             title: 'Dilution Calculator',
             subtitle: 'M1 × V1 = M2 × V2 standard solution dilution',
             icon: Icons.opacity,
-            iconColor: AppColors.accentCyan,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 0))),
+            iconColor: AppColors.adaptive(context, AppColors.accentCyan),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ChemistryToolkitScreen(initialCategory: 0),
+              ),
+            ),
           ),
           _ToolListTile(
             title: 'pH & Henderson-Hasselbalch Buffer',
             subtitle: 'Weak acid/base equilibria, buffer capacity and pKa calculations',
             icon: Icons.science_outlined,
-            iconColor: AppColors.accentGold,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 2))),
+            iconColor: AppColors.adaptive(context, AppColors.accentGold),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ChemistryToolkitScreen(initialCategory: 3),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
         ],
 
         // 2. PHYSICAL / INORGANIC
-        if (_shouldShow('physical', ['gibbs', 'delta g', 'nernst', 'cell potential', 'arrhenius', 'kinetics', 'beer lambert', 'thermo'])) ...[
-          const _ToolCategoryHeader(title: 'PHYSICAL / INORGANIC', icon: Icons.bolt_outlined),
+        if (_shouldShow('physical', [
+          'gibbs',
+          'delta g',
+          'nernst',
+          'cell potential',
+          'arrhenius',
+          'kinetics',
+          'beer lambert',
+          'thermo',
+        ])) ...[
+          const _ToolCategoryHeader(
+            title: 'PHYSICAL / INORGANIC',
+            icon: Icons.bolt_outlined,
+          ),
           _ToolListTile(
             title: 'Gibbs Free Energy (ΔG = ΔH - TΔS)',
             subtitle: 'Spontaneity analysis, enthalpy, entropy & temperature dependence',
             icon: Icons.local_fire_department,
             iconColor: Colors.deepOrangeAccent,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 3))),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ChemistryToolkitScreen(initialCategory: 4),
+              ),
+            ),
           ),
           _ToolListTile(
             title: 'Arrhenius Activation Energy (Ea)',
-            subtitle: 'Two-temperature rate constant ratios & reaction kinetics',
+            subtitle:
+                'Two-temperature rate constant ratios & reaction kinetics',
             icon: Icons.speed,
             iconColor: Colors.amber,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 3))),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ChemistryToolkitScreen(initialCategory: 4),
+              ),
+            ),
           ),
           _ToolListTile(
             title: 'Nernst Equation & Cell Potential',
             subtitle: 'Non-standard EMF, reaction quotient Q and transfer electrons n',
             icon: Icons.bolt,
-            iconColor: AppColors.accentGold,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 5))),
+            iconColor: AppColors.adaptive(context, AppColors.accentGold),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ChemistryToolkitScreen(initialCategory: 7),
+              ),
+            ),
           ),
           _ToolListTile(
             title: 'Beer-Lambert & Photon Energy (E = hν)',
             subtitle: 'Spectrophotometric absorbance A = ε·c·l and photon transitions',
             icon: Icons.lightbulb_outline,
             iconColor: Colors.tealAccent,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChemistryToolkitScreen(initialCategory: 4))),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ChemistryToolkitScreen(initialCategory: 6),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
         ],
 
         // 3. SPECTROSCOPY
-        if (_shouldShow('spectroscopy', ['dbe', 'ihd', 'nmr', 'ir', 'mass spec', 'spectroscopy', 'structure solver'])) ...[
-          const _ToolCategoryHeader(title: 'SPECTROSCOPY', icon: Icons.waves_outlined),
+        if (_shouldShow('spectroscopy', [
+          'dbe',
+          'ihd',
+          'nmr',
+          'ir',
+          'mass spec',
+          'spectroscopy',
+          'structure solver',
+        ])) ...[
+          const _ToolCategoryHeader(
+            title: 'SPECTROSCOPY',
+            icon: Icons.waves_outlined,
+          ),
           _ToolListTile(
             title: 'DBE / IHD Calculator',
-            subtitle: 'Degree of unsaturation with valence limits & halogen support',
+            subtitle:
+                'Degree of unsaturation with valence limits & halogen support',
             icon: Icons.calculate,
-            iconColor: AppColors.accentCyan,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SpectroscopyHubScreen())),
+            iconColor: AppColors.adaptive(context, AppColors.accentCyan),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SpectroscopyHubScreen()),
+            ),
           ),
           _ToolListTile(
             title: 'Academic Structure Deduction Engine',
-            subtitle: '8-step unified deduction from molecular formula, IR, NMR & MS',
+            subtitle:
+                '8-step unified deduction from molecular formula, IR, NMR & MS',
             icon: Icons.analytics,
-            iconColor: AppColors.purpleBright,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SpectroscopyHubScreen())),
+            iconColor: Theme.of(context).colorScheme.primary,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SpectroscopyHubScreen()),
+            ),
           ),
           _ToolListTile(
             title: 'FT-IR Diagnostic Bands & 1H/13C NMR Tables',
             subtitle: 'Carbonyl frequencies, fingerprint region, chemical shift ranges',
             icon: Icons.table_chart,
             iconColor: Colors.lightGreenAccent,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SpectroscopyHubScreen())),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SpectroscopyHubScreen()),
+            ),
           ),
           const SizedBox(height: 16),
         ],
 
         // 4. ORGANIC & ADVANCED
-        if (_shouldShow('organic', ['reactions', 'pericyclic', 'fmo', 'woodward', 'predict', 'pyq', 'syllabus'])) ...[
-          const _ToolCategoryHeader(title: 'ORGANIC & ADVANCED', icon: Icons.biotech_outlined),
+        if (_shouldShow('organic', [
+          'reactions',
+          'pericyclic',
+          'fmo',
+          'woodward',
+          'predict',
+          'pyq',
+          'syllabus',
+        ])) ...[
+          const _ToolCategoryHeader(
+            title: 'ORGANIC & ADVANCED',
+            icon: Icons.biotech_outlined,
+          ),
           _ToolListTile(
             title: 'Reaction Mechanisms & Vector SVGs',
             subtitle: 'Curated reaction database, curved electron arrows & conditions',
             icon: Icons.biotech,
-            iconColor: AppColors.brandBright,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReactionMechanismsScreen())),
+            iconColor: Theme.of(context).colorScheme.primary,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ReactionMechanismsScreen(),
+              ),
+            ),
           ),
           _ToolListTile(
             title: 'Pericyclic Mechanisms & FMO Analysis',
             subtitle: 'Woodward-Hoffmann rules, electrocyclic, cycloadditions, sigmatropic',
             icon: Icons.autorenew,
-            iconColor: AppColors.purpleBright,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PericyclicHubScreen())),
+            iconColor: Theme.of(context).colorScheme.primary,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PericyclicHubScreen()),
+            ),
           ),
           _ToolListTile(
             title: 'University PYQ Question Predictor',
             subtitle: 'Topic probability modeling based on previous examination patterns',
             icon: Icons.psychology,
-            iconColor: AppColors.accentGold,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PredictImportantQuestionsScreen())),
+            iconColor: AppColors.adaptive(context, AppColors.accentGold),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const PredictImportantQuestionsScreen(),
+              ),
+            ),
           ),
           _ToolListTile(
             title: 'MSc University Syllabus Browser',
             subtitle: 'Official semester units, core papers, elective modules & references',
             icon: Icons.menu_book,
             iconColor: Colors.tealAccent,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SyllabusBrowserScreen())),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SyllabusBrowserScreen()),
+            ),
           ),
         ],
       ],
@@ -1126,9 +1699,15 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
   }
 
   bool _shouldShow(String categoryName, List<String> keywords) {
-    if (_toolQuery.isEmpty) return true;
-    if (categoryName.contains(_toolQuery)) return true;
-    return keywords.any((k) => k.contains(_toolQuery) || _toolQuery.contains(k));
+    if (_toolQuery.isEmpty) {
+      return true;
+    }
+    if (categoryName.contains(_toolQuery)) {
+      return true;
+    }
+    return keywords.any(
+      (k) => k.contains(_toolQuery) || _toolQuery.contains(k),
+    );
   }
 }
 
@@ -1143,14 +1722,18 @@ class _ToolCategoryHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8, top: 4),
       child: Row(
         children: [
-          Icon(icon, size: 15, color: AppColors.textSecondary),
+          Icon(
+            icon,
+            size: 15,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 6),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w800,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               letterSpacing: 0.6,
             ),
           ),
@@ -1190,14 +1773,21 @@ class _QuickToolCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             title,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
           Text(
             subtitle,
-            style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -1249,19 +1839,30 @@ class _ToolListTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 11,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textMuted, size: 13),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 13,
+            ),
           ],
         ),
       ),
@@ -1287,34 +1888,64 @@ class _QuizzesAndMasteryTab extends ConsumerWidget {
     final examCard = Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: GlowCard(
-        borderColor: AppColors.accentGold.withValues(alpha: 0.4),
+        borderColor: AppColors.adaptive(
+          context,
+          AppColors.accentGold,
+        ).withValues(alpha: 0.4),
         padding: const EdgeInsets.all(14),
         onTap: () {
           AppHaptics.confirm();
-          Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ExamModeScreen()));
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const ExamModeScreen()),
+          );
         },
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.accentGold.withValues(alpha: 0.15),
+                color: AppColors.adaptive(
+                  context,
+                  AppColors.accentGold,
+                ).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.school_rounded, color: AppColors.accentGold, size: 20),
+              child: Icon(
+                Icons.school_rounded,
+                color: AppColors.adaptive(context, AppColors.accentGold),
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('University Exam Pattern Paper', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white)),
+                  Text(
+                    'University Exam Pattern Paper',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13.5,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
                   SizedBox(height: 2),
-                  Text('Practice authentic 2M, 5M, and 10M questions with model marking schemes.', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                  Text(
+                    'Practice authentic 2M, 5M, and 10M questions with model marking schemes.',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 11.5,
+                    ),
+                  ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.accentGold, size: 20),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.adaptive(context, AppColors.accentGold),
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -1324,17 +1955,28 @@ class _QuizzesAndMasteryTab extends ConsumerWidget {
       return Column(
         children: [
           examCard,
-          const GlowCard(
+          GlowCard(
             child: Column(
               children: [
-                Icon(Icons.quiz_outlined, size: 48, color: AppColors.purpleBright),
+                Icon(
+                  Icons.quiz_outlined,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 SizedBox(height: 12),
-                Text('No Quiz History Yet', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                Text(
+                  'No Quiz History Yet',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                ),
                 SizedBox(height: 8),
                 Text(
                   'Take a quiz from any uploaded PDF notes to track your topic mastery across performance tiers here.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -1347,64 +1989,90 @@ class _QuizzesAndMasteryTab extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         examCard,
-        const Text('Chemistry Topic Mastery', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-        const SizedBox(height: 8),
         const Text(
+          'Chemistry Topic Mastery',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        Text(
           'Adaptive tracking based on your PDF quiz performance:',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
         ),
         const SizedBox(height: 12),
-        ...allQuizzes.take(5).map((q) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: GlowCard(
-                padding: const EdgeInsets.all(14),
-                onTap: () {
-                  AppHaptics.selection();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (_) => PdfQuizScreen(
-                        quiz: q,
-                        docName: q.sourceFileName,
+        ...allQuizzes
+            .take(5)
+            .map(
+              (q) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: GlowCard(
+                  padding: const EdgeInsets.all(14),
+                  onTap: () {
+                    AppHaptics.selection();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            PdfQuizScreen(quiz: q, docName: q.sourceFileName),
                       ),
-                    ),
-                  );
-                },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.school, size: 18, color: AppColors.purpleBright),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            q.title,
-                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.school,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              q.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary
+                                  .withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${q.questionCount} Questions',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Source: ${q.sourceFileName} · ${DateFormat("d MMM yyyy").format(q.createdAt)}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11.5,
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.purple.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${q.questionCount} Questions',
-                            style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 11),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Source: ${q.sourceFileName} · ${DateFormat("d MMM yyyy").format(q.createdAt)}',
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            )),
+            ),
       ],
     );
   }
@@ -1428,22 +2096,38 @@ class _EventsTab extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         if (events.isEmpty)
-          const GlowCard(
+          GlowCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(Icons.event_note, size: 48, color: AppColors.purpleBright),
+                Icon(
+                  Icons.event_note,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 SizedBox(height: 12),
-                Text('No deadlines yet.', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                Text(
+                  'No deadlines yet.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
                 SizedBox(height: 8),
-                Text('Add a test, assignment, or seminar to track it here.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+                Text(
+                  'Add a test, assignment, or seminar to track it here.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),
         ...events.map((e) {
           String? subjectName;
           for (final s in state.subjects) {
-            if (s.id == e.subjectId) subjectName = s.name;
+            if (s.id == e.subjectId) {
+              subjectName = s.name;
+            }
           }
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
@@ -1453,8 +2137,10 @@ class _EventsTab extends ConsumerWidget {
                 children: [
                   Checkbox(
                     value: e.completed,
-                    activeColor: AppColors.purple,
-                    onChanged: (v) => ref.read(appControllerProvider.notifier).saveEvent(e.copyWith(completed: v ?? false)),
+                    activeColor: Theme.of(context).colorScheme.primary,
+                    onChanged: (v) => ref
+                        .read(appControllerProvider.notifier)
+                        .saveEvent(e.copyWith(completed: v ?? false)),
                   ),
                   Expanded(
                     child: Column(
@@ -1464,40 +2150,67 @@ class _EventsTab extends ConsumerWidget {
                           e.title,
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            decoration: e.completed ? TextDecoration.lineThrough : null,
+                            decoration: e.completed
+                                ? TextDecoration.lineThrough
+                                : null,
                           ),
                         ),
                         Text(
                           '${e.type.name.toUpperCase()} · ${DateFormat('d MMM yyyy').format(e.dueDate)}${subjectName == null ? '' : ' · $subjectName'}',
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 12,
+                          ),
                         ),
                         if (!e.completed) ...[
                           const SizedBox(height: 8),
-                          TextButton.icon(
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (_) => SmartFlashcardsGenerateScreen(
-                                  prefilledTopic: '${e.title}${subjectName != null ? ' ($subjectName)' : ''}',
+                          SpringPress(
+                            child: TextButton.icon(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (_) => SmartFlashcardsGenerateScreen(
+                                    prefilledTopic:
+                                        '${e.title}${subjectName != null ? ' ($subjectName)' : ''}',
+                                  ),
                                 ),
                               ),
-                            ),
-                            icon: const Icon(Icons.school, size: 16, color: AppColors.purpleBright),
-                            label: const Text('Study for this', style: TextStyle(color: AppColors.purpleBright, fontSize: 12)),
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: const Size(0, 24),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              alignment: Alignment.centerLeft,
+                              icon: Icon(
+                                Icons.school,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              label: Text(
+                                'Study for this',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(0, 24),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                alignment: Alignment.centerLeft,
+                              ),
                             ),
                           ),
                         ],
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => ref.read(appControllerProvider.notifier).deleteEvent(e.id),
-                    icon: const Icon(Icons.delete_outline, color: AppColors.danger),
+                  SpringPress(
+                    child: IconButton(
+                      onPressed: () => ref
+                          .read(appControllerProvider.notifier)
+                          .deleteEvent(e.id),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: AppColors.adaptive(context, AppColors.danger),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1508,7 +2221,11 @@ class _EventsTab extends ConsumerWidget {
     );
   }
 
-  Future<void> _editEvent(BuildContext context, WidgetRef ref, {AcademicEvent? existing}) async {
+  Future<void> _editEvent(
+    BuildContext context,
+    WidgetRef ref, {
+    AcademicEvent? existing,
+  }) async {
     final title = TextEditingController(text: existing?.title ?? '');
     final desc = TextEditingController(text: existing?.description ?? '');
     var type = existing?.type ?? EventType.test;
@@ -1519,25 +2236,44 @@ class _EventsTab extends ConsumerWidget {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) {
         return Padding(
-          padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(ctx).viewInsets.bottom + 20),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
           child: StatefulBuilder(
             builder: (context, setModal) {
               return SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(existing == null ? 'New deadline' : 'Edit deadline', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                    Text(
+                      existing == null ? 'New deadline' : 'Edit deadline',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    TextField(controller: title, decoration: const InputDecoration(hintText: 'Title')),
+                    TextField(
+                      controller: title,
+                      decoration: const InputDecoration(hintText: 'Title'),
+                    ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<EventType>(
                       initialValue: type,
                       items: EventType.values
-                          .map((t) => DropdownMenuItem(value: t, child: Text(t.name)))
+                          .map(
+                            (t) =>
+                                DropdownMenuItem(value: t, child: Text(t.name)),
+                          )
                           .toList(),
                       onChanged: (v) => setModal(() => type = v ?? type),
                     ),
@@ -1545,34 +2281,58 @@ class _EventsTab extends ConsumerWidget {
                     DropdownButtonFormField<String?>(
                       initialValue: subjectId,
                       items: [
-                        const DropdownMenuItem(value: null, child: Text('No subject')),
-                        ...subjects.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('No subject'),
+                        ),
+                        ...subjects.map(
+                          (s) => DropdownMenuItem(
+                            value: s.id,
+                            child: Text(s.name),
+                          ),
+                        ),
                       ],
                       onChanged: (v) => setModal(() => subjectId = v),
                     ),
                     const SizedBox(height: 8),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('Due ${DateFormat('d MMM yyyy').format(due)}'),
-                      trailing: const Icon(Icons.calendar_month),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: due,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2035),
-                        );
-                        if (picked != null) setModal(() => due = picked);
-                      },
+                    SpringPress(
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          'Due ${DateFormat('d MMM yyyy').format(due)}',
+                        ),
+                        trailing: const Icon(Icons.calendar_month),
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: due,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2035),
+                          );
+                          if (picked != null) {
+                            setModal(() => due = picked);
+                          }
+                        },
+                      ),
                     ),
-                    TextField(controller: desc, maxLines: 3, decoration: const InputDecoration(hintText: 'Description')),
+                    TextField(
+                      controller: desc,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        hintText: 'Description',
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     PrimaryButton(
                       label: 'Save',
                       onPressed: () async {
-                        if (title.text.trim().isEmpty) return;
+                        if (title.text.trim().isEmpty) {
+                          return;
+                        }
                         final repo = ref.read(chemRepositoryProvider);
-                        await ref.read(appControllerProvider.notifier).saveEvent(
+                        await ref
+                            .read(appControllerProvider.notifier)
+                            .saveEvent(
                               AcademicEvent(
                                 id: existing?.id ?? repo.newId(),
                                 title: title.text.trim(),
@@ -1583,7 +2343,9 @@ class _EventsTab extends ConsumerWidget {
                                 completed: existing?.completed ?? false,
                               ),
                             );
-                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (ctx.mounted) {
+                          Navigator.pop(ctx);
+                        }
                       },
                     ),
                   ],
@@ -1611,27 +2373,49 @@ class _NotesTab extends ConsumerWidget {
       children: [
         _EventsTab(state: state),
         const SizedBox(height: 24),
-        const Text('Daily Chemistry Notes', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        const Text(
+          'Daily Chemistry Notes',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
         const SizedBox(height: 10),
-        PrimaryButton(label: 'New note', onPressed: () => _editNote(context, ref)),
+        PrimaryButton(
+          label: 'New note',
+          onPressed: () => _editNote(context, ref),
+        ),
         const SizedBox(height: 16),
         if (state.notes.isEmpty)
-          const GlowCard(
+          GlowCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(Icons.notes, size: 48, color: AppColors.purpleBright),
+                Icon(
+                  Icons.notes,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 SizedBox(height: 12),
-                Text('No notes yet.', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                Text(
+                  'No notes yet.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
                 SizedBox(height: 8),
-                Text('Day-to-day notes will show up here.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+                Text(
+                  'Day-to-day notes will show up here.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),
         ...state.notes.map((n) {
           String? tag;
           for (final s in state.subjects) {
-            if (s.id == n.subjectId) tag = s.code;
+            if (s.id == n.subjectId) {
+              tag = s.code;
+            }
           }
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
@@ -1642,31 +2426,61 @@ class _NotesTab extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: Text(n.title, style: const TextStyle(fontWeight: FontWeight.w800))),
-                      IconButton(
-                        tooltip: 'Flashcard',
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) => SmartFlashcardsGenerateScreen(
-                              prefilledTopic: n.title,
-                              prefilledText: n.body,
+                      Expanded(
+                        child: Text(
+                          n.title,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      SpringPress(
+                        child: IconButton(
+                          tooltip: 'Flashcard',
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => SmartFlashcardsGenerateScreen(
+                                prefilledTopic: n.title,
+                                prefilledText: n.body,
+                              ),
+                            ),
+                          ),
+                          icon: Icon(
+                            Icons.style_outlined,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      SpringPress(
+                        child: IconButton(
+                          onPressed: () => ref
+                              .read(appControllerProvider.notifier)
+                              .deleteNote(n.id),
+                          icon: Icon(
+                            Icons.delete_outline,
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.danger,
                             ),
                           ),
                         ),
-                        icon: const Icon(Icons.style_outlined, color: AppColors.purpleBright),
-                      ),
-                      IconButton(
-                        onPressed: () => ref.read(appControllerProvider.notifier).deleteNote(n.id),
-                        icon: const Icon(Icons.delete_outline, color: AppColors.danger),
                       ),
                     ],
                   ),
-                  Text(n.body, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary)),
+                  Text(
+                    n.body,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     '${DateFormat('d MMM, h:mm a').format(n.updatedAt)}${tag == null ? '' : ' · $tag'}',
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -1677,7 +2491,11 @@ class _NotesTab extends ConsumerWidget {
     );
   }
 
-  Future<void> _editNote(BuildContext context, WidgetRef ref, {NoteItem? existing}) async {
+  Future<void> _editNote(
+    BuildContext context,
+    WidgetRef ref, {
+    NoteItem? existing,
+  }) async {
     final title = TextEditingController(text: existing?.title ?? '');
     final body = TextEditingController(text: existing?.body ?? '');
     String? subjectId = existing?.subjectId;
@@ -1686,37 +2504,71 @@ class _NotesTab extends ConsumerWidget {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) {
         return Padding(
-          padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(ctx).viewInsets.bottom + 20),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
           child: StatefulBuilder(
             builder: (context, setModal) {
               return SingleChildScrollView(
                 child: Column(
                   children: [
-                    Text(existing == null ? 'New note' : 'Edit note', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                    Text(
+                      existing == null ? 'New note' : 'Edit note',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    TextField(controller: title, decoration: const InputDecoration(hintText: 'Title')),
+                    TextField(
+                      controller: title,
+                      decoration: const InputDecoration(hintText: 'Title'),
+                    ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String?>(
                       initialValue: subjectId,
                       items: [
-                        const DropdownMenuItem(value: null, child: Text('No subject tag')),
-                        ...subjects.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('No subject tag'),
+                        ),
+                        ...subjects.map(
+                          (s) => DropdownMenuItem(
+                            value: s.id,
+                            child: Text(s.name),
+                          ),
+                        ),
                       ],
                       onChanged: (v) => setModal(() => subjectId = v),
                     ),
                     const SizedBox(height: 8),
-                    TextField(controller: body, maxLines: 6, decoration: const InputDecoration(hintText: 'Write your note…')),
+                    TextField(
+                      controller: body,
+                      maxLines: 6,
+                      decoration: const InputDecoration(
+                        hintText: 'Write your note…',
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     PrimaryButton(
                       label: 'Save',
                       onPressed: () async {
-                        if (title.text.trim().isEmpty) return;
+                        if (title.text.trim().isEmpty) {
+                          return;
+                        }
                         final repo = ref.read(chemRepositoryProvider);
-                        await ref.read(appControllerProvider.notifier).saveNote(
+                        await ref
+                            .read(appControllerProvider.notifier)
+                            .saveNote(
                               NoteItem(
                                 id: existing?.id ?? repo.newId(),
                                 title: title.text.trim(),
@@ -1725,7 +2577,9 @@ class _NotesTab extends ConsumerWidget {
                                 updatedAt: DateTime.now(),
                               ),
                             );
-                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (ctx.mounted) {
+                          Navigator.pop(ctx);
+                        }
                       },
                     ),
                   ],

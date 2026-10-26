@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -38,7 +40,7 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
     showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: AppColors.bg2,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Column(
@@ -55,24 +57,42 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                       children: [
                         Text(
                           '${preset.title} Timetable',
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.textPrimary),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           '${preset.department} • ${preset.semester}',
-                          style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    icon: const Icon(Icons.close_rounded, color: AppColors.textMuted, size: 20),
+                  SpringPress(
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        size: 20,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppColors.borderSubtle),
+            Divider(
+              height: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
             Container(
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height * 0.60,
@@ -85,9 +105,14 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                   child: Image.asset(
                     preset.imageAsset,
                     fit: BoxFit.contain,
-                    errorBuilder: (ctx, err, st) => const Padding(
+                    errorBuilder: (ctx, err, st) => Padding(
                       padding: EdgeInsets.all(32),
-                      child: Text('Timetable image not found', style: TextStyle(color: AppColors.textMuted)),
+                      child: Text(
+                        'Timetable image not found',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -97,17 +122,32 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  const Icon(Icons.touch_app_rounded, size: 14, color: AppColors.brandBright),
+                  Icon(
+                    Icons.touch_app_rounded,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(width: 6),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Pinch or drag to inspect faculty & slot codes.',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Close', style: TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w700)),
+                  SpringPress(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(
+                        'Close',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -131,32 +171,41 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
               Expanded(
                 child: Text(
                   mainTab == 0 ? 'Classes & Schedule' : 'Attendance Tracker',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -0.4),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    letterSpacing: -0.4,
+                  ),
                 ),
               ),
               if (mainTab == 0)
-                IconButton.filledTonal(
-                  tooltip: 'Add class',
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.surfaceContainerHigh,
-                    foregroundColor: AppColors.brandBright,
-                  ),
-                  onPressed: () => Navigator.push<bool>(
-                    context,
-                    ReviewTimetableScreen.route(
-                      replaceAll: false,
-                      initialEntries: [
-                        TimetableEntry(
-                          id: const Uuid().v4(),
-                          dayOfWeek: 'Monday',
-                          startTime: '10:00 AM',
-                          endTime: '11:00 AM',
-                          subjectCode: '',
-                        ),
-                      ],
+                SpringPress(
+                  child: IconButton.filledTonal(
+                    tooltip: 'Add class',
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHigh,
+                      foregroundColor: Theme.of(context).colorScheme.primary,
                     ),
+                    onPressed: () => Navigator.push<bool>(
+                      context,
+                      ReviewTimetableScreen.route(
+                        replaceAll: false,
+                        initialEntries: [
+                          TimetableEntry(
+                            id: const Uuid().v4(),
+                            dayOfWeek: 'Monday',
+                            startTime: '10:00 AM',
+                            endTime: '11:00 AM',
+                            subjectCode: '',
+                          ),
+                        ],
+                      ),
+                    ),
+                    icon: const Icon(Icons.add_rounded, size: 20),
                   ),
-                  icon: const Icon(Icons.add_rounded, size: 20),
                 ),
             ],
           ),
@@ -168,9 +217,12 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
           child: Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerHigh,
+              color: Theme.of(context).colorScheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                width: 0.6,
+              ),
             ),
             child: Row(
               children: [
@@ -199,39 +251,56 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
             child: Row(
               children: [
-                for (final item in ['Today', 'Week', 'Month', 'Scan'].asMap().entries)
+                for (final item in [
+                  'Today',
+                  'Week',
+                  'Month',
+                  'Scan',
+                ].asMap().entries)
                   Expanded(
                     child: Padding(
                       padding: EdgeInsets.only(right: item.key == 3 ? 0 : 6),
-                      child: InkWell(
-                        onTap: () {
-                          AppHaptics.selection();
-                          setState(() => timetableTab = item.key);
-                        },
-                        borderRadius: BorderRadius.circular(10),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          curve: Curves.easeOutCubic,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: timetableTab == item.key
-                                ? AppColors.brandPrimary
-                                : AppColors.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
+                      child: SpringPress(
+                        child: InkWell(
+                          onTap: () {
+                            AppHaptics.selection();
+                            setState(() => timetableTab = item.key);
+                          },
+                          borderRadius: BorderRadius.circular(10),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            curve: Curves.easeOutCubic,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
                               color: timetableTab == item.key
-                                  ? AppColors.borderHighlight
-                                  : AppColors.borderSubtle,
-                              width: 0.6,
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: timetableTab == item.key
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant,
+                                width: 0.6,
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            item.value,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: timetableTab == item.key ? FontWeight.w700 : FontWeight.w500,
-                              fontSize: 12,
-                              color: timetableTab == item.key ? Colors.white : AppColors.textSecondary,
+                            child: Text(
+                              item.value,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontWeight: timetableTab == item.key
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                fontSize: 12,
+                                color: timetableTab == item.key
+                                    ? Theme.of(context).colorScheme.onPrimary
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                              ),
                             ),
                           ),
                         ),
@@ -257,16 +326,19 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
                       child: const AttendanceScreen(embedded: true),
                     )
                   : timetableTab == 2
-                      ? const CalendarScreen(embedded: true)
-                      : timetableTab == 3
-                          ? ListView(padding: const EdgeInsets.fromLTRB(20, 0, 20, 100), children: const [TimetableScannerCard()])
-                          : ListView(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                              children: [
-                                _buildPresetSelector(entries),
-                                ..._list(entries, todayOnly: timetableTab == 0),
-                              ],
-                            ),
+                  ? const CalendarScreen(embedded: true)
+                  : timetableTab == 3
+                  ? ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      children: const [TimetableScannerCard()],
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      children: [
+                        _buildPresetSelector(entries),
+                        ..._list(entries, todayOnly: timetableTab == 0),
+                      ],
+                    ),
             ),
           ),
         ),
@@ -275,51 +347,95 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
   }
 
   Widget _buildPresetSelector(List<TimetableEntry> entries) {
-    final isInorganic = entries.any((e) => e.id.startsWith('inorg_') || e.subjectCode.toUpperCase().contains('ICH') || e.subject.toLowerCase().contains('inorganic'));
-    final isOrganic = entries.any((e) => e.id.startsWith('org_') || e.subjectCode.toUpperCase().contains('OCH') || e.subject.toLowerCase().contains('organic'));
+    final isInorganic = entries.any(
+      (e) =>
+          e.id.startsWith('inorg_') ||
+          e.subjectCode.toUpperCase().contains('ICH') ||
+          e.subject.toLowerCase().contains('inorganic'),
+    );
+    final isOrganic = entries.any(
+      (e) =>
+          e.id.startsWith('org_') ||
+          e.subjectCode.toUpperCase().contains('OCH') ||
+          e.subject.toLowerCase().contains('organic'),
+    );
     final isOrgActive = !isInorganic || isOrganic;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 0.6,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.account_balance_rounded, size: 14, color: AppColors.brandBright),
+              Icon(
+                Icons.account_balance_rounded,
+                size: 14,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(width: 6),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'BCU Central College • Sem III (2026-27)',
-                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
-              InkWell(
-                onTap: () => _showTimetablePhotoDialog(
-                  context,
-                  isInorganic && !isOrganic ? TimetablePreset.inorganic : TimetablePreset.organic,
-                ),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+              SpringPress(
+                child: InkWell(
+                  onTap: () => _showTimetablePhotoDialog(
+                    context,
+                    isInorganic && !isOrganic
+                        ? TimetablePreset.inorganic
+                        : TimetablePreset.organic,
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.photo_library_outlined, size: 12, color: AppColors.brandBright),
-                      SizedBox(width: 4),
-                      Text('View Photo', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.brandBright)),
-                    ],
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        width: 0.6,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.photo_library_outlined,
+                          size: 12,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'View Photo',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -355,85 +471,132 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
     required bool isActive,
     required IconData icon,
   }) {
-    return InkWell(
-      onTap: () async {
-        AppHaptics.selection();
-        if (!isActive) {
-          final confirm = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              backgroundColor: AppColors.bg2,
-              title: Text('Switch to ${preset.title}?', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-              content: Text(
-                'This will set your active attendance & timetable schedule to ${preset.title} (BCU Central College Sem III w.e.f. 24-08-2026).',
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+    return SpringPress(
+      child: InkWell(
+        onTap: () async {
+          AppHaptics.selection();
+          if (!isActive) {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHigh,
+                title: Text(
+                  'Switch to ${preset.title}?',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: AppColors.brandPrimary),
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Apply Timetable', style: TextStyle(color: Colors.white)),
+                content: Text(
+                  'This will set your active attendance & timetable schedule to ${preset.title} (BCU Central College Sem III w.e.f. 24-08-2026).',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ],
-            ),
-          );
-          if (confirm == true) {
-            await ref.read(appControllerProvider.notifier).applyPresetTimetable(preset);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${preset.title} timetable activated as default schedule.')),
-              );
-            }
-          }
-        }
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.brandPrimary.withValues(alpha: 0.18) : AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isActive ? AppColors.brandBright : AppColors.borderSubtle,
-            width: isActive ? 1.2 : 0.6,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isActive ? AppColors.brandBright : AppColors.textMuted,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    preset.title,
-                    style: TextStyle(
-                      color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
-                      fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                      fontSize: 11.5,
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                  Text(
-                    isActive ? 'Default Active' : 'Tap to switch',
-                    style: TextStyle(
-                      color: isActive ? AppColors.brandBright : AppColors.textMuted,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      foregroundColor: Theme.of(context)
+                          .colorScheme
+                          .onPrimaryContainer,
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
+                    ),
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(
+                      'Apply Timetable',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                   ),
                 ],
               ),
+            );
+            if (confirm == true) {
+              await ref
+                  .read(appControllerProvider.notifier)
+                  .applyPresetTimetable(preset);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      '${preset.title} timetable activated as default schedule.',
+                    ),
+                  ),
+                );
+              }
+            }
+          }
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.18)
+                : Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isActive
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.outlineVariant,
+              width: isActive ? 1.2 : 0.6,
             ),
-          ],
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isActive
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      preset.title,
+                      style: TextStyle(
+                        color: isActive
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: isActive
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                    Text(
+                      isActive ? 'Default Active' : 'Tap to switch',
+                      style: TextStyle(
+                        color: isActive
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -445,51 +608,65 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
     required String label,
   }) {
     final isSelected = mainTab == index;
-    return InkWell(
-      onTap: () {
-        AppHaptics.selection();
-        setState(() => mainTab = index);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.brandPrimary : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 15,
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : AppColors.textSecondary,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                fontSize: 13,
+    return SpringPress(
+      child: InkWell(
+        onTap: () {
+          AppHaptics.selection();
+          setState(() => mainTab = index);
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-            ),
-          ],
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   List<Widget> _list(List<TimetableEntry> all, {required bool todayOnly}) {
-    final filtered = todayOnly ? all.where((e) => e.weekdayNumber == DateTime.now().weekday).toList() : all;
+    final filtered = todayOnly
+        ? all.where((e) => e.weekdayNumber == DateTime.now().weekday).toList()
+        : all;
     if (filtered.isEmpty) {
       return [
         GlowCard(
           child: Text(
-            todayOnly ? 'No classes today. Scan a timetable or add a class.' : 'No weekly classes yet. Scan your timetable to get started.',
-            style: const TextStyle(color: AppColors.textSecondary),
+            todayOnly
+                ? 'No classes today. Scan a timetable or add a class.'
+                : 'No weekly classes yet. Scan your timetable to get started.',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ];
@@ -499,25 +676,61 @@ class _ClassesHubScreenState extends ConsumerState<ClassesHubScreen> {
         Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: GlowCard(
-            onTap: () => TimetableReviewDialog.show(context, ref, replaceAll: false, entries: [e]),
+            onTap: () => TimetableReviewDialog.show(
+              context,
+              ref,
+              replaceAll: false,
+              entries: [e],
+            ),
             child: Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${e.dayOfWeek} · ${e.startTime}–${e.endTime}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                      Text(e.displayName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary)),
                       Text(
-                        [e.type, if (e.room.isNotEmpty) e.room, if (e.teacherName.isNotEmpty) e.teacherName].join(' · '),
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        '${e.dayOfWeek} · ${e.startTime}–${e.endTime}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                      Text(
+                        e.displayName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      Text(
+                        [
+                          e.type,
+                          if (e.room.isNotEmpty) e.room,
+                          if (e.teacherName.isNotEmpty) e.teacherName,
+                        ].join(' · '),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () => ref.read(appControllerProvider.notifier).deleteTimetableEntry(e.id),
-                  icon: const Icon(Icons.delete_outline_rounded, color: AppColors.statusDanger, size: 20),
+                SpringPress(
+                  child: IconButton(
+                    onPressed: () => ref
+                        .read(appControllerProvider.notifier)
+                        .deleteTimetableEntry(e.id),
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.statusDanger,
+                      ),
+                      size: 20,
+                    ),
+                  ),
                 ),
               ],
             ),

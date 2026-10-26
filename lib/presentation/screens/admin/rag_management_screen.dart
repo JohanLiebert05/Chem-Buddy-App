@@ -1,5 +1,8 @@
+import '../../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 // import 'package:file_picker/file_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/glow_card.dart';
@@ -27,10 +30,30 @@ class RagManagementScreen extends ConsumerWidget {
           child: RefreshIndicator(
             onRefresh: () => ref.refresh(ragDocumentsProvider.future),
             child: docsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator(color: AppColors.purple)),
-              error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.danger))),
+              loading: () => Center(
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              error: (err, _) => Center(
+                child: Text(
+                  'Error: $err',
+                  style: TextStyle(
+                    color: AppColors.adaptive(context, AppColors.danger),
+                  ),
+                ),
+              ),
               data: (docs) {
-                if (docs.isEmpty) return const Center(child: Text('No documents uploaded', style: TextStyle(color: AppColors.textSecondary)));
+                if (docs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No documents uploaded',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  );
+                }
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: docs.length,
@@ -40,14 +63,37 @@ class RagManagementScreen extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: GlowCard(
                         child: ListTile(
-                          leading: const Icon(Icons.description, color: AppColors.purple),
-                          title: Text(doc.title, style: const TextStyle(color: AppColors.textPrimary)),
-                          subtitle: Text('Status: ${doc.status} | Chunks: ${doc.chunkCount}', style: const TextStyle(color: AppColors.textSecondary)),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline, color: AppColors.danger),
-                            onPressed: () {
-                              // Delete document logic
-                            },
+                          leading: Icon(
+                            Icons.description,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          title: Text(
+                            doc.title,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Status: ${doc.status} | Chunks: ${doc.chunkCount}',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                          ),
+                          trailing: SpringPress(
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: AppColors.adaptive(
+                                  context,
+                                  AppColors.danger,
+                                ),
+                              ),
+                              onPressed: () {
+                                // Delete document logic
+                              },
+                            ),
                           ),
                         ),
                       ),

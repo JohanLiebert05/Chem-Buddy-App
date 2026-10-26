@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../theme/app_colors.dart';
 
 /// The official ChemBuddy Wordmark with graduate subtitle badge.
@@ -24,11 +25,11 @@ class ChemBuddyWordmark extends StatelessWidget {
       crossAxisAlignment: alignment,
       children: [
         ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
+          shaderCallback: (bounds) => LinearGradient(
             colors: [
-              Color(0xFFA78BFA), // Purple light
-              Color(0xFF8B5CF6), // Purple bright
-              Color(0xFF06B6D4), // Cyan
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.secondary,
+              Theme.of(context).colorScheme.tertiary,
             ],
             stops: [0.0, 0.45, 1.0],
           ).createShader(bounds),
@@ -49,13 +50,14 @@ class ChemBuddyWordmark extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.purple.withValues(alpha: 0.25),
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
                   AppColors.blue.withValues(alpha: 0.15),
                 ],
               ),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: AppColors.purpleBright.withValues(alpha: 0.35),
+                color: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.35),
                 width: 0.7,
               ),
             ),

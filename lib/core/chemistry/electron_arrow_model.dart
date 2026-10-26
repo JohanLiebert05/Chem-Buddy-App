@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui';
+
 import 'chemical_graph.dart';
 
 /// Type of arrowhead for curved electron pushing arrows.
@@ -9,21 +10,10 @@ enum ArrowHeadType {
 }
 
 /// Source of the moving electron(s).
-enum ElectronSourceType {
-  lonePair,
-  bond,
-  piBond,
-  negativeCharge,
-  atom,
-}
+enum ElectronSourceType { lonePair, bond, piBond, negativeCharge, atom }
 
 /// Destination target of the moving electron(s).
-enum ElectronTargetType {
-  atom,
-  bond,
-  positiveCharge,
-  space,
-}
+enum ElectronTargetType { atom, bond, positiveCharge, space }
 
 /// Classification of the mechanistic electron transformation.
 enum ElectronFlowType {
@@ -65,11 +55,14 @@ class ElectronArrowModel {
     this.explicitSource,
     this.explicitTarget,
     this.explicitControl,
-    this.strokeColor = '#EC4899', // Vibrant electric pink/magenta for MSc mechanisms
+    this.strokeColor =
+        '#EC4899', // Vibrant electric pink/magenta for MSc mechanisms
   });
 
   /// Computes start, end, and quadratic Bezier control points from graph geometry.
-  ({Offset start, Offset control, Offset end}) resolveCoordinates(ChemicalGraph graph) {
+  ({Offset start, Offset control, Offset end}) resolveCoordinates(
+    ChemicalGraph graph,
+  ) {
     Offset start = explicitSource ?? _resolveSourcePoint(graph);
     Offset end = explicitTarget ?? _resolveTargetPoint(graph);
 
@@ -141,30 +134,36 @@ class ElectronArrowModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'sourceType': sourceType.name,
-        'sourceIdentifier': sourceIdentifier,
-        'targetType': targetType.name,
-        'targetIdentifier': targetIdentifier,
-        'flowType': flowType.name,
-        'arrowType': arrowType.name,
-        'description': description,
-        'curvature': curvature,
-        if (explicitSource != null) 'sourceX': explicitSource!.dx,
-        if (explicitSource != null) 'sourceY': explicitSource!.dy,
-        if (explicitTarget != null) 'targetX': explicitTarget!.dx,
-        if (explicitTarget != null) 'targetY': explicitTarget!.dy,
-        'strokeColor': strokeColor,
-      };
+    'id': id,
+    'sourceType': sourceType.name,
+    'sourceIdentifier': sourceIdentifier,
+    'targetType': targetType.name,
+    'targetIdentifier': targetIdentifier,
+    'flowType': flowType.name,
+    'arrowType': arrowType.name,
+    'description': description,
+    'curvature': curvature,
+    if (explicitSource != null) 'sourceX': explicitSource!.dx,
+    if (explicitSource != null) 'sourceY': explicitSource!.dy,
+    if (explicitTarget != null) 'targetX': explicitTarget!.dx,
+    if (explicitTarget != null) 'targetY': explicitTarget!.dy,
+    'strokeColor': strokeColor,
+  };
 
   factory ElectronArrowModel.fromJson(Map<String, dynamic> json) {
     Offset? explicitSrc;
     if (json['sourceX'] != null && json['sourceY'] != null) {
-      explicitSrc = Offset((json['sourceX'] as num).toDouble(), (json['sourceY'] as num).toDouble());
+      explicitSrc = Offset(
+        (json['sourceX'] as num).toDouble(),
+        (json['sourceY'] as num).toDouble(),
+      );
     }
     Offset? explicitTgt;
     if (json['targetX'] != null && json['targetY'] != null) {
-      explicitTgt = Offset((json['targetX'] as num).toDouble(), (json['targetY'] as num).toDouble());
+      explicitTgt = Offset(
+        (json['targetX'] as num).toDouble(),
+        (json['targetY'] as num).toDouble(),
+      );
     }
 
     return ElectronArrowModel(

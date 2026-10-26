@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -17,8 +19,11 @@ class SmartFlashcardsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(backgroundColor: AppColors.background, title: const Text('Smart Flashcards')),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text('Smart Flashcards'),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
         children: const [SmartFlashcardsHub()],
@@ -46,14 +51,19 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
     final service = ref.watch(flashcardServiceProvider);
     final sets = service.sets();
     final overallStats = service.getOverallStats();
-    final hasDueOrNew = overallStats.dueToday > 0 || overallStats.learningToday > 0 || overallStats.newToday > 0;
+    final hasDueOrNew =
+        overallStats.dueToday > 0 ||
+        overallStats.learningToday > 0 ||
+        overallStats.newToday > 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1. Spaced Repetition Daily Review Queue Card
         GlowCard(
-          borderColor: hasDueOrNew ? AppColors.purpleBright.withValues(alpha: 0.5) : AppColors.border,
+          borderColor: hasDueOrNew
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
+              : Theme.of(context).colorScheme.outlineVariant,
           padding: const EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,23 +71,44 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.psychology_outlined, color: AppColors.purpleBright, size: 24),
+                      Icon(
+                        Icons.psychology_outlined,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 24,
+                      ),
                       SizedBox(width: 8),
-                      Text('Review Today', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white)),
+                      Text(
+                        'Review Today',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
                     ],
                   ),
                   if (overallStats.reviewedToday > 0)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.15),
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.success,
+                        ).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '${overallStats.reviewedToday} completed today',
-                        style: const TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          color: AppColors.adaptive(context, AppColors.success),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                 ],
@@ -87,20 +118,37 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
               // Status metrics (Due, Learning, New, Mature)
               Row(
                 children: [
-                  _buildQueuePill('Due', overallStats.dueToday, AppColors.danger),
+                  _buildQueuePill(
+                    'Due',
+                    overallStats.dueToday,
+                    AppColors.adaptive(context, AppColors.danger),
+                  ),
                   const SizedBox(width: 8),
-                  _buildQueuePill('Learning', overallStats.learningToday, AppColors.warning),
+                  _buildQueuePill(
+                    'Learning',
+                    overallStats.learningToday,
+                    AppColors.adaptive(context, AppColors.warning),
+                  ),
                   const SizedBox(width: 8),
-                  _buildQueuePill('New', overallStats.newToday, AppColors.blue),
+                  _buildQueuePill(
+                    'New',
+                    overallStats.newToday,
+                    AppColors.adaptive(context, AppColors.blue),
+                  ),
                   const SizedBox(width: 8),
-                  _buildQueuePill('Mature', overallStats.matureCount, AppColors.success),
+                  _buildQueuePill(
+                    'Mature',
+                    overallStats.matureCount,
+                    AppColors.adaptive(context, AppColors.success),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
 
               if (hasDueOrNew)
                 PrimaryButton(
-                  label: 'Start Daily Review (${overallStats.dueToday + overallStats.learningToday + (overallStats.newToday > 10 ? 10 : overallStats.newToday)} cards)',
+                  label:
+                      'Start Daily Review (${overallStats.dueToday + overallStats.learningToday + (overallStats.newToday > 10 ? 10 : overallStats.newToday)} cards)',
                   onPressed: () async {
                     await Navigator.push(
                       context,
@@ -111,7 +159,9 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
                         ),
                       ),
                     );
-                    if (mounted) setState(() {});
+                    if (mounted) {
+                      setState(() {});
+                    }
                   },
                 )
               else
@@ -119,13 +169,17 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceElevated,
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
+                  child: Text(
                     'All cards reviewed for today',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 13),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
             ],
@@ -137,14 +191,28 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
         PrimaryButton(
           label: 'Create Flashcards from PDF',
           onPressed: () async {
-            await Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsGenerateScreen()));
-            if (mounted) setState(() {});
+            await Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const SmartFlashcardsGenerateScreen(),
+              ),
+            );
+            if (mounted) {
+              setState(() {});
+            }
           },
         ),
         const SizedBox(height: 20),
 
         // 3. Saved Flashcard Decks
-        const Text('Your Decks & Topics', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white)),
+        Text(
+          'Your Decks & Topics',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
         const SizedBox(height: 10),
 
         if (sets.isEmpty)
@@ -153,8 +221,15 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
             description: 'Generate active-recall flashcard decks from your chemistry notes or conversational answers with SM-2 spaced repetition.',
             buttonLabel: 'Generate First Deck',
             onAction: () async {
-              await Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsGenerateScreen()));
-              if (mounted) setState(() {});
+              await Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const SmartFlashcardsGenerateScreen(),
+                ),
+              );
+              if (mounted) {
+                setState(() {});
+              }
             },
           ),
 
@@ -166,9 +241,16 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
               onTap: () async {
                 await Navigator.push(
                   context,
-                  MaterialPageRoute<void>(builder: (_) => SmartFlashcardsStudyScreen(setId: s.id, review: ReviewMode.all)),
+                  MaterialPageRoute<void>(
+                    builder: (_) => SmartFlashcardsStudyScreen(
+                      setId: s.id,
+                      review: ReviewMode.all,
+                    ),
+                  ),
                 );
-                if (mounted) setState(() {});
+                if (mounted) {
+                  setState(() {});
+                }
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,10 +264,10 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
                           cleanStudyMaterialTitle(s.title),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 15.5,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onSurface,
                             letterSpacing: 0.1,
                           ),
                         ),
@@ -193,15 +275,33 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
                       if (deckStats.due > 0) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppColors.danger.withValues(alpha: 0.18),
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.danger,
+                            ).withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.danger.withValues(alpha: 0.4)),
+                            border: Border.all(
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.danger,
+                              ).withValues(alpha: 0.4),
+                            ),
                           ),
                           child: Text(
                             '${deckStats.due} Due',
-                            style: const TextStyle(color: AppColors.danger, fontSize: 10.5, fontWeight: FontWeight.w800),
+                            style: TextStyle(
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.danger,
+                              ),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                       ],
@@ -212,30 +312,61 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
                     '${s.cardCount} cards (${deckStats.newCount} new, ${deckStats.mature} mature) • ${cleanStudyMaterialTitle(s.sourceFileName)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     DateFormat('d MMM yyyy').format(s.createdAt),
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 11,
+                    ),
                   ),
                   if (deckStats.due > 0) ...[
                     const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(builder: (_) => SmartFlashcardsStudyScreen(setId: s.id, review: ReviewMode.due)),
-                        );
-                        if (mounted) setState(() {});
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.danger,
-                        side: const BorderSide(color: AppColors.danger),
-                        minimumSize: const Size.fromHeight(38),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    SpringPress(
+                      child: OutlinedButton(
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => SmartFlashcardsStudyScreen(
+                                setId: s.id,
+                                review: ReviewMode.due,
+                              ),
+                            ),
+                          );
+                          if (mounted) {
+                            setState(() {});
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.adaptive(
+                            context,
+                            AppColors.danger,
+                          ),
+                          side: BorderSide(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.danger,
+                            ),
+                          ),
+                          minimumSize: const Size.fromHeight(38),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Review ${deckStats.due} Due Cards',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.5,
+                          ),
+                        ),
                       ),
-                      child: Text('Review ${deckStats.due} Due Cards', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
                     ),
                   ],
                 ],
@@ -260,12 +391,20 @@ class _SmartFlashcardsHubState extends ConsumerState<SmartFlashcardsHub> {
           children: [
             Text(
               '$count',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: color),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+                color: AppColors.readableText(context, color),
+              ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.readableText(context, color),
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         ),

@@ -19,7 +19,7 @@ class HandwrittenImagePreprocessor {
   }) async {
     final validFiles = <File>[];
     final total = rawImagePaths.length;
-    if (total == 0) return const [];
+    if (total == 0) {return const [];}
 
     final tempDir = await getTemporaryDirectory();
     final preprocDir = Directory('${tempDir.path}/chembuddy_handwriting_preproc');

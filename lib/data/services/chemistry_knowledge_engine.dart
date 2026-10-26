@@ -116,7 +116,7 @@ I couldn't find that information in the uploaded PDF (**${documentName ?? "Uploa
           ),
         ],
       );
-      if (_responseCache.length >= _maxCacheSize) _responseCache.remove(_responseCache.keys.first);
+      if (_responseCache.length >= _maxCacheSize) {_responseCache.remove(_responseCache.keys.first);}
       _responseCache[cacheKey] = rxnResponse;
       return rxnResponse;
     }
@@ -138,7 +138,7 @@ I couldn't find that information in the uploaded PDF (**${documentName ?? "Uploa
           ),
         ],
       );
-      if (_responseCache.length >= _maxCacheSize) _responseCache.remove(_responseCache.keys.first);
+      if (_responseCache.length >= _maxCacheSize) {_responseCache.remove(_responseCache.keys.first);}
       _responseCache[cacheKey] = multiResponse;
       return multiResponse;
     }
@@ -160,7 +160,7 @@ I couldn't find that information in the uploaded PDF (**${documentName ?? "Uploa
           ),
         ],
       );
-      if (_responseCache.length >= _maxCacheSize) _responseCache.remove(_responseCache.keys.first);
+      if (_responseCache.length >= _maxCacheSize) {_responseCache.remove(_responseCache.keys.first);}
       _responseCache[cacheKey] = curatedResponse;
       return curatedResponse;
     }
@@ -174,7 +174,7 @@ I couldn't find that information in the uploaded PDF (**${documentName ?? "Uploa
         ),
         sources: const [],
       );
-      if (_responseCache.length >= _maxCacheSize) _responseCache.remove(_responseCache.keys.first);
+      if (_responseCache.length >= _maxCacheSize) {_responseCache.remove(_responseCache.keys.first);}
       _responseCache[cacheKey] = redirectResponse;
       return redirectResponse;
     }
@@ -194,15 +194,15 @@ I couldn't find that information in the uploaded PDF (**${documentName ?? "Uploa
         ),
       ],
     );
-    if (_responseCache.length >= _maxCacheSize) _responseCache.remove(_responseCache.keys.first);
+    if (_responseCache.length >= _maxCacheSize) {_responseCache.remove(_responseCache.keys.first);}
     _responseCache[cacheKey] = dynResponse;
     return dynResponse;
   }
 
   static String _applyExamMarkFormatting(String q, String content, bool is2M, bool is5M, bool is10M) {
-    if (is2M) return _format2Mark(q, content);
-    if (is5M) return _format5Mark(q, content);
-    if (is10M) return _format10Mark(q, content);
+    if (is2M) {return _format2Mark(q, content);}
+    if (is5M) {return _format5Mark(q, content);}
+    if (is10M) {return _format10Mark(q, content);}
     return content;
   }
 
@@ -1268,11 +1268,11 @@ $content
     final scored = <MapEntry<String, double>>[];
 
     for (final p in paragraphs) {
-      if (p.trim().length < 20) continue;
+      if (p.trim().length < 20) {continue;}
       final pLower = p.toLowerCase();
       var matchCount = 0;
       for (final term in qTerms) {
-        if (pLower.contains(term)) matchCount++;
+        if (pLower.contains(term)) {matchCount++;}
       }
       if (matchCount > 0) {
         final score = matchCount / qTerms.length;
@@ -1350,24 +1350,24 @@ $bestParagraphs
     }
 
     final detectedReactions = <String>[];
-    if (lower.contains('sn1')) detectedReactions.add('SN1 Nucleophilic Substitution');
-    if (lower.contains('sn2')) detectedReactions.add('SN2 Nucleophilic Substitution');
-    if (lower.contains('aldol')) detectedReactions.add('Aldol Condensation & Enolate Chemistry');
-    if (lower.contains('diels-alder') || lower.contains('diels alder')) detectedReactions.add('Diels-Alder [4+2] Cycloaddition');
-    if (lower.contains('wittig')) detectedReactions.add('Wittig Carbonyl Olefination');
-    if (lower.contains('cannizzaro')) detectedReactions.add('Cannizzaro Disproportionation');
-    if (lower.contains('beckmann')) detectedReactions.add('Beckmann Rearrangement');
-    if (lower.contains('friedel-crafts') || lower.contains('friedel crafts')) detectedReactions.add('Friedel-Crafts Alkylation / Acylation');
-    if (lower.contains('nitration')) detectedReactions.add('Aromatic Nitration (NO₂⁺ pathway)');
-    if (lower.contains('ozonolysis')) detectedReactions.add('Alkene Ozonolysis Cleavage');
+    if (lower.contains('sn1')) {detectedReactions.add('SN1 Nucleophilic Substitution');}
+    if (lower.contains('sn2')) {detectedReactions.add('SN2 Nucleophilic Substitution');}
+    if (lower.contains('aldol')) {detectedReactions.add('Aldol Condensation & Enolate Chemistry');}
+    if (lower.contains('diels-alder') || lower.contains('diels alder')) {detectedReactions.add('Diels-Alder [4+2] Cycloaddition');}
+    if (lower.contains('wittig')) {detectedReactions.add('Wittig Carbonyl Olefination');}
+    if (lower.contains('cannizzaro')) {detectedReactions.add('Cannizzaro Disproportionation');}
+    if (lower.contains('beckmann')) {detectedReactions.add('Beckmann Rearrangement');}
+    if (lower.contains('friedel-crafts') || lower.contains('friedel crafts')) {detectedReactions.add('Friedel-Crafts Alkylation / Acylation');}
+    if (lower.contains('nitration')) {detectedReactions.add('Aromatic Nitration (NO₂⁺ pathway)');}
+    if (lower.contains('ozonolysis')) {detectedReactions.add('Alkene Ozonolysis Cleavage');}
 
     final detectedEquations = <String>[];
-    if (lower.contains('beer') || lower.contains('lambert')) detectedEquations.add('Beer-Lambert Law: A = ε · c · l');
-    if (lower.contains('nernst')) detectedEquations.add('Nernst Equation: E = E° - (RT/nF) ln Q');
-    if (lower.contains('arrhenius')) detectedEquations.add('Arrhenius Equation: k = A e^(-Ea/RT)');
-    if (lower.contains('gibbs')) detectedEquations.add('Gibbs Free Energy: ΔG° = ΔH° - TΔS° = -RT ln K');
-    if (lower.contains('henderson')) detectedEquations.add('Henderson-Hasselbalch: pH = pKa + log([A⁻]/[HA])');
-    if (lower.contains('bragg')) detectedEquations.add('Bragg\'s Law: nλ = 2d sin θ');
+    if (lower.contains('beer') || lower.contains('lambert')) {detectedEquations.add('Beer-Lambert Law: A = ε · c · l');}
+    if (lower.contains('nernst')) {detectedEquations.add('Nernst Equation: E = E° - (RT/nF) ln Q');}
+    if (lower.contains('arrhenius')) {detectedEquations.add('Arrhenius Equation: k = A e^(-Ea/RT)');}
+    if (lower.contains('gibbs')) {detectedEquations.add('Gibbs Free Energy: ΔG° = ΔH° - TΔS° = -RT ln K');}
+    if (lower.contains('henderson')) {detectedEquations.add('Henderson-Hasselbalch: pH = pKa + log([A⁻]/[HA])');}
+    if (lower.contains('bragg')) {detectedEquations.add('Bragg\'s Law: nλ = 2d sin θ');}
 
     final buffer = StringBuffer();
     buffer.writeln('### 📑 **Executive Summary & Analysis: $documentName**');

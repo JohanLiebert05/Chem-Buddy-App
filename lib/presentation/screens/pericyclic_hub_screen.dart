@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -17,7 +19,8 @@ class PericyclicHubScreen extends StatefulWidget {
   State<PericyclicHubScreen> createState() => _PericyclicHubScreenState();
 }
 
-class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTickerProviderStateMixin {
+class _PericyclicHubScreenState extends State<PericyclicHubScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   // Predictor state
@@ -50,13 +53,23 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-            onPressed: () => Navigator.pop(context),
+          leading: SpringPress(
+            child: IconButton(
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 20,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.all_inclusive_rounded, color: AppColors.brandBright, size: 22),
+              Icon(
+                Icons.all_inclusive_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 22,
+              ),
               SizedBox(width: 8),
               Text(
                 'Pericyclic Chemistry & FMO',
@@ -68,11 +81,16 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
             controller: _tabController,
             isScrollable: true,
             tabAlignment: TabAlignment.start,
-            indicatorColor: AppColors.brandBright,
+            indicatorColor: Theme.of(context).colorScheme.primary,
             indicatorWeight: 3,
-            labelColor: Colors.white,
-            unselectedLabelColor: AppColors.textMuted,
-            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            labelColor: Theme.of(context).colorScheme.onSurface,
+            unselectedLabelColor: Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant,
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
             tabs: const [
               Tab(text: '3D Orbital Studio 🌐'),
               Tab(text: 'FMO Predictor'),
@@ -101,8 +119,12 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
     final examples = PericyclicService.threeDExamples;
     final currentEx = examples[_selected3DIndex.clamp(0, examples.length - 1)];
     final orbitals = currentEx.system.orbitals;
-    final activeOrb = orbitals[_selectedOrbitalIndex.clamp(0, orbitals.length - 1)];
-    final isTS = currentEx.category.contains('Cycloaddition') || currentEx.category.contains('Sigmatropic') || currentEx.category.contains('Frontier');
+    final activeOrb =
+        orbitals[_selectedOrbitalIndex.clamp(0, orbitals.length - 1)];
+    final isTS =
+        currentEx.category.contains('Cycloaddition') ||
+        currentEx.category.contains('Sigmatropic') ||
+        currentEx.category.contains('Frontier');
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -115,31 +137,41 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
               final isSelected = _selected3DIndex == index;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(
-                    examples[index].title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                child: SpringPress(
+                  child: ChoiceChip(
+                    label: Text(
+                      examples[index].title,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
+                    selected: isSelected,
+                    selectedColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHigh,
+                    side: BorderSide(
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.white12,
+                      width: 1.2,
+                    ),
+                    onSelected: (val) {
+                      if (val) {
+                        AppHaptics.selection();
+                        setState(() {
+                          _selected3DIndex = index;
+                          _selectedOrbitalIndex = 0;
+                        });
+                      }
+                    },
                   ),
-                  selected: isSelected,
-                  selectedColor: AppColors.brandPrimary,
-                  backgroundColor: const Color(0xFF0F172A),
-                  side: BorderSide(
-                    color: isSelected ? AppColors.brandBright : Colors.white12,
-                    width: 1.2,
-                  ),
-                  onSelected: (val) {
-                    if (val) {
-                      AppHaptics.selection();
-                      setState(() {
-                        _selected3DIndex = index;
-                        _selectedOrbitalIndex = 0;
-                      });
-                    }
-                  },
                 ),
               );
             }),
@@ -169,13 +201,21 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.layers_outlined, color: AppColors.brandBright, size: 16),
+                    Icon(
+                      Icons.layers_outlined,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 16,
+                    ),
                     SizedBox(width: 6),
                     Text(
                       'Select Molecular Orbital (FMO Level):',
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -186,27 +226,43 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
                   children: List.generate(orbitals.length, (i) {
                     final orb = orbitals[i];
                     final isSel = _selectedOrbitalIndex == i;
-                    return InkWell(
-                      onTap: () {
-                        AppHaptics.selection();
-                        setState(() => _selectedOrbitalIndex = i);
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSel ? AppColors.brandPrimary.withValues(alpha: 0.3) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isSel ? AppColors.brandBright : Colors.white12,
+                    return SpringPress(
+                      child: InkWell(
+                        onTap: () {
+                          AppHaptics.selection();
+                          setState(() => _selectedOrbitalIndex = i);
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
                           ),
-                        ),
-                        child: Text(
-                          orb.name,
-                          style: TextStyle(
-                            color: isSel ? AppColors.brandBright : AppColors.textSecondary,
-                            fontSize: 11,
-                            fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                          decoration: BoxDecoration(
+                            color: isSel
+                                ? Theme.of(context).colorScheme.primary
+                                      .withValues(alpha: 0.3)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSel
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.white12,
+                            ),
+                          ),
+                          child: Text(
+                            orb.name,
+                            style: TextStyle(
+                              color: isSel
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                              fontSize: 11,
+                              fontWeight: isSel
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -226,18 +282,28 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
             decoration: BoxDecoration(
               color: const Color(0xFF1E1B4B).withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFA855F7).withValues(alpha: 0.4)),
+              border: Border.all(
+                color: const Color(0xFFA855F7).withValues(alpha: 0.4),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.auto_fix_high_rounded, color: Color(0xFFA855F7), size: 18),
+                    Icon(
+                      Icons.auto_fix_high_rounded,
+                      color: Color(0xFFA855F7),
+                      size: 18,
+                    ),
                     SizedBox(width: 8),
                     Text(
                       'Highlight Endo Secondary Orbital Overlap',
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -258,33 +324,60 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
         // Academic Explanation Card
         GlowCard(
           padding: const EdgeInsets.all(16),
-          borderColor: AppColors.brandBright.withValues(alpha: 0.5),
+          borderColor: Theme.of(context).colorScheme.primary
+              .withValues(alpha: 0.5),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.accentCyan.withValues(alpha: 0.2),
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.accentCyan,
+                      ).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       currentEx.category,
-                      style: const TextStyle(color: AppColors.accentCyan, fontSize: 11, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withValues(alpha: 0.2),
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.accentGold,
+                      ).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       currentEx.condition,
-                      style: const TextStyle(color: AppColors.accentGold, fontSize: 11, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ],
@@ -292,28 +385,59 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
               const SizedBox(height: 10),
               Text(
                 currentEx.title,
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 currentEx.subtitle,
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              const Divider(color: AppColors.borderSubtle, height: 20),
-              _buildDetailRow('Selection Rule:', currentEx.stereochemicalRule, AppColors.brandBright),
+              Divider(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                height: 20,
+              ),
+              _buildDetailRow(
+                'Selection Rule:',
+                currentEx.stereochemicalRule,
+                Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(height: 8),
-              _buildDetailRow('Active FMO Symmetry:', activeOrb.symmetry, AppColors.accentCyan),
+              _buildDetailRow(
+                'Active FMO Symmetry:',
+                activeOrb.symmetry,
+                AppColors.adaptive(context, AppColors.accentCyan),
+              ),
               const SizedBox(height: 8),
-              _buildDetailRow('Nodal Topology:', '${activeOrb.nodes} Nodal Plane(s) • ${activeOrb.description}', Colors.white70),
+              _buildDetailRow(
+                'Nodal Topology:',
+                '${activeOrb.nodes} Nodal Plane(s) • ${activeOrb.description}',
+                Colors.white70,
+              ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Comprehensive MSc Mechanistic Rationale:',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 6),
               ChemistryMarkdownView(
                 text: currentEx.academicExplanation,
-                textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.45),
+                textStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12.5,
+                  height: 1.45,
+                ),
               ),
               if (currentEx.secondaryOrbitalNotes != null) ...[
                 const SizedBox(height: 10),
@@ -322,17 +446,37 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F172A),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.accentCyan,
+                      ).withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.stars_rounded, color: AppColors.accentCyan, size: 16),
+                      Icon(
+                        Icons.stars_rounded,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           currentEx.secondaryOrbitalNotes!,
-                          style: const TextStyle(color: AppColors.accentCyan, fontSize: 11.5, height: 1.35, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentCyan,
+                            ),
+                            fontSize: 11.5,
+                            height: 1.35,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -360,23 +504,47 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
       padding: const EdgeInsets.all(16),
       children: [
         GlowCard(
-          borderColor: AppColors.brandBright.withValues(alpha: 0.4),
+          borderColor: Theme.of(context).colorScheme.primary
+              .withValues(alpha: 0.4),
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Reaction Parameters',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
               ),
               const SizedBox(height: 12),
-              const Text('Reaction Type:', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
+              Text(
+                'Reaction Type:',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 6),
               SegmentedButton<PericyclicType>(
                 segments: const [
-                  ButtonSegment(value: PericyclicType.electrocyclic, label: Text('Electrocyclic', style: TextStyle(fontSize: 11))),
-                  ButtonSegment(value: PericyclicType.cycloaddition, label: Text('Cycloadd.', style: TextStyle(fontSize: 11))),
-                  ButtonSegment(value: PericyclicType.sigmatropic, label: Text('Sigmatropic', style: TextStyle(fontSize: 11))),
+                  ButtonSegment(
+                    value: PericyclicType.electrocyclic,
+                    label: Text(
+                      'Electrocyclic',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                  ),
+                  ButtonSegment(
+                    value: PericyclicType.cycloaddition,
+                    label: Text('Cycloadd.', style: TextStyle(fontSize: 11)),
+                  ),
+                  ButtonSegment(
+                    value: PericyclicType.sigmatropic,
+                    label: Text('Sigmatropic', style: TextStyle(fontSize: 11)),
+                  ),
                 ],
                 selected: {_selectedType},
                 onSelectionChanged: (set) {
@@ -385,65 +553,100 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
                 },
               ),
               const SizedBox(height: 12),
-              const Text('Electron Framework (π / σ):', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
+              Text(
+                'Electron Framework (π / σ):',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 6),
               Row(
                 children: [
                   Expanded(
-                    child: ChoiceChip(
-                      label: const Center(child: Text('4n Electrons (e.g. 4π)')),
-                      selected: _selectedElectrons == 4,
-                      onSelected: (selected) {
-                        if (selected) {
-                          AppHaptics.selection();
-                          setState(() => _selectedElectrons = 4);
-                        }
-                      },
+                    child: SpringPress(
+                      child: ChoiceChip(
+                        label: const Center(
+                          child: Text('4n Electrons (e.g. 4π)'),
+                        ),
+                        selected: _selectedElectrons == 4,
+                        onSelected: (selected) {
+                          if (selected) {
+                            AppHaptics.selection();
+                            setState(() => _selectedElectrons = 4);
+                          }
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: ChoiceChip(
-                      label: const Center(child: Text('4n + 2 Electrons (e.g. 6π)')),
-                      selected: _selectedElectrons == 6,
-                      onSelected: (selected) {
-                        if (selected) {
-                          AppHaptics.selection();
-                          setState(() => _selectedElectrons = 6);
-                        }
-                      },
+                    child: SpringPress(
+                      child: ChoiceChip(
+                        label: const Center(
+                          child: Text('4n + 2 Electrons (e.g. 6π)'),
+                        ),
+                        selected: _selectedElectrons == 6,
+                        onSelected: (selected) {
+                          if (selected) {
+                            AppHaptics.selection();
+                            setState(() => _selectedElectrons = 6);
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              const Text('Activation Mode:', style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
+              Text(
+                'Activation Mode:',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 6),
               Row(
                 children: [
                   Expanded(
-                    child: ChoiceChip(
-                      label: const Center(child: Text('Thermal (Δ)')),
-                      selected: _selectedCondition == ReactionCondition.thermal,
-                      onSelected: (selected) {
-                        if (selected) {
-                          AppHaptics.selection();
-                          setState(() => _selectedCondition = ReactionCondition.thermal);
-                        }
-                      },
+                    child: SpringPress(
+                      child: ChoiceChip(
+                        label: const Center(child: Text('Thermal (Δ)')),
+                        selected:
+                            _selectedCondition == ReactionCondition.thermal,
+                        onSelected: (selected) {
+                          if (selected) {
+                            AppHaptics.selection();
+                            setState(
+                              () => _selectedCondition =
+                                  ReactionCondition.thermal,
+                            );
+                          }
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: ChoiceChip(
-                      label: const Center(child: Text('Photochemical (hν)')),
-                      selected: _selectedCondition == ReactionCondition.photochemical,
-                      onSelected: (selected) {
-                        if (selected) {
-                          AppHaptics.selection();
-                          setState(() => _selectedCondition = ReactionCondition.photochemical);
-                        }
-                      },
+                    child: SpringPress(
+                      child: ChoiceChip(
+                        label: const Center(child: Text('Photochemical (hν)')),
+                        selected:
+                            _selectedCondition ==
+                            ReactionCondition.photochemical,
+                        onSelected: (selected) {
+                          if (selected) {
+                            AppHaptics.selection();
+                            setState(
+                              () => _selectedCondition =
+                                  ReactionCondition.photochemical,
+                            );
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ],
@@ -453,7 +656,12 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
         ),
         const SizedBox(height: 16),
         GlowCard(
-          borderColor: prediction.isThermallyAllowed ? AppColors.statusSuccess.withValues(alpha: 0.5) : AppColors.brandBright.withValues(alpha: 0.5),
+          borderColor: prediction.isThermallyAllowed
+              ? AppColors.adaptive(
+                  context,
+                  AppColors.statusSuccess,
+                ).withValues(alpha: 0.5)
+              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,15 +669,21 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
               Row(
                 children: [
                   Icon(
-                    prediction.isThermallyAllowed ? Icons.check_circle_rounded : Icons.wb_sunny_rounded,
-                    color: prediction.isThermallyAllowed ? AppColors.statusSuccess : AppColors.brandBright,
+                    prediction.isThermallyAllowed
+                        ? Icons.check_circle_rounded
+                        : Icons.wb_sunny_rounded,
+                    color: prediction.isThermallyAllowed
+                        ? AppColors.adaptive(context, AppColors.statusSuccess)
+                        : Theme.of(context).colorScheme.primary,
                     size: 22,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     'Predicted Mode: ${prediction.allowedMode}',
                     style: TextStyle(
-                      color: prediction.isThermallyAllowed ? AppColors.statusSuccess : AppColors.brandBright,
+                      color: prediction.isThermallyAllowed
+                          ? AppColors.adaptive(context, AppColors.statusSuccess)
+                          : Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w800,
                       fontSize: 16,
                     ),
@@ -477,17 +691,36 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
                 ],
               ),
               const SizedBox(height: 12),
-              _buildDetailRow('Symmetry Conservation:', prediction.transitionStateSymmetry, Colors.white),
+              _buildDetailRow(
+                'Symmetry Conservation:',
+                prediction.transitionStateSymmetry,
+                Colors.white,
+              ),
               const SizedBox(height: 8),
-              _buildDetailRow('Active FMO:', prediction.homoState, AppColors.brandBright),
+              _buildDetailRow(
+                'Active FMO:',
+                prediction.homoState,
+                Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(height: 12),
-              const Divider(color: AppColors.borderSubtle),
+              Divider(color: Theme.of(context).colorScheme.outlineVariant),
               const SizedBox(height: 8),
-              const Text('Stereochemical Benchmark Example:', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
+              Text(
+                'Stereochemical Benchmark Example:',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 4),
               ChemistryMarkdownView(
                 text: prediction.stereochemistryExample,
-                textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+                textStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
@@ -515,23 +748,56 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(rule.reactionType, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text(
+                      rule.reactionType,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.brandPrimary.withValues(alpha: 0.2),
+                        color: Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text(rule.electronCount, style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontWeight: FontWeight.w700)),
+                      child: Text(
+                        rule.electronCount,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                _buildDetailRow('Thermal (Δ):', rule.thermalMode, AppColors.statusSuccess),
+                _buildDetailRow(
+                  'Thermal (Δ):',
+                  rule.thermalMode,
+                  AppColors.adaptive(context, AppColors.statusSuccess),
+                ),
                 const SizedBox(height: 6),
-                _buildDetailRow('Photochemical (hν):', rule.photochemicalMode, AppColors.accentCyan),
+                _buildDetailRow(
+                  'Photochemical (hν):',
+                  rule.photochemicalMode,
+                  AppColors.adaptive(context, AppColors.accentCyan),
+                ),
                 const SizedBox(height: 8),
-                Text(rule.homoSymmetry, style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5, fontStyle: FontStyle.italic)),
+                Text(
+                  rule.homoSymmetry,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11.5,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
               ],
             ),
           ),
@@ -566,25 +832,37 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
             'Endo Rule: Electron-withdrawing substituents on the dienophile point toward the developing diene double bond due to secondary orbital interaction.',
             '[2s+2s] Photochemical: Irradiation promotes an electron into pi*, allowing constructive suprafacial overlap to form cyclobutanes.',
           ],
-          actionWidget: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.accentCyan),
-              foregroundColor: AppColors.accentCyan,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () {
-              AppHaptics.selection();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ReactionMechanismsScreen(
-                    initialReactionId: 'diels_alder',
-                  ),
+          actionWidget: SpringPress(
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(
+                  color: AppColors.adaptive(context, AppColors.accentCyan),
                 ),
-              );
-            },
-            icon: const Icon(Icons.auto_stories_rounded, size: 16),
-            label: const Text('View Diels-Alder Arrow Mechanism', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                foregroundColor: AppColors.adaptive(
+                  context,
+                  AppColors.accentCyan,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {
+                AppHaptics.selection();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ReactionMechanismsScreen(
+                      initialReactionId: 'diels_alder',
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.auto_stories_rounded, size: 16),
+              label: const Text(
+                'View Diels-Alder Arrow Mechanism',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -613,25 +891,55 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+          Text(
+            title,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(subtitle, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.3)),
-          const Divider(color: AppColors.borderSubtle, height: 18),
-          ...bullets.map((b) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('• ', style: TextStyle(color: AppColors.brandBright, fontSize: 14, fontWeight: FontWeight.w800)),
-                    Expanded(
-                      child: Text(
-                        b,
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+          Text(
+            subtitle,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12,
+              height: 1.3,
+            ),
+          ),
+          Divider(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            height: 18,
+          ),
+          ...bullets.map(
+            (b) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '• ',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      b,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                        height: 1.35,
                       ),
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
           if (actionWidget != null) ...[
             const SizedBox(height: 10),
             actionWidget,
@@ -647,13 +955,21 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen> with SingleTi
       children: [
         Text(
           label,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             value,
-            style: TextStyle(color: valueColor, fontSize: 12.5, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              color: AppColors.readableText(context, valueColor),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],

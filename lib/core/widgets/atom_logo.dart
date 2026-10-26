@@ -181,12 +181,12 @@ class CircularAttendance extends StatelessWidget {
                 style: TextStyle(
                   fontSize: size * 0.22,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               Text(
                 label,
-                style: TextStyle(fontSize: size * 0.08, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: size * 0.08, color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ],
           ),

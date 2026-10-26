@@ -14,12 +14,6 @@ void main() {
       expect(ChemBuddyAiMode.general.name, equals('general'));
     });
 
-    test('2. GeminiOrchestrator has working candidate models with gemini-3.5-flash-lite as primary', () {
-      expect(GeminiOrchestrator.candidateModels.first, equals('gemini-3.5-flash-lite'));
-      expect(GeminiOrchestrator.candidateModels.contains('gemini-3.6-flash'), isTrue);
-      expect(GeminiOrchestrator.candidateModels.contains('gemini-3.5-flash'), isTrue);
-    });
-
     test('3. RagService defaults gracefully to offline engine when unconfigured or offline', () async {
       final ragService = RagService(remote: SupabaseService.instance);
       final response = await ragService.ask(

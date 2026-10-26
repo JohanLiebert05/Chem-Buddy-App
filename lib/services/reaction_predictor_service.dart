@@ -293,9 +293,9 @@ JSON SCHEMA:
     }
 
     final conditionsList = <String>[];
-    if (reagents.trim().isNotEmpty) conditionsList.add('Reagent: ${reagents.trim()}');
-    if (solvent.trim().isNotEmpty) conditionsList.add('Solvent: ${solvent.trim()}');
-    if (temperature.trim().isNotEmpty) conditionsList.add('Temperature: ${temperature.trim()}');
+    if (reagents.trim().isNotEmpty) {conditionsList.add('Reagent: ${reagents.trim()}');}
+    if (solvent.trim().isNotEmpty) {conditionsList.add('Solvent: ${solvent.trim()}');}
+    if (temperature.trim().isNotEmpty) {conditionsList.add('Temperature: ${temperature.trim()}');}
     final conditionsStr = conditionsList.isNotEmpty ? conditionsList.join(', ') : 'Infer standard conditions';
 
     // 1. Primary: Invoke Supabase Edge Function `predict-reaction`
@@ -378,7 +378,7 @@ Identify the major organic product and generate the complete step-by-step reacti
     PredictedProduct? prod = pred.majorProduct;
     if (prod != null && (prod.svgData.isEmpty || !prod.svgData.contains('<svg'))) {
       var svg = await fetchCactusSvg(prod.smiles);
-      if (svg.isEmpty) svg = SmilesSvgGenerator.generateSvg(prod.smiles, title: prod.name);
+      if (svg.isEmpty) {svg = SmilesSvgGenerator.generateSvg(prod.smiles, title: prod.name);}
       prod = prod.copyWith(svgData: svg);
     }
 
@@ -386,7 +386,7 @@ Identify the major organic product and generate the complete step-by-step reacti
     for (final step in pred.mechanismSteps) {
       if (step.intermediateSmiles.isNotEmpty && (step.svgData.isEmpty || !step.svgData.contains('<svg'))) {
         var svg = await fetchCactusSvg(step.intermediateSmiles);
-        if (svg.isEmpty) svg = SmilesSvgGenerator.generateSvg(step.intermediateSmiles, title: step.stepTitle);
+        if (svg.isEmpty) {svg = SmilesSvgGenerator.generateSvg(step.intermediateSmiles, title: step.stepTitle);}
         updatedSteps.add(step.copyWith(svgData: svg));
       } else {
         updatedSteps.add(step);
@@ -1143,7 +1143,7 @@ Predict the major organic reaction product and complete step-by-step mechanism i
     // Remove label prefixes
     s = s.replaceAll(RegExp(r'^(?:SMILES|Product|Major Product|Result)\s*[:=-]\s*', caseSensitive: false), '').trim();
     final lines = s.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty && !l.toLowerCase().startsWith('note:')).toList();
-    if (lines.isNotEmpty) s = lines.first;
+    if (lines.isNotEmpty) {s = lines.first;}
     s = s.replaceAll(RegExp(r'''^["'`]|["'`]$'''), '').trim();
     s = s.replaceAll(RegExp(r'[.;]+$'), '').trim();
     return s;

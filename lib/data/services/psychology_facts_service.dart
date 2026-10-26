@@ -1013,16 +1013,11 @@ class PsychologyFactsService {
   /// Returns all available curated psychology facts.
   List<PsychologyFact> getAllFacts() => List.unmodifiable(_facts);
 
-  /// Returns a unique, non-repeating psychology fact for any given calendar date.
-  /// Uses a pseudo-random prime hash to ensure:
-  /// 1. Consecutive days never repeat or group the same category.
-  /// 2. Every day of the year gets a distinct fact.
-  /// 3. Deterministic: the same date always returns the exact same fact.
+  /// A deterministic catalog cycle; repeats only after every fact has been shown.
   PsychologyFact getFactForDay(DateTime date) {
-    final dayOfYear = date.difference(DateTime(date.year, 1, 1)).inDays;
-    // Prime-weighted hash across year, day of year, and month
-    final hash = (date.year * 365 + dayOfYear * 47 + date.month * 13).abs();
-    final index = hash % _facts.length;
+    final day = DateTime.utc(date.year, date.month, date.day);
+    final days = day.difference (DateTime.utc(2020, 1, 1)).inDays;
+    final index = days % _facts.length;
     return _facts[index];
   }
 

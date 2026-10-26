@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import '../models/pdf_ocr_models.dart';
@@ -8,7 +9,10 @@ import 'ocr/pdf_page_pipeline.dart';
 import 'pdf_text_utils.dart';
 
 /// Legacy extraction method that returns full concatenated text.
-Future<String> extractFromPath(String path, {void Function(String progress)? onProgress}) async {
+Future<String> extractFromPath(
+  String path, {
+  void Function(String progress)? onProgress,
+}) async {
   final file = File(path);
   if (!await file.exists()) {
     return 'Document: ${path.split(Platform.pathSeparator).last.replaceAll('.pdf', '')}';
@@ -46,8 +50,10 @@ Future<DocumentOcrBundle> extractBundleFromPath(
   final title = docTitle.isNotEmpty
       ? docTitle
       : (file.uri.pathSegments.isNotEmpty
-          ? file.uri.pathSegments.last.replaceAll('.pdf', '').replaceAll('_', ' ')
-          : 'Chemistry Document');
+            ? file.uri.pathSegments.last
+                  .replaceAll('.pdf', '')
+                  .replaceAll('_', ' ')
+            : 'Chemistry Document');
 
   final pipeline = PdfPagePipeline();
   return pipeline.processDocument(

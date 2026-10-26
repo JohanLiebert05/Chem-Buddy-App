@@ -240,10 +240,10 @@ class PdfPagePipeline {
 
   /// Classifies OCR text into handwritten notes vs printed/scanned textbook text.
   PageQuality _classifyOcrTextQuality(String text) {
-    if (text.trim().isEmpty) return PageQuality.scannedImage;
+    if (text.trim().isEmpty) {return PageQuality.scannedImage;}
 
     final lines = text.split('\n').where((l) => l.trim().isNotEmpty).toList();
-    if (lines.isEmpty) return PageQuality.scannedImage;
+    if (lines.isEmpty) {return PageQuality.scannedImage;}
 
     // Handwritten text tends to have irregular line lengths and occasional symbol mixups
     final avgLineLen = lines.map((l) => l.length).reduce((a, b) => a + b) / lines.length;
@@ -275,7 +275,7 @@ class PdfPagePipeline {
       if (lower.contains(kw.toLowerCase())) {
         found.add(kw);
       }
-      if (found.length >= 6) break;
+      if (found.length >= 6) {break;}
     }
     return found;
   }

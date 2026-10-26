@@ -219,7 +219,7 @@ class ReactionCurationRepository {
 
   /// Returns all curated reaction examples.
   Future<List<CuratedReactionExample>> getAllExamples() async {
-    if (_cachedExamples != null) return _cachedExamples!;
+    if (_cachedExamples != null) {return _cachedExamples!;}
     await getAllReactions();
     return _cachedExamples ?? [];
   }
@@ -227,7 +227,7 @@ class ReactionCurationRepository {
   /// Searches curated reactions by query (name, class, conditions, reagents).
   Future<List<CuratedReaction>> searchReactions(String query) async {
     final clean = query.trim().toLowerCase();
-    if (clean.isEmpty) return getAllReactions();
+    if (clean.isEmpty) {return getAllReactions();}
 
     final all = await getAllReactions();
     return all.where((r) {
@@ -252,12 +252,12 @@ class ReactionCurationRepository {
     try {
       final rawCsv = await rootBundle.loadString('assets/chemistry/reactions/reaction_electron_flows.csv');
       final rows = _parseCsv(rawCsv);
-      if (rows.length <= 1) return map;
+      if (rows.length <= 1) {return map;}
 
       // Header: flow_id,reaction_id,step_number,source_type,source_identifier,target_type,target_identifier,flow_type,arrow_type,description,curvature
       for (int i = 1; i < rows.length; i++) {
         final row = rows[i];
-        if (row.length < 8) continue;
+        if (row.length < 8) {continue;}
 
         final flowId = row[0].trim();
         final reactionId = row[1].trim();
@@ -299,12 +299,12 @@ class ReactionCurationRepository {
     try {
       final rawCsv = await rootBundle.loadString('assets/chemistry/reactions/reaction_steps.csv');
       final rows = _parseCsv(rawCsv);
-      if (rows.length <= 1) return map;
+      if (rows.length <= 1) {return map;}
 
       // Header: step_id,reaction_id,step_number,step_title,step_description,intermediate_name,intermediate_smiles,electron_flow_ids,bond_changes,charge_changes,is_rds,is_reversible
       for (int i = 1; i < rows.length; i++) {
         final row = rows[i];
-        if (row.length < 5) continue;
+        if (row.length < 5) {continue;}
 
         final stepId = row[0].trim();
         final reactionId = row[1].trim();
@@ -360,12 +360,12 @@ class ReactionCurationRepository {
     try {
       final rawCsv = await rootBundle.loadString('assets/chemistry/reactions/reaction_examples.csv');
       final rows = _parseCsv(rawCsv);
-      if (rows.length <= 1) return list;
+      if (rows.length <= 1) {return list;}
 
       // Header: example_id,reaction_id,reactant_name,reactant_smiles,reagent_name,reagent_smiles,solvent,temperature,expected_product_name,expected_product_smiles,stereochemical_outcome,mechanism_type,notes
       for (int i = 1; i < rows.length; i++) {
         final row = rows[i];
-        if (row.length < 10) continue;
+        if (row.length < 10) {continue;}
 
         list.add(CuratedReactionExample(
           exampleId: row[0].trim(),
@@ -397,12 +397,12 @@ class ReactionCurationRepository {
     try {
       final rawCsv = await rootBundle.loadString('assets/chemistry/reactions/reactions.csv');
       final rows = _parseCsv(rawCsv);
-      if (rows.length <= 1) return list;
+      if (rows.length <= 1) {return list;}
 
       // Header: reaction_id,reaction_name,reaction_class,subclass,description,difficulty,conditions,solvent,temperature,major_product_rule,selectivity_notes,stereochemistry_notes,supported,source_reference
       for (int i = 1; i < rows.length; i++) {
         final row = rows[i];
-        if (row.length < 3) continue;
+        if (row.length < 3) {continue;}
 
         final reactionId = row[0].trim();
         final reactionName = row[1].trim();
@@ -634,7 +634,7 @@ class ReactionCurationRepository {
         currentRow.add(currentField.toString());
         currentField.clear();
       } else if ((char == '\n' || (char == '\r' && (i + 1 < input.length && input[i + 1] == '\n'))) && !inQuotes) {
-        if (char == '\r') i++;
+        if (char == '\r') {i++;}
         currentRow.add(currentField.toString());
         currentField.clear();
         if (currentRow.any((s) => s.trim().isNotEmpty)) {

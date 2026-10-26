@@ -472,7 +472,7 @@ class ReactionMatcherEngine {
   }
 
   bool _isSmilesEquivalent(String s1, String s2) {
-    if (s1.toLowerCase() == s2.toLowerCase()) return true;
+    if (s1.toLowerCase() == s2.toLowerCase()) {return true;}
     final norm1 = s1.replaceAll('(', '').replaceAll(')', '').toLowerCase();
     final norm2 = s2.replaceAll('(', '').replaceAll(')', '').toLowerCase();
     return norm1 == norm2;

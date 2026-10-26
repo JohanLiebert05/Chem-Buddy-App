@@ -1,7 +1,9 @@
+import 'expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
 import '../utils/haptics.dart';
+import 'liquid_glass.dart';
 
 /// Material 3 Expressive Container Card following ChemBuddy Design System.
 /// Provides tonal surfaces, 16-20px border radius, subtle outline,
@@ -32,42 +34,33 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBorderColor = borderColor ??
-        (isHighlighted ? AppColors.borderHighlight : AppColors.borderSubtle);
-    final effectiveBgColor = backgroundColor ??
-        (isHighlighted ? AppColors.surfaceContainerHighest : AppColors.surfaceContainerHigh);
-
-    Widget content = Container(
-      width: double.infinity,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: effectiveBgColor,
-        borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
-          color: effectiveBorderColor,
-          width: isHighlighted ? 1.2 : 0.6,
+    final colors = Theme.of(context).colorScheme;
+    return LiquidGlassContainer(
+      margin: margin,
+      borderRadius: borderRadius,
+      enableBlur: false,
+      shadows: const [],
+      backgroundColor: backgroundColor,
+      borderColor:
+          borderColor ??
+          (isHighlighted ? colors.primary.withValues(alpha: .5) : null),
+      child: Material(
+        color: Colors.transparent,
+        child: SpringPress(
+          child: InkWell(
+            onTap: onTap == null
+                ? null
+                : () {
+                    AppHaptics.selection();
+                    onTap!();
+                  },
+            borderRadius: BorderRadius.circular(borderRadius),
+            child: Padding(
+              padding: padding,
+              child: SizedBox(width: double.infinity, child: child),
+            ),
+          ),
         ),
-      ),
-      child: child,
-    );
-
-    if (margin != null) {
-      content = Padding(padding: margin!, child: content);
-    }
-
-    if (onTap == null) return content;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          AppHaptics.selection();
-          onTap!();
-        },
-        borderRadius: BorderRadius.circular(borderRadius),
-        splashColor: AppColors.brandPrimary.withValues(alpha: 0.12),
-        highlightColor: AppColors.brandPrimary.withValues(alpha: 0.05),
-        child: content,
       ),
     );
   }
@@ -80,7 +73,7 @@ class StatCard extends StatelessWidget {
     required this.icon,
     required this.value,
     required this.label,
-    this.iconColor = AppColors.brandBright,
+    this.iconColor,
     this.badgeText,
     this.badgeColor,
     this.onTap,
@@ -89,7 +82,7 @@ class StatCard extends StatelessWidget {
   final IconData icon;
   final String value;
   final String label;
-  final Color iconColor;
+  final Color? iconColor;
   final String? badgeText;
   final Color? badgeColor;
   final VoidCallback? onTap;
@@ -109,22 +102,32 @@ class StatCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
+                  color: (iconColor ?? Theme.of(context).colorScheme.primary)
+                      .withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 18, color: iconColor),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: iconColor ?? Theme.of(context).colorScheme.primary,
+                ),
               ),
               if (badgeText != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: (badgeColor ?? AppColors.brandPrimary).withValues(alpha: 0.15),
+                    color: (badgeColor ?? Theme.of(context).colorScheme.primary)
+                        .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     badgeText!,
                     style: TextStyle(
-                      color: badgeColor ?? AppColors.brandBright,
+                      color:
+                          badgeColor ?? Theme.of(context).colorScheme.primary,
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
                     ),
@@ -135,8 +138,8 @@ class StatCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 20,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.4,
@@ -146,8 +149,8 @@ class StatCard extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -167,7 +170,7 @@ class EmptyState extends StatelessWidget {
     required this.subtitle,
     this.actionLabel,
     this.onAction,
-    this.iconColor = AppColors.brandBright,
+    this.iconColor,
   });
 
   final IconData icon;
@@ -175,7 +178,7 @@ class EmptyState extends StatelessWidget {
   final String subtitle;
   final String? actionLabel;
   final VoidCallback? onAction;
-  final Color iconColor;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -188,18 +191,26 @@ class EmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.10),
+                color: (iconColor ?? Theme.of(context).colorScheme.primary)
+                    .withValues(alpha: 0.10),
                 shape: BoxShape.circle,
-                border: Border.all(color: iconColor.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: (iconColor ?? Theme.of(context).colorScheme.primary)
+                      .withValues(alpha: 0.2),
+                ),
               ),
-              child: Icon(icon, size: 32, color: iconColor),
+              child: Icon(
+                icon,
+                size: 32,
+                color: iconColor ?? Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
               ),
@@ -208,31 +219,43 @@ class EmptyState extends StatelessWidget {
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 13.5,
                 height: 1.4,
               ),
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: () {
-                  AppHaptics.confirm();
-                  onAction!();
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.brandPrimary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+              SpringPress(
+                child: FilledButton.icon(
+                  onPressed: () {
+                    AppHaptics.confirm();
+                    onAction!();
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer,
+                    foregroundColor: Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                ),
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(
-                  actionLabel!,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: Text(
+                    actionLabel!,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                    ),
+                  ),
                 ),
               ),
             ],

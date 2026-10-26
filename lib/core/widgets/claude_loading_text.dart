@@ -1,7 +1,9 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
-
+import 'expressive_motion.dart';
 import '../theme/app_colors.dart';
+
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 
 /// Intellectual, reflective microcopy in the distinctive analytical voice of Claude.
 /// Reflects transparent reasoning, deep subject evaluation, and multi-step cognitive distillation.
@@ -121,7 +123,8 @@ class _ClaudeShimmerTextState extends State<ClaudeShimmerText>
 
   @override
   Widget build(BuildContext context) {
-    final base = widget.baseColor ?? const Color(0xFFE2E8F0).withValues(alpha: 0.85);
+    final base =
+        widget.baseColor ?? const Color(0xFFE2E8F0).withValues(alpha: 0.85);
     final highlight = widget.highlightColor ?? Colors.white;
 
     return AnimatedBuilder(
@@ -140,7 +143,7 @@ class _ClaudeShimmerTextState extends State<ClaudeShimmerText>
                 base,
                 base,
                 highlight,
-                AppColors.purpleBright,
+                Theme.of(context).colorScheme.primary,
                 highlight,
                 base,
                 base,
@@ -157,12 +160,13 @@ class _ClaudeShimmerTextState extends State<ClaudeShimmerText>
             textAlign: widget.textAlign,
             maxLines: widget.maxLines,
             overflow: widget.overflow,
-            style: widget.style ??
-                const TextStyle(
+            style:
+                widget.style ??
+                TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.2,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
           ),
         );
@@ -216,7 +220,8 @@ class ClaudeThinkingIndicator extends StatefulWidget {
   });
 
   @override
-  State<ClaudeThinkingIndicator> createState() => _ClaudeThinkingIndicatorState();
+  State<ClaudeThinkingIndicator> createState() =>
+      _ClaudeThinkingIndicatorState();
 }
 
 class _ClaudeThinkingIndicatorState extends State<ClaudeThinkingIndicator>
@@ -289,22 +294,22 @@ class _ClaudeThinkingIndicatorState extends State<ClaudeThinkingIndicator>
                   child: Container(
                     padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
-                      color: AppColors.purple.withValues(alpha: 0.25),
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.25),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.purpleBright.withValues(
-                            alpha: 0.25 * _pulseController.value,
-                          ),
+                          color: Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.25 * _pulseController.value),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.auto_awesome_rounded,
                       size: 14,
-                      color: AppColors.purpleBright,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
@@ -328,11 +333,13 @@ class _ClaudeThinkingIndicatorState extends State<ClaudeThinkingIndicator>
                         fontSize: widget.fontSize - 1.5,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
-                        color: AppColors.purpleBright,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    _ClaudeThinkingDots(color: AppColors.purpleBright),
+                    _ClaudeThinkingDots(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 2),
@@ -344,26 +351,23 @@ class _ClaudeThinkingIndicatorState extends State<ClaudeThinkingIndicator>
                 layoutBuilder: (currentChild, previousChildren) {
                   return Stack(
                     alignment: Alignment.centerLeft,
-                    children: <Widget>[
-                      ...previousChildren,
-                      ?currentChild,
-                    ],
+                    children: <Widget>[...previousChildren, ?currentChild],
                   );
                 },
                 transitionBuilder: (child, animation) {
-                  final inAnimation = Tween<Offset>(
-                    begin: const Offset(0.0, 0.30),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                  ));
+                  final inAnimation =
+                      Tween<Offset>(
+                        begin: const Offset(0.0, 0.30),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      );
                   return SlideTransition(
                     position: inAnimation,
-                    child: FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    ),
+                    child: FadeTransition(opacity: animation, child: child),
                   );
                 },
                 child: ClaudeShimmerText(
@@ -375,7 +379,10 @@ class _ClaudeThinkingIndicatorState extends State<ClaudeThinkingIndicator>
                     fontSize: widget.fontSize,
                     fontWeight: FontWeight.w500,
                     height: 1.35,
-                    color: const Color(0xFFE2E8F0),
+                    color: AppColors.readableText(
+                      context,
+                      const Color(0xFFE2E8F0),
+                    ),
                     letterSpacing: -0.2,
                   ),
                 ),
@@ -385,11 +392,17 @@ class _ClaudeThinkingIndicatorState extends State<ClaudeThinkingIndicator>
         ),
         if (widget.onCancel != null) ...[
           const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.close, size: 16, color: AppColors.textMuted),
-            onPressed: widget.onCancel,
-            tooltip: 'Cancel',
-            visualDensity: VisualDensity.compact,
+          SpringPress(
+            child: IconButton(
+              icon: Icon(
+                Icons.close,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              onPressed: widget.onCancel,
+              tooltip: 'Cancel',
+              visualDensity: VisualDensity.compact,
+            ),
           ),
         ],
       ],
@@ -397,13 +410,15 @@ class _ClaudeThinkingIndicatorState extends State<ClaudeThinkingIndicator>
 
     if (widget.isCard) {
       return Container(
-        padding: widget.padding ??
+        padding:
+            widget.padding ??
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: const Color(0xFF1E1638).withValues(alpha: 0.75),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: AppColors.purple.withValues(alpha: 0.35),
+            color: Theme.of(context).colorScheme.primary
+                .withValues(alpha: 0.35),
             width: 1.0,
           ),
           boxShadow: [
@@ -418,10 +433,7 @@ class _ClaudeThinkingIndicatorState extends State<ClaudeThinkingIndicator>
       );
     }
 
-    return Padding(
-      padding: widget.padding ?? EdgeInsets.zero,
-      child: content,
-    );
+    return Padding(padding: widget.padding ?? EdgeInsets.zero, child: content);
   }
 }
 
@@ -454,12 +466,13 @@ class ClaudeThinkingBubble extends StatelessWidget {
             bottomLeft: Radius.circular(4),
           ),
           border: Border.all(
-            color: AppColors.purple.withValues(alpha: 0.4),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.purple.withValues(alpha: 0.15),
+              color: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.15),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -521,7 +534,7 @@ class _ClaudeThinkingDotsState extends State<_ClaudeThinkingDots>
           child: Text(
             dots,
             style: TextStyle(
-              color: widget.color,
+              color: AppColors.readableText(context, widget.color),
               fontWeight: FontWeight.w800,
               fontSize: 12,
             ),

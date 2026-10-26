@@ -4,14 +4,10 @@
 /// and complete 3D orbital coordinate and nodal topology data for interactive spatial visualization.
 library;
 
-enum PericyclicType {
-  electrocyclic,
-  cycloaddition,
-  sigmatropic,
-}
+enum PericyclicType { electrocyclic, cycloaddition, sigmatropic }
 
 enum ReactionCondition {
-  thermal,       // Delta
+  thermal, // Delta
   photochemical, // h*nu
 }
 
@@ -85,7 +81,9 @@ class PericyclicService {
             allowedMode: isThermal ? 'Conrotatory' : 'Disrotatory',
             forbiddenMode: isThermal ? 'Disrotatory' : 'Conrotatory',
             isThermallyAllowed: isThermal,
-            transitionStateSymmetry: isThermal ? 'C₂ symmetry maintained' : 'Mirror plane (m) symmetry maintained',
+            transitionStateSymmetry: isThermal
+                ? 'C₂ symmetry maintained'
+                : 'Mirror plane (m) symmetry maintained',
             homoState: isThermal
                 ? 'Thermal HOMO = Ψ₂ (Antisymmetric lobes, requires like-phase rotation in same direction = Conrotatory)'
                 : 'Photochemical SOMO = Ψ₃* (Symmetric terminal lobes, requires opposite-direction rotation = Disrotatory)',
@@ -99,7 +97,9 @@ class PericyclicService {
             allowedMode: isThermal ? 'Disrotatory' : 'Conrotatory',
             forbiddenMode: isThermal ? 'Conrotatory' : 'Disrotatory',
             isThermallyAllowed: isThermal,
-            transitionStateSymmetry: isThermal ? 'Mirror plane (m) symmetry maintained' : 'C₂ symmetry maintained',
+            transitionStateSymmetry: isThermal
+                ? 'Mirror plane (m) symmetry maintained'
+                : 'C₂ symmetry maintained',
             homoState: isThermal
                 ? 'Thermal HOMO = Ψ₃ (Symmetric terminal lobes, requires opposite-direction rotation = Disrotatory)'
                 : 'Photochemical SOMO = Ψ₄* (Antisymmetric terminal lobes, requires same-direction rotation = Conrotatory)',
@@ -112,10 +112,16 @@ class PericyclicService {
       case PericyclicType.cycloaddition:
         if (is4n) {
           return PericyclicPrediction(
-            allowedMode: isThermal ? 'Antarafacial [2s+2a] (Geometrically Strained)' : 'Suprafacial-Suprafacial [2s+2s]',
-            forbiddenMode: isThermal ? 'Suprafacial [2s+2s]' : 'Antarafacial [2s+2a]',
+            allowedMode: isThermal
+                ? 'Antarafacial [2s+2a] (Geometrically Strained)'
+                : 'Suprafacial-Suprafacial [2s+2s]',
+            forbiddenMode: isThermal
+                ? 'Suprafacial [2s+2s]'
+                : 'Antarafacial [2s+2a]',
             isThermallyAllowed: !isThermal,
-            transitionStateSymmetry: isThermal ? 'Mobius topology (0 nodes / 1 twist)' : 'Hückel topology (4n electrons)',
+            transitionStateSymmetry: isThermal
+                ? 'Mobius topology (0 nodes / 1 twist)'
+                : 'Hückel topology (4n electrons)',
             homoState: isThermal
                 ? 'Thermal HOMO (pi) + LUMO (pi*) phase cancellation prevents [2s+2s] thermal overlap.'
                 : 'Photochemical HOMO* (pi*) + Ground State LUMO (pi*) gives phase-matched constructive overlap.',
@@ -126,8 +132,12 @@ class PericyclicService {
         } else {
           // 4n + 2 (e.g. Diels-Alder [4+2])
           return PericyclicPrediction(
-            allowedMode: isThermal ? 'Suprafacial-Suprafacial [4s+2s]' : 'Supra-Antara [4s+2a] (Forbidden)',
-            forbiddenMode: isThermal ? '[4s+2a] (Forbidden)' : '[4s+2s] (Photochemically Forbidden)',
+            allowedMode: isThermal
+                ? 'Suprafacial-Suprafacial [4s+2s]'
+                : 'Supra-Antara [4s+2a] (Forbidden)',
+            forbiddenMode: isThermal
+                ? '[4s+2a] (Forbidden)'
+                : '[4s+2s] (Photochemically Forbidden)',
             isThermallyAllowed: isThermal,
             transitionStateSymmetry: 'Aromatic 6-electron Hückel transition state (Dewar-Evans-Zimmerman rule)',
             homoState: isThermal
@@ -142,8 +152,12 @@ class PericyclicService {
       case PericyclicType.sigmatropic:
         if (is4n) {
           return PericyclicPrediction(
-            allowedMode: isThermal ? '[1,3]-Antarafacial (Inversion)' : '[1,3]-Suprafacial (Retention)',
-            forbiddenMode: isThermal ? '[1,3]-Suprafacial' : '[1,3]-Antarafacial',
+            allowedMode: isThermal
+                ? '[1,3]-Antarafacial (Inversion)'
+                : '[1,3]-Suprafacial (Retention)',
+            forbiddenMode: isThermal
+                ? '[1,3]-Suprafacial'
+                : '[1,3]-Antarafacial',
             isThermallyAllowed: isThermal,
             transitionStateSymmetry: 'Mobius transition state required for thermal antarafacial shift',
             homoState: 'Allyl radical SOMO Ψ₂ has opposite signs at C1 and C3, requiring migration to opposite face.',
@@ -154,10 +168,13 @@ class PericyclicService {
         } else {
           // 6 electrons: [1,5] and [3,3]
           return PericyclicPrediction(
-            allowedMode: isThermal ? 'Suprafacial [3,3] & [1,5] (Retention)' : 'Antarafacial (Forbidden)',
+            allowedMode: isThermal
+                ? 'Suprafacial [3,3] & [1,5] (Retention)'
+                : 'Antarafacial (Forbidden)',
             forbiddenMode: isThermal ? 'Antarafacial' : 'Suprafacial',
             isThermallyAllowed: isThermal,
-            transitionStateSymmetry: '6-electron aromatic chair-like Hückel transition state',
+            transitionStateSymmetry:
+                '6-electron aromatic chair-like Hückel transition state',
             homoState: 'Constructive in-phase overlap of terminal orbitals in a 6-membered cyclic transition state.',
             stereochemistryExample: isThermal
                 ? 'Cope Rearrangement (1,5-hexadienes) & Claisen Rearrangement (allyl vinyl ethers) proceed through chair-like transition state with complete chirality transfer.'
@@ -209,14 +226,70 @@ class PericyclicService {
             isLumo: false,
             description: '0 nodes. All p-orbitals in phase on top (+, +, +, +). Net bonding across all 4 carbons.',
             lobes: [
-              OrbitalLobe3D(atomIndex: 0, x: -1.5, y: -0.6, z: 0.6, sign: 1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 0, x: -1.5, y: -0.6, z: -0.6, sign: -1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 1, x: -0.5, y: 0.4, z: 0.6, sign: 1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 1, x: -0.5, y: 0.4, z: -0.6, sign: -1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 2, x: 0.5, y: -0.4, z: 0.6, sign: 1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 2, x: 0.5, y: -0.4, z: -0.6, sign: -1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 3, x: 1.5, y: 0.6, z: 0.6, sign: 1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 3, x: 1.5, y: 0.6, z: -0.6, sign: -1, size: 0.37),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.5,
+                y: -0.6,
+                z: 0.6,
+                sign: 1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.5,
+                y: -0.6,
+                z: -0.6,
+                sign: -1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -0.5,
+                y: 0.4,
+                z: 0.6,
+                sign: 1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -0.5,
+                y: 0.4,
+                z: -0.6,
+                sign: -1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: 0.5,
+                y: -0.4,
+                z: 0.6,
+                sign: 1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: 0.5,
+                y: -0.4,
+                z: -0.6,
+                sign: -1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.5,
+                y: 0.6,
+                z: 0.6,
+                sign: 1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.5,
+                y: 0.6,
+                z: -0.6,
+                sign: -1,
+                size: 0.37,
+              ),
             ],
           ),
           MolecularOrbital3D(
@@ -228,14 +301,70 @@ class PericyclicService {
             isLumo: false,
             description: '1 central node between C2 and C3. Top phases are (+, +, -, -). Terminal lobes C1 and C4 have opposite signs on top, requiring Conrotation.',
             lobes: [
-              OrbitalLobe3D(atomIndex: 0, x: -1.5, y: -0.6, z: 0.6, sign: 1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 0, x: -1.5, y: -0.6, z: -0.6, sign: -1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 1, x: -0.5, y: 0.4, z: 0.6, sign: 1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 1, x: -0.5, y: 0.4, z: -0.6, sign: -1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 2, x: 0.5, y: -0.4, z: 0.6, sign: -1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 2, x: 0.5, y: -0.4, z: -0.6, sign: 1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 3, x: 1.5, y: 0.6, z: 0.6, sign: -1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 3, x: 1.5, y: 0.6, z: -0.6, sign: 1, size: 0.60),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.5,
+                y: -0.6,
+                z: 0.6,
+                sign: 1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.5,
+                y: -0.6,
+                z: -0.6,
+                sign: -1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -0.5,
+                y: 0.4,
+                z: 0.6,
+                sign: 1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -0.5,
+                y: 0.4,
+                z: -0.6,
+                sign: -1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: 0.5,
+                y: -0.4,
+                z: 0.6,
+                sign: -1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: 0.5,
+                y: -0.4,
+                z: -0.6,
+                sign: 1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.5,
+                y: 0.6,
+                z: 0.6,
+                sign: -1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.5,
+                y: 0.6,
+                z: -0.6,
+                sign: 1,
+                size: 0.60,
+              ),
             ],
           ),
           MolecularOrbital3D(
@@ -247,14 +376,70 @@ class PericyclicService {
             isLumo: true,
             description: '2 nodes between C1-C2 and C3-C4. Top phases are (+, -, -, +). Terminal lobes C1 and C4 have identical signs (+, +) on top, requiring Disrotation.',
             lobes: [
-              OrbitalLobe3D(atomIndex: 0, x: -1.5, y: -0.6, z: 0.6, sign: 1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 0, x: -1.5, y: -0.6, z: -0.6, sign: -1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 1, x: -0.5, y: 0.4, z: 0.6, sign: -1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 1, x: -0.5, y: 0.4, z: -0.6, sign: 1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 2, x: 0.5, y: -0.4, z: 0.6, sign: -1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 2, x: 0.5, y: -0.4, z: -0.6, sign: 1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 3, x: 1.5, y: 0.6, z: 0.6, sign: 1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 3, x: 1.5, y: 0.6, z: -0.6, sign: -1, size: 0.60),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.5,
+                y: -0.6,
+                z: 0.6,
+                sign: 1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.5,
+                y: -0.6,
+                z: -0.6,
+                sign: -1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -0.5,
+                y: 0.4,
+                z: 0.6,
+                sign: -1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -0.5,
+                y: 0.4,
+                z: -0.6,
+                sign: 1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: 0.5,
+                y: -0.4,
+                z: 0.6,
+                sign: -1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: 0.5,
+                y: -0.4,
+                z: -0.6,
+                sign: 1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.5,
+                y: 0.6,
+                z: 0.6,
+                sign: 1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.5,
+                y: 0.6,
+                z: -0.6,
+                sign: -1,
+                size: 0.60,
+              ),
             ],
           ),
           MolecularOrbital3D(
@@ -264,16 +449,73 @@ class PericyclicService {
             nodes: 3,
             isHomo: false,
             isLumo: false,
-            description: '3 nodes alternating (+, -, +, -). Fully antibonding orbital.',
+            description:
+                '3 nodes alternating (+, -, +, -). Fully antibonding orbital.',
             lobes: [
-              OrbitalLobe3D(atomIndex: 0, x: -1.5, y: -0.6, z: 0.6, sign: 1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 0, x: -1.5, y: -0.6, z: -0.6, sign: -1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 1, x: -0.5, y: 0.4, z: 0.6, sign: -1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 1, x: -0.5, y: 0.4, z: -0.6, sign: 1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 2, x: 0.5, y: -0.4, z: 0.6, sign: 1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 2, x: 0.5, y: -0.4, z: -0.6, sign: -1, size: 0.60),
-              OrbitalLobe3D(atomIndex: 3, x: 1.5, y: 0.6, z: 0.6, sign: -1, size: 0.37),
-              OrbitalLobe3D(atomIndex: 3, x: 1.5, y: 0.6, z: -0.6, sign: 1, size: 0.37),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.5,
+                y: -0.6,
+                z: 0.6,
+                sign: 1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.5,
+                y: -0.6,
+                z: -0.6,
+                sign: -1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -0.5,
+                y: 0.4,
+                z: 0.6,
+                sign: -1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -0.5,
+                y: 0.4,
+                z: -0.6,
+                sign: 1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: 0.5,
+                y: -0.4,
+                z: 0.6,
+                sign: 1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: 0.5,
+                y: -0.4,
+                z: -0.6,
+                sign: -1,
+                size: 0.60,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.5,
+                y: 0.6,
+                z: 0.6,
+                sign: -1,
+                size: 0.37,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.5,
+                y: 0.6,
+                z: -0.6,
+                sign: 1,
+                size: 0.37,
+              ),
             ],
           ),
         ],
@@ -324,18 +566,102 @@ class PericyclicService {
             isLumo: false,
             description: '2 nodes. Top phases are (+, -, -, -, -, +). Terminal lobes C1 and C6 have IDENTICAL signs (+, +) on top, demanding Disrotatory ring closure.',
             lobes: [
-              OrbitalLobe3D(atomIndex: 0, x: -2.0, y: -0.5, z: 0.6, sign: 1, size: 0.50),
-              OrbitalLobe3D(atomIndex: 0, x: -2.0, y: -0.5, z: -0.6, sign: -1, size: 0.50),
-              OrbitalLobe3D(atomIndex: 1, x: -1.2, y: 0.4, z: 0.6, sign: -1, size: 0.30),
-              OrbitalLobe3D(atomIndex: 1, x: -1.2, y: 0.4, z: -0.6, sign: 1, size: 0.30),
-              OrbitalLobe3D(atomIndex: 2, x: -0.4, y: -0.3, z: 0.6, sign: -1, size: 0.45),
-              OrbitalLobe3D(atomIndex: 2, x: -0.4, y: -0.3, z: -0.6, sign: 1, size: 0.45),
-              OrbitalLobe3D(atomIndex: 3, x: 0.4, y: 0.3, z: 0.6, sign: -1, size: 0.45),
-              OrbitalLobe3D(atomIndex: 3, x: 0.4, y: 0.3, z: -0.6, sign: 1, size: 0.45),
-              OrbitalLobe3D(atomIndex: 4, x: 1.2, y: -0.4, z: 0.6, sign: -1, size: 0.30),
-              OrbitalLobe3D(atomIndex: 4, x: 1.2, y: -0.4, z: -0.6, sign: 1, size: 0.30),
-              OrbitalLobe3D(atomIndex: 5, x: 2.0, y: 0.5, z: 0.6, sign: 1, size: 0.50),
-              OrbitalLobe3D(atomIndex: 5, x: 2.0, y: 0.5, z: -0.6, sign: -1, size: 0.50),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -2.0,
+                y: -0.5,
+                z: 0.6,
+                sign: 1,
+                size: 0.50,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -2.0,
+                y: -0.5,
+                z: -0.6,
+                sign: -1,
+                size: 0.50,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -1.2,
+                y: 0.4,
+                z: 0.6,
+                sign: -1,
+                size: 0.30,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -1.2,
+                y: 0.4,
+                z: -0.6,
+                sign: 1,
+                size: 0.30,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: -0.4,
+                y: -0.3,
+                z: 0.6,
+                sign: -1,
+                size: 0.45,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: -0.4,
+                y: -0.3,
+                z: -0.6,
+                sign: 1,
+                size: 0.45,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 0.4,
+                y: 0.3,
+                z: 0.6,
+                sign: -1,
+                size: 0.45,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 0.4,
+                y: 0.3,
+                z: -0.6,
+                sign: 1,
+                size: 0.45,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 4,
+                x: 1.2,
+                y: -0.4,
+                z: 0.6,
+                sign: -1,
+                size: 0.30,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 4,
+                x: 1.2,
+                y: -0.4,
+                z: -0.6,
+                sign: 1,
+                size: 0.30,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 5,
+                x: 2.0,
+                y: 0.5,
+                z: 0.6,
+                sign: 1,
+                size: 0.50,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 5,
+                x: 2.0,
+                y: 0.5,
+                z: -0.6,
+                sign: -1,
+                size: 0.50,
+              ),
             ],
           ),
         ],
@@ -363,15 +689,57 @@ class PericyclicService {
         piElectrons: 6,
         atoms: [
           // Diene in s-cis conformation (top layer, z ≈ 0.8)
-          PericyclicAtom3D(index: 0, label: 'C1 (Diene)', x: -1.0, y: -0.8, z: 0.8),
-          PericyclicAtom3D(index: 1, label: 'C2 (Diene)', x: -0.7, y: 0.3, z: 0.8),
-          PericyclicAtom3D(index: 2, label: 'C3 (Diene)', x: 0.7, y: 0.3, z: 0.8),
-          PericyclicAtom3D(index: 3, label: 'C4 (Diene)', x: 1.0, y: -0.8, z: 0.8),
+          PericyclicAtom3D(
+            index: 0,
+            label: 'C1 (Diene)',
+            x: -1.0,
+            y: -0.8,
+            z: 0.8,
+          ),
+          PericyclicAtom3D(
+            index: 1,
+            label: 'C2 (Diene)',
+            x: -0.7,
+            y: 0.3,
+            z: 0.8,
+          ),
+          PericyclicAtom3D(
+            index: 2,
+            label: 'C3 (Diene)',
+            x: 0.7,
+            y: 0.3,
+            z: 0.8,
+          ),
+          PericyclicAtom3D(
+            index: 3,
+            label: 'C4 (Diene)',
+            x: 1.0,
+            y: -0.8,
+            z: 0.8,
+          ),
           // Dienophile (bottom layer, z ≈ -0.8)
-          PericyclicAtom3D(index: 4, label: 'C1 (Dienophile)', x: -0.7, y: -0.8, z: -0.8),
-          PericyclicAtom3D(index: 5, label: 'C2 (Dienophile)', x: 0.7, y: -0.8, z: -0.8),
+          PericyclicAtom3D(
+            index: 4,
+            label: 'C1 (Dienophile)',
+            x: -0.7,
+            y: -0.8,
+            z: -0.8,
+          ),
+          PericyclicAtom3D(
+            index: 5,
+            label: 'C2 (Dienophile)',
+            x: 0.7,
+            y: -0.8,
+            z: -0.8,
+          ),
           // Carbonyl of dienophile tucked under C2-C3 for Endo overlap
-          PericyclicAtom3D(index: 6, label: 'C=O (Carbonyl)', x: 0.0, y: 0.4, z: -0.8),
+          PericyclicAtom3D(
+            index: 6,
+            label: 'C=O (Carbonyl)',
+            x: 0.0,
+            y: 0.4,
+            z: -0.8,
+          ),
         ],
         bonds: [
           PericyclicBond3D(from: 0, to: 1, isDouble: true),
@@ -391,16 +759,65 @@ class PericyclicService {
             description: 'Green interaction lines demonstrate primary bond-forming overlap at C1/C4, while purple dashed lines show the stabilizing secondary orbital interaction at C2/C3.',
             lobes: [
               // Diene terminal lobes (bottom lobe pointing down to dienophile)
-              OrbitalLobe3D(atomIndex: 0, x: -1.0, y: -0.8, z: 0.3, sign: 1, size: 0.55),
-              OrbitalLobe3D(atomIndex: 3, x: 1.0, y: -0.8, z: 0.3, sign: -1, size: 0.55),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.0,
+                y: -0.8,
+                z: 0.3,
+                sign: 1,
+                size: 0.55,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.0,
+                y: -0.8,
+                z: 0.3,
+                sign: -1,
+                size: 0.55,
+              ),
               // Diene internal lobes
-              OrbitalLobe3D(atomIndex: 1, x: -0.7, y: 0.3, z: 0.3, sign: 1, size: 0.40),
-              OrbitalLobe3D(atomIndex: 2, x: 0.7, y: 0.3, z: 0.3, sign: -1, size: 0.40),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -0.7,
+                y: 0.3,
+                z: 0.3,
+                sign: 1,
+                size: 0.40,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: 0.7,
+                y: 0.3,
+                z: 0.3,
+                sign: -1,
+                size: 0.40,
+              ),
               // Dienophile alkene lobes (top lobe pointing up to diene)
-              OrbitalLobe3D(atomIndex: 4, x: -0.7, y: -0.8, z: -0.3, sign: 1, size: 0.55),
-              OrbitalLobe3D(atomIndex: 5, x: 0.7, y: -0.8, z: -0.3, sign: -1, size: 0.55),
+              OrbitalLobe3D(
+                atomIndex: 4,
+                x: -0.7,
+                y: -0.8,
+                z: -0.3,
+                sign: 1,
+                size: 0.55,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 5,
+                x: 0.7,
+                y: -0.8,
+                z: -0.3,
+                sign: -1,
+                size: 0.55,
+              ),
               // Dienophile carbonyl lobe (underneath C2-C3 for secondary interaction)
-              OrbitalLobe3D(atomIndex: 6, x: 0.0, y: 0.4, z: -0.3, sign: -1, size: 0.45),
+              OrbitalLobe3D(
+                atomIndex: 6,
+                x: 0.0,
+                y: 0.4,
+                z: -0.3,
+                sign: -1,
+                size: 0.45,
+              ),
             ],
           ),
         ],
@@ -452,12 +869,54 @@ class PericyclicService {
             isLumo: false,
             description: 'All 6 orbital lobes maintain continuous constructive in-phase overlap around the chair-shaped loop, conferring aromatic stabilization to the transition state.',
             lobes: [
-              OrbitalLobe3D(atomIndex: 0, x: -1.2, y: -0.7, z: 0.2, sign: 1, size: 0.50),
-              OrbitalLobe3D(atomIndex: 1, x: -1.2, y: 0.6, z: 0.4, sign: 1, size: 0.50),
-              OrbitalLobe3D(atomIndex: 2, x: 0.0, y: 1.2, z: 1.0, sign: 1, size: 0.50),
-              OrbitalLobe3D(atomIndex: 3, x: 1.2, y: 0.7, z: 0.2, sign: 1, size: 0.50),
-              OrbitalLobe3D(atomIndex: 4, x: 1.2, y: -0.6, z: 0.4, sign: 1, size: 0.50),
-              OrbitalLobe3D(atomIndex: 5, x: 0.0, y: -1.2, z: 1.0, sign: 1, size: 0.50),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.2,
+                y: -0.7,
+                z: 0.2,
+                sign: 1,
+                size: 0.50,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 1,
+                x: -1.2,
+                y: 0.6,
+                z: 0.4,
+                sign: 1,
+                size: 0.50,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 2,
+                x: 0.0,
+                y: 1.2,
+                z: 1.0,
+                sign: 1,
+                size: 0.50,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.2,
+                y: 0.7,
+                z: 0.2,
+                sign: 1,
+                size: 0.50,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 4,
+                x: 1.2,
+                y: -0.6,
+                z: 0.4,
+                sign: 1,
+                size: 0.50,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 5,
+                x: 0.0,
+                y: -1.2,
+                z: 1.0,
+                sign: 1,
+                size: 0.50,
+              ),
             ],
           ),
         ],
@@ -473,7 +932,8 @@ class PericyclicService {
       subtitle: '2-Methylbutadiene + Methyl Acrylate (1,4-Para Directing Rule)',
       category: 'Frontier Molecular Orbital Theory',
       condition: 'Thermal (Δ) Frontier Orbital Coefficient Matching',
-      stereochemicalRule: 'Largest HOMO coefficient pairs with Largest LUMO coefficient.',
+      stereochemicalRule:
+          'Largest HOMO coefficient pairs with Largest LUMO coefficient.',
       academicExplanation: 'In unsymmetrical Diels-Alder reactions, regioselectivity is dictated by the magnitude of the frontier orbital coefficients (c_i). For 2-methylbutadiene (isoprene), electron-donation by the methyl group polarizes the diene HOMO: C1 has the largest coefficient (c_1 = 0.58) and C4 has a smaller coefficient (c_4 = 0.40). For methyl acrylate, the electron-withdrawing ester group polarizes the dienophile LUMO: C_beta has the largest coefficient (c_beta = 0.70) while C_alpha is smaller (c_alpha = 0.40). The perturbation equation shows that initial interaction energy is maximized when the atoms with the largest coefficients bond together (C1 to C_beta). This cleanly yields the "para" (1-methyl-4-carbomethoxycyclohexene) regioisomer as the 85% dominant product over the "meta" isomer.',
       fmoOverlapDescription: 'Matching large coefficient (c=0.58 at C1) with large coefficient (c=0.70 at C_beta) lowers transition state energy Delta G‡.',
       transitionStateNotes: 'Synchronous vs Asynchronous bond formation: the bond between the two largest coefficients forms first in an asynchronous transition state.',
@@ -484,12 +944,48 @@ class PericyclicService {
         formulaOrName: '2-Methyl-1,3-butadiene + CH₂=CH–COOMe',
         piElectrons: 6,
         atoms: [
-          PericyclicAtom3D(index: 0, label: 'C1 (c=0.58 - Largest)', x: -1.2, y: -0.7, z: 0.5),
-          PericyclicAtom3D(index: 1, label: 'C2 (Me-subst)', x: -0.8, y: 0.4, z: 0.5),
-          PericyclicAtom3D(index: 2, label: 'C3 (c=0.42)', x: 0.6, y: 0.4, z: 0.5),
-          PericyclicAtom3D(index: 3, label: 'C4 (c=0.40)', x: 1.1, y: -0.7, z: 0.5),
-          PericyclicAtom3D(index: 4, label: 'C_beta (c=0.70 - Largest)', x: -0.8, y: -0.7, z: -0.5),
-          PericyclicAtom3D(index: 5, label: 'C_alpha (c=0.40)', x: 0.7, y: -0.7, z: -0.5),
+          PericyclicAtom3D(
+            index: 0,
+            label: 'C1 (c=0.58 - Largest)',
+            x: -1.2,
+            y: -0.7,
+            z: 0.5,
+          ),
+          PericyclicAtom3D(
+            index: 1,
+            label: 'C2 (Me-subst)',
+            x: -0.8,
+            y: 0.4,
+            z: 0.5,
+          ),
+          PericyclicAtom3D(
+            index: 2,
+            label: 'C3 (c=0.42)',
+            x: 0.6,
+            y: 0.4,
+            z: 0.5,
+          ),
+          PericyclicAtom3D(
+            index: 3,
+            label: 'C4 (c=0.40)',
+            x: 1.1,
+            y: -0.7,
+            z: 0.5,
+          ),
+          PericyclicAtom3D(
+            index: 4,
+            label: 'C_beta (c=0.70 - Largest)',
+            x: -0.8,
+            y: -0.7,
+            z: -0.5,
+          ),
+          PericyclicAtom3D(
+            index: 5,
+            label: 'C_alpha (c=0.40)',
+            x: 0.7,
+            y: -0.7,
+            z: -0.5,
+          ),
         ],
         bonds: [
           PericyclicBond3D(from: 0, to: 1, isDouble: true),
@@ -507,10 +1003,38 @@ class PericyclicService {
             isLumo: true,
             description: 'Notice the prominently larger orbital dumbbell at Diene C1 (size 0.58) pairing directly with the enlarged LUMO lobe at Dienophile C_beta (size 0.70).',
             lobes: [
-              OrbitalLobe3D(atomIndex: 0, x: -1.2, y: -0.7, z: 0.2, sign: 1, size: 0.70), // largest diene lobe
-              OrbitalLobe3D(atomIndex: 3, x: 1.1, y: -0.7, z: 0.2, sign: -1, size: 0.40),
-              OrbitalLobe3D(atomIndex: 4, x: -0.8, y: -0.7, z: -0.2, sign: 1, size: 0.85), // largest dienophile lobe
-              OrbitalLobe3D(atomIndex: 5, x: 0.7, y: -0.7, z: -0.2, sign: -1, size: 0.40),
+              OrbitalLobe3D(
+                atomIndex: 0,
+                x: -1.2,
+                y: -0.7,
+                z: 0.2,
+                sign: 1,
+                size: 0.70,
+              ), // largest diene lobe
+              OrbitalLobe3D(
+                atomIndex: 3,
+                x: 1.1,
+                y: -0.7,
+                z: 0.2,
+                sign: -1,
+                size: 0.40,
+              ),
+              OrbitalLobe3D(
+                atomIndex: 4,
+                x: -0.8,
+                y: -0.7,
+                z: -0.2,
+                sign: 1,
+                size: 0.85,
+              ), // largest dienophile lobe
+              OrbitalLobe3D(
+                atomIndex: 5,
+                x: 0.7,
+                y: -0.7,
+                z: -0.2,
+                sign: -1,
+                size: 0.40,
+              ),
             ],
           ),
         ],

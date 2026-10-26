@@ -13,7 +13,7 @@ class AdminRepository {
 
   Future<List<Announcement>> announcements({bool studentView = false}) async {
     final client = remote.client;
-    if (client == null) return [];
+    if (client == null) {return [];}
 
     final response = await (studentView
         ? client.from('announcements').select().eq('published', true).order('created_at', ascending: false)
@@ -32,7 +32,7 @@ class AdminRepository {
 
   Future<List<Map<String, dynamic>>> listStudents() async {
     final client = remote.client;
-    if (client == null) return [];
+    if (client == null) {return [];}
 
     final response = await client.from('profiles').select().eq('role', 'student').order('created_at', ascending: false);
     return List<Map<String, dynamic>>.from(response);
@@ -40,7 +40,7 @@ class AdminRepository {
 
   Future<void> updateStudentRole(String userId, String role) async {
     final client = remote.client;
-    if (client == null) return;
+    if (client == null) {return;}
 
     await client.from('profiles').update({'role': role}).eq('id', userId);
   }

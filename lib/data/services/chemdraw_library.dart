@@ -36,7 +36,7 @@ class ChemDrawLibrary {
 
   static ReactionMechanism attach(ReactionMechanism m) {
     final steps = _steps[m.id];
-    if (steps == null) return m;
+    if (steps == null) {return m;}
     return ReactionMechanism(
       id: m.id,
       name: m.name,

@@ -109,22 +109,22 @@ class SpacedRepetitionService {
       case FlashcardRating.again:
         return 0;
       case FlashcardRating.hard:
-        if (isNewOrLearning) return 1;
+        if (isNewOrLearning) {return 1;}
         return max(1, (card.intervalDays * 1.2).round());
       case FlashcardRating.good:
-        if (isNewOrLearning) return card.isNew ? 1 : 3;
-        if (card.repetitionCount == 1) return 6;
+        if (isNewOrLearning) {return card.isNew ? 1 : 3;}
+        if (card.repetitionCount == 1) {return 6;}
         return max(card.intervalDays + 1, (card.intervalDays * card.easeFactor).round());
       case FlashcardRating.easy:
-        if (isNewOrLearning) return 4;
+        if (isNewOrLearning) {return 4;}
         return max(card.intervalDays + 2, (card.intervalDays * card.easeFactor * 1.3).round());
     }
   }
 
   String _formatInterval(int days) {
-    if (days <= 0) return '< 10m';
-    if (days == 1) return '1d';
-    if (days < 30) return '${days}d';
+    if (days <= 0) {return '< 10m';}
+    if (days == 1) {return '1d';}
+    if (days < 30) {return '${days}d';}
     if (days < 365) {
       final months = (days / 30).toStringAsFixed(1).replaceAll('.0', '');
       return '${months}mo';

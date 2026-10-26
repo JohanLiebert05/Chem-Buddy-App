@@ -26,9 +26,9 @@ class _ContentManagementScreenState extends ConsumerState<ContentManagementScree
       children: [
         TabBar(
           controller: _tabController,
-          indicatorColor: AppColors.purple,
-          labelColor: AppColors.purple,
-          unselectedLabelColor: AppColors.textMuted,
+          indicatorColor: Theme.of(context).colorScheme.primary,
+          labelColor: Theme.of(context).colorScheme.primary,
+          unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
           tabs: const [
             Tab(text: 'Announcements'),
             Tab(text: 'Other Content'),
@@ -39,7 +39,7 @@ class _ContentManagementScreenState extends ConsumerState<ContentManagementScree
             controller: _tabController,
             children: [
               _AnnouncementsTab(),
-              const Center(child: Text('Coming Soon', style: TextStyle(color: AppColors.textSecondary))),
+               Center(child: Text('Coming Soon', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))),
             ],
           ),
         ),
@@ -68,10 +68,10 @@ class _AnnouncementsTab extends ConsumerWidget {
           child: RefreshIndicator(
             onRefresh: () => ref.refresh(announcementsProvider.future),
             child: announcementsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator(color: AppColors.purple)),
-              error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.danger))),
+              loading: () =>  Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
+              error: (err, _) => Center(child: Text('Error: $err', style:  TextStyle(color: AppColors.adaptive(context, AppColors.danger)))),
               data: (items) {
-                if (items.isEmpty) return const Center(child: Text('No announcements', style: TextStyle(color: AppColors.textSecondary)));
+                if (items.isEmpty) {return  Center(child: Text('No announcements', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)));}
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: items.length,
@@ -81,11 +81,11 @@ class _AnnouncementsTab extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: GlowCard(
                         child: ListTile(
-                          title: Text(item.title, style: const TextStyle(color: AppColors.textPrimary)),
-                          subtitle: Text(item.body, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary)),
+                          title: Text(item.title, style:  TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+                          subtitle: Text(item.body, maxLines: 2, overflow: TextOverflow.ellipsis, style:  TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           trailing: Switch(
                             value: item.published,
-                            activeThumbColor: AppColors.purple,
+                            activeThumbColor: Theme.of(context).colorScheme.primary,
                             onChanged: (val) {
                               // Toggle publish logic
                             },

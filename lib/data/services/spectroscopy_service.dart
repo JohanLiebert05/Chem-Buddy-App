@@ -550,11 +550,11 @@ class SpectroscopyService {
 
         // Stoichiometric filtering: only report groups that can exist given formula heteroatoms!
         final filtered = matched.where((m) {
-          if (m.group.contains('O-H') && parsed.oxygens == 0) return false;
-          if (m.group.contains('C=O') && parsed.oxygens == 0) return false;
-          if (m.group.contains('N-H') && parsed.nitrogens == 0) return false;
-          if (m.group.contains('Nitro') && (parsed.nitrogens == 0 || parsed.oxygens < 2)) return false;
-          if (m.group.contains('Nitrile') && parsed.nitrogens == 0) return false;
+          if (m.group.contains('O-H') && parsed.oxygens == 0) {return false;}
+          if (m.group.contains('C=O') && parsed.oxygens == 0) {return false;}
+          if (m.group.contains('N-H') && parsed.nitrogens == 0) {return false;}
+          if (m.group.contains('Nitro') && (parsed.nitrogens == 0 || parsed.oxygens < 2)) {return false;}
+          if (m.group.contains('Nitrile') && parsed.nitrogens == 0) {return false;}
           return true;
         }).toList();
 
@@ -562,14 +562,14 @@ class SpectroscopyService {
           final matchDesc = filtered.map((m) => '**${m.group}** (${m.intensity}: ${m.description})').join('\n  - ');
           step2Buffer.writeln('- **$peak cm⁻¹**: $matchDesc');
           for (final m in filtered) {
-            if (!detectedGroups.contains(m.group)) detectedGroups.add(m.group);
+            if (!detectedGroups.contains(m.group)) {detectedGroups.add(m.group);}
           }
         } else if (peak >= 3000 && peak <= 3100) {
           step2Buffer.writeln('- **$peak cm⁻¹**: **sp² C-H stretching** (Ar-H or =C-H above 3000 cm⁻¹ confirms aromatic/alkene unsaturation).');
-          if (!detectedGroups.contains('sp² C-H')) detectedGroups.add('sp² C-H');
+          if (!detectedGroups.contains('sp² C-H')) {detectedGroups.add('sp² C-H');}
         } else if (peak >= 2850 && peak < 3000) {
           step2Buffer.writeln('- **$peak cm⁻¹**: **sp³ C-H stretching** (saturated aliphatic alkyl framework).');
-          if (!detectedGroups.contains('sp³ C-H')) detectedGroups.add('sp³ C-H');
+          if (!detectedGroups.contains('sp³ C-H')) {detectedGroups.add('sp³ C-H');}
         } else {
           step2Buffer.writeln('- **$peak cm⁻¹**: Skeletal C-C single bond stretching / fingerprint region band.');
         }
@@ -601,11 +601,11 @@ class SpectroscopyService {
 
     if (effectiveH.isNotEmpty) {
       for (final p in effectiveH) {
-        if (p >= 9.2 && p <= 10.5) hasAldehydeProton = true;
-        if (p >= 10.5 && p <= 13.5) hasAcidProton = true;
-        if (p >= 6.5 && p <= 8.5) hasAromaticProtons = true;
-        if (p >= 3.3 && p <= 4.5) hasDeshieldedAliphatic = true;
-        if (p >= 2.0 && p <= 2.8) hasAlphaCarbonylProtons = true;
+        if (p >= 9.2 && p <= 10.5) {hasAldehydeProton = true;}
+        if (p >= 10.5 && p <= 13.5) {hasAcidProton = true;}
+        if (p >= 6.5 && p <= 8.5) {hasAromaticProtons = true;}
+        if (p >= 3.3 && p <= 4.5) {hasDeshieldedAliphatic = true;}
+        if (p >= 2.0 && p <= 2.8) {hasAlphaCarbonylProtons = true;}
 
         final matched = protonNmrRegions.where((r) {
           final parts = r.range.replaceAll('ppm', '').replaceAll(' ', '').split('–');
@@ -619,17 +619,17 @@ class SpectroscopyService {
 
         // Stoichiometric filter for 1H
         final filtered = matched.where((r) {
-          if (r.type.contains('Aldehyde') && parsed.oxygens == 0) return false;
-          if (r.type.contains('Carboxylic') && parsed.oxygens < 2) return false;
-          if (r.type.contains('Alkoxy') && parsed.oxygens == 0) return false;
-          if (r.type.contains('Halogenated') && parsed.halogens == 0) return false;
+          if (r.type.contains('Aldehyde') && parsed.oxygens == 0) {return false;}
+          if (r.type.contains('Carboxylic') && parsed.oxygens < 2) {return false;}
+          if (r.type.contains('Alkoxy') && parsed.oxygens == 0) {return false;}
+          if (r.type.contains('Halogenated') && parsed.halogens == 0) {return false;}
           return true;
         }).toList();
 
         if (filtered.isNotEmpty) {
           final best = filtered.first;
           step3Buffer.writeln('- **δ ${p.toStringAsFixed(2)} ppm**: **${best.type}**\n  - ${best.description}');
-          if (!nmrFragments.contains(best.type)) nmrFragments.add(best.type);
+          if (!nmrFragments.contains(best.type)) {nmrFragments.add(best.type);}
         } else {
           step3Buffer.writeln('- **δ ${p.toStringAsFixed(2)} ppm**: Shielded aliphatic / secondary alkyl chemical shift environment.');
         }
@@ -861,8 +861,8 @@ class SpectroscopyService {
       subunits.add('Terminal Methyl Group (–CH₃, consumes 1 C, 3 H)');
     }
 
-    if (parsed.chlorines > 0) subunits.add('${parsed.chlorines}x Chlorine substituent (-Cl)');
-    if (parsed.bromines > 0) subunits.add('${parsed.bromines}x Bromine substituent (-Br)');
+    if (parsed.chlorines > 0) {subunits.add('${parsed.chlorines}x Chlorine substituent (-Cl)');}
+    if (parsed.bromines > 0) {subunits.add('${parsed.bromines}x Bromine substituent (-Br)');}
 
     step6Buffer.writeln('Compiling the identified structural subunits against the molecular formula **$fUpper**:');
     for (final s in subunits) {
@@ -3070,8 +3070,8 @@ class SpectroscopyService {
   }) {
     final clean = formula.trim().toUpperCase().replaceAll(' ', '');
     final matches = curatedCompoundDatabase.where((c) => c.formula.toUpperCase() == clean).toList();
-    if (matches.isEmpty) return null;
-    if (matches.length == 1) return matches.first;
+    if (matches.isEmpty) {return null;}
+    if (matches.length == 1) {return matches.first;}
 
     // Disambiguate between constitutional isomers (e.g. 1-bromopropane vs 2-bromopropane)
     if (clean == 'C3H7BR') {

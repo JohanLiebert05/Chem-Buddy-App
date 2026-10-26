@@ -1,4 +1,7 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -47,22 +50,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _checkTutorial() {
-    final completed = ref.read(appControllerProvider.notifier).hasCompletedTutorial();
+    final completed = ref
+        .read(appControllerProvider.notifier)
+        .hasCompletedTutorial();
     if (!completed && mounted) {
       BeginnerTutorialDialog.show(context);
     }
   }
 
   String _timeGreeting(int hour, int weekday) {
-    if (hour < 5) return 'Late night study';
-    if (hour < 9) return 'Good morning';
-    if (hour < 12) {
-      if (weekday == DateTime.monday) return 'Monday focus';
-      if (weekday == DateTime.friday) return 'Friday wrap-up';
+    if (hour < 5) {
+      return 'Late night study';
+    }
+    if (hour < 9) {
       return 'Good morning';
     }
-    if (hour < 17) return 'Good afternoon';
-    if (hour < 21) return 'Good evening';
+    if (hour < 12) {
+      if (weekday == DateTime.monday) {
+        return 'Monday focus';
+      }
+      if (weekday == DateTime.friday) {
+        return 'Friday wrap-up';
+      }
+      return 'Good morning';
+    }
+    if (hour < 17) {
+      return 'Good afternoon';
+    }
+    if (hour < 21) {
+      return 'Good evening';
+    }
     return 'Night study';
   }
 
@@ -127,23 +144,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         : 'Prajwal';
 
     final localStore = ref.watch(localStoreProvider);
-    final allSessions = localStore.all(localStore.studySessions).map((j) => StudySession.fromJson(j)).toList();
-    final incompleteSession = allSessions.where((s) => !s.completed).firstOrNull;
+    final allSessions = localStore
+        .all(localStore.studySessions)
+        .map((j) => StudySession.fromJson(j))
+        .toList();
+    final incompleteSession = allSessions
+        .where((s) => !s.completed)
+        .firstOrNull;
     SmartFlashcardSet? incompleteSet;
     if (incompleteSession != null) {
-      final allSets = localStore.all(localStore.smartSets).map((j) => SmartFlashcardSet.fromJson(j)).toList();
-      incompleteSet = allSets.where((s) => s.id == incompleteSession.flashcardSetId).firstOrNull;
+      final allSets = localStore
+          .all(localStore.smartSets)
+          .map((j) => SmartFlashcardSet.fromJson(j))
+          .toList();
+      incompleteSet = allSets
+          .where((s) => s.id == incompleteSession.flashcardSetId)
+          .firstOrNull;
     }
 
     final recentPdf = state.pdfs.isNotEmpty
         ? (state.pdfs.where((p) => p.favorite).firstOrNull ?? state.pdfs.first)
         : null;
 
-    final upcomingTests = state.events.where((e) => !e.completed).take(3).toList();
+    final upcomingTests = state.events
+        .where((e) => !e.completed)
+        .take(3)
+        .toList();
     final dailyChem = DailyChemistryService.instance.getTodayContent();
 
     final analyticsService = ref.watch(studyAnalyticsServiceProvider);
-    final analytics = analyticsService.computeSummary(streakDays: repo.streak());
+    final analytics = analyticsService.computeSummary(
+      streakDays: repo.streak(),
+    );
 
     final hour = DateTime.now().hour;
     final weekday = DateTime.now().weekday;
@@ -169,8 +201,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Text(
                     timeGreeting,
-                    style: const TextStyle(
-                      color: AppColors.brandBright,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.2,
@@ -179,18 +211,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 2),
                   Text(
                     name.isEmpty ? 'Prajwal' : name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: -0.4,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${state.profile.university.isEmpty ? "MSc Chemistry" : state.profile.university} · Sem ${state.profile.semester}',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       height: 1.3,
@@ -199,34 +231,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
             ),
-            IconButton.filledTonal(
-              tooltip: 'Search',
-              iconSize: 20,
-              style: IconButton.styleFrom(
-                backgroundColor: AppColors.surfaceContainerHigh,
-                foregroundColor: AppColors.textPrimary,
+            SpringPress(
+              child: IconButton.filledTonal(
+                tooltip: 'Search',
+                iconSize: 20,
+                style: IconButton.styleFrom(
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHigh,
+                  foregroundColor: Theme.of(context).colorScheme.onSurface,
+                ),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const SearchScreen()),
+                ),
+                icon: const Icon(Icons.search_rounded),
               ),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const SearchScreen()),
-              ),
-              icon: const Icon(Icons.search_rounded),
             ),
           ],
         ),
 
         // Attendance Alert Banner (prominently displayed when below 75%)
-        if (overallPct < 75.0) ...[
+        if (overall.present + overall.absent > 0 && overallPct < 75.0) ...[
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.statusDanger.withValues(alpha: 0.12),
+              color: AppColors.adaptive(
+                context,
+                AppColors.statusDanger,
+              ).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.statusDanger.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppColors.adaptive(
+                  context,
+                  AppColors.statusDanger,
+                ).withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: AppColors.statusDanger, size: 20),
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: AppColors.adaptive(context, AppColors.statusDanger),
+                  size: 20,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -234,17 +282,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: [
                       Text(
                         'Attendance Warning: ${overallPct.toStringAsFixed(1)}% (Below 75%)',
-                        style: const TextStyle(
-                          color: AppColors.statusDanger,
+                        style: TextStyle(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.statusDanger,
+                          ),
                           fontWeight: FontWeight.w700,
                           fontSize: 12.5,
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         'Every class counts — attend upcoming classes to restore eligibility.',
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 11,
                         ),
                       ),
@@ -261,19 +312,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           margin: const EdgeInsets.only(top: 10),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerHigh,
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.borderSubtle),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
           ),
           child: Row(
             children: [
-              const Icon(Icons.format_quote_rounded, size: 16, color: AppColors.brandBright),
+              Icon(
+                Icons.format_quote_rounded,
+                size: 16,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   _chemistryThought(DateTime.now().day),
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 11.5,
                     fontStyle: FontStyle.italic,
                   ),
@@ -286,6 +343,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         // Study Priorities
         StudyPrioritiesCard(
+          hasStudyData: analytics.totalQuestionsAnswered > 0,
           weakTopics: analytics.weakTopics,
           moderateTopics: analytics.moderateTopics,
         ),
@@ -302,10 +360,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.brandPrimary.withValues(alpha: 0.14),
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.auto_stories_rounded, color: AppColors.brandBright, size: 22),
+                    child: Icon(
+                      Icons.auto_stories_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -313,13 +376,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          recentPdf != null ? recentPdf.displayName : 'MSc Chemistry Study Hub',
+                          recentPdf != null
+                              ? recentPdf.displayName
+                              : 'MSc Chemistry Study Hub',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 15,
-                            color: AppColors.textPrimary,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -327,7 +392,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           recentPdf != null
                               ? 'Ready for quizzes, flashcards & notes review'
                               : 'Upload chemistry notes to begin interactive study',
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -337,32 +407,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () {
-                    if (recentPdf != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: recentPdf)),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(builder: (_) => const PdfLibraryScreen()),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                  label: Text(
-                    recentPdf != null ? 'Continue Studying ${recentPdf.displayName}' : 'Open Study Hub',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                child: SpringPress(
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
+                      foregroundColor: Theme.of(context)
+                          .colorScheme
+                          .onPrimaryContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      if (recentPdf != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => PdfStudyHubScreen(doc: recentPdf),
+                          ),
+                        );
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => const PdfLibraryScreen(),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                    label: Text(
+                      recentPdf != null
+                          ? 'Continue Studying ${recentPdf.displayName}'
+                          : 'Open Study Hub',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.5,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -384,21 +471,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               label: 'Questions Answered',
               value: '${analytics.totalQuestionsAnswered}',
               icon: Icons.quiz_outlined,
-              color: AppColors.brandBright,
+              color: Theme.of(context).colorScheme.primary,
             ),
             _buildStatCard(
               label: 'Flashcards Due',
               value: '${analytics.flashcardsDueToday}',
               icon: Icons.psychology_outlined,
-              color: analytics.flashcardsDueToday > 0 ? AppColors.statusWarning : AppColors.statusSuccess,
+              color: analytics.flashcardsDueToday > 0
+                  ? AppColors.adaptive(context, AppColors.statusWarning)
+                  : AppColors.adaptive(context, AppColors.statusSuccess),
             ),
             _buildAccuracyCard(
               analytics.overallQuizAccuracy,
               analytics.totalQuestionsAnswered,
             ),
-            _buildStreakCard(
-              analytics.studyStreakDays,
-            ),
+            _buildStreakCard(analytics.studyStreakDays),
           ],
         ),
 
@@ -406,17 +493,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         if (analytics.flashcardsDueToday > 0) ...[
           const SizedBox(height: 10),
           GlowCard(
-            borderColor: AppColors.statusWarning.withValues(alpha: 0.4),
+            borderColor: AppColors.adaptive(
+              context,
+              AppColors.statusWarning,
+            ).withValues(alpha: 0.4),
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.statusWarning.withValues(alpha: 0.12),
+                    color: AppColors.adaptive(
+                      context,
+                      AppColors.statusWarning,
+                    ).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.alarm_on_rounded, color: AppColors.statusWarning, size: 20),
+                  child: Icon(
+                    Icons.alarm_on_rounded,
+                    color: AppColors.adaptive(context, AppColors.statusWarning),
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -425,35 +522,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: [
                       Text(
                         '${analytics.flashcardsDueToday} flashcard${analytics.flashcardsDueToday == 1 ? "" : "s"} due today',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.textPrimary),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.5,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 1),
-                      const Text(
+                      Text(
                         'Reinforce active recall with spaced repetition',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11.5,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                FilledButton.tonal(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.statusWarning.withValues(alpha: 0.18),
-                    foregroundColor: AppColors.statusWarning,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SmartFlashcardsStudyScreen(
-                          setId: '',
-                          review: ReviewMode.spacedRepetition,
-                        ),
+                SpringPress(
+                  child: FilledButton.tonal(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.adaptive(
+                        context,
+                        AppColors.statusWarning,
+                      ).withValues(alpha: 0.18),
+                      foregroundColor: AppColors.adaptive(
+                        context,
+                        AppColors.statusWarning,
                       ),
-                    );
-                  },
-                  child: const Text('Review', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const SmartFlashcardsStudyScreen(
+                            setId: '',
+                            review: ReviewMode.spacedRepetition,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Review',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -480,21 +603,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               label: 'Quiz',
               onTap: () {
                 if (recentPdf != null) {
-                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: recentPdf)));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => PdfStudyHubScreen(doc: recentPdf),
+                    ),
+                  );
                 } else {
-                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PdfLibraryScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const PdfLibraryScreen(),
+                    ),
+                  );
                 }
               },
             ),
             _QuickTile(
               icon: Icons.style_outlined,
               label: 'Cards',
-              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SmartFlashcardsPage())),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const SmartFlashcardsPage(),
+                ),
+              ),
             ),
             _QuickTile(
               icon: Icons.upload_file_rounded,
               label: 'Upload',
-              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PdfLibraryScreen())),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const PdfLibraryScreen(),
+                ),
+              ),
             ),
             _QuickTile(
               icon: Icons.science_outlined,
@@ -520,10 +663,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Chemistry Toolkit',
               subtitle: '16 postgraduate calculators and solutions formulation',
               icon: Icons.calculate_rounded,
-              color: AppColors.brandBright,
+              color: Theme.of(context).colorScheme.primary,
               onTap: () {
                 AppHaptics.selection();
-                Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ChemistryToolkitScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ChemistryToolkitScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 8),
@@ -531,10 +679,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Spectroscopy Hub',
               subtitle: '¹H/¹³C NMR, FT-IR and mass spectrometry database',
               icon: Icons.graphic_eq_rounded,
-              color: AppColors.accentCyan,
+              color: AppColors.adaptive(context, AppColors.accentCyan),
               onTap: () {
                 AppHaptics.selection();
-                Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SpectroscopyHubScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const SpectroscopyHubScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 8),
@@ -542,10 +695,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Pericyclic Rules & FMO',
               subtitle: 'Woodward-Hoffmann, electrocyclic and cycloadditions',
               icon: Icons.all_inclusive_rounded,
-              color: AppColors.brandPrimary,
+              color: Theme.of(context).colorScheme.primary,
               onTap: () {
                 AppHaptics.selection();
-                Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PericyclicHubScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PericyclicHubScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 8),
@@ -553,10 +711,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Exam Mode & Model Answers',
               subtitle: 'Blueprint rubrics, 2M/5M/10M marking criteria',
               icon: Icons.school_rounded,
-              color: AppColors.accentGold,
+              color: AppColors.adaptive(context, AppColors.accentGold),
               onTap: () {
                 AppHaptics.selection();
-                Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const ExamModeScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ExamModeScreen(),
+                  ),
+                );
               },
             ),
           ],
@@ -567,7 +730,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const _DailyPsychologyFactCard(),
 
         // 8. Schedule & Next Class
-        const SectionTitle('Schedule & Classes', icon: Icons.calendar_today_rounded),
+        const SectionTitle(
+          'Schedule & Classes',
+          icon: Icons.calendar_today_rounded,
+        ),
         _NextClassCard(state: state),
         const SizedBox(height: 10),
 
@@ -585,32 +751,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: AttendanceMath.isSafe(overall.percent)
-                                ? AppColors.statusSuccess.withValues(alpha: 0.14)
-                                : AppColors.statusDanger.withValues(alpha: 0.14),
+                                ? AppColors.adaptive(
+                                    context,
+                                    AppColors.statusSuccess,
+                                  ).withValues(alpha: 0.14)
+                                : AppColors.adaptive(
+                                    context,
+                                    AppColors.statusDanger,
+                                  ).withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            AttendanceMath.isSafe(overall.percent) ? 'Safe Margin' : 'Attendance Low',
+                            AttendanceMath.isSafe(overall.percent)
+                                ? 'Safe Margin'
+                                : 'Attendance Low',
                             style: TextStyle(
                               color: AttendanceMath.isSafe(overall.percent)
-                                  ? AppColors.statusSuccess
-                                  : AppColors.statusDanger,
+                                  ? AppColors.adaptive(
+                                      context,
+                                      AppColors.statusSuccess,
+                                    )
+                                  : AppColors.adaptive(
+                                      context,
+                                      AppColors.statusDanger,
+                                    ),
                               fontWeight: FontWeight.w700,
                               fontSize: 11,
                             ),
                           ),
                         ),
                         const Spacer(),
-                        const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 20),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          size: 20,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'Can skip ${overall.canSkip} more class${overall.canSkip == 1 ? "" : "es"} · Streak ${repo.streak()} days',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
                     ),
                   ],
                 ),
@@ -625,41 +815,66 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         // 11. Incomplete Flashcard Session
         if (incompleteSession != null && incompleteSet != null) ...[
-          const SectionTitle('Incomplete Flashcard Session', icon: Icons.pending_actions_rounded),
+          const SectionTitle(
+            'Incomplete Flashcard Session',
+            icon: Icons.pending_actions_rounded,
+          ),
           GlowCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Flashcard Review: ${incompleteSet.title}',
-                  style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(6),
                   child: LinearProgressIndicator(
                     value: incompleteSet.cardCount > 0
-                        ? (incompleteSession.currentPosition / incompleteSet.cardCount).clamp(0, 1)
+                        ? (incompleteSession.currentPosition /
+                                  incompleteSet.cardCount)
+                              .clamp(0, 1)
                         : 0,
-                    color: AppColors.accentCyan,
-                    backgroundColor: AppColors.surfaceContainerLowest,
+                    color: AppColors.adaptive(context, AppColors.accentCyan),
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerLowest,
                     minHeight: 6,
                   ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton.tonal(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.surfaceContainerHighest,
-                      foregroundColor: AppColors.textPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: SpringPress(
+                    child: FilledButton.tonal(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                        foregroundColor: Theme.of(context)
+                            .colorScheme
+                            .onSurface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => SmartFlashcardsStudyScreen(
+                            setId: incompleteSet!.id,
+                          ),
+                        ),
+                      ),
+                      child: const Text(
+                        'Resume Flashcards',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
                     ),
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(builder: (_) => SmartFlashcardsStudyScreen(setId: incompleteSet!.id)),
-                    ),
-                    child: const Text('Resume Flashcards', style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -671,23 +886,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const SectionTitle('Upcoming Deadlines & Tests', icon: Icons.event_note_rounded),
-            TextButton.icon(
-              onPressed: () => _showAddTestDialog(context, ref, state),
-              icon: const Icon(Icons.add_rounded, size: 16, color: AppColors.brandBright),
-              label: const Text('Add', style: TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w700, fontSize: 12)),
+            const SectionTitle(
+              'Upcoming Deadlines & Tests',
+              icon: Icons.event_note_rounded,
+            ),
+            SpringPress(
+              child: TextButton.icon(
+                onPressed: () => _showAddTestDialog(context, ref, state),
+                icon: Icon(
+                  Icons.add_rounded,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: Text(
+                  'Add',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
         if (upcomingTests.isEmpty)
           GlowCard(
             padding: const EdgeInsets.all(14),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.event_available_rounded, size: 22, color: AppColors.brandBright),
+                Icon(
+                  Icons.event_available_rounded,
+                  size: 22,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 SizedBox(width: 12),
                 Expanded(
-                  child: Text('No upcoming tests scheduled. Tap + Add to track deadlines.', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  child: Text(
+                    'No upcoming tests scheduled. Tap + Add to track deadlines.',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -696,13 +937,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ...upcomingTests.map((e) {
             final now = DateTime.now();
             final todayDate = DateTime(now.year, now.month, now.day);
-            final eventDate = DateTime(e.dueDate.year, e.dueDate.month, e.dueDate.day);
+            final eventDate = DateTime(
+              e.dueDate.year,
+              e.dueDate.month,
+              e.dueDate.day,
+            );
             final daysLeft = eventDate.difference(todayDate).inDays;
 
-            String countdownLabel = daysLeft == 0 ? 'Due today' : (daysLeft == 1 ? 'Due tomorrow' : '$daysLeft days left');
-            Color countdownColor = daysLeft <= 1 ? AppColors.statusWarning : AppColors.brandBright;
+            String countdownLabel = daysLeft == 0
+                ? 'Due today'
+                : (daysLeft == 1 ? 'Due tomorrow' : '$daysLeft days left');
+            Color countdownColor = daysLeft <= 1
+                ? AppColors.adaptive(context, AppColors.statusWarning)
+                : Theme.of(context).colorScheme.primary;
 
-            final subject = state.subjects.where((s) => s.id == e.subjectId).firstOrNull;
+            final subject = state.subjects
+                .where((s) => s.id == e.subjectId)
+                .firstOrNull;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -711,8 +962,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Row(
                   children: [
                     Icon(
-                      e.type == EventType.test ? Icons.quiz_rounded : Icons.assignment_rounded,
-                      color: AppColors.brandBright,
+                      e.type == EventType.test
+                          ? Icons.quiz_rounded
+                          : Icons.assignment_rounded,
+                      color: Theme.of(context).colorScheme.primary,
                       size: 20,
                     ),
                     const SizedBox(width: 12),
@@ -720,23 +973,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(e.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                          Text(
+                            e.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13.5,
+                            ),
+                          ),
                           Text(
                             '${DateFormat("d MMM").format(e.dueDate)}${subject != null ? " · ${subject.name}" : ""}',
-                            style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 11.5,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: countdownColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         countdownLabel,
-                        style: TextStyle(color: countdownColor, fontWeight: FontWeight.w700, fontSize: 11),
+                        style: TextStyle(
+                          color: AppColors.readableText(
+                            context,
+                            countdownColor,
+                          ),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                        ),
                       ),
                     ),
                   ],
@@ -746,7 +1020,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           }),
 
         // 13. Academic Progress
-        const SectionTitle('Academic Progress', icon: Icons.trending_up_rounded),
+        const SectionTitle(
+          'Academic Progress',
+          icon: Icons.trending_up_rounded,
+        ),
         _MyProgressSection(analytics: analytics),
         const SizedBox(height: 14),
 
@@ -765,9 +1042,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 0.6,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -782,7 +1062,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -791,9 +1075,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Text(
             value,
             style: TextStyle(
-              color: color,
+              color: AppColors.readableText(context, color),
               fontSize: 18,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
@@ -804,13 +1088,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildAccuracyCard(double accuracy, int totalQuestions) {
     final hasData = totalQuestions > 0;
-    final color = accuracy >= 70 ? AppColors.statusSuccess : AppColors.statusWarning;
+    final color = accuracy >= 70
+        ? AppColors.adaptive(context, AppColors.statusSuccess)
+        : AppColors.adaptive(context, AppColors.statusWarning);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 0.6,
+        ),
       ),
       child: Row(
         children: [
@@ -837,19 +1126,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Quiz Accuracy',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   hasData ? '${accuracy.toStringAsFixed(0)}%' : 'N/A',
                   style: TextStyle(
-                    color: color,
+                    color: AppColors.readableText(context, color),
                     fontSize: 16,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -865,9 +1158,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 0.6,
+        ),
       ),
       child: Row(
         children: [
@@ -884,19 +1180,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Study Streak',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '$streakDays Day${streakDays == 1 ? "" : "s"}',
-                  style: const TextStyle(
-                    color: AppColors.accentGold,
+                  style: TextStyle(
+                    color: AppColors.adaptive(context, AppColors.accentGold),
                     fontSize: 16,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -915,48 +1215,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.borderSubtle, width: 0.6),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 20),
+    return SpringPress(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              width: 0.6,
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
-                  ),
-                ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
               ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 20),
-          ],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -967,74 +1283,132 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final desc = TextEditingController();
     var type = EventType.test;
     var due = DateTime.now().add(const Duration(days: 7));
-    String? subjectId = state.subjects.isNotEmpty ? state.subjects.first.id : null;
+    String? subjectId = state.subjects.isNotEmpty
+        ? state.subjects.first.id
+        : null;
 
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.bg2,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) {
         return Padding(
-          padding: EdgeInsets.only(left: 20, right: 20, top: 12, bottom: MediaQuery.of(ctx).viewInsets.bottom + 20),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 12,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
           child: StatefulBuilder(
             builder: (context, setModal) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Add Academic Deadline', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: AppColors.textPrimary)),
+                  Text(
+                    'Add Academic Deadline',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
                   const SizedBox(height: 14),
-                  TextField(controller: title, decoration: const InputDecoration(hintText: 'Title (e.g. Midterm Test 1)')),
+                  TextField(
+                    controller: title,
+                    decoration: const InputDecoration(
+                      hintText: 'Title (e.g. Midterm Test 1)',
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String?>(
                     initialValue: subjectId,
                     items: [
-                      const DropdownMenuItem(value: null, child: Text('No subject')),
-                      ...state.subjects.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('No subject'),
+                      ),
+                      ...state.subjects.map(
+                        (s) =>
+                            DropdownMenuItem(value: s.id, child: Text(s.name)),
+                      ),
                     ],
                     onChanged: (v) => setModal(() => subjectId = v),
                     decoration: const InputDecoration(labelText: 'Subject'),
                   ),
                   const SizedBox(height: 10),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text('Due ${DateFormat('d MMM yyyy').format(due)}', style: const TextStyle(color: AppColors.textPrimary)),
-                    trailing: const Icon(Icons.calendar_month_rounded, color: AppColors.brandBright),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: due,
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                      );
-                      if (picked != null) setModal(() => due = picked);
-                    },
+                  SpringPress(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        'Due ${DateFormat('d MMM yyyy').format(due)}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      trailing: Icon(
+                        Icons.calendar_month_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: due,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
+                        );
+                        if (picked != null) {
+                          setModal(() => due = picked);
+                        }
+                      },
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.brandPrimary,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(48),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  SpringPress(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer,
+                        foregroundColor: Theme.of(context)
+                            .colorScheme
+                            .onPrimaryContainer,
+                        minimumSize: const Size.fromHeight(48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: () async {
+                        if (title.text.trim().isEmpty) {
+                          return;
+                        }
+                        final repo = ref.read(chemRepositoryProvider);
+                        await ref
+                            .read(appControllerProvider.notifier)
+                            .saveEvent(
+                              AcademicEvent(
+                                id: repo.newId(),
+                                title: title.text.trim(),
+                                type: type,
+                                dueDate: due,
+                                subjectId: subjectId,
+                                description: desc.text.trim(),
+                              ),
+                            );
+                        if (ctx.mounted) {
+                          Navigator.pop(ctx);
+                        }
+                      },
+                      child: const Text(
+                        'Save Deadline',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
                     ),
-                    onPressed: () async {
-                      if (title.text.trim().isEmpty) return;
-                      final repo = ref.read(chemRepositoryProvider);
-                      await ref.read(appControllerProvider.notifier).saveEvent(
-                            AcademicEvent(
-                              id: repo.newId(),
-                              title: title.text.trim(),
-                              type: type,
-                              dueDate: due,
-                              subjectId: subjectId,
-                              description: desc.text.trim(),
-                            ),
-                          );
-                      if (ctx.mounted) Navigator.pop(ctx);
-                    },
-                    child: const Text('Save Deadline', style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ],
               );
@@ -1053,7 +1427,7 @@ class _DailyChemistryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlowCard(
-      borderColor: AppColors.borderSubtle,
+      borderColor: Theme.of(context).colorScheme.outlineVariant,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1064,7 +1438,7 @@ class _DailyChemistryCard extends StatelessWidget {
               Text(
                 item.type.header,
                 style: TextStyle(
-                  color: item.type.color,
+                  color: AppColors.readableText(context, item.type.color),
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                   letterSpacing: 0.3,
@@ -1075,12 +1449,20 @@ class _DailyChemistryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             item.title,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             item.content,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.4),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12.5,
+              height: 1.4,
+            ),
           ),
         ],
       ),
@@ -1102,17 +1484,21 @@ class CircularAttendance extends StatelessWidget {
           height: 48,
           child: CircularProgressIndicator(
             value: percent / 100,
-            color: AttendanceMath.isSafe(percent) ? AppColors.statusSuccess : AppColors.statusDanger,
-            backgroundColor: AppColors.surfaceContainerLowest,
+            color: AttendanceMath.isSafe(percent)
+                ? AppColors.adaptive(context, AppColors.statusSuccess)
+                : AppColors.adaptive(context, AppColors.statusDanger),
+            backgroundColor: Theme.of(context)
+                .colorScheme
+                .surfaceContainerLowest,
             strokeWidth: 4.5,
           ),
         ),
         Text(
           '${percent.round()}%',
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
             fontSize: 11.5,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
             fontFeatures: [FontFeature.tabularFigures()],
           ),
         ),
@@ -1122,36 +1508,53 @@ class CircularAttendance extends StatelessWidget {
 }
 
 class _QuickTile extends StatelessWidget {
-  const _QuickTile({required this.icon, required this.label, required this.onTap});
+  const _QuickTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.borderSubtle, width: 0.6),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: AppColors.brandBright, size: 22),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+    return SpringPress(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              width: 0.6,
             ),
-          ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: Theme.of(context).colorScheme.primary,
+                size: 22,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1165,8 +1568,9 @@ class _NextClassCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
-    final today = state.entries.where((e) => e.weekdayNumber == now.weekday).toList()
-      ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
+    final today =
+        state.entries.where((e) => e.weekdayNumber == now.weekday).toList()
+          ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
 
     TimetableEntry? ongoing;
     TimetableEntry? next;
@@ -1181,17 +1585,34 @@ class _NextClassCard extends ConsumerWidget {
       }
     }
 
-    final displayClass = ongoing ?? next ?? (today.isEmpty ? null : today.first);
+    final displayClass =
+        ongoing ?? next ?? (today.isEmpty ? null : today.first);
     if (displayClass == null) {
       return GlowCard(
         padding: const EdgeInsets.all(14),
         onTap: () => ref.read(shellTabProvider.notifier).state = 1,
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.bedtime_outlined, color: AppColors.textMuted, size: 20),
+            Icon(
+              Icons.bedtime_outlined,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 20,
+            ),
             SizedBox(width: 10),
-            Expanded(child: Text('No classes scheduled for today.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))),
-            Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 18),
+            Expanded(
+              child: Text(
+                'No classes scheduled for today.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 18,
+            ),
           ],
         ),
       );
@@ -1200,10 +1621,18 @@ class _NextClassCard extends ConsumerWidget {
     final isOngoing = displayClass == ongoing;
     final repo = ref.watch(chemRepositoryProvider);
     final todayNormalized = DateTime(now.year, now.month, now.day);
-    final record = repo.recordFor(slotId: displayClass.id, date: todayNormalized);
+    final record = repo.recordFor(
+      slotId: displayClass.id,
+      date: todayNormalized,
+    );
 
     return GlowCard(
-      borderColor: isOngoing ? AppColors.statusSuccess.withValues(alpha: 0.4) : AppColors.borderSubtle,
+      borderColor: isOngoing
+          ? AppColors.adaptive(
+              context,
+              AppColors.statusSuccess,
+            ).withValues(alpha: 0.4)
+          : Theme.of(context).colorScheme.outlineVariant,
       padding: const EdgeInsets.all(14),
       onTap: () => ref.read(shellTabProvider.notifier).state = 1,
       child: Row(
@@ -1211,12 +1640,18 @@ class _NextClassCard extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: (isOngoing ? AppColors.statusSuccess : AppColors.brandPrimary).withValues(alpha: 0.14),
+              color:
+                  (isOngoing
+                          ? AppColors.adaptive(context, AppColors.statusSuccess)
+                          : Theme.of(context).colorScheme.primary)
+                      .withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               isOngoing ? Icons.play_arrow_rounded : Icons.schedule_rounded,
-              color: isOngoing ? AppColors.statusSuccess : AppColors.brandBright,
+              color: isOngoing
+                  ? AppColors.adaptive(context, AppColors.statusSuccess)
+                  : Theme.of(context).colorScheme.primary,
               size: 20,
             ),
           ),
@@ -1230,7 +1665,12 @@ class _NextClassCard extends ConsumerWidget {
                     Text(
                       isOngoing ? 'Class in Progress' : 'Next Up Today',
                       style: TextStyle(
-                        color: isOngoing ? AppColors.statusSuccess : AppColors.brandBright,
+                        color: isOngoing
+                            ? AppColors.adaptive(
+                                context,
+                                AppColors.statusSuccess,
+                              )
+                            : Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w700,
                         fontSize: 11,
                       ),
@@ -1238,14 +1678,29 @@ class _NextClassCard extends ConsumerWidget {
                     if (record != null) ...[
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.present.withValues(alpha: 0.15),
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.present,
+                          ).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          record.status == AttendanceStatus.present ? 'Marked Present' : record.status.name.toUpperCase(),
-                          style: const TextStyle(color: AppColors.present, fontSize: 9.5, fontWeight: FontWeight.w700),
+                          record.status == AttendanceStatus.present
+                              ? 'Marked Present'
+                              : record.status.name.toUpperCase(),
+                          style: TextStyle(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.present,
+                            ),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
@@ -1256,23 +1711,38 @@ class _NextClassCard extends ConsumerWidget {
                   displayClass.displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.textPrimary),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13.5,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 Text(
                   '${displayClass.startTime} – ${displayClass.endTime}${displayClass.room.isEmpty ? "" : " · ${displayClass.room}"}',
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11.5,
+                  ),
                 ),
                 if (displayClass.teacherName.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
                     'Faculty: ${displayClass.teacherName}',
-                    style: const TextStyle(color: AppColors.brandBright, fontSize: 11, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 20),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            size: 20,
+          ),
         ],
       ),
     );
@@ -1333,12 +1803,16 @@ class _StreakSparklinePainter extends CustomPainter {
       final isActive = daysAgo < streakDays;
       final x = i * (barWidth + spacing);
       final heightFactor = 0.35 + ((i + 1) / bars) * 0.65;
-      final height = isActive ? (size.height * heightFactor) : (size.height * 0.22);
+      final height = isActive
+          ? (size.height * heightFactor)
+          : (size.height * 0.22);
       final y = size.height - height;
 
       final paint = Paint()
         ..color = isActive
-            ? AppColors.accentGold.withValues(alpha: 0.55 + ((i + 1) / bars) * 0.45)
+            ? AppColors.accentGold.withValues(
+                alpha: 0.55 + ((i + 1) / bars) * 0.45,
+              )
             : const Color(0x1AFFFFFF)
         ..style = PaintingStyle.fill;
 
@@ -1368,20 +1842,33 @@ class _MyProgressSection extends StatelessWidget {
     if (!hasData) {
       return GlowCard(
         padding: const EdgeInsets.all(16),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.bar_chart_rounded, color: AppColors.brandBright, size: 28),
+            Icon(
+              Icons.bar_chart_rounded,
+              color: Theme.of(context).colorScheme.primary,
+              size: 28,
+            ),
             SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('No quiz data yet',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary)),
+                  Text(
+                    'No quiz data yet',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
                   SizedBox(height: 3),
                   Text(
                     'Take your first quiz from a PDF to start tracking your chemistry progress.',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12.5,
+                    ),
                   ),
                 ],
               ),
@@ -1393,8 +1880,10 @@ class _MyProgressSection extends StatelessWidget {
 
     final accuracy = analytics.overallQuizAccuracy;
     final accuracyColor = accuracy >= 70
-        ? AppColors.statusSuccess
-        : (accuracy >= 50 ? AppColors.statusWarning : AppColors.statusDanger);
+        ? AppColors.adaptive(context, AppColors.statusSuccess)
+        : (accuracy >= 50
+              ? AppColors.adaptive(context, AppColors.statusWarning)
+              : AppColors.adaptive(context, AppColors.statusDanger));
     final weakList = analytics.weakTopics.take(3).toList();
 
     return Column(
@@ -1403,11 +1892,17 @@ class _MyProgressSection extends StatelessWidget {
           children: [
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerHigh,
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: 0.6,
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -1420,7 +1915,11 @@ class _MyProgressSection extends StatelessWidget {
                           color: accuracyColor,
                         ),
                         child: Center(
-                          child: Icon(Icons.bolt_rounded, size: 14, color: accuracyColor),
+                          child: Icon(
+                            Icons.bolt_rounded,
+                            size: 14,
+                            color: accuracyColor,
+                          ),
                         ),
                       ),
                     ),
@@ -1429,15 +1928,28 @@ class _MyProgressSection extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Overall Accuracy',
-                              style: TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600)),
+                          Text(
+                            'Overall Accuracy',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                           Text(
                             '${accuracy.toStringAsFixed(0)}%',
                             style: TextStyle(
-                              color: accuracyColor,
+                              color: AppColors.readableText(
+                                context,
+                                accuracyColor,
+                              ),
                               fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontWeight: FontWeight.w700,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                         ],
@@ -1455,14 +1967,14 @@ class _MyProgressSection extends StatelessWidget {
                     icon: Icons.quiz_outlined,
                     label: 'Quizzes',
                     value: '${analytics.totalQuizzesTaken}',
-                    color: AppColors.brandBright,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(height: 6),
                   _MiniStatRow(
                     icon: Icons.style_outlined,
                     label: 'Cards Mastered',
                     value: '${analytics.flashcardsMatureCount}',
-                    color: AppColors.accentCyan,
+                    color: AppColors.adaptive(context, AppColors.accentCyan),
                   ),
                 ],
               ),
@@ -1476,21 +1988,36 @@ class _MyProgressSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerHigh,
+              color: Theme.of(context).colorScheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.statusWarning.withValues(alpha: 0.25)),
+              border: Border.all(
+                color: AppColors.adaptive(
+                  context,
+                  AppColors.statusWarning,
+                ).withValues(alpha: 0.25),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, size: 15, color: AppColors.statusWarning),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      size: 15,
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.statusWarning,
+                      ),
+                    ),
                     SizedBox(width: 6),
                     Text(
                       'Needs Attention',
                       style: TextStyle(
-                        color: AppColors.statusWarning,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.statusWarning,
+                        ),
                         fontWeight: FontWeight.w700,
                         fontSize: 12.5,
                       ),
@@ -1513,8 +2040,10 @@ class _MyProgressSection extends StatelessWidget {
                                 t.topic,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -1522,8 +2051,11 @@ class _MyProgressSection extends StatelessWidget {
                             ),
                             Text(
                               '${acc.toStringAsFixed(0)}%',
-                              style: const TextStyle(
-                                color: AppColors.statusDanger,
+                              style: TextStyle(
+                                color: AppColors.adaptive(
+                                  context,
+                                  AppColors.statusDanger,
+                                ),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 fontFeatures: [FontFeature.tabularFigures()],
@@ -1537,8 +2069,13 @@ class _MyProgressSection extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: acc / 100,
                             minHeight: 5,
-                            color: AppColors.statusDanger,
-                            backgroundColor: AppColors.surfaceContainerLowest,
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.statusDanger,
+                            ),
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerLowest,
                           ),
                         ),
                       ],
@@ -1548,24 +2085,44 @@ class _MyProgressSection extends StatelessWidget {
                 const SizedBox(height: 4),
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.statusWarning,
-                      side: const BorderSide(color: AppColors.statusWarning, width: 0.9),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    icon: const Icon(Icons.refresh_rounded, size: 16),
-                    label: const Text('Practice Weak Topics',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
-                    onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute<void>(
-                        builder: (_) => const SmartFlashcardsStudyScreen(
-                          setId: '',
-                          review: ReviewMode.difficult,
+                  child: SpringPress(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.adaptive(
+                          context,
+                          AppColors.statusWarning,
                         ),
-                      ));
-                    },
+                        side: BorderSide(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.statusWarning,
+                          ),
+                          width: 0.9,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: const Text(
+                        'Practice Weak Topics',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const SmartFlashcardsStudyScreen(
+                              setId: '',
+                              review: ReviewMode.difficult,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -1594,9 +2151,12 @@ class _MiniStatRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 0.6,
+        ),
       ),
       child: Row(
         children: [
@@ -1605,8 +2165,8 @@ class _MiniStatRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                color: AppColors.textMuted,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 10.5,
                 fontWeight: FontWeight.w600,
               ),
@@ -1617,9 +2177,9 @@ class _MiniStatRow extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color: color,
+              color: AppColors.readableText(context, color),
               fontSize: 14,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
@@ -1633,7 +2193,8 @@ class _DailyPsychologyFactCard extends StatefulWidget {
   const _DailyPsychologyFactCard();
 
   @override
-  State<_DailyPsychologyFactCard> createState() => _DailyPsychologyFactCardState();
+  State<_DailyPsychologyFactCard> createState() =>
+      _DailyPsychologyFactCardState();
 }
 
 class _DailyPsychologyFactCardState extends State<_DailyPsychologyFactCard> {
@@ -1657,7 +2218,7 @@ class _DailyPsychologyFactCardState extends State<_DailyPsychologyFactCard> {
     final catColor = PsychologyFactsService.getCategoryColor(_fact.category);
 
     return GlowCard(
-      borderColor: AppColors.borderSubtle,
+      borderColor: Theme.of(context).colorScheme.outlineVariant,
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1670,7 +2231,11 @@ class _DailyPsychologyFactCardState extends State<_DailyPsychologyFactCard> {
                   color: catColor.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.psychology_outlined, size: 20, color: catColor),
+                child: Icon(
+                  Icons.psychology_outlined,
+                  size: 20,
+                  color: catColor,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1678,7 +2243,10 @@ class _DailyPsychologyFactCardState extends State<_DailyPsychologyFactCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: catColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
@@ -1686,7 +2254,7 @@ class _DailyPsychologyFactCardState extends State<_DailyPsychologyFactCard> {
                       child: Text(
                         _fact.category.toUpperCase(),
                         style: TextStyle(
-                          color: catColor,
+                          color: AppColors.readableText(context, catColor),
                           fontSize: 9.5,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.4,
@@ -1696,51 +2264,63 @@ class _DailyPsychologyFactCardState extends State<_DailyPsychologyFactCard> {
                     const SizedBox(height: 3),
                     Text(
                       _fact.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.shuffle_rounded, size: 18, color: AppColors.textMuted),
-                tooltip: 'Another Fact',
-                onPressed: _shuffle,
+              SpringPress(
+                child: IconButton(
+                  icon: Icon(
+                    Icons.shuffle_rounded,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  tooltip: 'Another Fact',
+                  onPressed: _shuffle,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 10),
           Text(
             _fact.fact,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               height: 1.45,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.borderSubtle),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.lightbulb_outline_rounded, size: 16, color: AppColors.accentGold),
+                Icon(
+                  Icons.lightbulb_outline_rounded,
+                  size: 16,
+                  color: AppColors.adaptive(context, AppColors.accentGold),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     _fact.takeaway,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       height: 1.35,
                     ),
                   ),

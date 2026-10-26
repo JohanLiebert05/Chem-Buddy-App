@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
 import '../models/pdf_ocr_models.dart';
 
 class HiveBoxes {
@@ -28,77 +32,135 @@ class HiveBoxes {
   static const pyqPredictions = 'pyq_predictions';
   static const pdfOcrBundles = 'pdf_ocr_bundles';
 
+  static const accountControl = 'account_control';
+  static String? _activeAccount;
+  static String? get activeAccount => _activeAccount;
+  static const _names = [
+    profile,
+    subjects,
+    attendance,
+    timetable,
+    timetableEntries,
+    events,
+    notes,
+    pdfs,
+    flashcards,
+    smartSets,
+    smartCards,
+    flashcardAttempts,
+    studySessions,
+    pendingSync,
+    reminders,
+    settings,
+    aiConversations,
+    aiMessages,
+    pdfSummaries,
+    pdfTopics,
+    pdfQuizzes,
+    quizResults,
+    appTutorialState,
+    pyqPredictions,
+    pdfOcrBundles,
+  ];
+  static String _name(String name, String? account) => account == null
+      ? name
+      : 'account_${sha256.convert(utf8.encode(account))}_$name';
+  static Box box(String name) => Hive.box(_name(name, _activeAccount));
   static Future<void> openAll() async {
     await Hive.initFlutter();
-    await Future.wait([
-      Hive.openBox(profile),
-      Hive.openBox(subjects),
-      Hive.openBox(attendance),
-      Hive.openBox(timetable),
-      Hive.openBox(timetableEntries),
-      Hive.openBox(events),
-      Hive.openBox(notes),
-      Hive.openBox(pdfs),
-      Hive.openBox(flashcards),
-      Hive.openBox(smartSets),
-      Hive.openBox(smartCards),
-      Hive.openBox(flashcardAttempts),
-      Hive.openBox(studySessions),
-      Hive.openBox(pendingSync),
-      Hive.openBox(reminders),
-      Hive.openBox(settings),
-      Hive.openBox(aiConversations),
-      Hive.openBox(aiMessages),
-      Hive.openBox(pdfSummaries),
-      Hive.openBox(pdfTopics),
-      Hive.openBox(pdfQuizzes),
-      Hive.openBox(quizResults),
-      Hive.openBox(appTutorialState),
-      Hive.openBox(pyqPredictions),
-      Hive.openBox(pdfOcrBundles),
-    ]);
+    await Hive.openBox(accountControl);
+    _activeAccount = Hive.box(accountControl).get('active') as String?;
+    await Future.wait(
+      _names.map((name) => Hive.openBox(_name(name, _activeAccount))),
+    );
+  }
+
+  /// Copy legacy records once, only to the matching account (or the initial onboarding account).
+  /// Legacy files are retained, so migration never destroys the original data.
+  static Future<void> switchAccount(
+    String account, {
+    String registerNumber = '',
+  }) async {
+    if (account == _activeAccount) {
+      return;
+    }
+    if (!Hive.isBoxOpen(accountControl)) {
+      await Hive.openBox(accountControl);
+    }
+    final control = Hive.box(accountControl);
+    final next = <String, Box>{};
+    for (final name in _names) {
+      next[name] = await Hive.openBox(_name(name, account));
+    }
+    if (account != 'guest' &&
+        control.get('legacyOwner') == null &&
+        next[profile]!.get('current') == null) {
+      final legacyProfile = await Hive.openBox(profile);
+      final raw = legacyProfile.get('current');
+      final old = raw is Map ? raw : const {};
+      String normalize(String value) =>
+          value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final oldRegister = normalize(old['registerNumber'] as String? ?? '');
+      final matches =
+          oldRegister.isNotEmpty && oldRegister == normalize(registerNumber);
+      final initialSetup = oldRegister.isEmpty && old['loggedIn'] != true;
+      if (matches || initialSetup) {
+        for (final name in _names) {
+          final legacy = await Hive.openBox(name);
+          await next[name]!.putAll(legacy.toMap());
+        }
+        await control.put('legacyOwner', account);
+      }
+    }
+    await control.put('active', account);
+    _activeAccount = account;
   }
 }
 
 class LocalStore {
-  Box get _profile => Hive.box(HiveBoxes.profile);
-  Box get subjects => Hive.box(HiveBoxes.subjects);
-  Box get attendance => Hive.box(HiveBoxes.attendance);
-  Box get timetable => Hive.box(HiveBoxes.timetable);
-  Box get timetableEntries => Hive.box(HiveBoxes.timetableEntries);
-  Box get events => Hive.box(HiveBoxes.events);
-  Box get notes => Hive.box(HiveBoxes.notes);
-  Box get pdfs => Hive.box(HiveBoxes.pdfs);
-  Box get flashcards => Hive.box(HiveBoxes.flashcards);
-  Box get smartSets => Hive.box(HiveBoxes.smartSets);
-  Box get smartCards => Hive.box(HiveBoxes.smartCards);
-  Box get flashcardAttempts => Hive.box(HiveBoxes.flashcardAttempts);
-  Box get studySessions => Hive.box(HiveBoxes.studySessions);
-  Box get pendingSync => Hive.box(HiveBoxes.pendingSync);
-  Box get reminders => Hive.box(HiveBoxes.reminders);
-  Box get settings => Hive.box(HiveBoxes.settings);
-  Box get aiConversations => Hive.box(HiveBoxes.aiConversations);
-  Box get aiMessages => Hive.box(HiveBoxes.aiMessages);
-  Box get pdfSummaries => Hive.box(HiveBoxes.pdfSummaries);
-  Box get pdfTopics => Hive.box(HiveBoxes.pdfTopics);
-  Box get pdfQuizzes => Hive.box(HiveBoxes.pdfQuizzes);
-  Box get quizResults => Hive.box(HiveBoxes.quizResults);
-  Box get appTutorialState => Hive.box(HiveBoxes.appTutorialState);
-  Box get pyqPredictions => Hive.box(HiveBoxes.pyqPredictions);
-  Box get pdfOcrBundles => Hive.box(HiveBoxes.pdfOcrBundles);
+  Box get _profile => HiveBoxes.box(HiveBoxes.profile);
+  Box get subjects => HiveBoxes.box(HiveBoxes.subjects);
+  Box get attendance => HiveBoxes.box(HiveBoxes.attendance);
+  Box get timetable => HiveBoxes.box(HiveBoxes.timetable);
+  Box get timetableEntries => HiveBoxes.box(HiveBoxes.timetableEntries);
+  Box get events => HiveBoxes.box(HiveBoxes.events);
+  Box get notes => HiveBoxes.box(HiveBoxes.notes);
+  Box get pdfs => HiveBoxes.box(HiveBoxes.pdfs);
+  Box get flashcards => HiveBoxes.box(HiveBoxes.flashcards);
+  Box get smartSets => HiveBoxes.box(HiveBoxes.smartSets);
+  Box get smartCards => HiveBoxes.box(HiveBoxes.smartCards);
+  Box get flashcardAttempts => HiveBoxes.box(HiveBoxes.flashcardAttempts);
+  Box get studySessions => HiveBoxes.box(HiveBoxes.studySessions);
+  Box get pendingSync => HiveBoxes.box(HiveBoxes.pendingSync);
+  Box get reminders => HiveBoxes.box(HiveBoxes.reminders);
+  Box get settings => HiveBoxes.box(HiveBoxes.settings);
+  Box get aiConversations => HiveBoxes.box(HiveBoxes.aiConversations);
+  Box get aiMessages => HiveBoxes.box(HiveBoxes.aiMessages);
+  Box get pdfSummaries => HiveBoxes.box(HiveBoxes.pdfSummaries);
+  Box get pdfTopics => HiveBoxes.box(HiveBoxes.pdfTopics);
+  Box get pdfQuizzes => HiveBoxes.box(HiveBoxes.pdfQuizzes);
+  Box get quizResults => HiveBoxes.box(HiveBoxes.quizResults);
+  Box get appTutorialState => HiveBoxes.box(HiveBoxes.appTutorialState);
+  Box get pyqPredictions => HiveBoxes.box(HiveBoxes.pyqPredictions);
+  Box get pdfOcrBundles => HiveBoxes.box(HiveBoxes.pdfOcrBundles);
 
   Map<String, dynamic>? getProfile() {
     final raw = _profile.get('current');
-    if (raw is Map) return Map<String, dynamic>.from(raw);
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
     return null;
   }
 
-  Future<void> saveProfile(Map<String, dynamic> json) => _profile.put('current', json);
+  Future<void> saveProfile(Map<String, dynamic> json) =>
+      _profile.put('current', json);
 
   DocumentOcrBundle? getDocumentOcrBundle(String docId) {
     try {
       final raw = pdfOcrBundles.get(docId);
-      if (raw is Map) return DocumentOcrBundle.fromJson(Map<String, dynamic>.from(raw));
+      if (raw is Map) {
+        return DocumentOcrBundle.fromJson(Map<String, dynamic>.from(raw));
+      }
     } catch (_) {}
     return null;
   }
@@ -106,7 +168,8 @@ class LocalStore {
   Future<void> saveDocumentOcrBundle(DocumentOcrBundle bundle) =>
       pdfOcrBundles.put(bundle.docId, bundle.toJson());
 
-  Future<void> deleteDocumentOcrBundle(String docId) => pdfOcrBundles.delete(docId);
+  Future<void> deleteDocumentOcrBundle(String docId) =>
+      pdfOcrBundles.delete(docId);
 
   Future<void> clearAll() async {
     await Future.wait([
@@ -139,10 +202,14 @@ class LocalStore {
   }
 
   List<Map<String, dynamic>> all(Box box) {
-    return box.values.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+    return box.values
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 
-  Future<void> put(Box box, String id, Map<String, dynamic> json) => box.put(id, json);
+  Future<void> put(Box box, String id, Map<String, dynamic> json) =>
+      box.put(id, json);
 
   Future<void> delete(Box box, String id) => box.delete(id);
 }

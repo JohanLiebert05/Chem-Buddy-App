@@ -1,4 +1,7 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -40,11 +43,20 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
     if (filter == 1 && subjectId != null) {
       docs = docs.where((d) => d.subjectId == subjectId).toList();
     }
-    if (filter == 2) docs = docs.where((d) => d.favorite).toList();
+    if (filter == 2) {
+      docs = docs.where((d) => d.favorite).toList();
+    }
     if (filter == 3) {
-      docs.sort((a, b) => (b.lastOpened ?? b.dateAdded).compareTo(a.lastOpened ?? a.dateAdded));
+      docs.sort(
+        (a, b) => (b.lastOpened ?? b.dateAdded).compareTo(
+          a.lastOpened ?? a.dateAdded,
+        ),
+      );
     } else if (sort == 'name') {
-      docs.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+      docs.sort(
+        (a, b) =>
+            a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
+      );
     } else if (sort == 'size') {
       docs.sort((a, b) => b.fileSize.compareTo(a.fileSize));
     }
@@ -52,28 +64,43 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!widget.embedded) const Text('PDF library', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+        if (!widget.embedded)
+          const Text(
+            'PDF library',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+          ),
         if (!widget.embedded) const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final item in ['All', 'Subjects', 'Favorites', 'Recent'].asMap().entries)
-              ChoiceChip(
-                label: Text(item.value),
-                selected: filter == item.key,
-                onSelected: (_) {
-                  AppHaptics.selection();
-                  setState(() => filter = item.key);
-                },
+            for (final item in [
+              'All',
+              'Subjects',
+              'Favorites',
+              'Recent',
+            ].asMap().entries)
+              SpringPress(
+                child: ChoiceChip(
+                  label: Text(item.value),
+                  selected: filter == item.key,
+                  onSelected: (_) {
+                    AppHaptics.selection();
+                    setState(() => filter = item.key);
+                  },
+                ),
               ),
           ],
         ),
         if (filter == 1) ...[
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            initialValue: subjectId ?? (state.subjects.isEmpty ? null : state.subjects.first.id),
-            items: state.subjects.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
+            initialValue:
+                subjectId ??
+                (state.subjects.isEmpty ? null : state.subjects.first.id),
+            items: state.subjects
+                .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
+                .toList(),
             onChanged: (v) => setState(() => subjectId = v),
             decoration: const InputDecoration(labelText: 'Subject'),
           ),
@@ -93,19 +120,31 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            FilledButton.icon(
-              onPressed: loading ? null : () => _import(state),
-              icon: const Icon(Icons.add),
-              label: const Text('Add PDF'),
+            SpringPress(
+              child: FilledButton.icon(
+                onPressed: loading ? null : () => _import(state),
+                icon: const Icon(Icons.add),
+                label: const Text('Add PDF'),
+              ),
             ),
           ],
         ),
         if (error != null) ...[
           const SizedBox(height: 8),
-          Text(error!, style: const TextStyle(color: AppColors.danger)),
+          Text(
+            error!,
+            style: TextStyle(
+              color: AppColors.adaptive(context, AppColors.danger),
+            ),
+          ),
         ],
         const SizedBox(height: 12),
-        if (loading) const Center(child: CircularProgressIndicator(color: AppColors.purpleBright)),
+        if (loading)
+          Center(
+            child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
         if (!loading && docs.isEmpty)
           MascotEmptyState(
             title: 'Your Study Library is Empty',
@@ -116,18 +155,31 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
         ...docs.map((d) {
           String subjectName = 'Other';
           for (final s in state.subjects) {
-            if (s.id == d.subjectId) subjectName = s.name;
+            if (s.id == d.subjectId) {
+              subjectName = s.name;
+            }
           }
 
           final store = ref.watch(localStoreProvider);
-          final docQuizzes = store.all(store.quizResults).where((j) => j['pdfDocId'] == d.id).length;
-          final docFlashcards = store.all(store.smartSets).where((j) => j['sourceDocId'] == d.id).length;
+          final docQuizzes = store
+              .all(store.quizResults)
+              .where((j) => j['pdfDocId'] == d.id)
+              .length;
+          final docFlashcards = store
+              .all(store.smartSets)
+              .where((j) => j['sourceDocId'] == d.id)
+              .length;
           final ocrBundle = store.getDocumentOcrBundle(d.id);
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: GlowCard(
-              onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => PdfStudyHubScreen(doc: d),
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -136,20 +188,41 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.purple.withValues(alpha: 0.15),
+                          color: Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(d.favorite ? Icons.star : Icons.picture_as_pdf_outlined, color: AppColors.purpleBright, size: 20),
+                        child: Icon(
+                          d.favorite
+                              ? Icons.star
+                              : Icons.picture_as_pdf_outlined,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(d.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5, color: Colors.white)),
+                            Text(
+                              d.displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14.5,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
                             Text(
                               '$subjectName · ${ocrBundle != null ? "${ocrBundle.pageCount} pages · " : ""}${DateFormat('d MMM yyyy').format(d.dateAdded)}',
-                              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
@@ -157,11 +230,20 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                       PopupMenuButton<String>(
                         onSelected: (v) => _menu(d, v, state),
                         itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'study', child: Text('Study with AI')),
+                          PopupMenuItem(
+                            value: 'study',
+                            child: Text('Study with AI'),
+                          ),
                           PopupMenuItem(value: 'read', child: Text('Read PDF')),
                           PopupMenuItem(value: 'rename', child: Text('Rename')),
-                          PopupMenuItem(value: 'move', child: Text('Move subject')),
-                          PopupMenuItem(value: 'fav', child: Text('Toggle favorite')),
+                          PopupMenuItem(
+                            value: 'move',
+                            child: Text('Move subject'),
+                          ),
+                          PopupMenuItem(
+                            value: 'fav',
+                            child: Text('Toggle favorite'),
+                          ),
                           PopupMenuItem(value: 'delete', child: Text('Delete')),
                         ],
                       ),
@@ -173,41 +255,74 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceElevated,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           '$docQuizzes Quiz${docQuizzes == 1 ? "" : "zes"}',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceElevated,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           '$docFlashcards Deck${docFlashcards == 1 ? "" : "s"}',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       if (ocrBundle != null) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppColors.purple.withValues(alpha: 0.15),
+                            color: Theme.of(context).colorScheme.primary
+                                .withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             ocrBundle.overallQuality == PageQuality.digitalText
                                 ? 'Digital'
-                                : (ocrBundle.overallQuality == PageQuality.handwritten ? 'Handwritten' : 'Scanned'),
-                            style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w700),
+                                : (ocrBundle.overallQuality ==
+                                          PageQuality.handwritten
+                                      ? 'Handwritten'
+                                      : 'Scanned'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
@@ -215,7 +330,12 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                       if (d.lastOpened != null)
                         Text(
                           'Last studied ${DateFormat('d MMM').format(d.lastOpened!)}',
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 11,
+                          ),
                         ),
                     ],
                   ),
@@ -229,7 +349,12 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                       _buildQuickActionBtn(
                         label: 'Chat',
                         icon: Icons.chat_bubble_outline,
-                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => PdfStudyHubScreen(doc: d),
+                          ),
+                        ),
                       ),
                       _buildQuickActionBtn(
                         label: 'Quiz',
@@ -244,17 +369,32 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
                       _buildQuickActionBtn(
                         label: 'Flashcards',
                         icon: Icons.style_outlined,
-                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => PdfStudyHubScreen(doc: d),
+                          ),
+                        ),
                       ),
                       _buildQuickActionBtn(
                         label: 'Summary',
                         icon: Icons.auto_stories_outlined,
-                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: d))),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => PdfStudyHubScreen(doc: d),
+                          ),
+                        ),
                       ),
                       _buildQuickActionBtn(
                         label: 'Read',
                         icon: Icons.visibility_outlined,
-                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: d))),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => PdfReaderScreen(doc: d),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -266,11 +406,19 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
       ],
     );
 
-    if (widget.embedded) return body;
+    if (widget.embedded) {
+      return body;
+    }
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(backgroundColor: AppColors.background, title: const Text('PDF library')),
-      body: ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 40), children: [body]),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text('PDF library'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+        children: [body],
+      ),
     );
   }
 
@@ -291,47 +439,72 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
 
         // Content-based subject classification validation
         try {
-          final sampleText = await PdfTextExtractionService.instance.extractFromPath(doc.localPath);
+          final sampleText = await PdfTextExtractionService.instance
+              .extractFromPath(doc.localPath);
           final classification = classifyDocumentSubject(
             sampleText.substring(0, min(sampleText.length, 3000)),
             doc.displayName,
           );
-          final currentSubject = state.subjects.firstWhere((s) => s.id == sid, orElse: () => state.subjects.first);
+          final currentSubject = state.subjects.firstWhere(
+            (s) => s.id == sid,
+            orElse: () => state.subjects.first,
+          );
 
           final currentLower = currentSubject.name.toLowerCase();
           final detectedLower = classification.detectedSubject.toLowerCase();
-          final mismatch = !currentLower.contains(detectedLower.split(' ').first) &&
+          final mismatch =
+              !currentLower.contains(detectedLower.split(' ').first) &&
               !detectedLower.contains(currentLower.split(' ').first) &&
               classification.confidence >= 0.5;
 
           if (mismatch && mounted) {
             final matchingSubject = state.subjects.cast<Subject?>().firstWhere(
-              (s) => s?.name.toLowerCase().contains(classification.detectedSubject.toLowerCase().split(' ').first) ?? false,
+              (s) =>
+                  s?.name.toLowerCase().contains(
+                    classification.detectedSubject
+                        .toLowerCase()
+                        .split(' ')
+                        .first,
+                  ) ??
+                  false,
               orElse: () => null,
             );
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                backgroundColor: AppColors.surfaceElevated,
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHigh,
                 duration: const Duration(seconds: 7),
                 content: Row(
                   children: [
-                    const Icon(Icons.lightbulb_outline, color: AppColors.accentGold, size: 20),
+                    Icon(
+                      Icons.lightbulb_outline,
+                      color: AppColors.adaptive(context, AppColors.accentGold),
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'This looks like ${classification.detectedSubject} content — update tag?',
-                        style: const TextStyle(fontSize: 12.5, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 action: SnackBarAction(
-                  label: matchingSubject != null ? 'Update to ${matchingSubject.name}' : 'Change Tag',
-                  textColor: AppColors.purpleBright,
+                  label: matchingSubject != null
+                      ? 'Update to ${matchingSubject.name}'
+                      : 'Change Tag',
+                  textColor: Theme.of(context).colorScheme.primary,
                   onPressed: () async {
                     if (matchingSubject != null) {
-                      await ref.read(appControllerProvider.notifier).savePdf(doc.copyWith(subjectId: matchingSubject.id));
+                      await ref
+                          .read(appControllerProvider.notifier)
+                          .savePdf(doc.copyWith(subjectId: matchingSubject.id));
                     } else {
                       _menu(doc, 'move', state);
                     }
@@ -345,15 +518,23 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
     } catch (e) {
       setState(() => error = 'Could not import that file. Choose a valid PDF.');
     }
-    if (mounted) setState(() => loading = false);
+    if (mounted) {
+      setState(() => loading = false);
+    }
   }
 
   Future<void> _menu(PdfDoc doc, String action, AppState state) async {
     final controller = ref.read(appControllerProvider.notifier);
     if (action == 'study') {
-      Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: doc)));
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => PdfStudyHubScreen(doc: doc)),
+      );
     } else if (action == 'read') {
-      Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: doc)));
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => PdfReaderScreen(doc: doc)),
+      );
     } else if (action == 'fav') {
       await controller.savePdf(doc.copyWith(favorite: !doc.favorite));
     } else if (action == 'delete') {
@@ -363,12 +544,24 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
           title: const Text('Delete PDF?'),
           content: Text(doc.displayName),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+            SpringPress(
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+            ),
+            SpringPress(
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Delete'),
+              ),
+            ),
           ],
         ),
       );
-      if (ok == true) await controller.deletePdf(doc.id);
+      if (ok == true) {
+        await controller.deletePdf(doc.id);
+      }
     } else if (action == 'rename') {
       final name = TextEditingController(text: doc.displayName);
       final next = await showDialog<String>(
@@ -377,12 +570,24 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
           title: const Text('Rename'),
           content: TextField(controller: name),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(ctx, name.text.trim()), child: const Text('Save')),
+            SpringPress(
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+            ),
+            SpringPress(
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx, name.text.trim()),
+                child: const Text('Save'),
+              ),
+            ),
           ],
         ),
       );
-      if (next != null && next.isNotEmpty) await controller.savePdf(doc.copyWith(displayName: next));
+      if (next != null && next.isNotEmpty) {
+        await controller.savePdf(doc.copyWith(displayName: next));
+      }
     } else if (action == 'move') {
       final next = await showDialog<String>(
         context: context,
@@ -390,11 +595,16 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
           title: const Text('Move to subject'),
           children: [
             for (final s in state.subjects)
-              SimpleDialogOption(onPressed: () => Navigator.pop(ctx, s.id), child: Text(s.name)),
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(ctx, s.id),
+                child: Text(s.name),
+              ),
           ],
         ),
       );
-      if (next != null) await controller.savePdf(doc.copyWith(subjectId: next));
+      if (next != null) {
+        await controller.savePdf(doc.copyWith(subjectId: next));
+      }
     }
   }
 
@@ -403,26 +613,39 @@ class _PdfLibraryScreenState extends ConsumerState<PdfLibraryScreen> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 13, color: AppColors.purpleBright),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: const TextStyle(color: AppColors.textPrimary, fontSize: 11.5, fontWeight: FontWeight.w700),
+    return SpringPress(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.3),
             ),
-          ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 13,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

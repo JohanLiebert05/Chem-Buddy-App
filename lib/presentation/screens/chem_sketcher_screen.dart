@@ -1,4 +1,7 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -16,7 +19,7 @@ import 'organic_reaction_predictor_screen.dart';
 
 /// Mobile-First Chemical Sketcher (ChemDraw Alternative)
 /// Optimized for mobile touchscreens with generous hitboxes, haptic snaps,
-/// local zero-cost RDKit descriptors, forward reaction product predictor, and direct ChemBuddy AI integration.
+/// local educational descriptor estimates, forward reaction product predictor, and direct ChemBuddy AI integration.
 class ChemSketcherScreen extends StatefulWidget {
   const ChemSketcherScreen({super.key, this.initialSmiles});
 
@@ -41,32 +44,56 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Load SMILES', style: TextStyle(color: Colors.white)),
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+        title: Text(
+          'Load SMILES',
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+        ),
         content: TextField(
           controller: controller,
-          style: const TextStyle(color: Colors.white, fontFamily: 'monospace'),
-          decoration: const InputDecoration(
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontFamily: 'monospace',
+          ),
+          decoration: InputDecoration(
             hintText: 'Paste SMILES here...',
-            hintStyle: TextStyle(color: Colors.grey),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyan)),
+            hintStyle: TextStyle(
+              color: AppColors.readableText(context, Colors.grey),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.cyan),
+            ),
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          SpringPress(
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: AppColors.readableText(context, Colors.grey),
+                ),
+              ),
+            ),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan, foregroundColor: Colors.black),
-            onPressed: () {
-              Navigator.pop(ctx);
-              if (controller.text.isNotEmpty) {
-                _loadSmiles(controller.text);
-              }
-            },
-            child: const Text('Load'),
+          SpringPress(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.cyan,
+                foregroundColor: Colors.black,
+              ),
+              onPressed: () {
+                Navigator.pop(ctx);
+                if (controller.text.isNotEmpty) {
+                  _loadSmiles(controller.text);
+                }
+              },
+              child: const Text('Load'),
+            ),
           ),
         ],
       ),
@@ -88,7 +115,9 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
       final seen = prefs.getBool('chemdraw_guide_walkthrough_seen') ?? false;
       if (!seen && mounted) {
         await prefs.setBool('chemdraw_guide_walkthrough_seen', true);
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
         ChemDrawGuideDialog.show(context, onLoadExample: _loadSmiles);
       }
     } catch (_) {}
@@ -121,7 +150,8 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
         NavigationDelegate(
           onPageFinished: (String url) async {
             setState(() => _isLoading = false);
-            if (widget.initialSmiles != null && widget.initialSmiles!.isNotEmpty) {
+            if (widget.initialSmiles != null &&
+                widget.initialSmiles!.isNotEmpty) {
               await _loadSmiles(widget.initialSmiles!);
             }
           },
@@ -142,7 +172,9 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
 
   Future<String> _getMolfile() async {
     try {
-      final res = await _controller.runJavaScriptReturningResult('getMolfile()');
+      final res = await _controller.runJavaScriptReturningResult(
+        'getMolfile()',
+      );
       return res.toString().replaceAll('\\n', '\n').replaceAll('"', '');
     } catch (_) {
       return '';
@@ -163,9 +195,12 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
       setState(() => _isAnalyzing = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Please draw a chemical structure first.'),
-            backgroundColor: AppColors.statusDanger,
+            backgroundColor: AppColors.adaptive(
+              context,
+              AppColors.statusDanger,
+            ),
           ),
         );
       }
@@ -179,10 +214,15 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(valency.errorMessage ?? 'Valence error detected.'),
-            backgroundColor: AppColors.statusDanger,
+            backgroundColor: AppColors.adaptive(
+              context,
+              AppColors.statusDanger,
+            ),
             duration: const Duration(seconds: 4),
           ),
         );
+        setState(() => _isAnalyzing = false);
+        return;
       }
 
       final desc = await RdkitService.instance.calculateDescriptors(smiles);
@@ -197,7 +237,13 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
       setState(() => _isAnalyzing = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Analysis failed: $e'), backgroundColor: AppColors.statusDanger),
+          SnackBar(
+            content: Text('Analysis failed: $e'),
+            backgroundColor: AppColors.adaptive(
+              context,
+              AppColors.statusDanger,
+            ),
+          ),
         );
       }
     }
@@ -211,9 +257,14 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
     if (smiles.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please draw or select reactant molecule(s) on the canvas first.'),
-            backgroundColor: AppColors.statusDanger,
+          SnackBar(
+            content: Text(
+              'Please draw or select reactant molecule(s) on the canvas first.',
+            ),
+            backgroundColor: AppColors.adaptive(
+              context,
+              AppColors.statusDanger,
+            ),
           ),
         );
       }
@@ -223,16 +274,25 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
     setState(() => _isPredicting = true);
 
     try {
-      final result = await ReactionPredictorService.instance.predictMajorProduct(smiles);
+      final result = await ReactionPredictorService.instance
+          .predictMajorProduct(smiles);
       setState(() => _isPredicting = false);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       if (!result.success || result.productSmiles.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.error ?? 'Reaction product prediction unavailable across all 4 keys.'),
-            backgroundColor: AppColors.statusDanger,
+            content: Text(
+              result.error ??
+                  'Reaction product prediction unavailable across all 4 keys.',
+            ),
+            backgroundColor: AppColors.adaptive(
+              context,
+              AppColors.statusDanger,
+            ),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -246,17 +306,23 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Prediction failed: $e'),
-            backgroundColor: AppColors.statusDanger,
+            backgroundColor: AppColors.adaptive(
+              context,
+              AppColors.statusDanger,
+            ),
           ),
         );
       }
     }
   }
 
-  void _showPredictionBottomSheet(String reactantsSmiles, ReactionPredictionResult result) {
+  void _showPredictionBottomSheet(
+    String reactantsSmiles,
+    ReactionPredictionResult result,
+  ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF111827),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -284,39 +350,59 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Predicted Major Product',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     Text(
                       'Forward Chemical Reaction Outcome',
-                      style: TextStyle(color: AppColors.accentCyan, fontSize: 11.5, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF8B5CF6).withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFA78BFA), width: 1.2),
+                    border: Border.all(
+                      color: const Color(0xFFA78BFA),
+                      width: 1.2,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.auto_awesome_rounded, color: Color(0xFFA78BFA), size: 13),
+                      const Icon(
+                        Icons.auto_awesome_rounded,
+                        color: Color(0xFFA78BFA),
+                        size: 13,
+                      ),
                       const SizedBox(width: 4),
                       Text(
-                        result.isCached ? 'Verified Reaction' : 'AI Predicted',
-                        style: const TextStyle(
-                          color: Color(0xFFA78BFA),
+                        result.isCached ? 'Saved prediction' : 'AI Predicted',
+                        style: TextStyle(
+                          color: AppColors.readableText(
+                            context,
+                            Color(0xFFA78BFA),
+                          ),
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
                         ),
@@ -331,36 +417,55 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.bg1,
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderSubtle),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.input_rounded, color: AppColors.textMuted, size: 14),
+                      Icon(
+                        Icons.input_rounded,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        size: 14,
+                      ),
                       SizedBox(width: 6),
                       Text(
                         'Reactants (Canvas Input)',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   SelectableText(
                     reactantsSmiles,
-                    style: const TextStyle(color: Colors.white, fontSize: 12.5, fontFamily: 'monospace', fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 12.5,
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             // 2D Vector Structure Rendering
-            const Text(
+            Text(
               '2D Molecular Vector Structure (Clean Vector SVG)',
-              style: TextStyle(color: AppColors.brandBright, fontSize: 13, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 8),
             Container(
@@ -370,7 +475,10 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF0B0F19),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.borderHighlight, width: 1),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.5),
@@ -381,23 +489,41 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: result.svgData.isNotEmpty && result.svgData.contains('<svg')
+                child:
+                    result.svgData.isNotEmpty && result.svgData.contains('<svg')
                     ? SvgPicture.string(
                         result.svgData,
                         fit: BoxFit.contain,
-                        placeholderBuilder: (_) => const Center(
-                          child: CircularProgressIndicator(color: AppColors.accentCyan, strokeWidth: 2),
+                        placeholderBuilder: (_) => Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentCyan,
+                            ),
+                            strokeWidth: 2,
+                          ),
                         ),
                       )
                     : Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.science_rounded, color: AppColors.accentCyan, size: 36),
+                            Icon(
+                              Icons.science_rounded,
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.accentCyan,
+                              ),
+                              size: 36,
+                            ),
                             const SizedBox(height: 8),
                             Text(
                               result.productSmiles,
-                              style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 13),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontFamily: 'monospace',
+                                fontSize: 13,
+                              ),
                             ),
                           ],
                         ),
@@ -409,9 +535,11 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.bg1,
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderSubtle),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
               child: Row(
                 children: [
@@ -419,31 +547,55 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Product SMILES',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         SelectableText(
                           result.productSmiles,
-                          style: const TextStyle(color: AppColors.accentCyan, fontSize: 13, fontFamily: 'monospace', fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentCyan,
+                            ),
+                            fontSize: 13,
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.copy_rounded, color: AppColors.textMuted, size: 18),
-                    tooltip: 'Copy Product SMILES',
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: result.productSmiles));
-                      AppHaptics.selection();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Product SMILES copied to clipboard!'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
+                  SpringPress(
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.copy_rounded,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        size: 18,
+                      ),
+                      tooltip: 'Copy Product SMILES',
+                      onPressed: () {
+                        Clipboard.setData(
+                          ClipboardData(text: result.productSmiles),
+                        );
+                        AppHaptics.selection();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Product SMILES copied to clipboard!',
+                            ),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -453,9 +605,11 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.bg1,
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.borderSubtle),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,8 +620,8 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                         Expanded(
                           child: Text(
                             result.reactionName,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                             ),
@@ -475,16 +629,23 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                         ),
                         if (result.reactionClass.isNotEmpty)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppColors.brandBright.withValues(alpha: 0.15),
+                              color: Theme.of(context).colorScheme.primary
+                                  .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.brandBright, width: 0.8),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 0.8,
+                              ),
                             ),
                             child: Text(
                               result.reactionClass,
-                              style: const TextStyle(
-                                color: AppColors.brandBright,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -492,12 +653,16 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                           ),
                       ],
                     ),
-                    if (result.productName.isNotEmpty && result.productName != result.reactionName) ...[
+                    if (result.productName.isNotEmpty &&
+                        result.productName != result.reactionName) ...[
                       const SizedBox(height: 4),
                       Text(
                         'Major Product: ${result.productName}',
-                        style: const TextStyle(
-                          color: AppColors.accentCyan,
+                        style: TextStyle(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -509,14 +674,18 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             ],
             if (result.mechanismSteps.isNotEmpty) ...[
               const SizedBox(height: 16),
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.timeline_rounded, color: AppColors.accentCyan, size: 16),
+                  Icon(
+                    Icons.timeline_rounded,
+                    color: AppColors.adaptive(context, AppColors.accentCyan),
+                    size: 16,
+                  ),
                   SizedBox(width: 6),
                   Text(
                     'Step-by-Step Reaction Mechanism',
                     style: TextStyle(
-                      color: AppColors.brandBright,
+                      color: Theme.of(context).colorScheme.primary,
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                     ),
@@ -524,129 +693,186 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              ...result.mechanismSteps.map((step) => Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF1E293B)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentCyan.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'Step ${step.stepNumber}',
-                            style: const TextStyle(
-                              color: AppColors.accentCyan,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            step.stepTitle,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (step.electronPushing.isNotEmpty) ...[
-                      const SizedBox(height: 6),
+              ...result.mechanismSteps.map(
+                (step) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F172A),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF1E293B)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.subdirectory_arrow_right_rounded, color: Color(0xFFA78BFA), size: 15),
-                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.accentCyan,
+                              ).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Step ${step.stepNumber}',
+                              style: TextStyle(
+                                color: AppColors.adaptive(
+                                  context,
+                                  AppColors.accentCyan,
+                                ),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              step.electronPushing,
-                              style: const TextStyle(
-                                color: Color(0xFFA78BFA),
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                fontStyle: FontStyle.italic,
+                              step.stepTitle,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ],
-                    if (step.description.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        step.description,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 11.5,
-                          height: 1.35,
+                      if (step.electronPushing.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.subdirectory_arrow_right_rounded,
+                              color: Color(0xFFA78BFA),
+                              size: 15,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                step.electronPushing,
+                                style: TextStyle(
+                                  color: AppColors.readableText(
+                                    context,
+                                    Color(0xFFA78BFA),
+                                  ),
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      ],
+                      if (step.description.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          step.description,
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 11.5,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              )),
+              ),
             ],
-            if (result.drivingForce.isNotEmpty || result.regioselectivityRule.isNotEmpty) ...[
+            if (result.drivingForce.isNotEmpty ||
+                result.regioselectivityRule.isNotEmpty) ...[
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E1B4B).withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: const Color(0xFF4338CA).withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (result.drivingForce.isNotEmpty) ...[
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.bolt_rounded, color: Color(0xFFFBBF24), size: 15),
+                          Icon(
+                            Icons.bolt_rounded,
+                            color: Color(0xFFFBBF24),
+                            size: 15,
+                          ),
                           SizedBox(width: 5),
                           Text(
                             'Driving Force',
-                            style: TextStyle(color: Color(0xFFFBBF24), fontSize: 11.5, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              color: AppColors.readableText(
+                                context,
+                                Color(0xFFFBBF24),
+                              ),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 3),
                       Text(
                         result.drivingForce,
-                        style: const TextStyle(color: Colors.white, fontSize: 11.5, height: 1.3),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 11.5,
+                          height: 1.3,
+                        ),
                       ),
                     ],
-                    if (result.drivingForce.isNotEmpty && result.regioselectivityRule.isNotEmpty)
+                    if (result.drivingForce.isNotEmpty &&
+                        result.regioselectivityRule.isNotEmpty)
                       const SizedBox(height: 8),
                     if (result.regioselectivityRule.isNotEmpty) ...[
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.explore_rounded, color: AppColors.accentCyan, size: 15),
+                          Icon(
+                            Icons.explore_rounded,
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentCyan,
+                            ),
+                            size: 15,
+                          ),
                           SizedBox(width: 5),
                           Text(
                             'Regio- & Stereoselectivity',
-                            style: TextStyle(color: AppColors.accentCyan, fontSize: 11.5, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.accentCyan,
+                              ),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 3),
                       Text(
                         result.regioselectivityRule,
-                        style: const TextStyle(color: Colors.white, fontSize: 11.5, height: 1.3),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 11.5,
+                          height: 1.3,
+                        ),
                       ),
                     ],
                   ],
@@ -658,58 +884,88 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentCyan,
-                      foregroundColor: const Color(0xFF0B0F19),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () async {
-                      Navigator.pop(context);
-                      await _loadSmiles(result.productSmiles);
-                      AppHaptics.confirm();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Imported "${result.productSmiles}" onto canvas!'),
-                            backgroundColor: AppColors.statusSuccess,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.input_rounded, size: 18),
-                    label: const Text(
-                      'Import to Canvas',
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                  child: SpringPress(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        foregroundColor: const Color(0xFF0B0F19),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await _loadSmiles(result.productSmiles);
+                        AppHaptics.confirm();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Imported "${result.productSmiles}" onto canvas!',
+                              ),
+                              backgroundColor: AppColors.adaptive(
+                                context,
+                                AppColors.statusSuccess,
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.input_rounded, size: 18),
+                      label: const Text(
+                        'Import to Canvas',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: AppColors.brandBright),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (ctx) => OrganicReactionPredictorScreen(
-                            initialReactantsSmiles: reactantsSmiles,
-                          ),
+                  child: SpringPress(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Theme.of(context)
+                            .colorScheme
+                            .onSurface,
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.auto_awesome, color: AppColors.brandBright, size: 16),
-                    label: const Text(
-                      'Full Mechanism',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (ctx) => OrganicReactionPredictorScreen(
+                              initialReactantsSmiles: reactantsSmiles,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icon(
+                        Icons.auto_awesome,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 16,
+                      ),
+                      label: const Text(
+                        'Full Mechanism',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.5,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -724,7 +980,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
   void _showDescriptorsSheet(MolecularDescriptors d) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF111827),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -757,31 +1013,57 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                   children: [
                     Text(
                       d.formula.isEmpty ? 'Structure' : d.formula,
-                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'SMILES: ${d.smiles}',
-                      style: const TextStyle(color: AppColors.accentCyan, fontSize: 12, fontFamily: 'monospace'),
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: d.lipinskiPass
-                        ? AppColors.statusSuccess.withValues(alpha: 0.15)
-                        : AppColors.statusDanger.withValues(alpha: 0.15),
+                        ? AppColors.adaptive(
+                            context,
+                            AppColors.statusSuccess,
+                          ).withValues(alpha: 0.15)
+                        : AppColors.adaptive(
+                            context,
+                            AppColors.statusDanger,
+                          ).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: d.lipinskiPass ? AppColors.statusSuccess : AppColors.statusDanger,
+                      color: d.lipinskiPass
+                          ? AppColors.adaptive(context, AppColors.statusSuccess)
+                          : AppColors.adaptive(context, AppColors.statusDanger),
                       width: 1.2,
                     ),
                   ),
                   child: Text(
-                    d.lipinskiPass ? 'Lipinski Pass' : 'Lipinski Alert',
+                    d.lipinskiPass
+                        ? 'Preliminary screen'
+                        : 'Estimated threshold alert',
                     style: TextStyle(
-                      color: d.lipinskiPass ? AppColors.statusSuccess : AppColors.statusDanger,
+                      color: d.lipinskiPass
+                          ? AppColors.adaptive(context, AppColors.statusSuccess)
+                          : AppColors.adaptive(context, AppColors.statusDanger),
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                     ),
@@ -790,32 +1072,68 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            const Divider(color: AppColors.borderSubtle),
+            Divider(color: Theme.of(context).colorScheme.outlineVariant),
             const SizedBox(height: 12),
-            const Text(
-              'Physicochemical & Drug-Likeness Properties (Zero Token Local RDKit)',
-              style: TextStyle(color: AppColors.brandBright, fontSize: 13, fontWeight: FontWeight.w800),
+            Text(
+              'Approximate properties — educational estimates, not validated RDKit results',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
-                _buildMetricTile('Molecular Weight', '${d.molecularWeight} g/mol', 'Exact: ${d.exactMass}'),
-                _buildMetricTile('DBE / IHD', d.dbe.toStringAsFixed(1), 'Unsaturation index'),
-                _buildMetricTile('LogP', d.logP.toStringAsFixed(2), 'Lipophilicity'),
+                _buildMetricTile(
+                  'Molecular Weight',
+                  '${d.molecularWeight} g/mol',
+                  'Exact: ${d.exactMass}',
+                ),
+                _buildMetricTile(
+                  'DBE / IHD',
+                  d.dbe.toStringAsFixed(1),
+                  'Unsaturation index',
+                ),
+                _buildMetricTile(
+                  'LogP',
+                  d.logP.toStringAsFixed(2),
+                  'Lipophilicity',
+                ),
                 _buildMetricTile('TPSA', '${d.tpsa} Å²', 'Polar surface area'),
-                _buildMetricTile('H-Bond Donors', '${d.hbd}', 'Max 5 (Rule of 5)'),
-                _buildMetricTile('H-Bond Acceptors', '${d.hba}', 'Max 10 (Rule of 5)'),
-                _buildMetricTile('Rotatable Bonds', '${d.rotatableBonds}', 'Conformational flex'),
-                _buildMetricTile('Aromatic Rings', '${d.aromaticRings}', 'Aromatic systems'),
+                _buildMetricTile(
+                  'H-Bond Donors',
+                  '${d.hbd}',
+                  'Max 5 (Rule of 5)',
+                ),
+                _buildMetricTile(
+                  'H-Bond Acceptors',
+                  '${d.hba}',
+                  'Max 10 (Rule of 5)',
+                ),
+                _buildMetricTile(
+                  'Rotatable Bonds',
+                  '${d.rotatableBonds}',
+                  'Conformational flex',
+                ),
+                _buildMetricTile(
+                  'Aromatic Rings',
+                  '${d.aromaticRings}',
+                  'Aromatic systems',
+                ),
               ],
             ),
             const SizedBox(height: 16),
             if (d.elementalComposition.isNotEmpty) ...[
-              const Text(
+              Text(
                 'Elemental Composition (% by mass)',
-                style: TextStyle(color: AppColors.brandBright, fontSize: 13, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -823,15 +1141,24 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                 runSpacing: 8,
                 children: d.elementalComposition.entries.map((e) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.bg1,
+                      color: Theme.of(context).colorScheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.borderSubtle),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
                     ),
                     child: Text(
                       '${e.key}: ${e.value.toStringAsFixed(2)}%',
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   );
                 }).toList(),
@@ -840,18 +1167,37 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.brandPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: SpringPress(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer,
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _openAiWithSmiles(d.smiles);
+                  },
+                  icon: Icon(
+                    Icons.auto_awesome,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    size: 18,
+                  ),
+                  label: Text(
+                    'Consult ChemBuddy AI on this Structure',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-                onPressed: () {
-                  Navigator.pop(context);
-                  _openAiWithSmiles(d.smiles);
-                },
-                icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-                label: const Text('Consult ChemBuddy AI on this Structure', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -865,18 +1211,38 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
       width: (MediaQuery.of(context).size.width - 50) / 2,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.bg1,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800)),
+          Text(
+            value,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(sub, style: const TextStyle(color: AppColors.accentCyan, fontSize: 10)),
+          Text(
+            sub,
+            style: TextStyle(
+              color: AppColors.adaptive(context, AppColors.accentCyan),
+              fontSize: 10,
+            ),
+          ),
         ],
       ),
     );
@@ -885,7 +1251,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
   void _openAiWithSmiles(String smiles) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF111827),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -896,14 +1262,22 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Select AI Analysis Template',
-              style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
               'Target SMILES: $smiles',
-              style: const TextStyle(color: AppColors.accentCyan, fontSize: 11.5, fontFamily: 'monospace'),
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.accentCyan),
+                fontSize: 11.5,
+                fontFamily: 'monospace',
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -933,36 +1307,37 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             ),
             const SizedBox(height: 10),
             _buildAiOption(
-            title: 'Predict ¹H & ¹³C NMR Spectral Peaks',
-            subtitle: 'Chemical shifts (δ ppm), splitting multiplicities, and integration.',
-            icon: Icons.graphic_eq_rounded,
-            onTap: () => _launchChatWithPrompt(
-              'Analyze the chemical structure with SMILES "$smiles". Predict its 1H NMR chemical shifts, splitting patterns (coupling constants J in Hz), and 13C NMR (including DEPT-45, DEPT-90, DEPT-135) with postgraduate MSc rigor.',
+              title: 'Predict ¹H & ¹³C NMR Spectral Peaks',
+              subtitle: 'Chemical shifts (δ ppm), splitting multiplicities, and integration.',
+              icon: Icons.graphic_eq_rounded,
+              onTap: () => _launchChatWithPrompt(
+                'Analyze the chemical structure with SMILES "$smiles". Predict its 1H NMR chemical shifts, splitting patterns (coupling constants J in Hz), and 13C NMR (including DEPT-45, DEPT-90, DEPT-135) with postgraduate MSc rigor.',
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          _buildAiOption(
-            title: 'Explain Reactivity & Orbital Control',
-            subtitle: 'HOMO-LUMO, electrophilic/nucleophilic sites, and pKa.',
-            icon: Icons.flare_rounded,
-            onTap: () => _launchChatWithPrompt(
-              'For the molecule with SMILES "$smiles", explain its chemical reactivity, identify nucleophilic and electrophilic centers, thermodynamic vs kinetic sites, and orbital considerations (HOMO/LUMO).',
+            const SizedBox(height: 10),
+            _buildAiOption(
+              title: 'Explain Reactivity & Orbital Control',
+              subtitle: 'HOMO-LUMO, electrophilic/nucleophilic sites, and pKa.',
+              icon: Icons.flare_rounded,
+              onTap: () => _launchChatWithPrompt(
+                'For the molecule with SMILES "$smiles", explain its chemical reactivity, identify nucleophilic and electrophilic centers, thermodynamic vs kinetic sites, and orbital considerations (HOMO/LUMO).',
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          _buildAiOption(
-            title: 'Suggest Retrosynthetic Disconnection Route',
-            subtitle: 'FGI, synthons, and forward multi-step organic synthesis.',
-            icon: Icons.account_tree_outlined,
-            onTap: () => _launchChatWithPrompt(
-              'Perform a complete retrosynthetic analysis for the molecule with SMILES "$smiles". Provide target disconnections, synthetic equivalents (synthons), and forward reaction conditions.',
+            const SizedBox(height: 10),
+            _buildAiOption(
+              title: 'Suggest Retrosynthetic Disconnection Route',
+              subtitle:
+                  'FGI, synthons, and forward multi-step organic synthesis.',
+              icon: Icons.account_tree_outlined,
+              onTap: () => _launchChatWithPrompt(
+                'Perform a complete retrosynthetic analysis for the molecule with SMILES "$smiles". Provide target disconnections, synthetic equivalents (synthons), and forward reaction conditions.',
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildAiOption({
     required String title,
@@ -970,42 +1345,68 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.bg1,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderSubtle),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.brandPrimary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: AppColors.brandBright, size: 20),
+    return SpringPress(
+      child: InkWell(
+        onTap: () {
+          Navigator.pop(context);
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
               ),
-            ),
-            const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textMuted, size: 14),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 14,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1024,62 +1425,122 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
     final smiles = await _getSmiles();
     final molfile = await _getMolfile();
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Export Structure', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+        title: Text(
+          'Export Structure',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('SMILES Notation:', style: TextStyle(color: AppColors.brandBright, fontSize: 12, fontWeight: FontWeight.w700)),
+            Text(
+              'SMILES Notation:',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(height: 4),
             SelectableText(
               smiles.isEmpty ? 'Empty canvas' : smiles,
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'monospace'),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 12,
+                fontFamily: 'monospace',
+              ),
             ),
             const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accentCyan,
-                      side: const BorderSide(color: AppColors.accentCyan),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  child: SpringPress(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        side: BorderSide(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: smiles));
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('SMILES copied to clipboard!'),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.copy, size: 14),
+                      label: const Text(
+                        'Copy SMILES',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: smiles));
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('SMILES copied to clipboard!')),
-                      );
-                    },
-                    icon: const Icon(Icons.copy, size: 14),
-                    label: const Text('Copy SMILES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accentGold,
-                      side: const BorderSide(color: AppColors.accentGold),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  child: SpringPress(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ),
+                        side: BorderSide(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentGold,
+                          ),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: molfile));
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('MDL Molfile copied to clipboard!'),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.data_object, size: 14),
+                      label: const Text(
+                        'Copy Molfile',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: molfile));
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('MDL Molfile copied to clipboard!')),
-                      );
-                    },
-                    icon: const Icon(Icons.data_object, size: 14),
-                    label: const Text('Copy Molfile', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -1096,40 +1557,68 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
-            onPressed: () => Navigator.pop(context, _currentSmiles),
+          leading: SpringPress(
+            child: IconButton(
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 18,
+              ),
+              onPressed: () => Navigator.pop(context, _currentSmiles),
+            ),
           ),
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'ChemDraw Pro',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
               Text(
                 _currentSmiles.isNotEmpty
                     ? '$_atomCount Atoms • $_bondCount Bonds • $_currentSmiles'
                     : '$_atomCount Atoms • $_bondCount Bonds • Smart Canvas',
-                style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted),
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.help_outline_rounded, color: AppColors.accentCyan, size: 21),
-              tooltip: 'ChemDraw Guide & Masterclass',
-              onPressed: () => ChemDrawGuideDialog.show(context, onLoadExample: _loadSmiles),
+            SpringPress(
+              child: IconButton(
+                icon: Icon(
+                  Icons.help_outline_rounded,
+                  color: AppColors.adaptive(context, AppColors.accentCyan),
+                  size: 21,
+                ),
+                tooltip: 'ChemDraw Guide & Masterclass',
+                onPressed: () => ChemDrawGuideDialog.show(
+                  context,
+                  onLoadExample: _loadSmiles,
+                ),
+              ),
             ),
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded, color: Colors.white70, size: 22),
+              icon: Icon(
+                Icons.more_vert_rounded,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 22,
+              ),
               color: const Color(0xFF1E293B),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               onSelected: (val) {
                 AppHaptics.selection();
                 switch (val) {
@@ -1151,49 +1640,105 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                 }
               },
               itemBuilder: (ctx) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'load_smiles',
                   child: Row(
                     children: [
-                      Icon(Icons.paste_rounded, color: AppColors.accentCyan, size: 18),
+                      Icon(
+                        Icons.paste_rounded,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        size: 18,
+                      ),
                       SizedBox(width: 10),
-                      Text('Load from SMILES...', style: TextStyle(color: Colors.white, fontSize: 13)),
+                      Text(
+                        'Load from SMILES...',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'export',
                   child: Row(
                     children: [
-                      Icon(Icons.file_upload_outlined, color: AppColors.brandBright, size: 18),
+                      Icon(
+                        Icons.file_upload_outlined,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 18,
+                      ),
                       SizedBox(width: 10),
-                      Text('Export SMILES / Molfile', style: TextStyle(color: Colors.white, fontSize: 13)),
+                      Text(
+                        'Export SMILES / Molfile',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'rdkit',
                   child: Row(
                     children: [
-                      Icon(Icons.analytics_outlined, color: AppColors.accentGold, size: 18),
+                      Icon(
+                        Icons.analytics_outlined,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ),
+                        size: 18,
+                      ),
                       SizedBox(width: 10),
-                      Text('RDKit Descriptors & Lipinski', style: TextStyle(color: Colors.white, fontSize: 13)),
+                      Text(
+                        'Estimated molecular properties',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 CheckedPopupMenuItem(
                   value: 'multi_reactant',
                   checked: _multiReactantMode,
-                  child: const Text('Multi-Reactant Mode', style: TextStyle(color: Colors.white, fontSize: 13)),
+                  child: Text(
+                    'Multi-Reactant Mode',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 13,
+                    ),
+                  ),
                 ),
                 if (_currentSmiles.isNotEmpty)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'use',
                     child: Row(
                       children: [
-                        Icon(Icons.check_circle_outline_rounded, color: AppColors.present, size: 18),
+                        Icon(
+                          Icons.check_circle_outline_rounded,
+                          color: AppColors.adaptive(context, AppColors.present),
+                          size: 18,
+                        ),
                         SizedBox(width: 10),
-                        Text('Use / Return Structure', style: TextStyle(color: AppColors.present, fontSize: 13, fontWeight: FontWeight.bold)),
+                        Text(
+                          'Use / Return Structure',
+                          style: TextStyle(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.present,
+                            ),
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -1209,8 +1754,10 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                 children: [
                   WebViewWidget(controller: _controller),
                   if (_isLoading)
-                    const Center(
-                      child: CircularProgressIndicator(color: AppColors.brandBright),
+                    Center(
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                 ],
               ),
@@ -1218,9 +1765,13 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             // Bottom Action Dock (Streamlined single row for maximum canvas height)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFF0F172A),
-                border: Border(top: BorderSide(color: AppColors.borderSubtle)),
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
               ),
               child: SafeArea(
                 top: false,
@@ -1229,25 +1780,46 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                     // Predict Major Product
                     Expanded(
                       flex: 5,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7C3AED),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          elevation: 2,
-                        ),
-                        onPressed: _isPredicting ? null : _predictMajorProduct,
-                        icon: _isPredicting
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Icon(Icons.auto_awesome_rounded, size: 16, color: AppColors.accentCyan),
-                        label: Text(
-                          _isPredicting ? 'Predicting...' : 'Predict Product',
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                      child: SpringPress(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF7C3AED),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 2,
+                          ),
+                          onPressed: _isPredicting
+                              ? null
+                              : _predictMajorProduct,
+                          icon: _isPredicting
+                              ? SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.auto_awesome_rounded,
+                                  size: 16,
+                                  color: AppColors.adaptive(
+                                    context,
+                                    AppColors.accentCyan,
+                                  ),
+                                ),
+                          label: Text(
+                            _isPredicting ? 'Predicting...' : 'Predict Product',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -1255,24 +1827,37 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                     // RDKit
                     Expanded(
                       flex: 4,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentCyan,
-                          foregroundColor: const Color(0xFF0B0F19),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        onPressed: _isAnalyzing ? null : _analyzeWithRdkit,
-                        icon: _isAnalyzing
-                            ? const SizedBox(
-                                width: 13,
-                                height: 13,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                              )
-                            : const Icon(Icons.biotech_outlined, size: 15),
-                        label: const Text(
-                          'RDKit',
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11.5),
+                      child: SpringPress(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.adaptive(
+                              context,
+                              AppColors.accentCyan,
+                            ),
+                            foregroundColor: const Color(0xFF0B0F19),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: _isAnalyzing ? null : _analyzeWithRdkit,
+                          icon: _isAnalyzing
+                              ? const SizedBox(
+                                  width: 13,
+                                  height: 13,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.black,
+                                  ),
+                                )
+                              : const Icon(Icons.biotech_outlined, size: 15),
+                          label: const Text(
+                            'Estimates',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11.5,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -1280,21 +1865,38 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                     // Ask AI
                     Expanded(
                       flex: 4,
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: AppColors.brandBright),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        onPressed: () async {
-                          final smiles = await _getSmiles();
-                          _openAiWithSmiles(smiles.isNotEmpty ? smiles : 'C1=CC=CC=C1');
-                        },
-                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 15, color: AppColors.brandBright),
-                        label: const Text(
-                          'Ask AI',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11.5),
+                      child: SpringPress(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Theme.of(context)
+                                .colorScheme
+                                .onSurface,
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final smiles = await _getSmiles();
+                            _openAiWithSmiles(
+                              smiles.isNotEmpty ? smiles : 'C1=CC=CC=C1',
+                            );
+                          },
+                          icon: Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            size: 15,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          label: const Text(
+                            'Ask AI',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11.5,
+                            ),
+                          ),
                         ),
                       ),
                     ),

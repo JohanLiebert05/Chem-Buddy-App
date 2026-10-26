@@ -1,5 +1,9 @@
+import '../expressive_motion.dart';
+
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import '../../theme/app_colors.dart';
 import '../benzene_loading_indicator.dart';
 import '../claude_loading_text.dart';
@@ -7,15 +11,7 @@ import '../claude_loading_text.dart';
 export '../../../widgets/interactive_mascot.dart';
 
 /// Mascot expression and animation states
-enum MascotState {
-  idle,
-  thinking,
-  loading,
-  success,
-  empty,
-  error,
-  celebration,
-}
+enum MascotState { idle, thinking, loading, success, empty, error, celebration }
 
 /// Standard mascot display sizes
 enum MascotSize {
@@ -54,7 +50,8 @@ class ChemBuddyMascot extends StatefulWidget {
   State<ChemBuddyMascot> createState() => _ChemBuddyMascotState();
 }
 
-class _ChemBuddyMascotState extends State<ChemBuddyMascot> with TickerProviderStateMixin {
+class _ChemBuddyMascotState extends State<ChemBuddyMascot>
+    with TickerProviderStateMixin {
   late final AnimationController _floatController;
   late final AnimationController _pulseController;
   late final AnimationController _orbitController;
@@ -97,13 +94,14 @@ class _ChemBuddyMascotState extends State<ChemBuddyMascot> with TickerProviderSt
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    _scaleAnim = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.90), weight: 40),
-      TweenSequenceItem(tween: Tween(begin: 0.90, end: 1.08), weight: 40),
-      TweenSequenceItem(tween: Tween(begin: 1.08, end: 1.0), weight: 20),
-    ]).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.easeOut),
-    );
+    _scaleAnim =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.90), weight: 40),
+          TweenSequenceItem(tween: Tween(begin: 0.90, end: 1.08), weight: 40),
+          TweenSequenceItem(tween: Tween(begin: 1.08, end: 1.0), weight: 20),
+        ]).animate(
+          CurvedAnimation(parent: _bounceController, curve: Curves.easeOut),
+        );
 
     if (widget.animate) {
       _floatController.repeat(reverse: true);
@@ -163,97 +161,109 @@ class _ChemBuddyMascotState extends State<ChemBuddyMascot> with TickerProviderSt
     final dimension = widget.customDimension ?? widget.size.dimension;
     final glowColor = widget.flaskColor ?? _getStateGlowColor();
 
-    return GestureDetector(
-      onTap: widget.onTap != null ? _handleTap : null,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([
-          _floatController,
-          _pulseController,
-          _orbitController,
-          _bounceController,
-        ]),
-        builder: (context, child) {
-          final floatOffset = widget.animate ? _floatAnim.value * (dimension / 130.0) : 0.0;
-          final tiltAngle = widget.animate ? _tiltAnim.value * (math.pi / 180) : 0.0;
-          final scale = _bounceController.isAnimating ? _scaleAnim.value : 1.0;
+    return SpringPress(
+      child: GestureDetector(
+        onTap: widget.onTap != null ? _handleTap : null,
+        child: AnimatedBuilder(
+          animation: Listenable.merge([
+            _floatController,
+            _pulseController,
+            _orbitController,
+            _bounceController,
+          ]),
+          builder: (context, child) {
+            final floatOffset = widget.animate
+                ? _floatAnim.value * (dimension / 130.0)
+                : 0.0;
+            final tiltAngle = widget.animate
+                ? _tiltAnim.value * (math.pi / 180)
+                : 0.0;
+            final scale = _bounceController.isAnimating
+                ? _scaleAnim.value
+                : 1.0;
 
-          return Transform.translate(
-            offset: Offset(0, floatOffset),
-            child: Transform.rotate(
-              angle: tiltAngle,
-              child: Transform.scale(
-                scale: scale,
-                child: SizedBox(
-                  width: dimension,
-                  height: dimension,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.none,
-                    children: [
-                      // 1. Neon Aura / Radial Glow
-                      Container(
-                        width: dimension * 0.75,
-                        height: dimension * 0.75,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: glowColor.withValues(
-                                alpha: widget.state == MascotState.thinking
-                                    ? 0.55
-                                    : (widget.state == MascotState.celebration ? 0.60 : 0.30),
+            return Transform.translate(
+              offset: Offset(0, floatOffset),
+              child: Transform.rotate(
+                angle: tiltAngle,
+                child: Transform.scale(
+                  scale: scale,
+                  child: SizedBox(
+                    width: dimension,
+                    height: dimension,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      clipBehavior: Clip.none,
+                      children: [
+                        // 1. Neon Aura / Radial Glow
+                        Container(
+                          width: dimension * 0.75,
+                          height: dimension * 0.75,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: glowColor.withValues(
+                                  alpha: widget.state == MascotState.thinking
+                                      ? 0.55
+                                      : (widget.state == MascotState.celebration
+                                            ? 0.60
+                                            : 0.30),
+                                ),
+                                blurRadius: widget.animate
+                                    ? _glowAnim.value * (dimension / 130.0)
+                                    : 16.0,
+                                spreadRadius: 2,
                               ),
-                              blurRadius: widget.animate ? _glowAnim.value * (dimension / 130.0) : 16.0,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // 2. Orbiting valence particles (when thinking / loading / celebration)
-                      if (widget.animate &&
-                          (widget.state == MascotState.thinking ||
-                              widget.state == MascotState.loading ||
-                              widget.state == MascotState.celebration))
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: _OrbitParticlesPainter(
-                              progress: _orbitController.value,
-                              glowColor: glowColor,
-                              state: widget.state,
-                            ),
+                            ],
                           ),
                         ),
 
-                      // 3. Transparent Mascot Image
-                      Image.asset(
-                        'assets/images/mascot_transparent.webp',
-                        width: dimension,
-                        height: dimension,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Image.asset(
-                            'assets/images/mascot_transparent.png',
-                            width: dimension,
-                            height: dimension,
-                            fit: BoxFit.contain,
-                            errorBuilder: (ctx, err, st) {
-                              return Icon(
-                                Icons.science_rounded,
-                                color: glowColor,
-                                size: dimension * 0.6,
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ],
+                        // 2. Orbiting valence particles (when thinking / loading / celebration)
+                        if (widget.animate &&
+                            (widget.state == MascotState.thinking ||
+                                widget.state == MascotState.loading ||
+                                widget.state == MascotState.celebration))
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: _OrbitParticlesPainter(
+                                progress: _orbitController.value,
+                                glowColor: glowColor,
+                                state: widget.state,
+                              ),
+                            ),
+                          ),
+
+                        // 3. Transparent Mascot Image
+                        Image.asset(
+                          'assets/images/mascot_transparent.webp',
+                          width: dimension,
+                          height: dimension,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Image.asset(
+                              'assets/images/mascot_transparent.png',
+                              width: dimension,
+                              height: dimension,
+                              fit: BoxFit.contain,
+                              errorBuilder: (ctx, err, st) {
+                                return Icon(
+                                  Icons.science_rounded,
+                                  color: glowColor,
+                                  size: dimension * 0.6,
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -286,7 +296,8 @@ class _OrbitParticlesPainter extends CustomPainter {
       final py = center.dy + (radius * 0.45) * math.sin(angle);
       final alpha = (0.4 + 0.5 * math.sin(angle)).clamp(0.2, 0.9);
 
-      dotPaint.color = (i % 2 == 0 ? const Color(0xFF00F2FE) : glowColor).withValues(alpha: alpha);
+      dotPaint.color = (i % 2 == 0 ? const Color(0xFF00F2FE) : glowColor)
+          .withValues(alpha: alpha);
       canvas.drawCircle(Offset(px, py), size.width * 0.024, dotPaint);
 
       final trailPaint = Paint()
@@ -294,7 +305,11 @@ class _OrbitParticlesPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0;
       canvas.drawOval(
-        Rect.fromCenter(center: center, width: radius * 2, height: radius * 0.9),
+        Rect.fromCenter(
+          center: center,
+          width: radius * 2,
+          height: radius * 0.9,
+        ),
         trailPaint,
       );
     }
@@ -326,26 +341,20 @@ class MascotThinking extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        BenzeneLoadingIndicator(
-          size: size.dimension,
-          showMicrocopy: false,
-        ),
+        BenzeneLoadingIndicator(size: size.dimension, showMicrocopy: false),
         const SizedBox(height: 12),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 14.5,
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 6),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ClaudeThinkingIndicator(
-            thoughts: thoughts,
-            isCard: false,
-          ),
+          child: ClaudeThinkingIndicator(thoughts: thoughts, isCard: false),
         ),
       ],
     );
@@ -370,18 +379,15 @@ class MascotLoading extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        BenzeneLoadingIndicator(
-          size: size.dimension,
-          showMicrocopy: false,
-        ),
+        BenzeneLoadingIndicator(size: size.dimension, showMicrocopy: false),
         const SizedBox(height: 12),
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 15,
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         if (subtitle != null) ...[
@@ -389,9 +395,9 @@ class MascotLoading extends StatelessWidget {
           Text(
             subtitle!,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.textMuted,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -429,53 +435,66 @@ class MascotEmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ChemBuddyMascot(
-            state: MascotState.empty,
-            size: size,
-          ),
+          ChemBuddyMascot(state: MascotState.empty, size: size),
           const SizedBox(height: 16),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 18,
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             description,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 13.5,
               height: 1.45,
             ),
           ),
           if (buttonLabel != null && onAction != null) ...[
             const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.purple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-              onPressed: onAction,
-              child: Text(
-                buttonLabel!,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+            SpringPress(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer,
+                  foregroundColor: Theme.of(context)
+                      .colorScheme
+                      .onPrimaryContainer,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: onAction,
+                child: Text(
+                  buttonLabel!,
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+                ),
               ),
             ),
           ],
           if (secondaryButtonLabel != null && onSecondaryAction != null) ...[
             const SizedBox(height: 8),
-            TextButton(
-              onPressed: onSecondaryAction,
-              child: Text(
-                secondaryButtonLabel!,
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+            SpringPress(
+              child: TextButton(
+                onPressed: onSecondaryAction,
+                child: Text(
+                  secondaryButtonLabel!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
+                ),
               ),
             ),
           ],
@@ -507,18 +526,15 @@ class MascotSuccess extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ChemBuddyMascot(
-          state: MascotState.celebration,
-          size: size,
-        ),
+        ChemBuddyMascot(state: MascotState.celebration, size: size),
         const SizedBox(height: 14),
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 18,
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         if (subtitle != null) ...[
@@ -526,25 +542,32 @@ class MascotSuccess extends StatelessWidget {
           Text(
             subtitle!,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 13,
             ),
           ),
         ],
         if (buttonLabel != null && onAction != null) ...[
           const SizedBox(height: 16),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.success,
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            ),
-            onPressed: onAction,
-            child: Text(
-              buttonLabel!,
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+          SpringPress(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+              ),
+              onPressed: onAction,
+              child: Text(
+                buttonLabel!,
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+              ),
             ),
           ),
         ],
@@ -573,15 +596,12 @@ class MascotError extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ChemBuddyMascot(
-            state: MascotState.error,
-            size: size,
-          ),
+          ChemBuddyMascot(state: MascotState.error, size: size),
           const SizedBox(height: 12),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.warning,
               fontWeight: FontWeight.w600,
               fontSize: 13.5,
@@ -589,16 +609,28 @@ class MascotError extends StatelessWidget {
           ),
           if (onRetry != null) ...[
             const SizedBox(height: 14),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.warning),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh, size: 16, color: AppColors.warning),
-              label: const Text(
-                'Rebalance & Try Again',
-                style: TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700, fontSize: 12.5),
+            SpringPress(
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.warning),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: onRetry,
+                icon: const Icon(
+                  Icons.refresh,
+                  size: 16,
+                  color: AppColors.warning,
+                ),
+                label: const Text(
+                  'Rebalance & Try Again',
+                  style: TextStyle(
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                  ),
+                ),
               ),
             ),
           ],

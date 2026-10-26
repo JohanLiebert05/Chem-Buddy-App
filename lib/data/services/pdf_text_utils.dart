@@ -11,16 +11,16 @@ class PdfExtractionException implements Exception {
 /// Kept for backward compatibility — prefer [chunkBySentences] for RAG ingestion.
 List<String> chunkNotes(String raw, {int size = 8000, int overlap = 200}) {
   final text = raw.replaceAll(RegExp(r'\s+'), ' ').trim();
-  if (text.isEmpty) return const [];
-  if (text.length <= size) return [text];
+  if (text.isEmpty) {return const [];}
+  if (text.length <= size) {return [text];}
   final chunks = <String>[];
   var i = 0;
   while (i < text.length && chunks.length < 4) {
     final end = (i + size).clamp(0, text.length);
     chunks.add(text.substring(i, end));
-    if (end >= text.length) break;
+    if (end >= text.length) {break;}
     i = end - overlap;
-    if (i < 0) i = 0;
+    if (i < 0) {i = 0;}
   }
   return chunks;
 }
@@ -39,8 +39,8 @@ List<String> chunkBySentences(
   int overlapChars = 120,
 }) {
   final text = raw.replaceAll(RegExp(r'[ \t]+'), ' ').trim();
-  if (text.isEmpty) return const [];
-  if (text.length <= maxChars) return [text];
+  if (text.isEmpty) {return const [];}
+  if (text.length <= maxChars) {return [text];}
 
   // Split into candidate sentence units at `. `, `? `, `! `, or blank lines
   final sentencePattern = RegExp(r'(?<=[.?!])\s+|(?<=\n)\n+');
@@ -69,14 +69,14 @@ List<String> chunkBySentences(
       }
       buffer.write(sentence);
     } else {
-      if (buffer.isNotEmpty) buffer.write(' ');
+      if (buffer.isNotEmpty) {buffer.write(' ');}
       buffer.write(sentence);
     }
   }
 
   if (buffer.isNotEmpty) {
     final remaining = buffer.toString().trim();
-    if (remaining.length > 10) chunks.add(remaining);
+    if (remaining.length > 10) {chunks.add(remaining);}
   }
 
   return chunks.where((c) => c.length > 10).toList();
@@ -85,7 +85,7 @@ List<String> chunkBySentences(
 /// Layout-aware cleaner that filters running headers, footers, diagram captions,
 /// broken hyphenations, and non-chemistry OCR noise.
 String sanitizeLayoutAndNoise(String raw, {bool filterDiagramCaptions = false}) {
-  if (raw.trim().isEmpty) return '';
+  if (raw.trim().isEmpty) {return '';}
 
   var text = raw
       .replaceAll('\u0000', ' ')

@@ -3,11 +3,9 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:markdown/markdown.dart' as md;
 
-import '../theme/app_colors.dart';
 import '../utils/chemistry_text_formatter.dart';
 import 'chemistry_equation.dart';
 import 'chemistry_reaction_view.dart';
-
 
 /// Reusable widget for rendering MSc Chemistry notes, AI answers,
 /// flashcard questions, and quiz options with native LaTeX math & chemical notation.
@@ -42,7 +40,8 @@ class ChemistryMarkdownView extends StatelessWidget {
     final sanitized = _preprocessText(text.trim());
 
     // 2. Check if display math blocks ($$...$$ or \[...\]) or tables exist
-    final hasDisplayMath = sanitized.contains(r'$$') || sanitized.contains(r'\[');
+    final hasDisplayMath =
+        sanitized.contains(r'$$') || sanitized.contains(r'\[');
     final hasTable = RegExp(r'^\|.+\|', multiLine: true).hasMatch(sanitized);
 
     if (!hasDisplayMath && !hasTable) {
@@ -52,13 +51,20 @@ class ChemistryMarkdownView extends StatelessWidget {
 
     // Split display math blocks ($$...$$) and tables from Markdown narrative blocks
     final blocks = _splitIntoBlocks(sanitized);
-    final defaultStyle = textStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.45);
+    final defaultStyle =
+        textStyle ??
+        TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 14.5,
+          height: 1.45,
+        );
 
     final widgetList = <Widget>[];
 
     for (final b in blocks) {
       if (b.isDisplayMath) {
-        final isReaction = b.text.contains('→') ||
+        final isReaction =
+            b.text.contains('→') ||
             b.text.contains(r'\rightarrow') ||
             b.text.contains(r'\to') ||
             b.text.contains('->') ||
@@ -70,17 +76,14 @@ class ChemistryMarkdownView extends StatelessWidget {
 
         if (isReaction) {
           widgetList.add(
-            ChemistryReactionView(
-              reaction: b.text,
-              selectable: false,
-            ),
+            ChemistryReactionView(reaction: b.text, selectable: false),
           );
         } else {
           widgetList.add(
             ChemistryEquation(
               equation: b.text,
               textStyle: defaultStyle.copyWith(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: (defaultStyle.fontSize ?? 14.5) * 1.1,
               ),
               selectable: false,
@@ -104,10 +107,7 @@ class ChemistryMarkdownView extends StatelessWidget {
       children: widgetList,
     );
 
-    return SizedBox(
-      width: double.infinity,
-      child: column,
-    );
+    return SizedBox(width: double.infinity, child: column);
   }
 
   static Widget _buildTableCard(
@@ -119,9 +119,12 @@ class ChemistryMarkdownView extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.bg1,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.borderHighlight, width: 0.8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 0.8,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(9),
@@ -144,11 +147,11 @@ class ChemistryMarkdownView extends StatelessWidget {
                       fitContent: false,
                       styleSheet: _buildMarkdownStyleSheet(context, textStyle),
                       extensionSet: md.ExtensionSet.gitHubFlavored,
-                      inlineSyntaxes: [
-                        LatexInlineSyntax(),
-                      ],
+                      inlineSyntaxes: [LatexInlineSyntax()],
                       builders: {
-                        'latex-inline': _LatexInlineBuilder(textStyle: textStyle),
+                        'latex-inline': _LatexInlineBuilder(
+                          textStyle: textStyle,
+                        ),
                       },
                     ),
                   ),
@@ -173,18 +176,11 @@ class ChemistryMarkdownView extends StatelessWidget {
       fitContent: false,
       styleSheet: _buildMarkdownStyleSheet(context, textStyle),
       extensionSet: md.ExtensionSet.gitHubFlavored,
-      inlineSyntaxes: [
-        LatexInlineSyntax(),
-      ],
-      builders: {
-        'latex-inline': _LatexInlineBuilder(textStyle: textStyle),
-      },
+      inlineSyntaxes: [LatexInlineSyntax()],
+      builders: {'latex-inline': _LatexInlineBuilder(textStyle: textStyle)},
     );
 
-    return SizedBox(
-      width: double.infinity,
-      child: markdownBody,
-    );
+    return SizedBox(width: double.infinity, child: markdownBody);
   }
 
   static String _preprocessText(String input) {
@@ -220,9 +216,18 @@ class ChemistryMarkdownView extends StatelessWidget {
     });
 
     // 4. Convert pseudo-LaTeX arrows with conditions like \to {slow (RDS)} or \to{fast} into clean Unicode text
-    s = s.replaceAllMapped(RegExp(r'\\to\s*\{([^}]*)\}'), (m) => '→ (${m[1]}) ');
-    s = s.replaceAllMapped(RegExp(r'\\xrightarrow\s*\{([^}]*)\}'), (m) => '→ (${m[1]}) ');
-    s = s.replaceAllMapped(RegExp(r'\\rightleftharpoons\s*\{([^}]*)\}'), (m) => '⇌ (${m[1]}) ');
+    s = s.replaceAllMapped(
+      RegExp(r'\\to\s*\{([^}]*)\}'),
+      (m) => '→ (${m[1]}) ',
+    );
+    s = s.replaceAllMapped(
+      RegExp(r'\\xrightarrow\s*\{([^}]*)\}'),
+      (m) => '→ (${m[1]}) ',
+    );
+    s = s.replaceAllMapped(
+      RegExp(r'\\rightleftharpoons\s*\{([^}]*)\}'),
+      (m) => '⇌ (${m[1]}) ',
+    );
 
     // 5. Preserve genuine display math blocks ($$...$$) while sanitizing narrative text
     // Use collision-proof Unicode Private Use Area tokens without underscores or ASCII letters
@@ -234,27 +239,41 @@ class ChemistryMarkdownView extends StatelessWidget {
 
     // 6. Preserve genuine inline math blocks ($...$) before any text cleanups
     final inlineMathPlaceholders = <String>[];
-    s = s.replaceAllMapped(RegExp(r'(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)'), (m) {
-      inlineMathPlaceholders.add(m[0]!);
-      return '\uE002${inlineMathPlaceholders.length - 1}\uE003';
-    });
+    s = s.replaceAllMapped(
+      RegExp(r'(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)'),
+      (m) {
+        inlineMathPlaceholders.add(m[0]!);
+        return '\uE002${inlineMathPlaceholders.length - 1}\uE003';
+      },
+    );
 
     // 7. In narrative text outside of math, auto-wrap naked mathematical expressions (e.g. \Delta G^\circ, \Psi_3, \text{p}K_a, \mu_B)
     s = s.replaceAllMapped(
-      RegExp(r'(\\Delta\s*[A-Za-z](?:\^[0-9\circ\*\+\-]+|_\{?[0-9a-zA-Z]+\}?)?|\\Psi_?[0-9]+|\\psi_?[0-9]+|\\text\{p\}K[ab]?|\\text\{pH\}|\\mu_[A-Za-z0-9]+|\\pi\^\*|\\sigma\^\*)'),
+      RegExp(
+        r'(\\Delta\s*[A-Za-z](?:\^[0-9\circ\*\+\-]+|_\{?[0-9a-zA-Z]+\}?)?|\\Psi_?[0-9]+|\\psi_?[0-9]+|\\text\{p\}K[ab]?|\\text\{pH\}|\\mu_[A-Za-z0-9]+|\\pi\^\*|\\sigma\^\*)',
+      ),
       (m) => '\$${m[1]}\$',
     );
     // Mask newly wrapped inline math expressions as well
-    s = s.replaceAllMapped(RegExp(r'(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)'), (m) {
-      inlineMathPlaceholders.add(m[0]!);
-      return '\uE002${inlineMathPlaceholders.length - 1}\uE003';
-    });
+    s = s.replaceAllMapped(
+      RegExp(r'(?<!\$)\$(?!\$)([^\$\n]+?)(?<!\$)\$(?!\$)'),
+      (m) {
+        inlineMathPlaceholders.add(m[0]!);
+        return '\uE002${inlineMathPlaceholders.length - 1}\uE003';
+      },
+    );
 
     // 8. In narrative text, unwrap leftover \text{...}, \mathrm{...}, \mathbf{...} so it never renders as literal "\text{...}"
     for (var pass = 0; pass < 5; pass++) {
       s = s.replaceAllMapped(RegExp(r'\\text\{([^{}]*)\}'), (m) => m[1] ?? '');
-      s = s.replaceAllMapped(RegExp(r'\\mathrm\{([^{}]*)\}'), (m) => m[1] ?? '');
-      s = s.replaceAllMapped(RegExp(r'\\mathbf\{([^{}]*)\}'), (m) => m[1] ?? '');
+      s = s.replaceAllMapped(
+        RegExp(r'\\mathrm\{([^{}]*)\}'),
+        (m) => m[1] ?? '',
+      );
+      s = s.replaceAllMapped(
+        RegExp(r'\\mathbf\{([^{}]*)\}'),
+        (m) => m[1] ?? '',
+      );
     }
     // Clean any stray \text remnants in narrative
     s = s.replaceAll(RegExp(r'\\text\b'), '');
@@ -263,7 +282,8 @@ class ChemistryMarkdownView extends StatelessWidget {
     s = ChemistryTextFormatter.formatPlainFormulas(s);
 
     // Convert naked LaTeX commands in narrative text to clean Unicode
-    s = s.replaceAll(r'\rightleftharpoons', '⇌')
+    s = s
+        .replaceAll(r'\rightleftharpoons', '⇌')
         .replaceAll(r'\rightarrow', '→')
         .replaceAll(r'\leftarrow', '←')
         .replaceAll(RegExp(r'\\to\b'), '→')
@@ -295,11 +315,35 @@ class ChemistryMarkdownView extends StatelessWidget {
     // e.g. ^- -> ⁻, ^+ -> ⁺, ^2+ -> ²⁺, _2 -> ₂
     s = s.replaceAllMapped(RegExp(r'\^-\b'), (m) => '⁻');
     s = s.replaceAllMapped(RegExp(r'\^([0-9]*[-+])'), (m) {
-      const map = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻'};
+      const map = {
+        '0': '⁰',
+        '1': '¹',
+        '2': '²',
+        '3': '³',
+        '4': '⁴',
+        '5': '⁵',
+        '6': '⁶',
+        '7': '⁷',
+        '8': '⁸',
+        '9': '⁹',
+        '+': '⁺',
+        '-': '⁻',
+      };
       return m[1]!.split('').map((c) => map[c] ?? c).join();
     });
     s = s.replaceAllMapped(RegExp(r'(?<=[a-zA-Z\)])_([0-9]+)'), (m) {
-      const map = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
+      const map = {
+        '0': '₀',
+        '1': '₁',
+        '2': '₂',
+        '3': '₃',
+        '4': '₄',
+        '5': '₅',
+        '6': '₆',
+        '7': '₇',
+        '8': '₈',
+        '9': '₉',
+      };
       return m[1]!.split('').map((c) => map[c] ?? c).join();
     });
 
@@ -342,10 +386,19 @@ class ChemistryMarkdownView extends StatelessWidget {
     s = s.replaceAll(r'\quad', r'\space\space');
     s = s.replaceAll(r'\qquad', r'\space\space\space\space');
     // Wrap naked superscripts/subscripts for KaTeX
-    s = s.replaceAllMapped(RegExp(r'\^([-+])(?![{a-zA-Z0-9])'), (m) => '^{${m[1]}}');
-    s = s.replaceAllMapped(RegExp(r'\^([0-9]+[-+])(?![{a-zA-Z0-9])'), (m) => '^{${m[1]}}');
+    s = s.replaceAllMapped(
+      RegExp(r'\^([-+])(?![{a-zA-Z0-9])'),
+      (m) => '^{${m[1]}}',
+    );
+    s = s.replaceAllMapped(
+      RegExp(r'\^([0-9]+[-+])(?![{a-zA-Z0-9])'),
+      (m) => '^{${m[1]}}',
+    );
     // Prefix leading or naked term symbol / orbital superscripts (e.g. ^3A_{2g}, ^3T, ^3P, ^3F, ^4A) with empty atom {} for KaTeX
-    s = s.replaceAllMapped(RegExp(r'(?<=^|[\s=+\-:(,\(])\^([0-9a-zA-Z\+\-]+)'), (m) => '{}^${m[1]}');
+    s = s.replaceAllMapped(
+      RegExp(r'(?<=^|[\s=+\-:(,\(])\^([0-9a-zA-Z\+\-]+)'),
+      (m) => '{}^${m[1]}',
+    );
     return s;
   }
 
@@ -383,7 +436,9 @@ class ChemistryMarkdownView extends StatelessWidget {
   /// Splits markdown text into standard narrative blocks and horizontally scrollable table blocks.
   static List<_Block> _splitMarkdownAndTables(String markdownText) {
     final blocks = <_Block>[];
-    final tablePattern = RegExp(r'(?:^|\n)([ \t]*\|[^\n]+\|[ \t]*(?:\r?\n[ \t]*\|[^\n]+\|[ \t]*)+)');
+    final tablePattern = RegExp(
+      r'(?:^|\n)([ \t]*\|[^\n]+\|[ \t]*(?:\r?\n[ \t]*\|[^\n]+\|[ \t]*)+)',
+    );
     var lastEnd = 0;
 
     for (final match in tablePattern.allMatches(markdownText)) {
@@ -397,7 +452,9 @@ class ChemistryMarkdownView extends StatelessWidget {
 
       final tableText = (match.group(1) ?? match.group(0) ?? '').trim();
       if (tableText.isNotEmpty) {
-        blocks.add(_Block(text: tableText, isDisplayMath: false, isTable: true));
+        blocks.add(
+          _Block(text: tableText, isDisplayMath: false, isTable: true),
+        );
       }
 
       lastEnd = match.end;
@@ -410,51 +467,61 @@ class ChemistryMarkdownView extends StatelessWidget {
       }
     }
 
-    return blocks.isEmpty ? [_Block(text: markdownText, isDisplayMath: false)] : blocks;
+    return blocks.isEmpty
+        ? [_Block(text: markdownText, isDisplayMath: false)]
+        : blocks;
   }
 
-  static MarkdownStyleSheet _buildMarkdownStyleSheet(BuildContext? context, TextStyle? overrideStyle) {
-    final base = overrideStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5, height: 1.55);
+  static MarkdownStyleSheet _buildMarkdownStyleSheet(
+    BuildContext context,
+    TextStyle? overrideStyle,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+    final base = (overrideStyle ?? TextStyle(fontSize: 14.5, height: 1.55))
+        .copyWith(color: colors.onSurface);
     return MarkdownStyleSheet(
       p: base,
-      strong: base.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
-      em: base.copyWith(fontStyle: FontStyle.italic, color: AppColors.brandBright),
-      h1: const TextStyle(
-        color: Colors.white,
+      strong: base.copyWith(
+        fontWeight: FontWeight.w700,
+        color: colors.onSurface,
+      ),
+      em: base.copyWith(fontStyle: FontStyle.italic, color: colors.primary),
+      h1: TextStyle(
+        color: colors.onSurface,
         fontSize: 20,
         fontWeight: FontWeight.w800,
         letterSpacing: -0.4,
         height: 1.25,
       ),
-      h2: const TextStyle(
-        color: Colors.white,
+      h2: TextStyle(
+        color: colors.onSurface,
         fontSize: 17.5,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.3,
         height: 1.3,
       ),
-      h3: const TextStyle(
-        color: AppColors.brandBright,
+      h3: TextStyle(
+        color: colors.primary,
         fontSize: 15.5,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.2,
         height: 1.35,
       ),
-      h4: const TextStyle(
-        color: AppColors.brandBright,
+      h4: TextStyle(
+        color: colors.primary,
         fontSize: 14.0,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.1,
         height: 1.35,
       ),
-      h5: const TextStyle(
-        color: Colors.white,
+      h5: TextStyle(
+        color: colors.onSurface,
         fontSize: 13.0,
         fontWeight: FontWeight.w700,
         height: 1.35,
       ),
-      h6: const TextStyle(
-        color: AppColors.textSecondary,
+      h6: TextStyle(
+        color: colors.onSurfaceVariant,
         fontSize: 12.0,
         fontWeight: FontWeight.w600,
         height: 1.35,
@@ -464,58 +531,59 @@ class ChemistryMarkdownView extends StatelessWidget {
       h3Padding: const EdgeInsets.only(top: 10, bottom: 4),
       h4Padding: const EdgeInsets.only(top: 8, bottom: 4),
       pPadding: const EdgeInsets.only(bottom: 6),
-      listBullet: const TextStyle(
-        color: AppColors.brandBright,
+      listBullet: TextStyle(
+        color: colors.primary,
         fontSize: 14,
         fontWeight: FontWeight.w700,
       ),
       listBulletPadding: const EdgeInsets.only(right: 6),
-      tableHead: const TextStyle(
-        color: Colors.white,
+      tableHead: TextStyle(
+        color: colors.onSurface,
         fontWeight: FontWeight.w800,
         fontSize: 12.5,
         letterSpacing: 0.1,
       ),
       tableBody: base.copyWith(fontSize: 12.5, height: 1.4),
       tableBorder: TableBorder.all(
-        color: AppColors.borderHighlight,
+        color: colors.outlineVariant,
         width: 0.8,
         borderRadius: BorderRadius.circular(6),
       ),
-      tableCellsPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      tableCellsPadding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 8,
+      ),
       tableColumnWidth: const FlexColumnWidth(),
       code: TextStyle(
-        color: AppColors.brandBright,
-        backgroundColor: AppColors.bg2,
+        color: colors.primary,
+        backgroundColor: colors.surfaceContainerHigh,
         fontFamily: 'monospace',
         fontSize: (base.fontSize ?? 14) * 0.9,
         fontWeight: FontWeight.w600,
       ),
       codeblockDecoration: BoxDecoration(
-        color: AppColors.bg0,
+        color: colors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.borderSubtle, width: 0.8),
+        border: Border.all(color: colors.outlineVariant, width: 0.8),
       ),
       blockquote: TextStyle(
-        color: AppColors.textSecondary,
+        color: colors.onSurfaceVariant,
         fontSize: 13.5,
         fontStyle: FontStyle.italic,
         height: 1.45,
       ),
       blockquoteDecoration: BoxDecoration(
-        color: AppColors.bg2.withValues(alpha: 0.5),
+        color: colors.surfaceContainerHigh.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(10),
-        border: const Border(
-          left: BorderSide(color: AppColors.brandPrimary, width: 3.5),
-        ),
+        border: Border(left: BorderSide(color: colors.primary, width: 3.5)),
       ),
-      blockquotePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      blockquotePadding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 10,
+      ),
       horizontalRuleDecoration: BoxDecoration(
         border: Border(
-          top: BorderSide(
-            color: AppColors.borderSubtle,
-            width: 0.8,
-          ),
+          top: BorderSide(color: colors.outlineVariant, width: 0.8),
         ),
       ),
     );
@@ -530,7 +598,9 @@ class LatexInlineSyntax extends md.InlineSyntax {
   @override
   bool onMatch(md.InlineParser parser, Match match) {
     final math = match.group(1);
-    if (math == null || math.trim().isEmpty) return false;
+    if (math == null || math.trim().isEmpty) {
+      return false;
+    }
     final el = md.Element.text('latex-inline', math.trim());
     parser.addNode(el);
     return true;
@@ -555,7 +625,14 @@ class _LatexInlineBuilder extends MarkdownElementBuilder {
     TextStyle? parentStyle,
   ) {
     final mathCode = element.textContent;
-    final style = preferredStyle ?? parentStyle ?? textStyle ?? const TextStyle(color: AppColors.textPrimary, fontSize: 14.5);
+    final style =
+        preferredStyle ??
+        parentStyle ??
+        textStyle ??
+        TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 14.5,
+        );
     final sanitized = ChemistryMarkdownView._sanitizeLatex(mathCode);
 
     return Semantics(
@@ -564,14 +641,16 @@ class _LatexInlineBuilder extends MarkdownElementBuilder {
         child: Math.tex(
           sanitized,
           mathStyle: MathStyle.text,
-          textStyle: style.copyWith(color: Colors.white),
+          textStyle: style.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onErrorFallback: (err) {
             // Strip raw LaTeX commands so they never appear as ugly raw text
             final cleaned = _cleanLatexFallback(mathCode);
             return Text(
               cleaned,
               style: style.copyWith(
-                color: AppColors.purpleBright,
+                color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.w600,
               ),
             );
@@ -586,29 +665,63 @@ class _LatexInlineBuilder extends MarkdownElementBuilder {
     var s = raw.trim();
     try {
       final unicode = ChemistryTextFormatter.toUnicodeMath(s);
-      if (unicode.isNotEmpty && !unicode.contains(r'\')) return unicode;
+      if (unicode.isNotEmpty && !unicode.contains(r'\')) {
+        return unicode;
+      }
     } catch (_) {}
     s = s.replaceAllMapped(RegExp(r'\\text\{([^}]*)\}'), (m) => m[1] ?? '');
     s = s.replaceAllMapped(RegExp(r'\\mathrm\{([^}]*)\}'), (m) => m[1] ?? '');
     s = s.replaceAllMapped(RegExp(r'\\mathbf\{([^}]*)\}'), (m) => m[1] ?? '');
-    s = s.replaceAllMapped(RegExp(r'\\frac\{([^}]*)\}\{([^}]*)\}'), (m) => '(${m[1]})/(${m[2]})');
+    s = s.replaceAllMapped(
+      RegExp(r'\\frac\{([^}]*)\}\{([^}]*)\}'),
+      (m) => '(${m[1]})/(${m[2]})',
+    );
     s = s.replaceAllMapped(RegExp(r'\\sqrt\{([^}]*)\}'), (m) => '√(${m[1]})');
-    s = s.replaceAll(r'\rightleftharpoons', '⇌').replaceAll(r'\rightarrow', '→')
-        .replaceAll(r'\leftarrow', '←').replaceAll(RegExp(r'\\to\b'), '→')
-        .replaceAll(r'\times', '×').replaceAll(r'\cdot', '·').replaceAll(r'\pm', '±')
-        .replaceAll(r'\uparrow', '↑').replaceAll(r'\downarrow', '↓')
-        .replaceAll(r'\Delta', 'Δ').replaceAll(r'\alpha', 'α')
-        .replaceAll(r'\beta', 'β').replaceAll(r'\gamma', 'γ')
-        .replaceAll(r'\lambda', 'λ').replaceAll(r'\mu', 'μ')
-        .replaceAll(r'\pi', 'π').replaceAll(r'\sigma', 'σ')
-        .replaceAll(r'\omega', 'ω').replaceAll(r'\infty', '∞')
-        .replaceAll(r'\log', 'log').replaceAll(r'\ln', 'ln')
-        .replaceAll(r'\leq', '≤').replaceAll(r'\geq', '≥')
-        .replaceAll(r'\neq', '≠').replaceAll(r'\approx', '≈')
-        .replaceAll(r'\degree', '°').replaceAll(r'^\circ', '°').replaceAll(r'\circ', '°');
+    s = s
+        .replaceAll(r'\rightleftharpoons', '⇌')
+        .replaceAll(r'\rightarrow', '→')
+        .replaceAll(r'\leftarrow', '←')
+        .replaceAll(RegExp(r'\\to\b'), '→')
+        .replaceAll(r'\times', '×')
+        .replaceAll(r'\cdot', '·')
+        .replaceAll(r'\pm', '±')
+        .replaceAll(r'\uparrow', '↑')
+        .replaceAll(r'\downarrow', '↓')
+        .replaceAll(r'\Delta', 'Δ')
+        .replaceAll(r'\alpha', 'α')
+        .replaceAll(r'\beta', 'β')
+        .replaceAll(r'\gamma', 'γ')
+        .replaceAll(r'\lambda', 'λ')
+        .replaceAll(r'\mu', 'μ')
+        .replaceAll(r'\pi', 'π')
+        .replaceAll(r'\sigma', 'σ')
+        .replaceAll(r'\omega', 'ω')
+        .replaceAll(r'\infty', '∞')
+        .replaceAll(r'\log', 'log')
+        .replaceAll(r'\ln', 'ln')
+        .replaceAll(r'\leq', '≤')
+        .replaceAll(r'\geq', '≥')
+        .replaceAll(r'\neq', '≠')
+        .replaceAll(r'\approx', '≈')
+        .replaceAll(r'\degree', '°')
+        .replaceAll(r'^\circ', '°')
+        .replaceAll(r'\circ', '°');
     s = s.replaceAllMapped(RegExp(r'\^-\b'), (m) => '⁻');
     s = s.replaceAllMapped(RegExp(r'\^([0-9]*[-+])'), (m) {
-      const map = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻'};
+      const map = {
+        '0': '⁰',
+        '1': '¹',
+        '2': '²',
+        '3': '³',
+        '4': '⁴',
+        '5': '⁵',
+        '6': '⁶',
+        '7': '⁷',
+        '8': '⁸',
+        '9': '⁹',
+        '+': '⁺',
+        '-': '⁻',
+      };
       return m[1]!.split('').map((c) => map[c] ?? c).join();
     });
     s = s.replaceAll(RegExp(r'\\[a-zA-Z]+'), '');

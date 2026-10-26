@@ -284,11 +284,7 @@ ${clipped}`;
 });
 
 // ─── Key Pool & Multi-Key Failover Engine ───────────────────
-const GEMINI_API_KEYS_FALLBACK = [
-  atob("QVEuQWI4Uk42TFdoRHRwWlppYkYzY08wbjJ0RVdGOWt2enlNVzUwcjRfVE9sZkVpUF9jSHc="),
-  atob("QVEuQWI4Uk42TFloMi01alpsTUFkdl9CaXE0cHMzZ2RxeXlpSDVBNV95c09kMktyZWptVHc="),
-  atob("QVEuQWI4Uk42THB0RlUxXzdBR3NKbnZ6cVpaeVpYRDZCSnlzNzlkWmJKUGpENEpjWnhVUHc="),
-];
+const GEMINI_API_KEYS_FALLBACK: string[] = []; // Server secrets only; no embedded provider credentials.
 
 function getGeminiKeyPool(): string[] {
   const envKeys = (Deno.env.get("GEMINI_API_KEYS") ?? "")
@@ -335,7 +331,7 @@ async function fetchGeminiWithRotation(
     let lastErrorText = "";
     let lastStatus = 500;
     const activeControllers: AbortController[] = [];
-    const scheduledTimeouts: number[] = [];
+    const scheduledTimeouts: ReturnType<typeof setTimeout>[] = [];
     const launched = new Set<number>();
 
     function settleSuccess(data: any) {

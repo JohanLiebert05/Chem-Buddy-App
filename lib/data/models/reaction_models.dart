@@ -106,7 +106,9 @@ class ReactionStep {
       svgAsset: json['svg'] as String? ?? json['svg_asset'] as String?,
       svgContent: json['svg_content'] as String?,
       electronFlow: (json['electron_flow'] as List? ?? const [])
-          .map((e) => ElectronFlow.fromJson(Map<String, dynamic>.from(e as Map)))
+          .map(
+            (e) => ElectronFlow.fromJson(Map<String, dynamic>.from(e as Map)),
+          )
           .toList(),
     );
   }
@@ -119,7 +121,8 @@ class ReactionStep {
     if (intermediate != null) 'intermediate': intermediate,
     if (svgAsset != null) 'svg_asset': svgAsset,
     if (svgContent != null) 'svg_content': svgContent,
-    if (electronFlow.isNotEmpty) 'electron_flow': electronFlow.map((e) => e.toJson()).toList(),
+    if (electronFlow.isNotEmpty)
+      'electron_flow': electronFlow.map((e) => e.toJson()).toList(),
   };
 }
 
@@ -168,7 +171,11 @@ class ReactionMechanism {
     this.drivingForce,
   });
 
-  bool get hasChemDrawSteps => steps.any((s) => (s.svgAsset != null && s.svgAsset!.isNotEmpty) || (s.svgContent != null && s.svgContent!.isNotEmpty));
+  bool get hasChemDrawSteps => steps.any(
+    (s) =>
+        (s.svgAsset != null && s.svgAsset!.isNotEmpty) ||
+        (s.svgContent != null && s.svgContent!.isNotEmpty),
+  );
 
   factory ReactionMechanism.fromJson(Map<String, dynamic> json) {
     return ReactionMechanism(
@@ -184,16 +191,21 @@ class ReactionMechanism {
       reagentsAndConditions: json['reagents_and_conditions'] as String? ?? '',
       products: json['products'] as String? ?? '',
       steps: (json['steps'] as List? ?? const [])
-          .map((s) => ReactionStep.fromJson(Map<String, dynamic>.from(s as Map)))
+          .map(
+            (s) => ReactionStep.fromJson(Map<String, dynamic>.from(s as Map)),
+          )
           .toList(),
       svgPath: json['svg_path'] as String?,
       svgUrl: json['svg_url'] as String?,
       svgContent: json['svg_content'] as String?,
-      keyApplications: List<String>.from(json['key_applications'] as List? ?? const []),
+      keyApplications: List<String>.from(
+        json['key_applications'] as List? ?? const [],
+      ),
       limitations: List<String>.from(json['limitations'] as List? ?? const []),
       isVerified: json['is_verified'] as bool? ?? false,
       representativeExample: json['representative_example'] as String?,
-      verificationStatus: json['verification_status'] as String? ?? 'needs_review',
+      verificationStatus:
+          json['verification_status'] as String? ?? 'needs_review',
       regioselectivity: json['regioselectivity'] as String?,
       stereochemistry: json['stereochemistry'] as String?,
       drivingForce: json['driving_force'] as String?,
@@ -216,14 +228,14 @@ class ReactionMechanism {
     'key_applications': keyApplications,
     'limitations': limitations,
     'is_verified': isVerified,
-    if (representativeExample != null) 'representative_example': representativeExample,
+    if (representativeExample != null)
+      'representative_example': representativeExample,
     'verification_status': verificationStatus,
     if (regioselectivity != null) 'regioselectivity': regioselectivity,
     if (stereochemistry != null) 'stereochemistry': stereochemistry,
     if (drivingForce != null) 'driving_force': drivingForce,
   };
 }
-
 
 enum AskAiIntent {
   conceptExplanation,

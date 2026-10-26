@@ -227,7 +227,7 @@ class TimetableParserService {
 
     // Process each day's content
     for (final day in _daysOfWeek) {
-      if (!dayLines.containsKey(day)) continue;
+      if (!dayLines.containsKey(day)) {continue;}
       final dLines = dayLines[day]!;
       final dayJoined = dLines.join(' ');
 
@@ -396,7 +396,7 @@ class TimetableParserService {
       }
 
       final timeMatch = _timeRange.firstMatch(line);
-      if (timeMatch == null) continue;
+      if (timeMatch == null) {continue;}
 
       final codeMatch = _subjectCodePattern.firstMatch(line);
       final rawTeacher = _extractTeacherFromLine(line);
@@ -428,10 +428,10 @@ class TimetableParserService {
 
   String _extractTeacherFromLine(String line) {
     final tMatch = RegExp(r'\b((?:Dr|Prof|Mrs|Mr|Ms)\.?\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)').firstMatch(line);
-    if (tMatch != null) return tMatch.group(1)!;
+    if (tMatch != null) {return tMatch.group(1)!;}
 
     final initialMatch = RegExp(r'\b([A-Z]{2,4})\b').firstMatch(line);
-    if (initialMatch != null) return initialMatch.group(1)!;
+    if (initialMatch != null) {return initialMatch.group(1)!;}
 
     return '';
   }
@@ -442,10 +442,10 @@ class TimetableParserService {
       return legend[clean]!;
     }
     // Hardcoded university faculty fallbacks if initials match
-    if (clean == 'KSS') return 'Prof. Dr. K. Shivashankar';
-    if (clean == 'HP') return 'Dr. Hari Prasad';
-    if (clean == 'RK') return 'Dr. R. Kundu';
-    if (clean == 'SMR') return 'Dr. S. M. Roopa';
+    if (clean == 'KSS') {return 'Prof. Dr. K. Shivashankar';}
+    if (clean == 'HP') {return 'Dr. Hari Prasad';}
+    if (clean == 'RK') {return 'Dr. R. Kundu';}
+    if (clean == 'SMR') {return 'Dr. S. M. Roopa';}
 
     return clean;
   }
@@ -462,21 +462,21 @@ class TimetableParserService {
 
   String _getSubjectName(String code) {
     final clean = code.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
-    if (clean.contains('301')) return 'Inorganic Chemistry (CH-301)';
-    if (clean.contains('302')) return 'Organic Chemistry (CH-302)';
-    if (clean.contains('303')) return 'Physical Chemistry (CH-303)';
-    if (clean.contains('305')) return 'Inorganic Chemistry Practical (CH-305)';
-    if (clean.contains('306')) return 'Organic Chemistry Practical (CH-306)';
-    if (clean.contains('304')) return 'Open Elective (CH-3040E)';
-    if (clean.contains('SEM')) return 'Seminar & Literature Review';
+    if (clean.contains('301')) {return 'Inorganic Chemistry (CH-301)';}
+    if (clean.contains('302')) {return 'Organic Chemistry (CH-302)';}
+    if (clean.contains('303')) {return 'Physical Chemistry (CH-303)';}
+    if (clean.contains('305')) {return 'Inorganic Chemistry Practical (CH-305)';}
+    if (clean.contains('306')) {return 'Organic Chemistry Practical (CH-306)';}
+    if (clean.contains('304')) {return 'Open Elective (CH-3040E)';}
+    if (clean.contains('SEM')) {return 'Seminar & Literature Review';}
     return 'Chemistry Course ($code)';
   }
 
   int _getColorForCode(String code) {
     final clean = code.toUpperCase();
-    if (clean.contains('301')) return 0xFF38BDF8; // Cyan
-    if (clean.contains('302')) return 0xFFA78BFA; // Purple
-    if (clean.contains('303')) return 0xFFF472B6; // Pink
+    if (clean.contains('301')) {return 0xFF38BDF8;} // Cyan
+    if (clean.contains('302')) {return 0xFFA78BFA;} // Purple
+    if (clean.contains('303')) {return 0xFFF472B6;} // Pink
     return 0xFF10B981; // Green
   }
 
@@ -522,7 +522,7 @@ class TimetableParserService {
   String _normalizeTime(String raw) {
     final text = raw.trim().toUpperCase().replaceAll('.', ':');
     final match = RegExp(r'(\d{1,2}):?(\d{2})?\s*(AM|PM)?').firstMatch(text);
-    if (match == null) return raw.trim();
+    if (match == null) {return raw.trim();}
     final hour = int.parse(match.group(1)!);
     final minute = int.tryParse(match.group(2) ?? '00') ?? 0;
     var period = match.group(3);

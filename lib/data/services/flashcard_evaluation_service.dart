@@ -68,7 +68,7 @@ Return strictly valid JSON with this shape:
 
         if (raw is Map && raw['answer'] != null) {
           final eval = _parseAiEvaluation(raw['answer'].toString());
-          if (eval != null) return eval;
+          if (eval != null) {return eval;}
         } else if (raw is Map) {
           final eval = FlashcardAiEvaluation.fromJson(Map<String, dynamic>.from(raw));
           return eval;
@@ -131,7 +131,7 @@ Return strictly valid JSON with this shape:
     // 1. Key Term Matching (Exact, substring, and root matching)
     for (final term in keyTerms) {
       final normTerm = _normalize(term);
-      if (normTerm.isEmpty) continue;
+      if (normTerm.isEmpty) {continue;}
 
       final termWords = normTerm.split(RegExp(r'\s+')).where((w) => w.length > 2).toList();
       var isCovered = false;

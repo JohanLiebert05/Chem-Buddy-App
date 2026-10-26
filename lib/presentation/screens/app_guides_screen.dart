@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/hex_background.dart';
 
@@ -18,15 +17,15 @@ class AppGuidesScreen extends StatelessWidget {
         ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-          children: const [
+          children:  [
             Text(
               'User Guides & Help',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface),
             ),
             SizedBox(height: 6),
             Text(
               'Quick, visual tutorials on getting the most out of ChemBuddy for your MSc Chemistry studies.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13, height: 1.4),
             ),
             SizedBox(height: 16),
 
@@ -168,26 +167,26 @@ class _GuideCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.purple.withValues(alpha: 0.18),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
                   ),
-                  child: Icon(icon, color: AppColors.purpleBright, size: 20),
+                  child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white)),
-                      Text(subtitle, style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                      Text(title, style:  TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Theme.of(context).colorScheme.onSurface)),
+                      Text(subtitle, style:  TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 11.5)),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            const Divider(color: AppColors.border, height: 1),
+             Divider(color: Theme.of(context).colorScheme.outlineVariant, height: 1),
             const SizedBox(height: 10),
             ...bullets.map(
               (b) => Padding(
@@ -195,11 +194,11 @@ class _GuideCard extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('• ', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.bold, fontSize: 14)),
+                     Text('• ', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 14)),
                     Expanded(
                       child: Text(
                         b,
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+                        style:  TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12.5, height: 1.35),
                       ),
                     ),
                   ],

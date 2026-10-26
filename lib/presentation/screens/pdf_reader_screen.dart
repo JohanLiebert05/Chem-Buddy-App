@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,13 +45,22 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
   }
 
   void _promptJumpToPage() {
-    if (_total <= 0) return;
+    if (_total <= 0) {
+      return;
+    }
     final controller = TextEditingController(text: '${_page + 1}');
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Jump to Page', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+        title: Text(
+          'Jump to Page',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -60,18 +71,35 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.purple),
-            onPressed: () {
-              final target = int.tryParse(controller.text.trim());
-              if (target != null && target >= 1 && target <= _total) {
-                _controller?.setPage(target - 1);
-                setState(() => _page = target - 1);
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Jump'),
+          SpringPress(
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+          SpringPress(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Theme.of(context)
+                    .colorScheme
+                    .onPrimaryContainer,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              ),
+              onPressed: () {
+                final target = int.tryParse(controller.text.trim());
+                if (target != null && target >= 1 && target <= _total) {
+                  _controller?.setPage(target - 1);
+                  setState(() => _page = target - 1);
+                }
+                Navigator.pop(ctx);
+              },
+              child: const Text('Jump'),
+            ),
           ),
         ],
       ),
@@ -95,8 +123,10 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
   void _showStudyOptions() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) {
         return Padding(
           padding: const EdgeInsets.all(20),
@@ -109,18 +139,39 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.purple.withValues(alpha: 0.2),
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.auto_awesome, color: AppColors.purpleBright, size: 20),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_doc.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                        const Text('What would you like to do?', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                        Text(
+                          _doc.displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
+                        Text(
+                          'What would you like to do?',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -129,9 +180,10 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
               const SizedBox(height: 16),
               _StudyOptionRow(
                 icon: Icons.local_fire_department_outlined,
-                color: AppColors.warning,
+                color: AppColors.adaptive(context, AppColors.warning),
                 title: 'Find Important Topics',
-                subtitle: 'Ranked priorities based on document coverage & exams',
+                subtitle:
+                    'Ranked priorities based on document coverage & exams',
                 onTap: () {
                   Navigator.pop(ctx);
                   _openStudyHub(0);
@@ -139,7 +191,7 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
               ),
               _StudyOptionRow(
                 icon: Icons.summarize_outlined,
-                color: AppColors.purpleBright,
+                color: Theme.of(context).colorScheme.primary,
                 title: 'Summarize Document',
                 subtitle: 'Overview, core definitions, and reaction equations',
                 onTap: () {
@@ -149,7 +201,7 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
               ),
               _StudyOptionRow(
                 icon: Icons.quiz_outlined,
-                color: AppColors.blue,
+                color: AppColors.adaptive(context, AppColors.blue),
                 title: 'Create Practice Quiz',
                 subtitle: '10, 20, 30, or 40 questions with weak area analysis',
                 onTap: () {
@@ -164,7 +216,7 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
               ),
               _StudyOptionRow(
                 icon: Icons.style_outlined,
-                color: AppColors.success,
+                color: AppColors.adaptive(context, AppColors.success),
                 title: 'Generate Flashcards',
                 subtitle: 'Turn concepts into spaced repetition cards',
                 onTap: () {
@@ -174,7 +226,7 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
               ),
               _StudyOptionRow(
                 icon: Icons.chat_bubble_outline_rounded,
-                color: AppColors.purpleBright,
+                color: Theme.of(context).colorScheme.primary,
                 title: 'Ask ChemBuddy',
                 subtitle: 'Ask questions grounded directly in this PDF',
                 onTap: () {
@@ -194,22 +246,29 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
     return Scaffold(
       backgroundColor: _night ? Colors.black : Colors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(_doc.displayName, overflow: TextOverflow.ellipsis),
         actions: [
-          IconButton(
-            tooltip: 'Favorite',
-            onPressed: () async {
-              _doc = _doc.copyWith(favorite: !_doc.favorite);
-              await ref.read(appControllerProvider.notifier).savePdf(_doc);
-              setState(() {});
-            },
-            icon: Icon(_doc.favorite ? Icons.star : Icons.star_border, color: AppColors.purpleBright),
+          SpringPress(
+            child: IconButton(
+              tooltip: 'Favorite',
+              onPressed: () async {
+                _doc = _doc.copyWith(favorite: !_doc.favorite);
+                await ref.read(appControllerProvider.notifier).savePdf(_doc);
+                setState(() {});
+              },
+              icon: Icon(
+                _doc.favorite ? Icons.star : Icons.star_border,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
           ),
-          IconButton(
-            tooltip: 'Share',
-            onPressed: () => Share.shareXFiles([XFile(_doc.localPath)]),
-            icon: const Icon(Icons.share_outlined),
+          SpringPress(
+            child: IconButton(
+              tooltip: 'Share',
+              onPressed: () => Share.shareXFiles([XFile(_doc.localPath)]),
+              icon: const Icon(Icons.share_outlined),
+            ),
           ),
         ],
       ),
@@ -217,7 +276,13 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.danger)),
+                child: Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.adaptive(context, AppColors.danger),
+                  ),
+                ),
               ),
             )
           : Column(
@@ -225,20 +290,41 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
                 // Citation Jump Banner
                 if (_showCitationBanner && widget.initialPage != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    color: AppColors.purple.withValues(alpha: 0.25),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.25),
                     child: Row(
                       children: [
-                        const Icon(Icons.bookmark_added_rounded, size: 16, color: AppColors.purpleBright),
+                        Icon(
+                          Icons.bookmark_added_rounded,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Jumped to Page ${widget.initialPage} from citation',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
                         ),
                         const Spacer(),
-                        InkWell(
-                          onTap: () => setState(() => _showCitationBanner = false),
-                          child: const Icon(Icons.close, size: 16, color: AppColors.textMuted),
+                        SpringPress(
+                          child: InkWell(
+                            onTap: () =>
+                                setState(() => _showCitationBanner = false),
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -246,37 +332,72 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
 
                 // Top Page Counter & Study Header
                 Container(
-                  color: AppColors.background,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  color: Theme.of(context).colorScheme.surface,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      InkWell(
-                        onTap: _promptJumpToPage,
-                        borderRadius: BorderRadius.circular(6),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                _total == 0 ? 'Loading…' : 'Page ${_page + 1} / $_total',
-                                style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 13),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.unfold_more, size: 13, color: AppColors.textMuted),
-                            ],
+                      SpringPress(
+                        child: InkWell(
+                          onTap: _promptJumpToPage,
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _total == 0
+                                      ? 'Loading…'
+                                      : 'Page ${_page + 1} / $_total',
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.unfold_more,
+                                  size: 13,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      GestureDetector(
-                        onTap: _showStudyOptions,
-                        child: const Row(
-                          children: [
-                            Icon(Icons.tune_rounded, size: 14, color: AppColors.purpleBright),
-                            SizedBox(width: 4),
-                            Text('Study Options', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w700, fontSize: 12)),
-                          ],
+                      SpringPress(
+                        child: GestureDetector(
+                          onTap: _showStudyOptions,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.tune_rounded,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Study Options',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -301,14 +422,19 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
                       });
                       _persistPage(_page);
                     },
-                    onError: (e) => setState(() => _error = 'This PDF could not be opened. It may be corrupted.'),
-                    onPageError: (p, e) => setState(() => _error = 'Could not read page ${(p ?? 0) + 1}.'),
+                    onError: (e) => setState(
+                      () => _error =
+                          'This PDF could not be opened. It may be corrupted.',
+                    ),
+                    onPageError: (p, e) => setState(
+                      () => _error = 'Could not read page ${(p ?? 0) + 1}.',
+                    ),
                   ),
                 ),
 
                 // Unified Primary Study Action Bar & Navigation
                 ColoredBox(
-                  color: AppColors.background,
+                  color: Theme.of(context).colorScheme.surface,
                   child: SafeArea(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -319,37 +445,77 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
                           SizedBox(
                             width: double.infinity,
                             height: 46,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.purple,
-                                foregroundColor: Colors.white,
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            child: SpringPress(
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                                  foregroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
+                                  elevation: 3,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                onPressed: () => _openStudyHub(0),
+                                icon: const Icon(Icons.auto_awesome, size: 18),
+                                label: const Text(
+                                  'Study with ChemBuddy',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                  ),
+                                ),
                               ),
-                              onPressed: () => _openStudyHub(0),
-                              icon: const Icon(Icons.auto_awesome, size: 18),
-                              label: const Text('Study with ChemBuddy', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
                             ),
                           ),
                           const SizedBox(height: 6),
                           // Reader Controls
                           Row(
                             children: [
-                              IconButton(
-                                onPressed: () => _controller?.setPage((_page - 1).clamp(0, _total)),
-                                icon: const Icon(Icons.chevron_left),
+                              SpringPress(
+                                child: IconButton(
+                                  onPressed: () => _controller?.setPage(
+                                    (_page - 1).clamp(0, _total),
+                                  ),
+                                  icon: const Icon(Icons.chevron_left),
+                                ),
                               ),
                               Expanded(
-                                child: Text('${_page + 1} / $_total', textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                                child: Text(
+                                  '${_page + 1} / $_total',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                ),
                               ),
-                              IconButton(
-                                onPressed: () => _controller?.setPage((_page + 1).clamp(0, (_total - 1).clamp(0, 9999))),
-                                icon: const Icon(Icons.chevron_right),
+                              SpringPress(
+                                child: IconButton(
+                                  onPressed: () => _controller?.setPage(
+                                    (_page + 1).clamp(
+                                      0,
+                                      (_total - 1).clamp(0, 9999),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.chevron_right),
+                                ),
                               ),
-                              IconButton(
-                                tooltip: 'Night mode',
-                                onPressed: () => setState(() => _night = !_night),
-                                icon: Icon(_night ? Icons.dark_mode : Icons.light_mode, size: 20),
+                              SpringPress(
+                                child: IconButton(
+                                  tooltip: 'Night mode',
+                                  onPressed: () =>
+                                      setState(() => _night = !_night),
+                                  icon: Icon(
+                                    _night ? Icons.dark_mode : Icons.light_mode,
+                                    size: 20,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -394,12 +560,29 @@ class _StudyOptionRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: Colors.white)),
-                  Text(subtitle, style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 11.5,
+                    ),
+                  ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
+            Icon(
+              Icons.chevron_right,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 18,
+            ),
           ],
         ),
       ),

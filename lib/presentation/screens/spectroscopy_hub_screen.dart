@@ -1,4 +1,7 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,19 +19,30 @@ class SpectroscopyHubScreen extends ConsumerStatefulWidget {
   const SpectroscopyHubScreen({super.key});
 
   @override
-  ConsumerState<SpectroscopyHubScreen> createState() => _SpectroscopyHubScreenState();
+  ConsumerState<SpectroscopyHubScreen> createState() =>
+      _SpectroscopyHubScreenState();
 }
 
-class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> with SingleTickerProviderStateMixin {
+class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   // Structure Solver Controllers
-  final TextEditingController _formulaCtrl = TextEditingController(text: 'C8H8O');
-  final TextEditingController _irPeaksCtrl = TextEditingController(text: '1685, 1600, 1450, 3050');
-  final TextEditingController _nmr1HPeaksCtrl = TextEditingController(text: '2.60, 7.50, 7.95');
-  final TextEditingController _nmr13CPeaksCtrl = TextEditingController(text: '26.6, 128.3, 128.6, 133.1, 137.1, 198.1');
-  final TextEditingController _msPeaksCtrl = TextEditingController(text: '120, 105, 77');
-
+  final TextEditingController _formulaCtrl = TextEditingController(
+    text: 'C8H8O',
+  );
+  final TextEditingController _irPeaksCtrl = TextEditingController(
+    text: '1685, 1600, 1450, 3050',
+  );
+  final TextEditingController _nmr1HPeaksCtrl = TextEditingController(
+    text: '2.60, 7.50, 7.95',
+  );
+  final TextEditingController _nmr13CPeaksCtrl = TextEditingController(
+    text: '26.6, 128.3, 128.6, 133.1, 137.1, 198.1',
+  );
+  final TextEditingController _msPeaksCtrl = TextEditingController(
+    text: '120, 105, 77',
+  );
 
   SpectroscopyAnalysisResult? _analysisResult;
   bool _showFullReport = false;
@@ -47,16 +61,28 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
 
   int _magDElectrons = 8;
   bool _magIsHighSpin = true;
-  final TextEditingController _magLambdaCtrl = TextEditingController(text: '-315');
-  final TextEditingController _mag10DqCtrl = TextEditingController(text: '8500');
+  final TextEditingController _magLambdaCtrl = TextEditingController(
+    text: '-315',
+  );
+  final TextEditingController _mag10DqCtrl = TextEditingController(
+    text: '8500',
+  );
 
-  final TextEditingController _eprFreqCtrl = TextEditingController(text: '9.45');
-  final TextEditingController _eprFieldCtrl = TextEditingController(text: '3246');
+  final TextEditingController _eprFreqCtrl = TextEditingController(
+    text: '9.45',
+  );
+  final TextEditingController _eprFieldCtrl = TextEditingController(
+    text: '3246',
+  );
   int _eprNuclearSpinDouble = 3; // I = 3/2 (63Cu)
   int _eprLigandCount = 2; // 2x 14N (I = 1)
 
-  final TextEditingController _mossIsomerCtrl = TextEditingController(text: '1.25');
-  final TextEditingController _mossQuadCtrl = TextEditingController(text: '2.70');
+  final TextEditingController _mossIsomerCtrl = TextEditingController(
+    text: '1.25',
+  );
+  final TextEditingController _mossQuadCtrl = TextEditingController(
+    text: '2.70',
+  );
 
   String _carbonylSelectedType = 'cis-M(CO)4L2';
   String? _currentInorganicDerivation;
@@ -209,13 +235,23 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-            onPressed: () => Navigator.pop(context),
+          leading: SpringPress(
+            child: IconButton(
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 20,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.graphic_eq_rounded, color: AppColors.brandBright, size: 22),
+              Icon(
+                Icons.graphic_eq_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 22,
+              ),
               SizedBox(width: 8),
               Text(
                 'Spectroscopy Hub',
@@ -224,16 +260,24 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
             ],
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.draw_outlined, color: AppColors.accentCyan, size: 22),
-              tooltip: 'Mobile ChemDraw Canvas',
-              onPressed: () {
-                AppHaptics.selection();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ChemSketcherScreen()),
-                );
-              },
+            SpringPress(
+              child: IconButton(
+                icon: Icon(
+                  Icons.draw_outlined,
+                  color: AppColors.adaptive(context, AppColors.accentCyan),
+                  size: 22,
+                ),
+                tooltip: 'Mobile ChemDraw Canvas',
+                onPressed: () {
+                  AppHaptics.selection();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ChemSketcherScreen(),
+                    ),
+                  );
+                },
+              ),
             ),
             const SizedBox(width: 8),
           ],
@@ -241,11 +285,16 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
             controller: _tabController,
             isScrollable: true,
             tabAlignment: TabAlignment.start,
-            indicatorColor: AppColors.brandBright,
+            indicatorColor: Theme.of(context).colorScheme.primary,
             indicatorWeight: 3,
-            labelColor: Colors.white,
-            unselectedLabelColor: AppColors.textMuted,
-            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            labelColor: Theme.of(context).colorScheme.onSurface,
+            unselectedLabelColor: Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant,
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
             tabs: const [
               Tab(text: 'Structure Solver'),
               Tab(text: 'Chromatograms & Spectrograms'),
@@ -283,19 +332,41 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(right: 8),
-                child: Text('Presets:', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
-              ),
-              ...SpectroscopyService.caseStudies.map((study) => Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: ActionChip(
-                  label: Text(study.compoundName.split(' ').first, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-                  backgroundColor: const Color(0xFF0F172A),
-                  side: const BorderSide(color: AppColors.brandBright, width: 0.8),
-                  onPressed: () => _loadPreset(study),
+                child: Text(
+                  'Presets:',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              )),
+              ),
+              ...SpectroscopyService.caseStudies.map(
+                (study) => Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: SpringPress(
+                    child: ActionChip(
+                      label: Text(
+                        study.compoundName.split(' ').first,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHigh,
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 0.8,
+                      ),
+                      onPressed: () => _loadPreset(study),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -304,61 +375,119 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
         // Input Card
         GlowCard(
           padding: const EdgeInsets.all(16),
-          borderColor: AppColors.brandBright.withValues(alpha: 0.4),
+          borderColor: Theme.of(context).colorScheme.primary
+              .withValues(alpha: 0.4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.auto_awesome, color: AppColors.brandBright, size: 18),
+                  Icon(
+                    Icons.auto_awesome,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 18,
+                  ),
                   SizedBox(width: 8),
-                  Text('Structure Deduction Assistant', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white)),
+                  Text(
+                    'Structure Deduction Assistant',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
-              _buildInput('Molecular Formula (e.g. C8H8O, C9H11NO2)', _formulaCtrl),
+              _buildInput(
+                'Molecular Formula (e.g. C8H8O, C9H11NO2)',
+                _formulaCtrl,
+              ),
               const SizedBox(height: 10),
-              _buildInput('FT-IR Peaks in cm⁻¹ (e.g. 1685, 1600, 1450)', _irPeaksCtrl),
+              _buildInput(
+                'FT-IR Peaks in cm⁻¹ (e.g. 1685, 1600, 1450)',
+                _irPeaksCtrl,
+              ),
               const SizedBox(height: 10),
-              _buildInput('¹H NMR Shifts in ppm (e.g. 2.60, 7.50, 7.95)', _nmr1HPeaksCtrl),
+              _buildInput(
+                '¹H NMR Shifts in ppm (e.g. 2.60, 7.50, 7.95)',
+                _nmr1HPeaksCtrl,
+              ),
               const SizedBox(height: 10),
-              _buildInput('¹³C NMR Shifts in ppm (e.g. 26.6, 128.3, 198.1)', _nmr13CPeaksCtrl),
+              _buildInput(
+                '¹³C NMR Shifts in ppm (e.g. 26.6, 128.3, 198.1)',
+                _nmr13CPeaksCtrl,
+              ),
               const SizedBox(height: 10),
-              _buildInput('Mass Spec m/z Peaks (e.g. 120, 105, 77)', _msPeaksCtrl),
+              _buildInput(
+                'Mass Spec m/z Peaks (e.g. 120, 105, 77)',
+                _msPeaksCtrl,
+              ),
               const SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: SpringPress(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
+                      foregroundColor: Theme.of(context)
+                          .colorScheme
+                          .onPrimaryContainer,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: _runAnalysis,
+                    icon: const Icon(Icons.analytics_outlined, size: 18),
+                    label: const Text(
+                      'Analyze Spectra & Deduce Structure',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
-                  onPressed: _runAnalysis,
-                  icon: const Icon(Icons.analytics_outlined, size: 18),
-                  label: const Text('Analyze Spectra & Deduce Structure', style: TextStyle(fontWeight: FontWeight.w700)),
                 ),
               ),
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.accentCyan,
-                    side: const BorderSide(color: AppColors.accentCyan),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: SpringPress(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.adaptive(
+                        context,
+                        AppColors.accentCyan,
+                      ),
+                      side: BorderSide(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      AppHaptics.selection();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ChemSketcherScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.gesture_rounded, size: 16),
+                    label: const Text(
+                      'Draw Structure in Mobile ChemDraw Canvas',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                      ),
+                    ),
                   ),
-                  onPressed: () {
-                    AppHaptics.selection();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ChemSketcherScreen()),
-                    );
-                  },
-                  icon: const Icon(Icons.gesture_rounded, size: 16),
-                  label: const Text('Draw Structure in Mobile ChemDraw Canvas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
                 ),
               ),
             ],
@@ -370,24 +499,42 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
           if (!_analysisResult!.isValid)
             AppCard(
               padding: const EdgeInsets.all(16),
-              borderColor: AppColors.statusDanger.withValues(alpha: 0.6),
+              borderColor: AppColors.adaptive(
+                context,
+                AppColors.statusDanger,
+              ).withValues(alpha: 0.6),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.error_outline_rounded, color: AppColors.statusDanger, size: 24),
+                  Icon(
+                    Icons.error_outline_rounded,
+                    color: AppColors.adaptive(context, AppColors.statusDanger),
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Formula Validation Error',
-                          style: TextStyle(color: AppColors.statusDanger, fontWeight: FontWeight.w800, fontSize: 14),
+                          style: TextStyle(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.statusDanger,
+                            ),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           _analysisResult!.errorMessage ?? 'Invalid formula',
-                          style: const TextStyle(color: Colors.white, fontSize: 12.5, height: 1.4),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 12.5,
+                            height: 1.4,
+                          ),
                         ),
                       ],
                     ),
@@ -399,7 +546,8 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
             // Deduction Header Card
             GlowCard(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              borderColor: AppColors.brandBright.withValues(alpha: 0.5),
+              borderColor: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.5),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -408,37 +556,69 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.verified_outlined, color: AppColors.accentCyan, size: 18),
+                          Icon(
+                            Icons.verified_outlined,
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentCyan,
+                            ),
+                            size: 18,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             _analysisResult!.formula,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
                           ),
                         ],
                       ),
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppColors.accentGold.withValues(alpha: 0.2),
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.accentGold,
+                              ).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               'DBE = ${_analysisResult!.dbe.toStringAsFixed(1).replaceAll('.0', '')}',
-                              style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w800, fontSize: 11.5),
+                              style: TextStyle(
+                                color: AppColors.adaptive(
+                                  context,
+                                  AppColors.accentGold,
+                                ),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11.5,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppColors.brandPrimary.withValues(alpha: 0.2),
+                              color: Theme.of(context).colorScheme.primary
+                                  .withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               '${_analysisResult!.molarMass} g/mol',
-                              style: const TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w800, fontSize: 11.5),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11.5,
+                              ),
                             ),
                           ),
                         ],
@@ -449,28 +629,40 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         '8-Step Spectroscopy Interpretation',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      InkWell(
-                        onTap: () {
-                          AppHaptics.selection();
-                          setState(() => _showFullReport = !_showFullReport);
-                        },
-                        child: Row(
-                          children: [
-                            Icon(
-                              _showFullReport ? Icons.view_agenda_outlined : Icons.description_outlined,
-                              size: 14,
-                              color: AppColors.brandBright,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _showFullReport ? 'Step View' : 'Full Report',
-                              style: const TextStyle(color: AppColors.brandBright, fontSize: 11.5, fontWeight: FontWeight.w700),
-                            ),
-                          ],
+                      SpringPress(
+                        child: InkWell(
+                          onTap: () {
+                            AppHaptics.selection();
+                            setState(() => _showFullReport = !_showFullReport);
+                          },
+                          child: Row(
+                            children: [
+                              Icon(
+                                _showFullReport
+                                    ? Icons.view_agenda_outlined
+                                    : Icons.description_outlined,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _showFullReport ? 'Step View' : 'Full Report',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -486,70 +678,149 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                 padding: const EdgeInsets.all(16),
                 child: ChemistryMarkdownView(
                   text: _analysisResult!.markdownFull,
-                  textStyle: const TextStyle(fontSize: 13, height: 1.45, color: Colors.white),
+                  textStyle: TextStyle(
+                    fontSize: 13,
+                    height: 1.45,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               )
             else
-              ..._analysisResult!.steps.map((step) => _buildDeductionStepCard(step)),
+              ..._analysisResult!.steps.map(
+                (step) => _buildDeductionStepCard(step),
+              ),
           ],
         ],
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'Curated MSc Examination Case Studies',
-          style: TextStyle(color: AppColors.brandBright, fontSize: 14, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 10),
-        ...SpectroscopyService.caseStudies.map((study) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: AppCard(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      study.compoundName,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
-                    ),
-                    Text(
-                      'DBE = ${study.dbe.toInt()}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.accentGold),
-                    ),
-                  ],
-                ),
-                Text('Formula: ${study.formula} • Molar Mass: ${study.molarMass} g/mol', style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
-                const Divider(color: AppColors.borderSubtle, height: 18),
-                Text('FT-IR: ${study.irHighlights}', style: const TextStyle(fontSize: 12, color: AppColors.accentCyan)),
-                const SizedBox(height: 4),
-                Text('¹H NMR: ${study.nmr1H}', style: const TextStyle(fontSize: 12, color: AppColors.brandBright)),
-                const SizedBox(height: 4),
-                Text('¹³C NMR: ${study.nmr13C}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                const SizedBox(height: 4),
-                Text('Mass Spec: ${study.massSpec}', style: const TextStyle(fontSize: 12, color: AppColors.statusDanger)),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F172A),
-                        foregroundColor: AppColors.brandBright,
-                        side: const BorderSide(color: AppColors.brandBright, width: 1),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ...SpectroscopyService.caseStudies.map(
+          (study) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: AppCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        study.compoundName,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                      onPressed: () => _loadPreset(study),
-                      icon: const Icon(Icons.bolt_rounded, size: 16),
-                      label: const Text('Load into Solver', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                      Text(
+                        'DBE = ${study.dbe.toInt()}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentGold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'Formula: ${study.formula} • Molar Mass: ${study.molarMass} g/mol',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 11.5,
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  Divider(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    height: 18,
+                  ),
+                  Text(
+                    'FT-IR: ${study.irHighlights}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.adaptive(context, AppColors.accentCyan),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '¹H NMR: ${study.nmr1H}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '¹³C NMR: ${study.nmr13C}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Mass Spec: ${study.massSpec}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.statusDanger,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      SpringPress(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHigh,
+                            foregroundColor: Theme.of(context)
+                                .colorScheme
+                                .primary,
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 1,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () => _loadPreset(study),
+                          icon: const Icon(Icons.bolt_rounded, size: 16),
+                          label: const Text(
+                            'Load into Solver',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        )),
+        ),
       ],
     );
   }
@@ -561,12 +832,19 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
     final allTechniques = SpectroscopyService.analyticalTechniques;
     final filteredTechniques = _selectedTechniqueCategory == 'All'
         ? allTechniques
-        : allTechniques.where((t) => t.category == _selectedTechniqueCategory).toList();
+        : allTechniques
+              .where((t) => t.category == _selectedTechniqueCategory)
+              .toList();
 
     final currentTech = filteredTechniques.isNotEmpty
-        ? filteredTechniques[_selectedTechniqueIndex.clamp(0, filteredTechniques.length - 1)]
+        ? filteredTechniques[_selectedTechniqueIndex.clamp(
+            0,
+            filteredTechniques.length - 1,
+          )]
         : allTechniques.first;
-    final currentEx = currentTech.examples.isNotEmpty ? currentTech.examples.first : null;
+    final currentEx = currentTech.examples.isNotEmpty
+        ? currentTech.examples.first
+        : null;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -576,11 +854,23 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildCategoryFilterChip('All', 'All (${allTechniques.length})', Icons.auto_awesome_mosaic_rounded),
+              _buildCategoryFilterChip(
+                'All',
+                'All (${allTechniques.length})',
+                Icons.auto_awesome_mosaic_rounded,
+              ),
               const SizedBox(width: 8),
-              _buildCategoryFilterChip('Chromatography', 'Chromatography (3)', Icons.biotech_rounded),
+              _buildCategoryFilterChip(
+                'Chromatography',
+                'Chromatography (3)',
+                Icons.biotech_rounded,
+              ),
               const SizedBox(width: 8),
-              _buildCategoryFilterChip('Spectroscopy', 'Spectroscopy (5)', Icons.waves_rounded),
+              _buildCategoryFilterChip(
+                'Spectroscopy',
+                'Spectroscopy (5)',
+                Icons.waves_rounded,
+              ),
             ],
           ),
         ),
@@ -595,53 +885,77 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
               final t = filteredTechniques[index];
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(t.instrumentIcon, style: const TextStyle(fontSize: 14)),
-                      const SizedBox(width: 6),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            t.acronym,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: isSel ? Colors.white : AppColors.textSecondary,
-                              fontSize: 12,
+                child: SpringPress(
+                  child: ChoiceChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          t.instrumentIcon,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(width: 6),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              t.acronym,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: isSel
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                          Text(
-                            t.category == 'Chromatography' ? 'Chromatogram' : 'Spectrogram',
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              color: isSel ? Colors.white70 : AppColors.textMuted,
-                              fontWeight: FontWeight.w600,
+                            Text(
+                              t.category == 'Chromatography'
+                                  ? 'Chromatogram'
+                                  : 'Spectrogram',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                color: isSel
+                                    ? Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
+                    selected: isSel,
+                    selectedColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHigh,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
+                    side: BorderSide(
+                      color: isSel
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.white12,
+                      width: 1.2,
+                    ),
+                    onSelected: (val) {
+                      if (val) {
+                        AppHaptics.selection();
+                        setState(() {
+                          _selectedTechniqueIndex = index;
+                          _selectedPeak = null;
+                        });
+                      }
+                    },
                   ),
-                  selected: isSel,
-                  selectedColor: AppColors.brandPrimary,
-                  backgroundColor: const Color(0xFF0F172A),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  side: BorderSide(
-                    color: isSel ? AppColors.brandBright : Colors.white12,
-                    width: 1.2,
-                  ),
-                  onSelected: (val) {
-                    if (val) {
-                      AppHaptics.selection();
-                      setState(() {
-                        _selectedTechniqueIndex = index;
-                        _selectedPeak = null;
-                      });
-                    }
-                  },
                 ),
               );
             }),
@@ -657,18 +971,29 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.18),
+                (currentTech.category == 'Chromatography'
+                        ? AppColors.adaptive(context, AppColors.accentCyan)
+                        : Theme.of(context).colorScheme.primary)
+                    .withValues(alpha: 0.18),
                 const Color(0xFF0F172A),
               ],
             ),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.55),
+              color:
+                  (currentTech.category == 'Chromatography'
+                          ? AppColors.adaptive(context, AppColors.accentCyan)
+                          : Theme.of(context).colorScheme.primary)
+                      .withValues(alpha: 0.55),
               width: 1.4,
             ),
             boxShadow: [
               BoxShadow(
-                color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.1),
+                color:
+                    (currentTech.category == 'Chromatography'
+                            ? AppColors.adaptive(context, AppColors.accentCyan)
+                            : Theme.of(context).colorScheme.primary)
+                        .withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -686,7 +1011,14 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                       color: Colors.black38,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.4),
+                        color:
+                            (currentTech.category == 'Chromatography'
+                                    ? AppColors.adaptive(
+                                        context,
+                                        AppColors.accentCyan,
+                                      )
+                                    : Theme.of(context).colorScheme.primary)
+                                .withValues(alpha: 0.4),
                       ),
                     ),
                     child: Text(
@@ -702,12 +1034,33 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 2.5,
+                              ),
                               decoration: BoxDecoration(
-                                color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.25),
+                                color:
+                                    (currentTech.category == 'Chromatography'
+                                            ? AppColors.adaptive(
+                                                context,
+                                                AppColors.accentCyan,
+                                              )
+                                            : Theme.of(context)
+                                                  .colorScheme
+                                                  .primary)
+                                        .withValues(alpha: 0.25),
                                 borderRadius: BorderRadius.circular(5),
                                 border: Border.all(
-                                  color: (currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright).withValues(alpha: 0.6),
+                                  color:
+                                      (currentTech.category == 'Chromatography'
+                                              ? AppColors.adaptive(
+                                                  context,
+                                                  AppColors.accentCyan,
+                                                )
+                                              : Theme.of(context)
+                                                    .colorScheme
+                                                    .primary)
+                                          .withValues(alpha: 0.6),
                                   width: 0.8,
                                 ),
                               ),
@@ -716,7 +1069,13 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                                 style: TextStyle(
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.w900,
-                                  color: currentTech.category == 'Chromatography' ? AppColors.accentCyan : AppColors.brandBright,
+                                  color:
+                                      currentTech.category == 'Chromatography'
+                                      ? AppColors.adaptive(
+                                          context,
+                                          AppColors.accentCyan,
+                                        )
+                                      : Theme.of(context).colorScheme.primary,
                                   letterSpacing: 0.8,
                                 ),
                               ),
@@ -725,7 +1084,13 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                             Expanded(
                               child: Text(
                                 currentTech.domainDescription,
-                                style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -734,8 +1099,8 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                         const SizedBox(height: 4),
                         Text(
                           currentTech.fullInstrumentTitle,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 15.5,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.2,
@@ -748,7 +1113,10 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
               ),
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF090E17),
                   borderRadius: BorderRadius.circular(8),
@@ -756,13 +1124,17 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.settings_input_component_rounded, size: 14, color: AppColors.accentGold),
+                    Icon(
+                      Icons.settings_input_component_rounded,
+                      size: 14,
+                      color: AppColors.adaptive(context, AppColors.accentGold),
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         currentTech.instrumentParameters,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -779,34 +1151,66 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
         // Principle Header Card
         GlowCard(
           padding: const EdgeInsets.all(16),
-          borderColor: AppColors.accentCyan.withValues(alpha: 0.4),
+          borderColor: AppColors.adaptive(
+            context,
+            AppColors.accentCyan,
+          ).withValues(alpha: 0.4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Fundamental Working Principle',
-                      style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w800,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentCyan.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.3)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
                     ),
-                    child: const Text('Theory', style: TextStyle(color: AppColors.accentCyan, fontSize: 10, fontWeight: FontWeight.w700)),
+                    decoration: BoxDecoration(
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.accentCyan,
+                      ).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      'Theory',
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               ChemistryMarkdownView(
                 text: currentTech.fundamentalPrinciple,
-                textStyle: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.45),
+                textStyle: TextStyle(
+                  fontSize: 12.5,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  height: 1.45,
+                ),
               ),
             ],
           ),
@@ -819,7 +1223,9 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
             decoration: BoxDecoration(
               color: const Color(0xFF070D18),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.borderSubtle),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -835,27 +1241,57 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                           children: [
                             Text(
                               currentEx.title,
-                              style: const TextStyle(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w800),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                             Text(
                               currentEx.compound,
-                              style: const TextStyle(color: AppColors.accentCyan, fontSize: 11.5, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: AppColors.adaptive(
+                                  context,
+                                  AppColors.accentCyan,
+                                ),
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0F172A),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(color: Colors.white12),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(Icons.touch_app_rounded, size: 12, color: AppColors.accentCyan),
+                            Icon(
+                              Icons.touch_app_rounded,
+                              size: 12,
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.accentCyan,
+                              ),
+                            ),
                             SizedBox(width: 4),
-                            Text('Tap Peak to Inspect', style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700)),
+                            Text(
+                              'Tap Peak to Inspect',
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -866,7 +1302,11 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     currentEx.description,
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 11, height: 1.35),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 11,
+                      height: 1.35,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -892,40 +1332,73 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                     runSpacing: 6,
                     children: currentEx.peaks.map((p) {
                       final isSelected = _selectedPeak == p;
-                      return InkWell(
-                        onTap: () {
-                          AppHaptics.selection();
-                          setState(() => _selectedPeak = isSelected ? null : p);
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.accentCyan.withValues(alpha: 0.25) : const Color(0xFF0F172A),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: isSelected ? AppColors.accentCyan : Colors.white12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.accentCyan : AppColors.brandBright,
-                                  shape: BoxShape.circle,
-                                ),
+                      return SpringPress(
+                        child: InkWell(
+                          onTap: () {
+                            AppHaptics.selection();
+                            setState(
+                              () => _selectedPeak = isSelected ? null : p,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.adaptive(
+                                      context,
+                                      AppColors.accentCyan,
+                                    ).withValues(alpha: 0.25)
+                                  : const Color(0xFF0F172A),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.adaptive(
+                                        context,
+                                        AppColors.accentCyan,
+                                      )
+                                    : Colors.white12,
                               ),
-                              const SizedBox(width: 5),
-                              Text(
-                                p.label,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                  color: isSelected ? AppColors.accentCyan : Colors.white70,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppColors.adaptive(
+                                            context,
+                                            AppColors.accentCyan,
+                                          )
+                                        : Theme.of(context).colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 5),
+                                Text(
+                                  p.label,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w800
+                                        : FontWeight.w600,
+                                    color: isSelected
+                                        ? AppColors.adaptive(
+                                            context,
+                                            AppColors.accentCyan,
+                                          )
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -941,7 +1414,12 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                     decoration: BoxDecoration(
                       color: const Color(0xFF0F172A),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ).withValues(alpha: 0.5),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -951,18 +1429,35 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                           children: [
                             Text(
                               _selectedPeak!.label,
-                              style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.accentCyan, fontSize: 13),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.adaptive(
+                                  context,
+                                  AppColors.accentCyan,
+                                ),
+                                fontSize: 13,
+                              ),
                             ),
                             Text(
                               _selectedPeak!.compoundOrFragment,
-                              style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 11),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 4),
                         ChemistryMarkdownView(
                           text: _selectedPeak!.explanation,
-                          textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35),
+                          textStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 11.5,
+                            height: 1.35,
+                          ),
                         ),
                       ],
                     ),
@@ -981,26 +1476,77 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
             Expanded(
               child: GlowCard(
                 padding: const EdgeInsets.all(14),
-                borderColor: AppColors.accentCyan.withValues(alpha: 0.4),
+                borderColor: AppColors.adaptive(
+                  context,
+                  AppColors.accentCyan,
+                ).withValues(alpha: 0.4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.swap_horiz_rounded, color: AppColors.accentCyan, size: 18),
+                        Icon(
+                          Icons.swap_horiz_rounded,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                          size: 18,
+                        ),
                         SizedBox(width: 6),
-                        Text('X-Axis Meaning', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.accentCyan, fontSize: 13)),
+                        Text(
+                          'X-Axis Meaning',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentCyan,
+                            ),
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(currentTech.xAxisName, style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 13)),
-                    Text(currentTech.xAxisUnit, style: const TextStyle(color: AppColors.accentGold, fontSize: 11, fontWeight: FontWeight.w700)),
+                    Text(
+                      currentTech.xAxisName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      currentTech.xAxisUnit,
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text('Direction: ${currentTech.xAxisDirection}', style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontStyle: FontStyle.italic)),
-                    const Divider(color: AppColors.borderSubtle, height: 14),
+                    Text(
+                      'Direction: ${currentTech.xAxisDirection}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 10.5,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    Divider(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      height: 14,
+                    ),
                     ChemistryMarkdownView(
                       text: currentTech.xAxisPhysicalMeaning,
-                      textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35),
+                      textStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11.5,
+                        height: 1.35,
+                      ),
                     ),
                   ],
                 ),
@@ -1010,26 +1556,69 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
             Expanded(
               child: GlowCard(
                 padding: const EdgeInsets.all(14),
-                borderColor: AppColors.brandBright.withValues(alpha: 0.4),
+                borderColor: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.swap_vert_rounded, color: AppColors.brandBright, size: 18),
+                        Icon(
+                          Icons.swap_vert_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 18,
+                        ),
                         SizedBox(width: 6),
-                        Text('Y-Axis Meaning', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.brandBright, fontSize: 13)),
+                        Text(
+                          'Y-Axis Meaning',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(currentTech.yAxisName, style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 13)),
-                    Text(currentTech.yAxisUnit, style: const TextStyle(color: AppColors.accentGold, fontSize: 11, fontWeight: FontWeight.w700)),
+                    Text(
+                      currentTech.yAxisName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      currentTech.yAxisUnit,
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text('Direction: ${currentTech.yAxisDirection}', style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontStyle: FontStyle.italic)),
-                    const Divider(color: AppColors.borderSubtle, height: 14),
+                    Text(
+                      'Direction: ${currentTech.yAxisDirection}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 10.5,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    Divider(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      height: 14,
+                    ),
                     ChemistryMarkdownView(
                       text: currentTech.yAxisPhysicalMeaning,
-                      textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35),
+                      textStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11.5,
+                        height: 1.35,
+                      ),
                     ),
                   ],
                 ),
@@ -1045,11 +1634,22 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.checklist_rounded, color: AppColors.statusSuccess, size: 20),
+                  Icon(
+                    Icons.checklist_rounded,
+                    color: AppColors.adaptive(context, AppColors.statusSuccess),
+                    size: 20,
+                  ),
                   SizedBox(width: 8),
-                  Text('How to Read & Interpret this Instrument', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14.5)),
+                  Text(
+                    'How to Read & Interpret this Instrument',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 14.5,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -1059,15 +1659,28 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.only(top: 2),
-                        child: Icon(Icons.arrow_right_rounded, color: AppColors.accentCyan, size: 18),
+                        child: Icon(
+                          Icons.arrow_right_rounded,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                          size: 18,
+                        ),
                       ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: ChemistryMarkdownView(
                           text: item,
-                          textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.4),
+                          textStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 12.5,
+                            height: 1.4,
+                          ),
                         ),
                       ),
                     ],
@@ -1088,21 +1701,56 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.functions_rounded, color: AppColors.accentGold, size: 20),
+                      Icon(
+                        Icons.functions_rounded,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ),
+                        size: 20,
+                      ),
                       SizedBox(width: 8),
-                      Text('Core Mathematical Equations & Rules', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14.5)),
+                      Text(
+                        'Core Mathematical Equations & Rules',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 14.5,
+                        ),
+                      ),
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGold.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
                     ),
-                    child: const Text('KaTeX LaTeX', style: TextStyle(color: AppColors.accentGold, fontSize: 10, fontWeight: FontWeight.w700)),
+                    decoration: BoxDecoration(
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.accentGold,
+                      ).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      'KaTeX LaTeX',
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1114,11 +1762,20 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F172A),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.25)),
+                    border: Border.all(
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.accentGold,
+                      ).withValues(alpha: 0.25),
+                    ),
                   ),
                   child: ChemistryMarkdownView(
                     text: formula,
-                    textStyle: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4),
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
                   ),
                 );
               }),
@@ -1129,53 +1786,81 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen> w
     );
   }
 
-  Widget _buildCategoryFilterChip(String categoryKey, String label, IconData icon) {
+  Widget _buildCategoryFilterChip(
+    String categoryKey,
+    String label,
+    IconData icon,
+  ) {
     final isSelected = _selectedTechniqueCategory == categoryKey;
-    return InkWell(
-      onTap: () {
-        AppHaptics.selection();
-        setState(() {
-          _selectedTechniqueCategory = categoryKey;
-          _selectedTechniqueIndex = 0;
-          _selectedPeak = null;
-        });
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.brandPrimary : const Color(0xFF0F172A),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? AppColors.brandBright : Colors.white12,
-            width: 1.2,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: isSelected ? Colors.white : AppColors.textMuted),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : AppColors.textSecondary,
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              ),
+    return SpringPress(
+      child: InkWell(
+        onTap: () {
+          AppHaptics.selection();
+          setState(() {
+            _selectedTechniqueCategory = categoryKey;
+            _selectedTechniqueIndex = 0;
+            _selectedPeak = null;
+          });
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : const Color(0xFF0F172A),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.white12,
+              width: 1.2,
             ),
-          ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 14,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
+
+  Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
     final hasIssues = report.hasViolations || report.warningCount > 0;
     final borderColor = report.hasViolations
-        ? AppColors.statusDanger.withValues(alpha: 0.6)
+        ? AppColors.adaptive(
+            context,
+            AppColors.statusDanger,
+          ).withValues(alpha: 0.6)
         : (report.warningCount > 0
-            ? AppColors.accentGold.withValues(alpha: 0.6)
-            : AppColors.statusSuccess.withValues(alpha: 0.5));
+              ? AppColors.adaptive(
+                  context,
+                  AppColors.accentGold,
+                ).withValues(alpha: 0.6)
+              : AppColors.adaptive(
+                  context,
+                  AppColors.statusSuccess,
+                ).withValues(alpha: 0.5));
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -1188,178 +1873,296 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
             color: Colors.transparent,
             child: ExpansionTile(
               initiallyExpanded: hasIssues,
-              tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: (report.hasViolations
-                    ? AppColors.statusDanger
-                    : (report.warningCount > 0 ? AppColors.accentGold : AppColors.statusSuccess)).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 6,
               ),
-              child: Icon(
-                report.hasViolations
-                    ? Icons.gpp_bad_rounded
-                    : (report.warningCount > 0 ? Icons.gpp_maybe_rounded : Icons.gpp_good_rounded),
-                color: report.hasViolations
-                    ? AppColors.statusDanger
-                    : (report.warningCount > 0 ? AppColors.accentGold : AppColors.statusSuccess),
-                size: 22,
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color:
+                      (report.hasViolations
+                              ? AppColors.adaptive(
+                                  context,
+                                  AppColors.statusDanger,
+                                )
+                              : (report.warningCount > 0
+                                    ? AppColors.adaptive(
+                                        context,
+                                        AppColors.accentGold,
+                                      )
+                                    : AppColors.adaptive(
+                                        context,
+                                        AppColors.statusSuccess,
+                                      )))
+                          .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  report.hasViolations
+                      ? Icons.gpp_bad_rounded
+                      : (report.warningCount > 0
+                            ? Icons.gpp_maybe_rounded
+                            : Icons.gpp_good_rounded),
+                  color: report.hasViolations
+                      ? AppColors.adaptive(context, AppColors.statusDanger)
+                      : (report.warningCount > 0
+                            ? AppColors.adaptive(context, AppColors.accentGold)
+                            : AppColors.adaptive(
+                                context,
+                                AppColors.statusSuccess,
+                              )),
+                  size: 22,
+                ),
               ),
-            ),
-            title: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Spectral Sanity Checks',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Spectral Sanity Checks',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  if (report.violationCount > 0)
+                    Container(
+                      margin: const EdgeInsets.only(left: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.statusDanger,
+                        ).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.statusDanger,
+                          ).withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        '${report.violationCount} Violations',
+                        style: TextStyle(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.statusDanger,
+                          ),
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  if (report.warningCount > 0)
+                    Container(
+                      margin: const EdgeInsets.only(left: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentGold,
+                          ).withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        '${report.warningCount} Warnings',
+                        style: TextStyle(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentGold,
+                          ),
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  Container(
+                    margin: const EdgeInsets.only(left: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.statusSuccess,
+                      ).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${report.passedCount} Passed',
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.statusSuccess,
+                        ),
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  hasIssues
+                      ? 'Cross-spectral inconsistencies or valence violations detected'
+                      : 'All rule-based chemical valence and spectroscopic checks verified',
+                  style: TextStyle(
+                    color: hasIssues
+                        ? AppColors.adaptive(context, AppColors.accentGold)
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (report.violationCount > 0)
-                  Container(
-                    margin: const EdgeInsets.only(left: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.statusDanger.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.statusDanger.withValues(alpha: 0.5)),
-                    ),
-                    child: Text(
-                      '${report.violationCount} Violations',
-                      style: const TextStyle(color: AppColors.statusDanger, fontSize: 10.5, fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                if (report.warningCount > 0)
-                  Container(
-                    margin: const EdgeInsets.only(left: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGold.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.5)),
-                    ),
-                    child: Text(
-                      '${report.warningCount} Warnings',
-                      style: const TextStyle(color: AppColors.accentGold, fontSize: 10.5, fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                Container(
-                  margin: const EdgeInsets.only(left: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.statusSuccess.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    '${report.passedCount} Passed',
-                    style: const TextStyle(color: AppColors.statusSuccess, fontSize: 10.5, fontWeight: FontWeight.w800),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                  child: Column(
+                    children: report.items.map((item) {
+                      final itemColor = item.passed
+                          ? AppColors.adaptive(context, AppColors.statusSuccess)
+                          : (item.severity == SanitySeverity.violation
+                                ? AppColors.adaptive(
+                                    context,
+                                    AppColors.statusDanger,
+                                  )
+                                : AppColors.adaptive(
+                                    context,
+                                    AppColors.accentGold,
+                                  ));
+                      final itemIcon = item.passed
+                          ? Icons.check_circle_outline_rounded
+                          : (item.severity == SanitySeverity.violation
+                                ? Icons.error_outline_rounded
+                                : Icons.warning_amber_rounded);
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: itemColor.withValues(
+                              alpha: item.passed ? 0.2 : 0.5,
+                            ),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(itemIcon, color: itemColor, size: 16),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    item.title,
+                                    style: TextStyle(
+                                      color: AppColors.readableText(
+                                        context,
+                                        itemColor,
+                                      ),
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHigh,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    item.category,
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              item.message,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 12,
+                                height: 1.35,
+                              ),
+                            ),
+                            if (!item.passed) ...[
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: itemColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.lightbulb_outline,
+                                      color: itemColor,
+                                      size: 14,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        'Recommendation: ${item.recommendation}',
+                                        style: TextStyle(
+                                          color: AppColors.readableText(
+                                            context,
+                                            itemColor,
+                                          ),
+                                          fontSize: 11.5,
+                                          height: 1.3,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ],
             ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                hasIssues
-                    ? 'Cross-spectral inconsistencies or valence violations detected'
-                    : 'All rule-based chemical valence and spectroscopic checks verified',
-                style: TextStyle(
-                  color: hasIssues ? AppColors.accentGold : AppColors.textSecondary,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                child: Column(
-                  children: report.items.map((item) {
-                    final itemColor = item.passed
-                        ? AppColors.statusSuccess
-                        : (item.severity == SanitySeverity.violation
-                            ? AppColors.statusDanger
-                            : AppColors.accentGold);
-                    final itemIcon = item.passed
-                        ? Icons.check_circle_outline_rounded
-                        : (item.severity == SanitySeverity.violation
-                            ? Icons.error_outline_rounded
-                            : Icons.warning_amber_rounded);
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.bg0,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: itemColor.withValues(alpha: item.passed ? 0.2 : 0.5)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(itemIcon, color: itemColor, size: 16),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  item.title,
-                                  style: TextStyle(
-                                    color: itemColor,
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                                decoration: BoxDecoration(
-                                  color: AppColors.bg2,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  item.category,
-                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            item.message,
-                            style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.35),
-                          ),
-                          if (!item.passed) ...[
-                            const SizedBox(height: 6),
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: itemColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(Icons.lightbulb_outline, color: itemColor, size: 14),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      'Recommendation: ${item.recommendation}',
-                                      style: TextStyle(color: itemColor, fontSize: 11.5, height: 1.3, fontStyle: FontStyle.italic),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-          ),
           ),
         ),
       ),
@@ -1377,56 +2180,89 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
             color: Colors.transparent,
             child: ExpansionTile(
               initiallyExpanded: step.stepNumber == 1 || step.stepNumber == 7,
-              tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.brandPrimary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 4,
               ),
-              child: Icon(step.icon, color: AppColors.brandBright, size: 20),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.accentCyan.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'Step ${step.stepNumber}',
-                    style: const TextStyle(color: AppColors.accentCyan, fontSize: 10.5, fontWeight: FontWeight.w800),
-                  ),
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    step.title,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+                child: Icon(
+                  step.icon,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.accentCyan,
+                      ).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Step ${step.stepNumber}',
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      step.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.5,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  step.summary,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: ChemistryMarkdownView(
+                    text: step.content,
+                    textStyle: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.45,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
               ],
             ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                step.summary,
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, fontWeight: FontWeight.w600),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: ChemistryMarkdownView(
-                  text: step.content,
-                  textStyle: const TextStyle(fontSize: 12.5, height: 1.45, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
           ),
         ),
       ),
@@ -1437,81 +2273,162 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
+        Text(
           '¹H NMR Chemical Shift Diagnostic Table (δ ppm)',
-          style: TextStyle(color: AppColors.brandBright, fontSize: 14, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 10),
-        ...SpectroscopyService.protonNmrRegions.map((region) => Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: AppCard(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      region.range,
-                      style: const TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.w800, fontSize: 14),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.brandPrimary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
+        ...SpectroscopyService.protonNmrRegions.map(
+          (region) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: AppCard(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        region.range,
+                        style: TextStyle(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
                       ),
-                      child: const Text('¹H NMR', style: TextStyle(color: AppColors.brandBright, fontSize: 10, fontWeight: FontWeight.w700)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '¹H NMR',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    region.type,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(region.type, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-                const SizedBox(height: 4),
-                Text(region.description, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35)),
-              ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    region.description,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        )),
+        ),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           '¹³C NMR Chemical Shift Diagnostic Table (δ ppm)',
-          style: TextStyle(color: AppColors.brandBright, fontSize: 14, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 10),
-        ...SpectroscopyService.carbonNmrRegions.map((region) => Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: AppCard(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      region.range,
-                      style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w800, fontSize: 14),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentGold.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
+        ...SpectroscopyService.carbonNmrRegions.map(
+          (region) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: AppCard(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        region.range,
+                        style: TextStyle(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentGold,
+                          ),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
                       ),
-                      child: const Text('¹³C NMR', style: TextStyle(color: AppColors.accentGold, fontSize: 10, fontWeight: FontWeight.w700)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentGold,
+                          ).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '¹³C NMR',
+                          style: TextStyle(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentGold,
+                            ),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    region.type,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(region.type, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-                const SizedBox(height: 4),
-                Text(region.description, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35)),
-              ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    region.description,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        )),
+        ),
       ],
     );
   }
@@ -1520,39 +2437,70 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
+        Text(
           'FT-IR Diagnostic Absorption Bands (cm⁻¹)',
-          style: TextStyle(color: AppColors.brandBright, fontSize: 14, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 10),
-        ...SpectroscopyService.irCharacteristicBands.map((band) => Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: AppCard(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      band.range,
-                      style: const TextStyle(color: AppColors.statusSuccess, fontWeight: FontWeight.w800, fontSize: 14),
+        ...SpectroscopyService.irCharacteristicBands.map(
+          (band) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: AppCard(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        band.range,
+                        style: TextStyle(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.statusSuccess,
+                          ),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        band.intensity,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    band.group,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
                     ),
-                    Text(
-                      band.intensity,
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    band.description,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                      height: 1.35,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(band.group, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-                const SizedBox(height: 4),
-                Text(band.description, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35)),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
-        )),
+        ),
       ],
     );
   }
@@ -1561,46 +2509,76 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
+        Text(
           'Mass Spectrometry Halogen Signatures & Rearrangements',
-          style: TextStyle(color: AppColors.brandBright, fontSize: 14, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 10),
-        ...SpectroscopyService.massSpecPatterns.map((pat) => Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: AppCard(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        pat.name,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13.5),
+        ...SpectroscopyService.massSpecPatterns.map(
+          (pat) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: AppCard(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          pat.name,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                          ),
+                        ),
                       ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.statusDanger,
+                          ).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          pat.ratio,
+                          style: TextStyle(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.statusDanger,
+                            ),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    pat.description,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                      height: 1.35,
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
-                      decoration: BoxDecoration(
-                        color: AppColors.statusDanger.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        pat.ratio,
-                        style: const TextStyle(color: AppColors.statusDanger, fontSize: 11, fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(pat.description, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35)),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
-        )),
+        ),
       ],
     );
   }
@@ -1626,33 +2604,45 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
               final isSelected = _selectedInorganicCategory == idx;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  avatar: Icon(
-                    cat['icon'] as IconData,
-                    size: 14,
-                    color: isSelected ? Colors.white : AppColors.textMuted,
-                  ),
-                  label: Text(
-                    cat['title'] as String,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color: isSelected ? Colors.white : AppColors.textMuted,
+                child: SpringPress(
+                  child: ChoiceChip(
+                    avatar: Icon(
+                      cat['icon'] as IconData,
+                      size: 14,
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
+                    label: Text(
+                      cat['title'] as String,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    selected: isSelected,
+                    selectedColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHigh,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    onSelected: (val) {
+                      if (val) {
+                        AppHaptics.selection();
+                        setState(() {
+                          _selectedInorganicCategory = idx;
+                        });
+                        _runInorganicCalculation();
+                      }
+                    },
                   ),
-                  selected: isSelected,
-                  selectedColor: AppColors.brandPrimary,
-                  backgroundColor: const Color(0xFF1E293B),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  onSelected: (val) {
-                    if (val) {
-                      AppHaptics.selection();
-                      setState(() {
-                        _selectedInorganicCategory = idx;
-                      });
-                      _runInorganicCalculation();
-                    }
-                  },
                 ),
               );
             }),
@@ -1660,16 +2650,23 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
         ),
         const SizedBox(height: 14),
         if (_selectedInorganicCategory == 5) ...[
-          const Text(
+          Text(
             'Curated 10-Mark Postgraduate Exam Solutions',
-            style: TextStyle(color: AppColors.brandBright, fontSize: 14, fontWeight: FontWeight.w800),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 10),
-          ...InorganicSpectroscopyService.curated10MarkProblems.map((prob) => _build10MarkProblemCard(prob)),
+          ...InorganicSpectroscopyService.curated10MarkProblems.map(
+            (prob) => _build10MarkProblemCard(prob),
+          ),
         ] else ...[
           GlowCard(
             padding: const EdgeInsets.all(16),
-            borderColor: AppColors.brandBright.withValues(alpha: 0.4),
+            borderColor: Theme.of(context).colorScheme.primary
+                .withValues(alpha: 0.4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1678,15 +2675,35 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
                   children: [
                     Text(
                       categories[_selectedInorganicCategory]['title'] as String,
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.accentCyan.withValues(alpha: 0.15),
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text('10-Mark Calculator', style: TextStyle(color: AppColors.accentCyan, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                      child: Text(
+                        '10-Mark Calculator',
+                        style: TextStyle(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -1695,16 +2712,27 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
                 const SizedBox(height: 14),
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.brandPrimary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: SpringPress(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer,
+                        foregroundColor: Theme.of(context)
+                            .colorScheme
+                            .onPrimaryContainer,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _runInorganicCalculation,
+                      icon: const Icon(Icons.calculate_outlined, size: 18),
+                      label: const Text(
+                        'Derive 10-Mark University Model Answer',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
                     ),
-                    onPressed: _runInorganicCalculation,
-                    icon: const Icon(Icons.calculate_outlined, size: 18),
-                    label: const Text('Derive 10-Mark University Model Answer', style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -1716,7 +2744,11 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
               padding: const EdgeInsets.all(16),
               child: ChemistryMarkdownView(
                 text: _currentInorganicDerivation!,
-                textStyle: const TextStyle(fontSize: 13, height: 1.5, color: Colors.white),
+                textStyle: TextStyle(
+                  fontSize: 13,
+                  height: 1.5,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
         ],
@@ -1747,30 +2779,40 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
             const SizedBox(height: 8),
             Row(
               children: [
-                ActionChip(
-                  label: const Text('[Ni(H₂O)₆]²⁺', style: TextStyle(fontSize: 11)),
-                  onPressed: () {
-                    setState(() {
-                      _nu1Ctrl.text = '8500';
-                      _nu2Ctrl.text = '13800';
-                      _nu3Ctrl.text = '25300';
-                      _b0Ctrl.text = '1030';
-                    });
-                    _runInorganicCalculation();
-                  },
+                SpringPress(
+                  child: ActionChip(
+                    label: const Text(
+                      '[Ni(H₂O)₆]²⁺',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _nu1Ctrl.text = '8500';
+                        _nu2Ctrl.text = '13800';
+                        _nu3Ctrl.text = '25300';
+                        _b0Ctrl.text = '1030';
+                      });
+                      _runInorganicCalculation();
+                    },
+                  ),
                 ),
                 const SizedBox(width: 8),
-                ActionChip(
-                  label: const Text('[Cr(H₂O)₆]³⁺', style: TextStyle(fontSize: 11)),
-                  onPressed: () {
-                    setState(() {
-                      _nu1Ctrl.text = '17400';
-                      _nu2Ctrl.text = '24600';
-                      _nu3Ctrl.text = '37800';
-                      _b0Ctrl.text = '918';
-                    });
-                    _runInorganicCalculation();
-                  },
+                SpringPress(
+                  child: ActionChip(
+                    label: const Text(
+                      '[Cr(H₂O)₆]³⁺',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _nu1Ctrl.text = '17400';
+                        _nu2Ctrl.text = '24600';
+                        _nu3Ctrl.text = '37800';
+                        _b0Ctrl.text = '918';
+                      });
+                      _runInorganicCalculation();
+                    },
+                  ),
                 ),
               ],
             ),
@@ -1786,20 +2828,47 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('d-Electrons Count', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                      Text(
+                        'd-Electrons Count',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       DropdownButtonFormField<int>(
                         initialValue: _magDElectrons,
                         dropdownColor: const Color(0xFF1E293B),
-                        items: List.generate(9, (i) => i + 1).map((d) => DropdownMenuItem(value: d, child: Text('d$d', style: const TextStyle(color: Colors.white)))).toList(),
+                        items: List.generate(9, (i) => i + 1)
+                            .map(
+                              (d) => DropdownMenuItem(
+                                value: d,
+                                child: Text(
+                                  'd$d',
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
                         onChanged: (val) {
-                          if (val != null) setState(() => _magDElectrons = val);
+                          if (val != null) {
+                            setState(() => _magDElectrons = val);
+                          }
                         },
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: const Color(0xFF0F172A),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                     ],
@@ -1810,23 +2879,52 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Spin State', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                      Text(
+                        'Spin State',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       DropdownButtonFormField<bool>(
                         initialValue: _magIsHighSpin,
                         dropdownColor: const Color(0xFF1E293B),
-                        items: const [
-                          DropdownMenuItem(value: true, child: Text('High Spin', style: TextStyle(color: Colors.white))),
-                          DropdownMenuItem(value: false, child: Text('Low Spin', style: TextStyle(color: Colors.white))),
+                        items: [
+                          DropdownMenuItem(
+                            value: true,
+                            child: Text(
+                              'High Spin',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: false,
+                            child: Text(
+                              'Low Spin',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
                         ],
                         onChanged: (val) {
-                          if (val != null) setState(() => _magIsHighSpin = val);
+                          if (val != null) {
+                            setState(() => _magIsHighSpin = val);
+                          }
                         },
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: const Color(0xFF0F172A),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                     ],
@@ -1837,7 +2935,9 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _buildInput('λ constant (cm⁻¹)', _magLambdaCtrl)),
+                Expanded(
+                  child: _buildInput('λ constant (cm⁻¹)', _magLambdaCtrl),
+                ),
                 const SizedBox(width: 8),
                 Expanded(child: _buildInput('10Dq (cm⁻¹)', _mag10DqCtrl)),
               ],
@@ -1851,7 +2951,9 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
               children: [
                 Expanded(child: _buildInput('Frequency ν (GHz)', _eprFreqCtrl)),
                 const SizedBox(width: 8),
-                Expanded(child: _buildInput('Magnetic Field B (Gauss)', _eprFieldCtrl)),
+                Expanded(
+                  child: _buildInput('Magnetic Field B (Gauss)', _eprFieldCtrl),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -1861,26 +2963,79 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Metal Spin (2×I)', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                      Text(
+                        'Metal Spin (2×I)',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       DropdownButtonFormField<int>(
                         initialValue: _eprNuclearSpinDouble,
                         dropdownColor: const Color(0xFF1E293B),
-                        items: const [
-                          DropdownMenuItem(value: 1, child: Text('I = 1/2', style: TextStyle(color: Colors.white))),
-                          DropdownMenuItem(value: 2, child: Text('I = 1 (¹⁴N)', style: TextStyle(color: Colors.white))),
-                          DropdownMenuItem(value: 3, child: Text('I = 3/2 (⁶³Cu)', style: TextStyle(color: Colors.white))),
-                          DropdownMenuItem(value: 5, child: Text('I = 5/2 (⁵⁵Mn)', style: TextStyle(color: Colors.white))),
-                          DropdownMenuItem(value: 7, child: Text('I = 7/2 (⁵¹V)', style: TextStyle(color: Colors.white))),
+                        items: [
+                          DropdownMenuItem(
+                            value: 1,
+                            child: Text(
+                              'I = 1/2',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 2,
+                            child: Text(
+                              'I = 1 (¹⁴N)',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 3,
+                            child: Text(
+                              'I = 3/2 (⁶³Cu)',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 5,
+                            child: Text(
+                              'I = 5/2 (⁵⁵Mn)',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 7,
+                            child: Text(
+                              'I = 7/2 (⁵¹V)',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
                         ],
                         onChanged: (val) {
-                          if (val != null) setState(() => _eprNuclearSpinDouble = val);
+                          if (val != null) {
+                            setState(() => _eprNuclearSpinDouble = val);
+                          }
                         },
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: const Color(0xFF0F172A),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                     ],
@@ -1891,24 +3046,61 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Coupled Ligands (¹⁴N)', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                      Text(
+                        'Coupled Ligands (¹⁴N)',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11.5,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       DropdownButtonFormField<int>(
                         initialValue: _eprLigandCount,
                         dropdownColor: const Color(0xFF1E293B),
-                        items: const [
-                          DropdownMenuItem(value: 0, child: Text('0 Ligands', style: TextStyle(color: Colors.white))),
-                          DropdownMenuItem(value: 2, child: Text('2 Ligands', style: TextStyle(color: Colors.white))),
-                          DropdownMenuItem(value: 4, child: Text('4 Ligands', style: TextStyle(color: Colors.white))),
+                        items: [
+                          DropdownMenuItem(
+                            value: 0,
+                            child: Text(
+                              '0 Ligands',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 2,
+                            child: Text(
+                              '2 Ligands',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 4,
+                            child: Text(
+                              '4 Ligands',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
                         ],
                         onChanged: (val) {
-                          if (val != null) setState(() => _eprLigandCount = val);
+                          if (val != null) {
+                            setState(() => _eprLigandCount = val);
+                          }
                         },
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: const Color(0xFF0F172A),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                     ],
@@ -1923,45 +3115,67 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
           children: [
             Row(
               children: [
-                Expanded(child: _buildInput('Isomer Shift δ (mm/s)', _mossIsomerCtrl)),
+                Expanded(
+                  child: _buildInput('Isomer Shift δ (mm/s)', _mossIsomerCtrl),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: _buildInput('Quadrupole Splitting ΔEQ (mm/s)', _mossQuadCtrl)),
+                Expanded(
+                  child: _buildInput(
+                    'Quadrupole Splitting ΔEQ (mm/s)',
+                    _mossQuadCtrl,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                ActionChip(
-                  label: const Text('Fe(II) High-Spin', style: TextStyle(fontSize: 11)),
-                  onPressed: () {
-                    setState(() {
-                      _mossIsomerCtrl.text = '1.25';
-                      _mossQuadCtrl.text = '2.70';
-                    });
-                    _runInorganicCalculation();
-                  },
+                SpringPress(
+                  child: ActionChip(
+                    label: const Text(
+                      'Fe(II) High-Spin',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _mossIsomerCtrl.text = '1.25';
+                        _mossQuadCtrl.text = '2.70';
+                      });
+                      _runInorganicCalculation();
+                    },
+                  ),
                 ),
                 const SizedBox(width: 8),
-                ActionChip(
-                  label: const Text('Fe(III) High-Spin', style: TextStyle(fontSize: 11)),
-                  onPressed: () {
-                    setState(() {
-                      _mossIsomerCtrl.text = '0.70';
-                      _mossQuadCtrl.text = '0.30';
-                    });
-                    _runInorganicCalculation();
-                  },
+                SpringPress(
+                  child: ActionChip(
+                    label: const Text(
+                      'Fe(III) High-Spin',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _mossIsomerCtrl.text = '0.70';
+                        _mossQuadCtrl.text = '0.30';
+                      });
+                      _runInorganicCalculation();
+                    },
+                  ),
                 ),
                 const SizedBox(width: 8),
-                ActionChip(
-                  label: const Text('Nitroprusside', style: TextStyle(fontSize: 11)),
-                  onPressed: () {
-                    setState(() {
-                      _mossIsomerCtrl.text = '-0.16';
-                      _mossQuadCtrl.text = '1.72';
-                    });
-                    _runInorganicCalculation();
-                  },
+                SpringPress(
+                  child: ActionChip(
+                    label: const Text(
+                      'Nitroprusside',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _mossIsomerCtrl.text = '-0.16';
+                        _mossQuadCtrl.text = '1.72';
+                      });
+                      _runInorganicCalculation();
+                    },
+                  ),
                 ),
               ],
             ),
@@ -1971,18 +3185,72 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Metal Carbonyl Geometry / Isomer', style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+            Text(
+              'Metal Carbonyl Geometry / Isomer',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 11.5,
+              ),
+            ),
             const SizedBox(height: 4),
             DropdownButtonFormField<String>(
               initialValue: _carbonylSelectedType,
               dropdownColor: const Color(0xFF1E293B),
-              items: const [
-                DropdownMenuItem(value: 'M(CO)6', child: Text('M(CO)₆ (Octahedral, Oh)', style: TextStyle(color: Colors.white))),
-                DropdownMenuItem(value: 'M(CO)5L', child: Text('M(CO)₅L (C₄ᵥ)', style: TextStyle(color: Colors.white))),
-                DropdownMenuItem(value: 'trans-M(CO)4L2', child: Text('trans-M(CO)₄L₂ (D₄ₕ)', style: TextStyle(color: Colors.white))),
-                DropdownMenuItem(value: 'cis-M(CO)4L2', child: Text('cis-M(CO)₄L₂ (C₂ᵥ)', style: TextStyle(color: Colors.white))),
-                DropdownMenuItem(value: 'fac-M(CO)3L3', child: Text('fac-M(CO)₃L₃ (C₃ᵥ)', style: TextStyle(color: Colors.white))),
-                DropdownMenuItem(value: 'mer-M(CO)3L3', child: Text('mer-M(CO)₃L₃ (C₂ᵥ)', style: TextStyle(color: Colors.white))),
+              items: [
+                DropdownMenuItem(
+                  value: 'M(CO)6',
+                  child: Text(
+                    'M(CO)₆ (Octahedral, Oh)',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'M(CO)5L',
+                  child: Text(
+                    'M(CO)₅L (C₄ᵥ)',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'trans-M(CO)4L2',
+                  child: Text(
+                    'trans-M(CO)₄L₂ (D₄ₕ)',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'cis-M(CO)4L2',
+                  child: Text(
+                    'cis-M(CO)₄L₂ (C₂ᵥ)',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'fac-M(CO)3L3',
+                  child: Text(
+                    'fac-M(CO)₃L₃ (C₃ᵥ)',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'mer-M(CO)3L3',
+                  child: Text(
+                    'mer-M(CO)₃L₃ (C₂ᵥ)',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
               ],
               onChanged: (val) {
                 if (val != null) {
@@ -1993,8 +3261,13 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: const Color(0xFF0F172A),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ],
@@ -2015,111 +3288,211 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
             color: Colors.transparent,
             child: ExpansionTile(
               tilePadding: const EdgeInsets.all(14),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.brandPrimary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.assignment_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
               ),
-              child: const Icon(Icons.assignment_outlined, color: AppColors.brandBright, size: 20),
-            ),
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    prob.title,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: Colors.white),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      prob.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.5,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.accentGold,
+                      ).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '10 Marks',
+                      style: TextStyle(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ),
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '${prob.universityExam} • ${prob.topic}',
+                  style: TextStyle(
+                    color: AppColors.adaptive(context, AppColors.accentCyan),
+                    fontSize: 11,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.accentGold.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Examination Problem Statement:',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            ChemistryMarkdownView(
+                              text: prob.problemStatement,
+                              textStyle: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 12.5,
+                                height: 1.4,
+                              ),
+                              selectable: false,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Official Marking Rubric Breakdown:',
+                        style: TextStyle(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentGold,
+                          ),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      ...prob.rubricMarkDistribution.entries.map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '• ${e.key}',
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                  fontSize: 11.5,
+                                ),
+                              ),
+                              Text(
+                                '${e.value} Marks',
+                                style: TextStyle(
+                                  color: AppColors.adaptive(
+                                    context,
+                                    AppColors.accentGold,
+                                  ),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Divider(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        height: 18,
+                      ),
+                      ChemistryMarkdownView(
+                        text: prob.fullKaTeXSolution,
+                        textStyle: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.45,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.statusSuccess,
+                          ).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.statusSuccess,
+                            ).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.statusSuccess,
+                              ),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Key Examination Takeaway: ${prob.takeawayPoints}',
+                                style: TextStyle(
+                                  color: AppColors.adaptive(
+                                    context,
+                                    AppColors.statusSuccess,
+                                  ),
+                                  fontSize: 11.5,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  child: const Text('10 Marks', style: TextStyle(color: AppColors.accentGold, fontSize: 10.5, fontWeight: FontWeight.w800)),
                 ),
               ],
             ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                '${prob.universityExam} • ${prob.topic}',
-                style: const TextStyle(color: AppColors.accentCyan, fontSize: 11),
-              ),
-            ),
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0F172A),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.borderSubtle),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Examination Problem Statement:', style: TextStyle(color: AppColors.brandBright, fontWeight: FontWeight.w700, fontSize: 11.5)),
-                          const SizedBox(height: 4),
-                          ChemistryMarkdownView(
-                            text: prob.problemStatement,
-                            textStyle: const TextStyle(color: Colors.white, fontSize: 12.5, height: 1.4),
-                            selectable: false,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text('Official Marking Rubric Breakdown:', style: TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w700, fontSize: 12)),
-                    const SizedBox(height: 6),
-                    ...prob.rubricMarkDistribution.entries.map((e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('• ${e.key}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5)),
-                          Text('${e.value} Marks', style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w700, fontSize: 11.5)),
-                        ],
-                      ),
-                    )),
-                    const Divider(color: AppColors.borderSubtle, height: 18),
-                    ChemistryMarkdownView(
-                      text: prob.fullKaTeXSolution,
-                      textStyle: const TextStyle(fontSize: 12.5, height: 1.45, color: Colors.white),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.statusSuccess.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.statusSuccess.withValues(alpha: 0.3)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.check_circle_outline, color: AppColors.statusSuccess, size: 16),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Key Examination Takeaway: ${prob.takeawayPoints}',
-                              style: const TextStyle(color: AppColors.statusSuccess, fontSize: 11.5, height: 1.35),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
           ),
         ),
       ),
@@ -2129,20 +3502,41 @@ Widget _buildSanityChecksCard(SpectroscopySanityReport report) {
   Widget _buildInput(String hint, TextEditingController controller) {
     return TextField(
       controller: controller,
-      style: const TextStyle(color: Colors.white, fontSize: 13.5),
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
+        fontSize: 13.5,
+      ),
       decoration: InputDecoration(
         labelText: hint,
-        labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+        labelStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontSize: 12,
+        ),
         filled: true,
-        fillColor: AppColors.bg2,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.borderSubtle)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.borderSubtle)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.brandBright)),
+        fillColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+        ),
       ),
     );
   }
-
 }
 
 // ----------------------------------------------------
@@ -2162,7 +3556,8 @@ class _ZoomableSpectrogramChart extends StatefulWidget {
   });
 
   @override
-  State<_ZoomableSpectrogramChart> createState() => _ZoomableSpectrogramChartState();
+  State<_ZoomableSpectrogramChart> createState() =>
+      _ZoomableSpectrogramChartState();
 }
 
 class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
@@ -2188,7 +3583,8 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
   @override
   void didUpdateWidget(covariant _ZoomableSpectrogramChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.example != widget.example || oldWidget.technique != widget.technique) {
+    if (oldWidget.example != widget.example ||
+        oldWidget.technique != widget.technique) {
       _resetZoom();
     }
   }
@@ -2234,13 +3630,16 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
 
     final plotWidth = size.width - leftPad - rightPad;
     final plotHeight = size.height - topPad - bottomPad;
-    if (plotWidth <= 0 || plotHeight <= 0) return;
+    if (plotWidth <= 0 || plotHeight <= 0) {
+      return;
+    }
 
     final xMin = widget.example.xMin;
     final xMax = widget.example.xMax;
     final yMin = widget.example.yMin;
     final yMax = widget.example.yMax;
-    final isInvertedX = widget.technique.xAxisDirection.contains('Decreasing') ||
+    final isInvertedX =
+        widget.technique.xAxisDirection.contains('Decreasing') ||
         widget.technique.xAxisDirection.contains('Inverted');
 
     double mapX(double x) {
@@ -2262,7 +3661,9 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
     for (final peak in widget.example.peaks) {
       final px = mapX(peak.x);
       final py = mapY(peak.y);
-      final dist = math.sqrt(math.pow(px - localPos.dx, 2) + math.pow(py - localPos.dy, 2));
+      final dist = math.sqrt(
+        math.pow(px - localPos.dx, 2) + math.pow(py - localPos.dy, 2),
+      );
       if (dist < minDistance) {
         minDistance = dist;
         closest = peak;
@@ -2289,21 +3690,33 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
           decoration: const BoxDecoration(
             color: Color(0xFF0F172A),
             borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-            border: Border(
-              bottom: BorderSide(color: Colors.white10),
-            ),
+            border: Border(bottom: BorderSide(color: Colors.white10)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.zoom_in_rounded, size: 16, color: AppColors.accentCyan),
+                  Icon(
+                    Icons.zoom_in_rounded,
+                    size: 16,
+                    color: AppColors.adaptive(context, AppColors.accentCyan),
+                  ),
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: (_currentScale > 1.05 ? AppColors.accentGold : AppColors.brandBright).withValues(alpha: 0.2),
+                      color:
+                          (_currentScale > 1.05
+                                  ? AppColors.adaptive(
+                                      context,
+                                      AppColors.accentGold,
+                                    )
+                                  : Theme.of(context).colorScheme.primary)
+                              .withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -2311,14 +3724,20 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
-                        color: _currentScale > 1.05 ? AppColors.accentGold : AppColors.brandBright,
+                        color: _currentScale > 1.05
+                            ? AppColors.adaptive(context, AppColors.accentGold)
+                            : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Pinch & Pan',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -2326,51 +3745,90 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_currentScale > 1.05)
-                    InkWell(
-                      onTap: _resetZoom,
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        margin: const EdgeInsets.only(right: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.bg2,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.white24),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.restart_alt_rounded, size: 12, color: Colors.white70),
-                            SizedBox(width: 3),
-                            Text('Reset', style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w700)),
-                          ],
+                    SpringPress(
+                      child: InkWell(
+                        onTap: _resetZoom,
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          margin: const EdgeInsets.only(right: 6),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.white24),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.restart_alt_rounded,
+                                size: 12,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                              SizedBox(width: 3),
+                              Text(
+                                'Reset',
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface,
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  InkWell(
-                    onTap: _zoomOut,
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: AppColors.bg2,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.white12),
+                  SpringPress(
+                    child: InkWell(
+                      onTap: _zoomOut,
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.white12),
+                        ),
+                        child: Icon(
+                          Icons.remove_rounded,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      child: const Icon(Icons.remove_rounded, size: 16, color: Colors.white70),
                     ),
                   ),
                   const SizedBox(width: 4),
-                  InkWell(
-                    onTap: _zoomIn,
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: AppColors.brandPrimary,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.5)),
+                  SpringPress(
+                    child: InkWell(
+                      onTap: _zoomIn,
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary
+                                .withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.add_rounded,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                      child: const Icon(Icons.add_rounded, size: 16, color: Colors.white),
                     ),
                   ),
                 ],
@@ -2381,7 +3839,9 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
 
         // Zoomable Canvas Viewport
         ClipRRect(
-          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(12),
+          ),
           child: Container(
             color: const Color(0xFF070D18),
             height: 240,
@@ -2397,7 +3857,8 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
                   scaleEnabled: true,
                   clipBehavior: Clip.hardEdge,
                   child: GestureDetector(
-                    onTapUp: (details) => _handleTap(details.localPosition, chartSize),
+                    onTapUp: (details) =>
+                        _handleTap(details.localPosition, chartSize),
                     child: SizedBox(
                       width: constraints.maxWidth,
                       height: 240,
@@ -2451,7 +3912,9 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
     final yMax = example.yMax;
 
     // Check if inverted X-axis (e.g. FT-IR 4000 -> 400 cm^-1 or NMR 12 -> 0 ppm)
-    final isInvertedX = technique.xAxisDirection.contains('Decreasing') || technique.xAxisDirection.contains('Inverted');
+    final isInvertedX =
+        technique.xAxisDirection.contains('Decreasing') ||
+        technique.xAxisDirection.contains('Inverted');
 
     double mapX(double x) {
       final norm = (x - xMin) / (xMax - xMin);
@@ -2473,9 +3936,17 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
 
     for (int i = 0; i <= 5; i++) {
       final gy = topPad + i * (plotHeight / 5);
-      canvas.drawLine(Offset(leftPad, gy), Offset(leftPad + plotWidth, gy), gridPaint);
+      canvas.drawLine(
+        Offset(leftPad, gy),
+        Offset(leftPad + plotWidth, gy),
+        gridPaint,
+      );
       final gx = leftPad + i * (plotWidth / 5);
-      canvas.drawLine(Offset(gx, topPad), Offset(gx, topPad + plotHeight), gridPaint);
+      canvas.drawLine(
+        Offset(gx, topPad),
+        Offset(gx, topPad + plotHeight),
+        gridPaint,
+      );
     }
 
     // Axes lines
@@ -2484,24 +3955,46 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
       ..strokeWidth = 1.5;
 
     // X axis line
-    canvas.drawLine(Offset(leftPad, topPad + plotHeight), Offset(leftPad + plotWidth, topPad + plotHeight), axisPaint);
+    canvas.drawLine(
+      Offset(leftPad, topPad + plotHeight),
+      Offset(leftPad + plotWidth, topPad + plotHeight),
+      axisPaint,
+    );
     // Y axis line
-    canvas.drawLine(Offset(leftPad, topPad), Offset(leftPad, topPad + plotHeight), axisPaint);
+    canvas.drawLine(
+      Offset(leftPad, topPad),
+      Offset(leftPad, topPad + plotHeight),
+      axisPaint,
+    );
 
     // Axis labels
     final xLabelPainter = TextPainter(
       text: TextSpan(
         text: example.xAxisLabel,
-        style: const TextStyle(color: AppColors.accentCyan, fontSize: 10.5, fontWeight: FontWeight.w700),
+        style: const TextStyle(
+          color: AppColors.accentCyan,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    xLabelPainter.paint(canvas, Offset(leftPad + plotWidth / 2 - xLabelPainter.width / 2, size.height - 18));
+    xLabelPainter.paint(
+      canvas,
+      Offset(
+        leftPad + plotWidth / 2 - xLabelPainter.width / 2,
+        size.height - 18,
+      ),
+    );
 
     final yLabelPainter = TextPainter(
       text: TextSpan(
         text: example.yAxisLabel,
-        style: const TextStyle(color: AppColors.brandBright, fontSize: 9.5, fontWeight: FontWeight.w700),
+        style: const TextStyle(
+          color: AppColors.brandBright,
+          fontSize: 9.5,
+          fontWeight: FontWeight.w700,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
@@ -2532,7 +4025,11 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
         }
 
         canvas.drawLine(Offset(px, mapY(0)), Offset(px, py), stickPaint);
-        canvas.drawCircle(Offset(px, py), isSel ? 5.0 : 3.5, Paint()..color = isSel ? AppColors.accentCyan : AppColors.brandBright);
+        canvas.drawCircle(
+          Offset(px, py),
+          isSel ? 5.0 : 3.5,
+          Paint()..color = isSel ? AppColors.accentCyan : AppColors.brandBright,
+        );
       }
     } else {
       // Continuous curve
@@ -2568,7 +4065,8 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
       final isSel = selectedPeak == peak;
 
       // Glow marker
-      final markerPaint = Paint()..color = isSel ? AppColors.accentGold : AppColors.brandBright;
+      final markerPaint = Paint()
+        ..color = isSel ? AppColors.accentGold : AppColors.brandBright;
       canvas.drawCircle(Offset(px, py), isSel ? 6.0 : 4.0, markerPaint);
 
       // Marker badge text
@@ -2586,12 +4084,23 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
       )..layout();
 
       final badgeY = py - pLabel.height - 4;
-      pLabel.paint(canvas, Offset((px - pLabel.width / 2).clamp(leftPad, leftPad + plotWidth - pLabel.width), badgeY));
+      pLabel.paint(
+        canvas,
+        Offset(
+          (px - pLabel.width / 2).clamp(
+            leftPad,
+            leftPad + plotWidth - pLabel.width,
+          ),
+          badgeY,
+        ),
+      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant _InteractiveSpectrogramChartPainter oldDelegate) {
+  bool shouldRepaint(
+    covariant _InteractiveSpectrogramChartPainter oldDelegate,
+  ) {
     return oldDelegate.example != example ||
         oldDelegate.technique != technique ||
         oldDelegate.selectedPeak != selectedPeak;

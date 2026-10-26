@@ -71,8 +71,8 @@ class _BenzeneLoadingIndicatorState extends State<BenzeneLoadingIndicator>
 
   @override
   Widget build(BuildContext context) {
-    final primary = widget.primaryColor ?? AppColors.purpleBright;
-    final accent = widget.accentColor ?? AppColors.brandBright;
+    final primary = widget.primaryColor ?? Theme.of(context).colorScheme.primary;
+    final accent = widget.accentColor ?? Theme.of(context).colorScheme.primary;
 
     final benzeneWidget = AnimatedBuilder(
       animation: Listenable.merge([_bondController, _resonanceController, _pulseController]),
@@ -104,8 +104,8 @@ class _BenzeneLoadingIndicatorState extends State<BenzeneLoadingIndicator>
           Text(
             widget.customMessage!,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
+            style:  TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w700,
               fontSize: 13.5,
               letterSpacing: -0.2,
@@ -313,12 +313,12 @@ class BenzeneThinkingBubble extends StatelessWidget {
             bottomLeft: Radius.circular(4),
           ),
           border: Border.all(
-            color: AppColors.purple.withValues(alpha: 0.45),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.45),
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.purple.withValues(alpha: 0.18),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.18),
               blurRadius: 12,
               offset: const Offset(0, 3),
             ),

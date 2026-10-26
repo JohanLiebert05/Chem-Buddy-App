@@ -557,15 +557,15 @@ class ChemicalNameDatabase {
   /// Searches the polymer/biomolecule database for exact or word-boundary match.
   static PolymerBiomoleculeEntry? lookupPolymer(String query) {
     final normalized = query.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
-    if (normalized.isEmpty) return null;
+    if (normalized.isEmpty) {return null;}
 
     // 1. Exact matches on full polymer name or synonyms
     for (final poly in polymerDatabase) {
       final pNorm = poly.name.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
-      if (pNorm == normalized) return poly;
+      if (pNorm == normalized) {return poly;}
       for (final syn in poly.synonyms) {
         final synNorm = syn.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
-        if (synNorm == normalized) return poly;
+        if (synNorm == normalized) {return poly;}
       }
     }
 
@@ -596,19 +596,19 @@ class ChemicalNameDatabase {
   /// Searches the curated database for exact or prefix match on common name, IUPAC, or synonyms.
   static ChemicalCompound? lookupByName(String query) {
     final normalized = query.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
-    if (normalized.isEmpty) return null;
+    if (normalized.isEmpty) {return null;}
 
     // 1. Exact matches
     for (final comp in curatedDatabase) {
       final cNorm = comp.commonName.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
-      if (cNorm == normalized) return comp;
+      if (cNorm == normalized) {return comp;}
       if (comp.iupacName != null) {
         final iNorm = comp.iupacName!.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
-        if (iNorm == normalized) return comp;
+        if (iNorm == normalized) {return comp;}
       }
       for (final syn in comp.synonyms) {
         final synNorm = syn.toLowerCase().replaceAll(RegExp(r'[\-_,\s]+'), ' ').trim();
-        if (synNorm == normalized) return comp;
+        if (synNorm == normalized) {return comp;}
       }
     }
 
@@ -651,7 +651,7 @@ class ChemicalNameDatabase {
     // Process hydrate segments (e.g. 5H2O)
     for (var i = 1; i < hydrateParts.length; i++) {
       final part = hydrateParts[i];
-      if (part.isEmpty) continue;
+      if (part.isEmpty) {continue;}
       final match = RegExp(r'^(\d+)(.*)$').firstMatch(part);
       final multiplier = match != null ? (int.tryParse(match.group(1)!) ?? 1) : 1;
       final subPart = match != null ? match.group(2)! : part;
@@ -682,8 +682,8 @@ class ChemicalNameDatabase {
         final start = i + 1;
         i++;
         while (i < str.length && depth > 0) {
-          if (str[i] == char) depth++;
-          if (str[i] == closeChar) depth--;
+          if (str[i] == char) {depth++;}
+          if (str[i] == closeChar) {depth--;}
           i++;
         }
         if (depth > 0) {
@@ -753,7 +753,7 @@ class ChemicalNameDatabase {
   /// Computes percentage mass for each element.
   static Map<String, double> calculatePercentages(Map<String, int> elements, double totalMass) {
     final result = <String, double>{};
-    if (totalMass <= 0) return result;
+    if (totalMass <= 0) {return result;}
 
     elements.forEach((elem, count) {
       final mass = (atomicMasses[elem] ?? 0.0) * count;

@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -23,13 +25,21 @@ class TimetableReviewDialog {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => _ReviewSheet(initial: entries, rawText: rawText, replaceAll: replaceAll),
+      builder: (_) => _ReviewSheet(
+        initial: entries,
+        rawText: rawText,
+        replaceAll: replaceAll,
+      ),
     );
   }
 }
 
 class _ReviewSheet extends ConsumerStatefulWidget {
-  const _ReviewSheet({required this.initial, required this.rawText, required this.replaceAll});
+  const _ReviewSheet({
+    required this.initial,
+    required this.rawText,
+    required this.replaceAll,
+  });
 
   final List<TimetableEntry> initial;
   final String rawText;
@@ -65,15 +75,24 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
             Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(4)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
             const SizedBox(height: 14),
-            const Text('Review timetable', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-            const SizedBox(height: 4),
             const Text(
+              'Review timetable',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+            ),
+            const SizedBox(height: 4),
+            Text(
               'Correct any OCR mistakes, then save to your daily routine.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
             ),
             if (widget.rawText.isNotEmpty && widget.rawText.length < 1200) ...[
               const SizedBox(height: 8),
@@ -81,7 +100,10 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
                 widget.rawText,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                ),
               ),
             ],
             const SizedBox(height: 12),
@@ -98,11 +120,25 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
                           Row(
                             children: [
                               Expanded(
-                                child: Text('Class ${i + 1}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                                child: Text(
+                                  'Class ${i + 1}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
-                              IconButton(
-                                onPressed: () => setState(() => _rows.removeAt(i)),
-                                icon: const Icon(Icons.delete_outline, color: AppColors.danger),
+                              SpringPress(
+                                child: IconButton(
+                                  onPressed: () =>
+                                      setState(() => _rows.removeAt(i)),
+                                  icon: Icon(
+                                    Icons.delete_outline,
+                                    color: AppColors.adaptive(
+                                      context,
+                                      AppColors.danger,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -110,10 +146,14 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
                             _rows[i] = _rows[i].copyWith(dayOfWeek: v);
                           }),
                           _timeField(context, 'Start', row.startTime, (v) {
-                            setState(() => _rows[i] = _rows[i].copyWith(startTime: v));
+                            setState(
+                              () => _rows[i] = _rows[i].copyWith(startTime: v),
+                            );
                           }),
                           _timeField(context, 'End', row.endTime, (v) {
-                            setState(() => _rows[i] = _rows[i].copyWith(endTime: v));
+                            setState(
+                              () => _rows[i] = _rows[i].copyWith(endTime: v),
+                            );
                           }),
                           _field('Subject', row.subject, (v) {
                             _rows[i] = _rows[i].copyWith(subject: v);
@@ -140,23 +180,25 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
                 },
               ),
             ),
-            TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  _rows.add(
-                    TimetableEntry(
-                      id: const Uuid().v4(),
-                      dayOfWeek: 'Monday',
-                      startTime: '10:00 AM',
-                      endTime: '11:00 AM',
-                      subjectCode: '',
-                      teacherName: '',
-                    ),
-                  );
-                });
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Add class'),
+            SpringPress(
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _rows.add(
+                      TimetableEntry(
+                        id: const Uuid().v4(),
+                        dayOfWeek: 'Monday',
+                        startTime: '10:00 AM',
+                        endTime: '11:00 AM',
+                        subjectCode: '',
+                        teacherName: '',
+                      ),
+                    );
+                  });
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Add class'),
+              ),
             ),
             PrimaryButton(
               label: 'Save to my timetable',
@@ -172,10 +214,16 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
                     await controller.saveTimetableEntry(row);
                   }
                 }
-                if (!context.mounted) return;
+                if (!context.mounted) {
+                  return;
+                }
                 Navigator.pop(context);
                 messenger.showSnackBar(
-                  SnackBar(content: Text(widget.replaceAll ? 'Timetable saved.' : 'Class saved.')),
+                  SnackBar(
+                    content: Text(
+                      widget.replaceAll ? 'Timetable saved.' : 'Class saved.',
+                    ),
+                  ),
                 );
               },
             ),
@@ -185,38 +233,51 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
     );
   }
 
-  Widget _timeField(BuildContext context, String label, String value, ValueChanged<String> onChanged) {
+  Widget _timeField(
+    BuildContext context,
+    String label,
+    String value,
+    ValueChanged<String> onChanged,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: () async {
-          TimeOfDay? initial;
-          try {
-            final parts = value.split(' ');
-            if (parts.length == 2) {
-              final timeParts = parts[0].split(':');
-              var h = int.parse(timeParts[0]);
-              final m = int.parse(timeParts[1]);
-              if (parts[1].toUpperCase() == 'PM' && h != 12) h += 12;
-              if (parts[1].toUpperCase() == 'AM' && h == 12) h = 0;
-              initial = TimeOfDay(hour: h, minute: m);
+      child: SpringPress(
+        child: InkWell(
+          onTap: () async {
+            TimeOfDay? initial;
+            try {
+              final parts = value.split(' ');
+              if (parts.length == 2) {
+                final timeParts = parts[0].split(':');
+                var h = int.parse(timeParts[0]);
+                final m = int.parse(timeParts[1]);
+                if (parts[1].toUpperCase() == 'PM' && h != 12) {
+                  h += 12;
+                }
+                if (parts[1].toUpperCase() == 'AM' && h == 12) {
+                  h = 0;
+                }
+                initial = TimeOfDay(hour: h, minute: m);
+              }
+            } catch (_) {}
+
+            final selected = await showTimePicker(
+              context: context,
+              initialTime: initial ?? TimeOfDay.now(),
+            );
+            if (selected != null && context.mounted) {
+              final period = selected.period == DayPeriod.am ? 'AM' : 'PM';
+              final hour = selected.hourOfPeriod == 0
+                  ? 12
+                  : selected.hourOfPeriod;
+              final min = selected.minute.toString().padLeft(2, '0');
+              onChanged('$hour:$min $period');
             }
-          } catch (_) {}
-          
-          final selected = await showTimePicker(
-            context: context,
-            initialTime: initial ?? TimeOfDay.now(),
-          );
-          if (selected != null && context.mounted) {
-            final period = selected.period == DayPeriod.am ? 'AM' : 'PM';
-            final hour = selected.hourOfPeriod == 0 ? 12 : selected.hourOfPeriod;
-            final min = selected.minute.toString().padLeft(2, '0');
-            onChanged('$hour:$min $period');
-          }
-        },
-        child: InputDecorator(
-          decoration: InputDecoration(labelText: label, isDense: true),
-          child: Text(value.isEmpty ? 'Select time' : value),
+          },
+          child: InputDecorator(
+            decoration: InputDecoration(labelText: label, isDense: true),
+            child: Text(value.isEmpty ? 'Select time' : value),
+          ),
         ),
       ),
     );

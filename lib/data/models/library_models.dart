@@ -240,7 +240,7 @@ class NotificationPrefs {
       };
 
   factory NotificationPrefs.fromJson(Map<String, dynamic>? json) {
-    if (json == null) return const NotificationPrefs();
+    if (json == null) {return const NotificationPrefs();}
     return NotificationPrefs(
       enabled: json['enabled'] as bool? ?? true,
       classReminders: json['classReminders'] as bool? ?? true,

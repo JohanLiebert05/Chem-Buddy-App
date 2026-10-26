@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../constants/app_identity.dart';
 
 class AppByPrajwal extends StatelessWidget {
   const AppByPrajwal({super.key, this.large = false, this.showVersion = true});
@@ -15,9 +15,9 @@ class AppByPrajwal extends StatelessWidget {
       children: [
         if (showVersion)
           Text(
-            'ChemBuddy v3.5.0',
+            'ChemBuddy ${AppIdentity.version}',
             style: TextStyle(
-              color: AppColors.purpleBright,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w800,
               fontSize: large ? 13 : 11,
               letterSpacing: 0.8,
@@ -28,7 +28,7 @@ class AppByPrajwal extends StatelessWidget {
           'Developed by Prajwal A Kambar',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: AppColors.textMuted,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
             fontSize: large ? 13 : 11.5,
             letterSpacing: 0.4,

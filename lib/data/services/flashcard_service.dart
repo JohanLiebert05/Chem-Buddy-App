@@ -5,6 +5,7 @@ import '../local/local_store.dart';
 import '../models/smart_flashcard.dart';
 import '../remote/supabase_service.dart';
 import 'spaced_repetition_service.dart';
+import 'pending_sync_service.dart';
 
 class DeckSrStats {
   const DeckSrStats({
@@ -76,15 +77,7 @@ class FlashcardService {
     for (final card in cards) {
       await store.put(store.smartCards, card.id, card.toJson());
     }
-    await _tryRemote(() async {
-      await remote.upsert('flashcard_sets', set.toJson());
-      for (final card in cards) {
-        await remote.upsert('flashcards', {
-          ...card.toJson(),
-          'user_id': remote.userId,
-        });
-      }
-    }, kind: 'set', payload: set.toJson());
+    await _saveRemote( kind: 'set', payload: set.toJson());
   }
 
 
@@ -124,30 +117,20 @@ class FlashcardService {
       );
       await store.put(store.smartCards, card.id, card.toJson());
     }
-    await _tryRemote(() async {
-      await remote.upsert('flashcard_sets', set.toJson());
-      for (final card in cardsFor(set.id)) {
-        await remote.upsert('flashcards', {
-          ...card.toJson(),
-          'user_id': remote.userId,
-        });
-      }
-    }, kind: 'set', payload: set.toJson());
+    await _saveRemote( kind: 'set', payload: set.toJson());
     return set;
   }
 
   Future<void> updateCard(SmartFlashcard card) async {
     await store.put(store.smartCards, card.id, card.toJson());
-    await _tryRemote(() async {
-      await remote.upsert('flashcards', {...card.toJson(), 'user_id': remote.userId});
-    }, kind: 'card', payload: card.toJson());
+    await _saveRemote( kind: 'card', payload: card.toJson());
   }
 
   /// Rates a card with Anki / SM-2 spaced repetition calculation.
   Future<SmartFlashcard> applyRating(String cardId, FlashcardRating rating) async {
     final raw = store.all(store.smartCards).map(SmartFlashcard.fromJson);
     final card = raw.firstWhere((c) => c.id == cardId);
-    
+
     final scheduled = scheduler.schedule(card: card, rating: rating);
     await updateCard(scheduled);
     return scheduled;
@@ -199,17 +182,17 @@ class FlashcardService {
 
     // 1. Learning / Lapse cards
     for (final c in getLearningCards(setId)) {
-      if (seen.add(c.id)) queue.add(c);
+      if (seen.add(c.id)) {queue.add(c);}
     }
 
     // 2. Due Review cards
     for (final c in getDueCards(setId, reviewLimit)) {
-      if (seen.add(c.id)) queue.add(c);
+      if (seen.add(c.id)) {queue.add(c);}
     }
 
     // 3. New cards
     for (final c in getNewCards(setId, newLimit)) {
-      if (seen.add(c.id)) queue.add(c);
+      if (seen.add(c.id)) {queue.add(c);}
     }
 
     return queue;
@@ -227,10 +210,10 @@ class FlashcardService {
     var mature = 0;
 
     for (final c in cards) {
-      if (c.isDue) due++;
-      if (c.isLearning) learning++;
-      if (c.isNew) newCount++;
-      if (c.isMature) mature++;
+      if (c.isDue) {due++;}
+      if (c.isLearning) {learning++;}
+      if (c.isNew) {newCount++;}
+      if (c.isMature) {mature++;}
     }
 
     return DeckSrStats(
@@ -250,10 +233,10 @@ class FlashcardService {
     var mature = 0;
 
     for (final c in cards) {
-      if (c.isDue) due++;
-      if (c.isLearning) learning++;
-      if (c.isNew) newCount++;
-      if (c.isMature) mature++;
+      if (c.isDue) {due++;}
+      if (c.isLearning) {learning++;}
+      if (c.isNew) {newCount++;}
+      if (c.isMature) {mature++;}
     }
 
     // Calculate reviews done today from attempts
@@ -284,61 +267,37 @@ class FlashcardService {
 
   Future<void> saveAttempt(FlashcardAttempt attempt) async {
     await store.put(store.flashcardAttempts, attempt.id, attempt.toJson());
-    await _tryRemote(() async {
-      await remote.upsert('flashcard_attempts', attempt.toJson());
-    }, kind: 'attempt', payload: attempt.toJson());
+    await _saveRemote( kind: 'attempt', payload: attempt.toJson());
   }
 
   Future<void> saveSession(StudySession session) async {
     await store.put(store.studySessions, session.id, session.toJson());
-    await _tryRemote(() async {
-      await remote.upsert('study_sessions', session.toJson());
-    }, kind: 'session', payload: session.toJson());
+    await _saveRemote( kind: 'session', payload: session.toJson());
   }
 
   StudySession? latestSession(String setId) {
     final list = store.all(store.studySessions).map(StudySession.fromJson).where((s) => s.flashcardSetId == setId).toList();
-    if (list.isEmpty) return null;
+    if (list.isEmpty) {return null;}
     list.sort((a, b) => b.startedAt.compareTo(a.startedAt));
     return list.first;
   }
 
-  Future<void> syncPending() async {
-    if (!await isOnline || !remote.configured || remote.userId == null) return;
-    final pending = store.all(store.pendingSync);
-    for (final item in pending) {
-      final id = item['id'] as String?;
-      final table = item['table'] as String?;
-      final payload = item['payload'];
-      if (id == null || table == null || payload is! Map) continue;
-      try {
-        await remote.upsert(table, Map<String, dynamic>.from(payload));
-        await store.delete(store.pendingSync, id);
-      } catch (_) {}
-    }
-  }
+  PendingSyncService get _sync => PendingSyncService(store, remote);
 
-  Future<void> _tryRemote(Future<void> Function() action, {required String kind, required Map<String, dynamic> payload}) async {
-    try {
-      if (await isOnline && remote.configured && remote.userId != null) {
-        await action();
-        return;
-      }
-    } catch (_) {}
-    final id = _uuid.v4();
-    await store.put(store.pendingSync, id, {
-      'id': id,
-      'kind': kind,
-      'table': switch (kind) {
+  Future<void> syncPending() => _sync.flush();
+
+  Future<void> _saveRemote( {required String kind, required Map<String, dynamic> payload}) async {
+    final table = switch (kind) {
         'set' => 'flashcard_sets',
         'card' => 'flashcards',
         'attempt' => 'flashcard_attempts',
         _ => 'study_sessions',
-      },
-      'payload': {
-        ...payload,
-        'user_id': remote.userId,
-      },
-    });
+      };
+    await _sync.upsert(table, payload);
+    if (kind == 'set') {
+      for (final card in cardsFor(payload['id'] as String)) {
+        await _sync.upsert('flashcards', card.toJson());
+  }
+}
   }
 }

@@ -72,3 +72,6 @@ build/
 # Local Hive test files
 *.hive
 *.lock
+
+# JavaScript test dependencies
+node_modules/

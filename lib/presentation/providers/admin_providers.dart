@@ -37,7 +37,7 @@ final ragDocumentsProvider = FutureProvider<List<RagDocument>>((ref) async {
 
 final aiUsageTodayProvider = FutureProvider<int>((ref) async {
   final client = SupabaseService.instance.client;
-  if (client == null || !SupabaseService.instance.configured) return 0;
+  if (client == null || !SupabaseService.instance.configured) {return 0;}
   try {
     final today = DateTime.now().toIso8601String().split('T').first;
     final rows = await client.from('ai_usage').select('request_count').eq('date', today);
@@ -50,7 +50,7 @@ final aiUsageTodayProvider = FutureProvider<int>((ref) async {
 
 final aiCacheStatsProvider = FutureProvider<Map<String, int>>((ref) async {
   final client = SupabaseService.instance.client;
-  if (client == null || !SupabaseService.instance.configured) return {};
+  if (client == null || !SupabaseService.instance.configured) {return {};}
   try {
     final rows = await client.from('ai_cache').select('feature, hit_count');
     final stats = <String, int>{};
@@ -66,7 +66,7 @@ final aiCacheStatsProvider = FutureProvider<Map<String, int>>((ref) async {
 
 final appConfigProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final client = SupabaseService.instance.client;
-  if (client == null || !SupabaseService.instance.configured) return [];
+  if (client == null || !SupabaseService.instance.configured) {return [];}
   try {
     final rows = await client.from('app_config').select().order('key');
     return List<Map<String, dynamic>>.from(rows);

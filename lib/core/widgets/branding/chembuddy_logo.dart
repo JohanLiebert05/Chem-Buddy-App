@@ -72,13 +72,13 @@ class _ChemBuddyLogoState extends State<ChemBuddyLogo> with TickerProviderStateM
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.purpleBright.withValues(alpha: 0.25 + (_pulseController.value * 0.15)),
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25 + (_pulseController.value * 0.15)),
                         blurRadius: widget.size * 0.35,
                         spreadRadius: widget.size * 0.05,
                       ),
                     ],
                     border: Border.all(
-                      color: AppColors.purpleBright.withValues(alpha: 0.5),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                       width: widget.size * 0.03,
                     ),
                   )

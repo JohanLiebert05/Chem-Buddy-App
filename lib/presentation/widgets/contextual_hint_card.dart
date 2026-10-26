@@ -1,5 +1,7 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+
 import '../../core/widgets/glow_card.dart';
 
 class ContextualHintCard extends StatefulWidget {
@@ -43,12 +45,15 @@ class _ContextualHintCardState extends State<ContextualHintCard> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_visible) return const SizedBox.shrink();
+    if (!_visible) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlowCard(
-        borderColor: AppColors.purpleBright.withValues(alpha: 0.35),
+        borderColor: Theme.of(context).colorScheme.primary
+            .withValues(alpha: 0.35),
         padding: const EdgeInsets.all(12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,10 +61,15 @@ class _ContextualHintCardState extends State<ContextualHintCard> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColors.purple.withValues(alpha: 0.18),
+                color: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.lightbulb_outline_rounded, color: AppColors.purpleBright, size: 18),
+              child: Icon(
+                Icons.lightbulb_outline_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -68,23 +78,34 @@ class _ContextualHintCardState extends State<ContextualHintCard> {
                 children: [
                   Text(
                     widget.title,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     widget.message,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.3),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                      height: 1.3,
+                    ),
                   ),
-                  if (widget.actionLabel != null && widget.onAction != null) ...[
+                  if (widget.actionLabel != null &&
+                      widget.onAction != null) ...[
                     const SizedBox(height: 6),
-                    GestureDetector(
-                      onTap: widget.onAction,
-                      child: Text(
-                        widget.actionLabel!,
-                        style: const TextStyle(
-                          color: AppColors.purpleBright,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
+                    SpringPress(
+                      child: GestureDetector(
+                        onTap: widget.onAction,
+                        child: Text(
+                          widget.actionLabel!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ),
@@ -92,12 +113,18 @@ class _ContextualHintCardState extends State<ContextualHintCard> {
                 ],
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 16, color: AppColors.textMuted),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              splashRadius: 16,
-              onPressed: _dismiss,
+            SpringPress(
+              child: IconButton(
+                icon: Icon(
+                  Icons.close,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                splashRadius: 16,
+                onPressed: _dismiss,
+              ),
             ),
           ],
         ),

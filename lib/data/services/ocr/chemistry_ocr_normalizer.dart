@@ -38,7 +38,7 @@ class ChemistryOcrNormalizer {
 
   /// Main entrypoint: Cleans and normalizes raw OCR / extracted text.
   static String normalize(String raw) {
-    if (raw.trim().isEmpty) return '';
+    if (raw.trim().isEmpty) {return '';}
 
     var text = raw;
 
@@ -357,7 +357,7 @@ class ChemistryOcrNormalizer {
   /// Specialized normalizer specifically tuned for handwritten chemistry notes.
   /// Handles handwriting quirks, arrow conversions, loose spacing, and structural annotations.
   static String normalizeHandwritten(String raw) {
-    if (raw.trim().isEmpty) return '';
+    if (raw.trim().isEmpty) {return '';}
 
     var text = raw;
 
@@ -391,13 +391,13 @@ class ChemistryOcrNormalizer {
       'YEAR2024', 'YEAR2025', 'YEAR2026', 'MSc', 'BSc', 'PhD',
     };
 
-    if (nonFormulas.contains(token.toUpperCase())) return true;
+    if (nonFormulas.contains(token.toUpperCase())) {return true;}
 
     // Tokens without any digits don't need subscripting
-    if (!RegExp(r'\d').hasMatch(token)) return true;
+    if (!RegExp(r'\d').hasMatch(token)) {return true;}
 
     // Tokens starting with numbers aren't simple formulas
-    if (RegExp(r'^\d').hasMatch(token)) return true;
+    if (RegExp(r'^\d').hasMatch(token)) {return true;}
 
     return false;
   }
@@ -410,7 +410,7 @@ class ChemistryOcrNormalizer {
     final subRegex = RegExp(r'\b[A-Z][a-z]?[₀-₉]+(?:[A-Z][a-z]?[₀-₉]*)*\b');
     for (final m in subRegex.allMatches(text)) {
       final f = m.group(0)!.trim();
-      if (f.length >= 2) formulas.add(f);
+      if (f.length >= 2) {formulas.add(f);}
     }
 
     // Reaction lines containing arrows

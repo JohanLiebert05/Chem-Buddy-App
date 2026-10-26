@@ -1,6 +1,8 @@
+import 'expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import 'liquid_glass.dart';
 import '../utils/haptics.dart';
 
 /// Material 3 Expressive Container Card
@@ -27,37 +29,33 @@ class GlowCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBg = backgroundColor ?? AppColors.surfaceContainerHigh;
-    final effectiveBorder = borderColor ?? AppColors.borderSubtle;
-
-    final cardContent = Container(
-      width: double.infinity,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: effectiveBg,
-        borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: effectiveBorder, width: 0.8),
-      ),
-      child: child,
-    );
-
-    if (onTap == null) {
-      return cardContent;
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          AppHaptics.selection();
-          onTap!();
-        },
-        borderRadius: BorderRadius.circular(borderRadius),
-        splashColor: AppColors.brandPrimary.withValues(alpha: 0.12),
-        highlightColor: AppColors.brandPrimary.withValues(alpha: 0.06),
-        child: cardContent,
+    final cardContent = LiquidGlassContainer(
+      enableBlur: false,
+      borderRadius: borderRadius,
+      backgroundColor: backgroundColor,
+      borderColor: borderColor,
+      shadows: const [],
+      child: Material(
+        color: Colors.transparent,
+        child: SpringPress(
+          child: InkWell(
+            onTap: onTap == null
+                ? null
+                : () {
+                    AppHaptics.selection();
+                    onTap!();
+                  },
+            borderRadius: BorderRadius.circular(borderRadius),
+            child: Padding(
+              padding: padding,
+              child: SizedBox(width: double.infinity, child: child),
+            ),
+          ),
+        ),
       ),
     );
+
+    return cardContent;
   }
 }
 
@@ -81,52 +79,56 @@ class PrimaryButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: 52,
-      child: FilledButton(
-        onPressed: loading || onPressed == null
-            ? null
-            : () {
-                AppHaptics.confirm();
-                onPressed!();
-              },
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.brandPrimary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.surfaceContainerHighest,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+      child: SpringPress(
+        child: FilledButton(
+          onPressed: loading || onPressed == null
+              ? null
+              : () {
+                  AppHaptics.confirm();
+                  onPressed!();
+                },
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            disabledBackgroundColor: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
           ),
-          elevation: 0,
-        ),
-        child: loading
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.2,
-                  color: Colors.white,
-                ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 18),
-                    const SizedBox(width: 8),
-                  ],
-                  Flexible(
-                    child: Text(
-                      label,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        letterSpacing: 0.1,
+          child: loading
+              ? SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, size: 18),
+                      const SizedBox(width: 8),
+                    ],
+                    Flexible(
+                      child: Text(
+                        label,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          letterSpacing: 0.1,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -134,12 +136,7 @@ class PrimaryButton extends StatelessWidget {
 
 /// Cohesive Material 3 Section Header without emoji clutter
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(
-    this.text, {
-    super.key,
-    this.action,
-    this.icon,
-  });
+  const SectionTitle(this.text, {super.key, this.action, this.icon});
 
   final String text;
   final Widget? action;
@@ -152,11 +149,11 @@ class SectionTitle extends StatelessWidget {
 
     final titleWidget = Text(
       cleanText,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 15,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.2,
-        color: AppColors.textPrimary,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
 
@@ -173,13 +170,10 @@ class SectionTitle extends StatelessWidget {
         mainAxisSize: action != null ? MainAxisSize.max : MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 18, color: AppColors.brandBright),
+            Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
           ],
-          if (action != null)
-            Expanded(child: titleWidget)
-          else
-            titleWidget,
+          if (action != null) Expanded(child: titleWidget) else titleWidget,
           ?action,
         ],
       ),
@@ -188,7 +182,13 @@ class SectionTitle extends StatelessWidget {
 
   static String _stripDecorativeEmojis(String s) {
     return s
-        .replaceAll(RegExp(r'[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]', unicode: true), '')
+        .replaceAll(
+          RegExp(
+            r'[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]',
+            unicode: true,
+          ),
+          '',
+        )
         .trim();
   }
 }

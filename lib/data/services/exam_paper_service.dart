@@ -177,7 +177,7 @@ class ExamPaperService {
       final words = cleanP.replaceAll(RegExp(r'[(),.]'), ' ').split(' ').where((w) => w.length > 3 && !stopWords.contains(w) && !questionWords.contains(w)).toList();
       int triggerCount = 0;
       for (final w in words) {
-        if (text.contains(w)) triggerCount++;
+        if (text.contains(w)) {triggerCount++;}
       }
       if (words.isNotEmpty && triggerCount >= 1) {
         pitfallsFound.add(pitfall);
@@ -205,7 +205,7 @@ class ExamPaperService {
       final rWords = r.toLowerCase().split(RegExp(r'\W+')).where((w) => w.length > 3 && !metaWords.contains(w)).toList();
       int matchCount = 0;
       for (final rw in rWords) {
-        if (text.contains(rw)) matchCount++;
+        if (text.contains(rw)) {matchCount++;}
       }
 
       final kwCoverage = question.mandatoryKeywords.isEmpty ? 1.0 : matched.length / question.mandatoryKeywords.length;

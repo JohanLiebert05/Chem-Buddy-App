@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -10,7 +12,11 @@ import '../../data/models/reaction_models.dart';
 
 /// Step-through ChemDraw-style SVG viewer. Zoom/pan stay vector-sharp.
 class MechanismStepViewer extends StatefulWidget {
-  const MechanismStepViewer({super.key, required this.mechanism, this.onSwitchTo3D});
+  const MechanismStepViewer({
+    super.key,
+    required this.mechanism,
+    this.onSwitchTo3D,
+  });
 
   final ReactionMechanism mechanism;
   final VoidCallback? onSwitchTo3D;
@@ -28,8 +34,13 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
   String? _svg;
   String? _loadError;
 
-  List<ReactionStep> get _steps =>
-      widget.mechanism.steps.where((s) => (s.svgAsset != null && s.svgAsset!.isNotEmpty) || (s.svgContent != null && s.svgContent!.isNotEmpty)).toList();
+  List<ReactionStep> get _steps => widget.mechanism.steps
+      .where(
+        (s) =>
+            (s.svgAsset != null && s.svgAsset!.isNotEmpty) ||
+            (s.svgContent != null && s.svgContent!.isNotEmpty),
+      )
+      .toList();
 
   ReactionStep get _current => _steps[_stepIndex];
 
@@ -67,9 +78,13 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
           'id="electron-arrows" display="none"',
         );
       }
-      if (mounted) setState(() => _svg = raw);
+      if (mounted) {
+        setState(() => _svg = raw);
+      }
     } catch (e) {
-      if (mounted) setState(() => _loadError = e.toString());
+      if (mounted) {
+        setState(() => _loadError = e.toString());
+      }
     }
   }
 
@@ -80,7 +95,9 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
   }
 
   void _play() {
-    if (_steps.isEmpty) return;
+    if (_steps.isEmpty) {
+      return;
+    }
     AppHaptics.confirm();
     _playTimer?.cancel();
     setState(() {
@@ -116,20 +133,30 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if (_steps.isEmpty) return const SizedBox.shrink();
+    if (_steps.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           widget.mechanism.name,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         if (widget.mechanism.representativeExample != null) ...[
           const SizedBox(height: 6),
           Text(
             widget.mechanism.representativeExample!,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
           ),
         ],
         const SizedBox(height: 10),
@@ -137,7 +164,10 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.purple.withValues(alpha: 0.35)),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.35),
+            ),
           ),
           clipBehavior: Clip.antiAlias,
           child: AspectRatio(
@@ -153,7 +183,16 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
                         padding: const EdgeInsets.all(24),
                         child: _loadError == null
                             ? const CircularProgressIndicator(strokeWidth: 2)
-                            : Text(_loadError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                            : Text(
+                                _loadError!,
+                                style: TextStyle(
+                                  color: AppColors.readableText(
+                                    context,
+                                    Colors.red,
+                                  ),
+                                  fontSize: 12,
+                                ),
+                              ),
                       ),
                     )
                   : SvgPicture.string(
@@ -167,12 +206,20 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
         const SizedBox(height: 10),
         Text(
           _current.title,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: Colors.white),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 13.5,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           _current.description,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12.5,
+            height: 1.35,
+          ),
         ),
         const SizedBox(height: 12),
         Row(
@@ -186,14 +233,20 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
               child: Text(
                 'Step ${_stepIndex + 1} of ${_steps.length}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white),
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
             _CtrlButton(
               label: 'Next',
               icon: Icons.chevron_right,
               trailing: true,
-              onPressed: _stepIndex >= _steps.length - 1 ? null : () => _goTo(_stepIndex + 1),
+              onPressed: _stepIndex >= _steps.length - 1
+                  ? null
+                  : () => _goTo(_stepIndex + 1),
             ),
           ],
         ),
@@ -202,44 +255,69 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            OutlinedButton.icon(
-              onPressed: _playing ? null : _play,
-              icon: const Icon(Icons.play_arrow, size: 18),
-              label: Text(_playing ? 'Playing…' : 'Play Mechanism'),
+            SpringPress(
+              child: OutlinedButton.icon(
+                onPressed: _playing ? null : _play,
+                icon: const Icon(Icons.play_arrow, size: 18),
+                label: Text(_playing ? 'Playing…' : 'Play Mechanism'),
+              ),
             ),
-            OutlinedButton.icon(
-              onPressed: _replay,
-              icon: const Icon(Icons.replay, size: 18),
-              label: const Text('Replay'),
+            SpringPress(
+              child: OutlinedButton.icon(
+                onPressed: _replay,
+                icon: const Icon(Icons.replay, size: 18),
+                label: const Text('Replay'),
+              ),
             ),
-            OutlinedButton.icon(
-              onPressed: () {
-                setState(() => _showElectronFlow = !_showElectronFlow);
-                _loadSvg();
-              },
-              icon: Icon(_showElectronFlow ? Icons.visibility : Icons.visibility_off, size: 18),
-              label: Text(_showElectronFlow ? 'Hide Electron Flow' : 'Show Electron Flow'),
-            ),
-            OutlinedButton.icon(
-              onPressed: () {
-                AppHaptics.selection();
-                _transform.value = Matrix4.identity();
-              },
-              icon: const Icon(Icons.center_focus_strong, size: 18),
-              label: const Text('Reset view'),
-            ),
-            if (widget.onSwitchTo3D != null)
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.accentCyan,
-                  side: BorderSide(color: AppColors.accentCyan.withValues(alpha: 0.5)),
+            SpringPress(
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  setState(() => _showElectronFlow = !_showElectronFlow);
+                  _loadSvg();
+                },
+                icon: Icon(
+                  _showElectronFlow ? Icons.visibility : Icons.visibility_off,
+                  size: 18,
                 ),
+                label: Text(
+                  _showElectronFlow
+                      ? 'Hide Electron Flow'
+                      : 'Show Electron Flow',
+                ),
+              ),
+            ),
+            SpringPress(
+              child: OutlinedButton.icon(
                 onPressed: () {
                   AppHaptics.selection();
-                  widget.onSwitchTo3D!();
+                  _transform.value = Matrix4.identity();
                 },
-                icon: const Icon(Icons.view_in_ar_rounded, size: 18),
-                label: const Text('Explore in 3D'),
+                icon: const Icon(Icons.center_focus_strong, size: 18),
+                label: const Text('Reset view'),
+              ),
+            ),
+            if (widget.onSwitchTo3D != null)
+              SpringPress(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.adaptive(
+                      context,
+                      AppColors.accentCyan,
+                    ),
+                    side: BorderSide(
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.accentCyan,
+                      ).withValues(alpha: 0.5),
+                    ),
+                  ),
+                  onPressed: () {
+                    AppHaptics.selection();
+                    widget.onSwitchTo3D!();
+                  },
+                  icon: const Icon(Icons.view_in_ar_rounded, size: 18),
+                  label: const Text('Explore in 3D'),
+                ),
               ),
           ],
         ),
@@ -263,11 +341,16 @@ class _CtrlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final child = Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13));
-    return TextButton.icon(
-      onPressed: onPressed,
-      icon: trailing ? child : Icon(icon),
-      label: trailing ? Icon(icon) : child,
+    final child = Text(
+      label,
+      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+    );
+    return SpringPress(
+      child: TextButton.icon(
+        onPressed: onPressed,
+        icon: trailing ? child : Icon(icon),
+        label: trailing ? Icon(icon) : child,
+      ),
     );
   }
 }

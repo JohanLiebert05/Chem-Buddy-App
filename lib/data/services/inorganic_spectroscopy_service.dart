@@ -142,7 +142,8 @@ class Inorganic10MarkExamProblem {
   final String topic;
   final String universityExam;
   final String problemStatement;
-  final Map<String, int> rubricMarkDistribution; // e.g. {'Term Symbols': 2, 'Racah B': 3, ...}
+  final Map<String, int>
+  rubricMarkDistribution; // e.g. {'Term Symbols': 2, 'Racah B': 3, ...}
   final String fullKaTeXSolution;
   final String takeawayPoints;
 
@@ -192,7 +193,8 @@ class InorganicSpectroscopyService {
 
     final ratio21 = (nu2 / nu1).toStringAsFixed(2);
 
-    final katex = '''
+    final katex =
+        '''
 ### 10-Mark Academic Derivation: Racah Parameters for Octahedral \$d^8\$ ($complexName)
 
 #### Step 1: Identification of Ground and Excited State Terms
@@ -238,7 +240,11 @@ Given free-ion Racah parameter \$B_0(Ni^{2+}) = ${bFree.toStringAsFixed(1)}\\tex
       nephelauxeticPercentage: double.parse(nephelauxetic.toStringAsFixed(2)),
       racahC: double.parse(cVal.toStringAsFixed(1)),
       groundStateTerm: '^3A_{2g}',
-      transitionTerms: ['^3A_{2g} \\to ^3T_{2g}', '^3A_{2g} \\to ^3T_{1g}(F)', '^3A_{2g} \\to ^3T_{1g}(P)'],
+      transitionTerms: [
+        '^3A_{2g} \\to ^3T_{2g}',
+        '^3A_{2g} \\to ^3T_{1g}(F)',
+        '^3A_{2g} \\to ^3T_{1g}(P)',
+      ],
       derivationKaTeX: katex,
     );
   }
@@ -249,7 +255,7 @@ Given free-ion Racah parameter \$B_0(Ni^{2+}) = ${bFree.toStringAsFixed(1)}\\tex
     required String geometry, // 'Oh' or 'Td'
     required bool isHighSpin,
     double? lambda, // Spin-orbit coupling constant in cm^-1
-    double? tenDq,  // 10Dq in cm^-1
+    double? tenDq, // 10Dq in cm^-1
     double? temperatureKelvin,
     double? curieWeissTheta,
     String metalIon = 'Transition Metal Ion',
@@ -263,33 +269,118 @@ Given free-ion Racah parameter \$B_0(Ni^{2+}) = ${bFree.toStringAsFixed(1)}\\tex
     if (geometry == 'Oh') {
       if (isHighSpin) {
         switch (dElectrons) {
-          case 1: unpaired = 1; groundTerm = '^2T_{2g}'; alpha = 0.0; defaultLambda = 154.0; break;
-          case 2: unpaired = 2; groundTerm = '^3T_{1g}'; alpha = 0.0; defaultLambda = 104.0; break;
-          case 3: unpaired = 3; groundTerm = '^4A_{2g}'; alpha = 4.0; defaultLambda = 92.0; break;
-          case 4: unpaired = 4; groundTerm = '^5E_g'; alpha = 2.0; defaultLambda = 88.0; break;
-          case 5: unpaired = 5; groundTerm = '^6A_{1g}'; alpha = 0.0; defaultLambda = 0.0; break;
-          case 6: unpaired = 4; groundTerm = '^5T_{2g}'; alpha = 0.0; defaultLambda = -100.0; break;
-          case 7: unpaired = 3; groundTerm = '^4T_{1g}'; alpha = 0.0; defaultLambda = -180.0; break;
-          case 8: unpaired = 2; groundTerm = '^3A_{2g}'; alpha = 4.0; defaultLambda = -315.0; break;
-          case 9: unpaired = 1; groundTerm = '^2E_g'; alpha = 2.0; defaultLambda = -830.0; break;
+          case 1:
+            unpaired = 1;
+            groundTerm = '^2T_{2g}';
+            alpha = 0.0;
+            defaultLambda = 154.0;
+            break;
+          case 2:
+            unpaired = 2;
+            groundTerm = '^3T_{1g}';
+            alpha = 0.0;
+            defaultLambda = 104.0;
+            break;
+          case 3:
+            unpaired = 3;
+            groundTerm = '^4A_{2g}';
+            alpha = 4.0;
+            defaultLambda = 92.0;
+            break;
+          case 4:
+            unpaired = 4;
+            groundTerm = '^5E_g';
+            alpha = 2.0;
+            defaultLambda = 88.0;
+            break;
+          case 5:
+            unpaired = 5;
+            groundTerm = '^6A_{1g}';
+            alpha = 0.0;
+            defaultLambda = 0.0;
+            break;
+          case 6:
+            unpaired = 4;
+            groundTerm = '^5T_{2g}';
+            alpha = 0.0;
+            defaultLambda = -100.0;
+            break;
+          case 7:
+            unpaired = 3;
+            groundTerm = '^4T_{1g}';
+            alpha = 0.0;
+            defaultLambda = -180.0;
+            break;
+          case 8:
+            unpaired = 2;
+            groundTerm = '^3A_{2g}';
+            alpha = 4.0;
+            defaultLambda = -315.0;
+            break;
+          case 9:
+            unpaired = 1;
+            groundTerm = '^2E_g';
+            alpha = 2.0;
+            defaultLambda = -830.0;
+            break;
         }
       } else {
         // Low-Spin Octahedral
         switch (dElectrons) {
-          case 4: unpaired = 2; groundTerm = '^3T_{1g}'; alpha = 0.0; defaultLambda = 88.0; break;
-          case 5: unpaired = 1; groundTerm = '^2T_{2g}'; alpha = 0.0; defaultLambda = 400.0; break;
-          case 6: unpaired = 0; groundTerm = '^1A_{1g}'; alpha = 0.0; defaultLambda = 0.0; break;
-          case 7: unpaired = 1; groundTerm = '^2E_g'; alpha = 2.0; defaultLambda = -180.0; break;
-          case 8: unpaired = 0; groundTerm = '^1A_{1g}'; alpha = 0.0; defaultLambda = 0.0; break; // Square planar analog
-          default: unpaired = dElectrons <= 3 ? dElectrons : (10 - dElectrons);
+          case 4:
+            unpaired = 2;
+            groundTerm = '^3T_{1g}';
+            alpha = 0.0;
+            defaultLambda = 88.0;
+            break;
+          case 5:
+            unpaired = 1;
+            groundTerm = '^2T_{2g}';
+            alpha = 0.0;
+            defaultLambda = 400.0;
+            break;
+          case 6:
+            unpaired = 0;
+            groundTerm = '^1A_{1g}';
+            alpha = 0.0;
+            defaultLambda = 0.0;
+            break;
+          case 7:
+            unpaired = 1;
+            groundTerm = '^2E_g';
+            alpha = 2.0;
+            defaultLambda = -180.0;
+            break;
+          case 8:
+            unpaired = 0;
+            groundTerm = '^1A_{1g}';
+            alpha = 0.0;
+            defaultLambda = 0.0;
+            break; // Square planar analog
+          default:
+            unpaired = dElectrons <= 3 ? dElectrons : (10 - dElectrons);
         }
       }
     } else {
       // Tetrahedral
-      if (dElectrons == 7) { unpaired = 3; groundTerm = '^4A_2'; alpha = 4.0; defaultLambda = -180.0; }
-      else if (dElectrons == 8) { unpaired = 2; groundTerm = '^3T_1'; alpha = 0.0; defaultLambda = -315.0; }
-      else if (dElectrons == 9) { unpaired = 1; groundTerm = '^2T_2'; alpha = 0.0; defaultLambda = -830.0; }
-      else { unpaired = dElectrons <= 5 ? dElectrons : (10 - dElectrons); }
+      if (dElectrons == 7) {
+        unpaired = 3;
+        groundTerm = '^4A_2';
+        alpha = 4.0;
+        defaultLambda = -180.0;
+      } else if (dElectrons == 8) {
+        unpaired = 2;
+        groundTerm = '^3T_1';
+        alpha = 0.0;
+        defaultLambda = -315.0;
+      } else if (dElectrons == 9) {
+        unpaired = 1;
+        groundTerm = '^2T_2';
+        alpha = 0.0;
+        defaultLambda = -830.0;
+      } else {
+        unpaired = dElectrons <= 5 ? dElectrons : (10 - dElectrons);
+      }
     }
 
     final sVal = unpaired / 2.0;
@@ -314,7 +405,8 @@ Given free-ion Racah parameter \$B_0(Ni^{2+}) = ${bFree.toStringAsFixed(1)}\\tex
       chiM = cCurie / (temp - theta);
     }
 
-    final katex = '''
+    final katex =
+        '''
 ### 10-Mark Academic Derivation: Magnetic Susceptibility & Spin-Orbit Coupling
 
 #### Step 1: Ground State Configuration & Unpaired Electrons
@@ -353,7 +445,9 @@ At \$T = ${temp.toStringAsFixed(1)}\\text{ K}\$ with Curie temperature \$\\theta
       alphaCoefficient: alpha,
       groundTerm: groundTerm,
       spinState: isHighSpin ? 'High Spin' : 'Low Spin',
-      susceptibilityChiM: chiM != null ? double.parse(chiM.toStringAsExponential(3)) : null,
+      susceptibilityChiM: chiM != null
+          ? double.parse(chiM.toStringAsExponential(3))
+          : null,
       derivationKaTeX: katex,
     );
   }
@@ -379,7 +473,9 @@ At \$T = ${temp.toStringAsFixed(1)}\\text{ K}\$ with Curie temperature \$\\theta
     }
 
     int ligandLines = 1;
-    if (superHyperfineSpinDouble != null && superHyperfineSpinDouble > 0 && numberOfLigands > 0) {
+    if (superHyperfineSpinDouble != null &&
+        superHyperfineSpinDouble > 0 &&
+        numberOfLigands > 0) {
       final iLigand = superHyperfineSpinDouble / 2.0;
       ligandLines = (2 * numberOfLigands * iLigand + 1).round();
     }
@@ -390,7 +486,8 @@ At \$T = ${temp.toStringAsFixed(1)}\\text{ K}\$ with Curie temperature \$\\theta
     // Assume S = 1/2 for classic radical / Cu(II) system
     const isKramers = true;
 
-    final katex = '''
+    final katex =
+        '''
 ### 10-Mark Academic Derivation: EPR / ESR Spectroscopy & \$g\$-Factor Evaluation
 
 #### Step 1: Fundamental EPR Resonance Condition
@@ -427,7 +524,9 @@ Rearranging for the Landé \$g\$-factor:
       magneticFieldGauss: magneticFieldGauss,
       gFactor: double.parse(gVal.toStringAsFixed(4)),
       totalHyperfineLines: totalLines,
-      intensityRatio: totalLines == 4 ? ['1', '1', '1', '1'] : ['1', '2', '3', '2', '1'],
+      intensityRatio: totalLines == 4
+          ? ['1', '1', '1', '1']
+          : ['1', '2', '3', '2', '1'],
       isKramersDegenerate: isKramers,
       spinSystem: 'S = 1/2',
       interpretation: 'Deviations from g_e (2.0023) arise from spin-orbit mixing of the ground state with excited crystal field states.',
@@ -468,7 +567,8 @@ Rearranging for the Landé \$g\$-factor:
       explanation = 'Very low isomer shift (0.0-0.2 mm/s or negative) due to strong metal-to-ligand π-backbonding into empty π* orbitals (e.g. CN⁻ or NO⁺), which removes d-electron density and unshields 3s electrons, dramatically increasing s-electron density at the nucleus.';
     }
 
-    final katex = '''
+    final katex =
+        '''
 ### 10-Mark Academic Deduction: ⁵⁷Fe Mössbauer Spectral Diagnosis
 
 #### Step 1: Physical Principles of Isomer Shift (\$\\delta\$)
@@ -583,7 +683,8 @@ $explanation
         analysis = 'Standard octahedral metal hexacarbonyl.';
     }
 
-    final katex = '''
+    final katex =
+        '''
 ### 10-Mark Academic Derivation: Group Theory & Carbonyl IR Selection Rules ($complexType)
 
 #### Step 1: Determination of Point Group Symmetry
@@ -709,7 +810,8 @@ $$\mu_{\text{eff}} = \mu_{\text{s.o.}} \left(1 - \frac{4\lambda}{10Dq}\right)$$
     ),
     Inorganic10MarkExamProblem(
       id: 'inorg-10m-03',
-      title: 'EPR Spectrum of [Cu(salen)] with ⁶³Cu and ¹⁴N Hyperfine Couplings',
+      title:
+          'EPR Spectrum of [Cu(salen)] with ⁶³Cu and ¹⁴N Hyperfine Couplings',
       topic: 'EPR / ESR Spectroscopy',
       universityExam: 'Karnataka State MSc / CSIR-NET June',
       problemStatement:

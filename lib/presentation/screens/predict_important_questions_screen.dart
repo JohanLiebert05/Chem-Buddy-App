@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,9 +95,11 @@ class _PredictImportantQuestionsScreenState
   Future<void> _startAnalysis() async {
     if (_selectedFiles.length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload at least 3 question papers for accurate pattern prediction.'),
-          backgroundColor: AppColors.warning,
+        SnackBar(
+          content: Text(
+            'Please upload at least 3 question papers for accurate pattern prediction.',
+          ),
+          backgroundColor: AppColors.adaptive(context, AppColors.warning),
         ),
       );
       return;
@@ -103,9 +107,9 @@ class _PredictImportantQuestionsScreenState
 
     if (_subjectController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Please enter the subject name.'),
-          backgroundColor: AppColors.warning,
+          backgroundColor: AppColors.adaptive(context, AppColors.warning),
         ),
       );
       return;
@@ -115,11 +119,15 @@ class _PredictImportantQuestionsScreenState
       _isAnalyzing = true;
       _errorMessage = null;
       _progress = 0.05;
-      _statusText = 'Starting extraction from ${_selectedFiles.length} papers...';
+      _statusText =
+          'Starting extraction from ${_selectedFiles.length} papers...';
     });
 
     try {
-      final paths = _selectedFiles.map((f) => f.path ?? '').where((p) => p.isNotEmpty).toList();
+      final paths = _selectedFiles
+          .map((f) => f.path ?? '')
+          .where((p) => p.isNotEmpty)
+          .toList();
       final names = _selectedFiles.map((f) => f.name).toList();
 
       final prediction = await _service.analyzeAndPredict(
@@ -170,23 +178,28 @@ class _PredictImportantQuestionsScreenState
           ),
           actions: [
             if (_currentPrediction != null)
-              IconButton(
-                icon: const Icon(Icons.refresh, color: AppColors.purpleBright),
-                tooltip: 'Analyze New Papers',
-                onPressed: () {
-                  setState(() {
-                    _currentPrediction = null;
-                    _selectedFiles.clear();
-                  });
-                },
+              SpringPress(
+                child: IconButton(
+                  icon: Icon(
+                    Icons.refresh,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  tooltip: 'Analyze New Papers',
+                  onPressed: () {
+                    setState(() {
+                      _currentPrediction = null;
+                      _selectedFiles.clear();
+                    });
+                  },
+                ),
               ),
           ],
         ),
         body: _isAnalyzing
             ? _buildAnalyzingState()
             : _currentPrediction != null
-                ? _buildResultsView(_currentPrediction!)
-                : _buildUploadView(),
+            ? _buildResultsView(_currentPrediction!)
+            : _buildUploadView(),
       ),
     );
   }
@@ -198,7 +211,10 @@ class _PredictImportantQuestionsScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const BenzeneMoleculeLoader(size: 80, color: AppColors.purpleBright),
+            BenzeneMoleculeLoader(
+              size: 80,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(height: 24),
             ClaudeThinkingIndicator(
               thoughts: _statusText.isNotEmpty
@@ -213,14 +229,21 @@ class _PredictImportantQuestionsScreenState
               child: LinearProgressIndicator(
                 value: _progress > 0 ? _progress : null,
                 minHeight: 6,
-                backgroundColor: AppColors.bg2,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.purpleBright),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHigh,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Analyzing past year question papers to uncover high-frequency trends, core reaction mechanisms, and mark weightage.',
-              style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -244,28 +267,51 @@ class _PredictImportantQuestionsScreenState
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.brandPrimary.withValues(alpha: 0.15),
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.psychology_rounded, color: AppColors.purpleBright, size: 28),
+                    child: Icon(
+                      Icons.psychology_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 28,
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('AI Question Predictor', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                        Text(
+                          'AI Question Predictor',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         SizedBox(height: 2),
-                        Text('Upload ≥ 3 PYQ papers to detect patterns', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text(
+                          'Upload ≥ 3 PYQ papers to detect patterns',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Upload 3 or more previous year question paper PDFs from your university. The system analyzes recurring questions, core concepts, and predicts high-probability exam topics.',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
@@ -277,32 +323,47 @@ class _PredictImportantQuestionsScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Paper Information', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              const Text(
+                'Paper Information',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: _subjectController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Subject Name *',
                   hintText: 'e.g. Advanced Organic Chemistry',
-                  prefixIcon: Icon(Icons.menu_book, color: AppColors.purpleBright, size: 20),
+                  prefixIcon: Icon(
+                    Icons.menu_book,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _universityController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'University Name (Optional)',
                   hintText: 'e.g. University of Mumbai / General',
-                  prefixIcon: Icon(Icons.school, color: AppColors.purpleBright, size: 20),
+                  prefixIcon: Icon(
+                    Icons.school,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _yearRangeController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Papers Year Range (Optional)',
                   hintText: 'e.g. 2021 – 2024',
-                  prefixIcon: Icon(Icons.date_range, color: AppColors.purpleBright, size: 20),
+                  prefixIcon: Icon(
+                    Icons.date_range,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
@@ -318,13 +379,25 @@ class _PredictImportantQuestionsScreenState
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Upload Question Papers (PDF)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Upload Question Papers (PDF)',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: _selectedFiles.length >= 3
-                          ? AppColors.success.withValues(alpha: 0.15)
-                          : AppColors.warning.withValues(alpha: 0.15),
+                          ? AppColors.adaptive(
+                              context,
+                              AppColors.success,
+                            ).withValues(alpha: 0.15)
+                          : AppColors.adaptive(
+                              context,
+                              AppColors.warning,
+                            ).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -332,7 +405,9 @@ class _PredictImportantQuestionsScreenState
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: _selectedFiles.length >= 3 ? AppColors.success : AppColors.warning,
+                        color: _selectedFiles.length >= 3
+                            ? AppColors.adaptive(context, AppColors.success)
+                            : AppColors.adaptive(context, AppColors.warning),
                       ),
                     ),
                   ),
@@ -343,22 +418,41 @@ class _PredictImportantQuestionsScreenState
               if (_selectedFiles.isEmpty)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 24,
+                    horizontal: 16,
+                  ),
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.borderHighlight, style: BorderStyle.solid),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      style: BorderStyle.solid,
+                    ),
                     borderRadius: BorderRadius.circular(12),
-                    color: AppColors.bg0.withValues(alpha: 0.5),
+                    color: Theme.of(context).colorScheme.surface
+                        .withValues(alpha: 0.5),
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.upload_file_rounded, size: 40, color: AppColors.purpleBright),
+                      Icon(
+                        Icons.upload_file_rounded,
+                        size: 40,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       const SizedBox(height: 8),
-                      const Text('Select at least 3 PYQ PDFs to begin', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                      Text(
+                        'Select at least 3 PYQ PDFs to begin',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                       const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: _pickPdfs,
-                        icon: const Icon(Icons.add),
-                        label: const Text('Select PDF Papers'),
+                      SpringPress(
+                        child: ElevatedButton.icon(
+                          onPressed: _pickPdfs,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Select PDF Papers'),
+                        ),
                       ),
                     ],
                   ),
@@ -370,14 +464,26 @@ class _PredictImportantQuestionsScreenState
                     final file = entry.value;
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.bg2,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.picture_as_pdf, color: AppColors.danger, size: 20),
+                          Icon(
+                            Icons.picture_as_pdf,
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.danger,
+                            ),
+                            size: 20,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
@@ -385,20 +491,36 @@ class _PredictImportantQuestionsScreenState
                               children: [
                                 Text(
                                   file.name,
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
                                   '${(file.size / 1024).toStringAsFixed(1)} KB',
-                                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
-                            onPressed: () => _removeFile(index),
+                          SpringPress(
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                size: 18,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                              onPressed: () => _removeFile(index),
+                            ),
                           ),
                         ],
                       ),
@@ -406,10 +528,12 @@ class _PredictImportantQuestionsScreenState
                   }).toList(),
                 ),
                 const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: _pickPdfs,
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add Another Paper'),
+                SpringPress(
+                  child: OutlinedButton.icon(
+                    onPressed: _pickPdfs,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Add Another Paper'),
+                  ),
                 ),
               ],
             ],
@@ -422,16 +546,31 @@ class _PredictImportantQuestionsScreenState
             padding: const EdgeInsets.all(12),
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: AppColors.danger.withValues(alpha: 0.15),
+              color: AppColors.adaptive(
+                context,
+                AppColors.danger,
+              ).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.danger),
+              border: Border.all(
+                color: AppColors.adaptive(context, AppColors.danger),
+              ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.error_outline, color: AppColors.danger, size: 20),
+                Icon(
+                  Icons.error_outline,
+                  color: AppColors.adaptive(context, AppColors.danger),
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(_errorMessage!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+                  child: Text(
+                    _errorMessage!,
+                    style: TextStyle(
+                      color: AppColors.adaptive(context, AppColors.danger),
+                      fontSize: 13,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -441,14 +580,19 @@ class _PredictImportantQuestionsScreenState
         SizedBox(
           width: double.infinity,
           height: 50,
-          child: ElevatedButton.icon(
-            onPressed: _selectedFiles.length >= 3 ? _startAnalysis : null,
-            icon: const Icon(Icons.auto_awesome),
-            label: Text(
-              _selectedFiles.length >= 3
-                  ? 'Analyze & Predict Questions (${_selectedFiles.length} Papers)'
-                  : 'Add ${_selectedFiles.length < 3 ? 3 - _selectedFiles.length : 0} More Paper(s) to Analyze',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          child: SpringPress(
+            child: ElevatedButton.icon(
+              onPressed: _selectedFiles.length >= 3 ? _startAnalysis : null,
+              icon: const Icon(Icons.auto_awesome),
+              label: Text(
+                _selectedFiles.length >= 3
+                    ? 'Analyze & Predict Questions (${_selectedFiles.length} Papers)'
+                    : 'Add ${_selectedFiles.length < 3 ? 3 - _selectedFiles.length : 0} More Paper(s) to Analyze',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ),
@@ -456,50 +600,77 @@ class _PredictImportantQuestionsScreenState
         // Past Predictions Section
         if (pastPredictions.isNotEmpty) ...[
           const SizedBox(height: 32),
-          const Text('Past Predictions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'Past Predictions',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
-          ...pastPredictions.map((pred) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: GlowCard(
-                  onTap: () {
-                    setState(() => _currentPrediction = pred);
-                    AppHaptics.selection();
-                  },
+          ...pastPredictions.map(
+            (pred) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: GlowCard(
+                onTap: () {
+                  setState(() => _currentPrediction = pred);
+                  AppHaptics.selection();
+                },
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.purple.withValues(alpha: 0.15),
+                        color: Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.analytics, color: AppColors.purpleBright, size: 24),
+                      child: Icon(
+                        Icons.analytics,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(pred.subjectName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                          Text(
+                            pred.subjectName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             '${pred.paperCount} papers · ${pred.predictedQuestions.length} predicted questions · ${DateFormat.MMMd().format(pred.createdAt)}',
-                            style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.textMuted),
-                      onPressed: () async {
-                        await _service.deletePrediction(pred.id);
-                        setState(() {});
-                      },
+                    SpringPress(
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.delete_outline,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        onPressed: () async {
+                          await _service.deletePrediction(pred.id);
+                          setState(() {});
+                        },
+                      ),
                     ),
                   ],
                 ),
               ),
-            )),
+            ),
+          ),
         ],
       ],
     );
@@ -507,11 +678,21 @@ class _PredictImportantQuestionsScreenState
 
   Widget _buildResultsView(ImportantQuestionsPrediction pred) {
     final filteredQuestions = pred.predictedQuestions.where((q) {
-      if (_selectedFilter == 'All') return true;
-      if (_selectedFilter == '2 Marks') return q.marks == 2;
-      if (_selectedFilter == '5 Marks') return q.marks == 5;
-      if (_selectedFilter == '10 Marks') return q.marks == 10;
-      if (_selectedFilter == 'Mechanism') return q.questionType == 'mechanism';
+      if (_selectedFilter == 'All') {
+        return true;
+      }
+      if (_selectedFilter == '2 Marks') {
+        return q.marks == 2;
+      }
+      if (_selectedFilter == '5 Marks') {
+        return q.marks == 5;
+      }
+      if (_selectedFilter == '10 Marks') {
+        return q.marks == 10;
+      }
+      if (_selectedFilter == 'Mechanism') {
+        return q.questionType == 'mechanism';
+      }
       return true;
     }).toList();
 
@@ -529,47 +710,86 @@ class _PredictImportantQuestionsScreenState
                   Expanded(
                     child: Text(
                       pred.subjectName,
-                      style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   if (pred.isCached)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.15),
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.success,
+                        ).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text('⚡ Cached Analysis', style: TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        '⚡ Cached Analysis',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.adaptive(context, AppColors.success),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
                 '${pred.universityName} · Based on ${pred.paperCount} Question Papers',
-                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 14),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.bg0,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.borderHighlight),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.lightbulb_outline, color: AppColors.warning, size: 18),
+                        Icon(
+                          Icons.lightbulb_outline,
+                          color: AppColors.adaptive(context, AppColors.warning),
+                          size: 18,
+                        ),
                         SizedBox(width: 6),
-                        Text('Exam Strategy', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.warning)),
+                        Text(
+                          'Exam Strategy',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.warning,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(
                       pred.examStrategy,
-                      style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, height: 1.4),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        height: 1.4,
+                      ),
                     ),
                   ],
                 ),
@@ -581,21 +801,31 @@ class _PredictImportantQuestionsScreenState
 
         // Frequently Asked Topics
         if (pred.frequentlyAskedTopics.isNotEmpty) ...[
-          const Text('Recurring High-Frequency Topics', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Recurring High-Frequency Topics',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: pred.frequentlyAskedTopics.map((t) {
-                Color tagColor = AppColors.blue;
-                if (t.importance == 'very_high') tagColor = AppColors.danger;
-                if (t.importance == 'high') tagColor = AppColors.warning;
+                Color tagColor = AppColors.adaptive(context, AppColors.blue);
+                if (t.importance == 'very_high') {
+                  tagColor = AppColors.adaptive(context, AppColors.danger);
+                }
+                if (t.importance == 'high') {
+                  tagColor = AppColors.adaptive(context, AppColors.warning);
+                }
 
                 return Container(
                   margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.bg1,
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
                     border: Border.all(color: tagColor.withValues(alpha: 0.4)),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -608,18 +838,28 @@ class _PredictImportantQuestionsScreenState
                       ),
                       Text(
                         t.topic,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: tagColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           '${t.appearedCount}x',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: tagColor),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.readableText(context, tagColor),
+                          ),
                         ),
                       ),
                     ],
@@ -645,24 +885,40 @@ class _PredictImportantQuestionsScreenState
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: ['All', '2 Marks', '5 Marks', '10 Marks', 'Mechanism'].map((f) {
-              final isSel = _selectedFilter == f;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(f, style: TextStyle(fontSize: 12, color: isSel ? Colors.white : AppColors.textSecondary)),
-                  selected: isSel,
-                  selectedColor: AppColors.brandPrimary,
-                  backgroundColor: AppColors.bg2,
-                  onSelected: (val) {
-                    if (val) {
-                      AppHaptics.selection();
-                      setState(() => _selectedFilter = f);
-                    }
-                  },
-                ),
-              );
-            }).toList(),
+            children: ['All', '2 Marks', '5 Marks', '10 Marks', 'Mechanism']
+                .map((f) {
+                  final isSel = _selectedFilter == f;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: SpringPress(
+                      child: ChoiceChip(
+                        label: Text(
+                          f,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isSel
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                          ),
+                        ),
+                        selected: isSel,
+                        selectedColor: Theme.of(context).colorScheme.primary,
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHigh,
+                        onSelected: (val) {
+                          if (val) {
+                            AppHaptics.selection();
+                            setState(() => _selectedFilter = f);
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                })
+                .toList(),
           ),
         ),
         const SizedBox(height: 12),
@@ -675,15 +931,17 @@ class _PredictImportantQuestionsScreenState
         }),
 
         const SizedBox(height: 24),
-        OutlinedButton.icon(
-          onPressed: () {
-            setState(() {
-              _currentPrediction = null;
-              _selectedFiles.clear();
-            });
-          },
-          icon: const Icon(Icons.arrow_back),
-          label: const Text('Analyze Different Papers'),
+        SpringPress(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              setState(() {
+                _currentPrediction = null;
+                _selectedFiles.clear();
+              });
+            },
+            icon: const Icon(Icons.arrow_back),
+            label: const Text('Analyze Different Papers'),
+          ),
         ),
       ],
     );
@@ -706,112 +964,179 @@ class _PredictedQuestionCardState extends State<_PredictedQuestionCard> {
   Widget build(BuildContext context) {
     final q = widget.question;
 
-    Color marksColor = AppColors.blue;
-    if (q.marks == 2) marksColor = AppColors.accentCyan;
-    if (q.marks == 5) marksColor = AppColors.warning;
-    if (q.marks >= 10) marksColor = AppColors.danger;
+    Color marksColor = AppColors.adaptive(context, AppColors.blue);
+    if (q.marks == 2) {
+      marksColor = AppColors.adaptive(context, AppColors.accentCyan);
+    }
+    if (q.marks == 5) {
+      marksColor = AppColors.adaptive(context, AppColors.warning);
+    }
+    if (q.marks >= 10) {
+      marksColor = AppColors.adaptive(context, AppColors.danger);
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlowCard(
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: marksColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '${q.marks} MARKS',
-                  style: TextStyle(color: marksColor, fontSize: 11, fontWeight: FontWeight.w800),
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (q.importance == 'very_high')
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.danger.withValues(alpha: 0.15),
+                    color: marksColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text('🔥 HIGH PROBABILITY', style: TextStyle(color: AppColors.danger, fontSize: 10, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    '${q.marks} MARKS',
+                    style: TextStyle(
+                      color: AppColors.readableText(context, marksColor),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
-              const Spacer(),
-              Text(
-                q.topic,
-                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                const SizedBox(width: 8),
+                if (q.importance == 'very_high')
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.danger,
+                      ).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '🔥 HIGH PROBABILITY',
+                      style: TextStyle(
+                        color: AppColors.adaptive(context, AppColors.danger),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                const Spacer(),
+                Text(
+                  q.topic,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ChemistryMarkdownView(
+              text: '**Q${widget.index}.** ${q.question}',
+              textStyle: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                height: 1.35,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            if (q.reason.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              ChemistryMarkdownView(
+                text: '*Trend rationale:* ${q.reason}',
+                textStyle: TextStyle(
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                selectable: false,
               ),
             ],
-          ),
-          const SizedBox(height: 10),
-          ChemistryMarkdownView(
-            text: '**Q${widget.index}.** ${q.question}',
-            textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.35, color: Colors.white),
-          ),
-          if (q.reason.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            ChemistryMarkdownView(
-              text: '*Trend rationale:* ${q.reason}',
-              textStyle: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.textSecondary),
-              selectable: false,
-            ),
-          ],
-          if (q.modelAnswerHints.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            InkWell(
-              onTap: () {
-                AppHaptics.selection();
-                setState(() => _expanded = !_expanded);
-              },
-              child: Row(
-                children: [
-                  Icon(
-                    _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    size: 18,
-                    color: AppColors.purpleBright,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _expanded ? 'Hide Model Answer Hints' : 'View Model Answer Key Points (${q.modelAnswerHints.length})',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.purpleBright),
-                  ),
-                ],
-              ),
-            ),
-            if (_expanded)
-              Container(
-                margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.bg0,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: q.modelAnswerHints.map((hint) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('• ', style: TextStyle(color: AppColors.purpleBright, fontSize: 13)),
-                            Expanded(
-                              child: ChemistryMarkdownView(
-                                text: hint,
-                                textStyle: const TextStyle(fontSize: 12, color: AppColors.textPrimary, height: 1.3),
-                              ),
-                            ),
-                          ],
+            if (q.modelAnswerHints.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              SpringPress(
+                child: InkWell(
+                  onTap: () {
+                    AppHaptics.selection();
+                    setState(() => _expanded = !_expanded);
+                  },
+                  child: Row(
+                    children: [
+                      Icon(
+                        _expanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _expanded
+                            ? 'Hide Model Answer Hints'
+                            : 'View Model Answer Key Points (${q.modelAnswerHints.length})',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                      )).toList(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
+              if (_expanded)
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: q.modelAnswerHints
+                        .map(
+                          (hint) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '• ',
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: ChemistryMarkdownView(
+                                    text: hint,
+                                    textStyle: TextStyle(
+                                      fontSize: 12,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+            ],
           ],
-        ],
+        ),
       ),
-    ));
+    );
   }
 }

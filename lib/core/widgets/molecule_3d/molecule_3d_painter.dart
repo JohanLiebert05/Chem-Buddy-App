@@ -32,7 +32,7 @@ class Molecule3DPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (molecule.atoms.isEmpty) return;
+    if (molecule.atoms.isEmpty) {return;}
 
     final centerX = size.width / 2;
     final centerY = size.height / 2;
@@ -132,7 +132,7 @@ class Molecule3DPainter extends CustomPainter {
     final dx = p2.screenX - p1.screenX;
     final dy = p2.screenY - p1.screenY;
     final dist = math.sqrt(dx * dx + dy * dy);
-    if (dist < 1.0) return;
+    if (dist < 1.0) {return;}
 
     final nx = -dy / dist;
     final ny = dx / dist;

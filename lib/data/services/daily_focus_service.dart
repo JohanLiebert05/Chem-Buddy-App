@@ -11,10 +11,15 @@ class DailyFocusService {
 
   int countDueFlashcards(AppState state) {
     int count = 0;
-    final sessions = store.all(store.studySessions).map((json) => StudySession.fromJson(json)).toList();
+    final sessions = store
+        .all(store.studySessions)
+        .map((json) => StudySession.fromJson(json))
+        .toList();
     for (final setJson in store.all(store.smartSets)) {
       final set = SmartFlashcardSet.fromJson(setJson);
-      final setSessions = sessions.where((s) => s.flashcardSetId == set.id).toList();
+      final setSessions = sessions
+          .where((s) => s.flashcardSetId == set.id)
+          .toList();
       setSessions.sort((a, b) => b.startedAt.compareTo(a.startedAt));
       if (setSessions.isEmpty) {
         count++;
@@ -33,21 +38,28 @@ class DailyFocusService {
     final flashcardsDue = countDueFlashcards(state);
 
     // 1. Check events for tests/assignments within 3 days
-    final upcomingEvents = state.events.where((e) => 
-      !e.completed && 
-      e.dueDate.difference(now).inDays <= 3 && 
-      e.dueDate.isAfter(now.subtract(const Duration(days: 1)))
-    ).toList();
-    
+    final upcomingEvents = state.events
+        .where(
+          (e) =>
+              !e.completed &&
+              e.dueDate.difference(now).inDays <= 3 &&
+              e.dueDate.isAfter(now.subtract(const Duration(days: 1))),
+        )
+        .toList();
+
     if (upcomingEvents.isNotEmpty) {
       upcomingEvents.sort((a, b) => a.dueDate.compareTo(b.dueDate));
       final event = upcomingEvents.first;
-      final subject = state.subjects.cast<Subject?>().firstWhere((s) => s?.id == event.subjectId, orElse: () => null);
-      
+      final subject = state.subjects.cast<Subject?>().firstWhere(
+        (s) => s?.id == event.subjectId,
+        orElse: () => null,
+      );
+
       return DailyFocus(
         subjectName: subject?.name ?? 'Subject',
         subjectId: event.subjectId,
-        reason: 'Upcoming ${event.type.name} in ${event.dueDate.difference(now).inDays} days',
+        reason:
+            'Upcoming ${event.type.name} in ${event.dueDate.difference(now).inDays} days',
         recommendedMinutes: 45,
         flashcardsDue: flashcardsDue,
         upcomingTestTitle: event.title,
@@ -56,13 +68,21 @@ class DailyFocusService {
     }
 
     // 2. Check flashcard sets with >40% difficult cards
-    final cards = store.all(store.smartCards).map((j) => SmartFlashcard.fromJson(j)).toList();
-    final sets = store.all(store.smartSets).map((j) => SmartFlashcardSet.fromJson(j)).toList();
-    
+    final cards = store
+        .all(store.smartCards)
+        .map((j) => SmartFlashcard.fromJson(j))
+        .toList();
+    final sets = store
+        .all(store.smartSets)
+        .map((j) => SmartFlashcardSet.fromJson(j))
+        .toList();
+
     for (final set in sets) {
       final setCards = cards.where((c) => c.setId == set.id).toList();
       if (setCards.isNotEmpty) {
-        final difficult = setCards.where((c) => c.status == FlashcardUiState.difficult).length;
+        final difficult = setCards
+            .where((c) => c.status == FlashcardUiState.difficult)
+            .length;
         if (difficult / setCards.length > 0.4) {
           return DailyFocus(
             subjectName: set.topic.isNotEmpty ? set.topic : 'Flashcards',
@@ -88,7 +108,10 @@ class DailyFocusService {
     final todaySlots = repo.slotsFor(now);
     if (todaySlots.isNotEmpty) {
       final firstSlot = todaySlots.first;
-      final subject = state.subjects.cast<Subject?>().firstWhere((s) => s?.id == firstSlot.subjectId, orElse: () => null);
+      final subject = state.subjects.cast<Subject?>().firstWhere(
+        (s) => s?.id == firstSlot.subjectId,
+        orElse: () => null,
+      );
       if (subject != null) {
         return DailyFocus(
           subjectName: subject.name,

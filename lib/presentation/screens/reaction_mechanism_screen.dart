@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -23,10 +25,12 @@ class ReactionMechanismsScreen extends ConsumerStatefulWidget {
   final String? initialReactionId;
 
   @override
-  ConsumerState<ReactionMechanismsScreen> createState() => _ReactionMechanismsScreenState();
+  ConsumerState<ReactionMechanismsScreen> createState() =>
+      _ReactionMechanismsScreenState();
 }
 
-class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScreen> {
+class _ReactionMechanismsScreenState
+    extends ConsumerState<ReactionMechanismsScreen> {
   final TextEditingController _searchController = TextEditingController();
   ReactionCategory? _selectedCategory;
   ReactionMechanism? _selectedMechanism;
@@ -37,7 +41,9 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
   void initState() {
     super.initState();
     if (widget.initialReactionId != null) {
-      _selectedMechanism = ReactionMechanismService.instance.find(widget.initialReactionId!);
+      _selectedMechanism = ReactionMechanismService.instance.find(
+        widget.initialReactionId!,
+      );
     }
   }
 
@@ -54,20 +60,31 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
     }
 
     final query = _searchController.text;
-    final list = ReactionMechanismService.instance.search(query, category: _selectedCategory);
+    final list = ReactionMechanismService.instance.search(
+      query,
+      category: _selectedCategory,
+    );
 
     return HexBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Reaction Mechanisms', style: TextStyle(fontWeight: FontWeight.w800)),
+          title: const Text(
+            'Reaction Mechanisms',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           actions: [
-            IconButton(
-              icon: const Icon(Icons.file_download_outlined, color: AppColors.purpleBright),
-              tooltip: 'Export Reactions Compendium (PDF / Excel)',
-              onPressed: _showCompendiumExportOptions,
+            SpringPress(
+              child: IconButton(
+                icon: Icon(
+                  Icons.file_download_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                tooltip: 'Export Reactions Compendium (PDF / Excel)',
+                onPressed: _showCompendiumExportOptions,
+              ),
             ),
           ],
         ),
@@ -82,21 +99,35 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                     controller: _searchController,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      hintText: 'Search named reactions, reagents, or products...',
-                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                      prefixIcon: const Icon(Icons.search, color: AppColors.purpleBright),
+                      hintText:
+                          'Search named reactions, reagents, or products...',
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {});
-                              },
+                          ? SpringPress(
+                              child: IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {});
+                                },
+                              ),
                             )
                           : null,
                       filled: true,
-                      fillColor: AppColors.surfaceElevated,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                      fillColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHigh,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -118,7 +149,11 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                   // Count Indicator
                   Text(
                     '${list.length} Verified MSc Mechanisms',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 10),
                 ]),
@@ -126,25 +161,41 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
             ),
             if (list.isEmpty)
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 40,
+                ),
                 sliver: SliverToBoxAdapter(
                   child: Center(
                     child: Column(
                       children: [
-                        const Icon(Icons.science_outlined, size: 48, color: AppColors.textMuted),
+                        Icon(
+                          Icons.science_outlined,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           _selectedCategory != null
                               ? 'No ${_selectedCategory!.displayName} matches'
                               : 'No mechanisms found',
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           _selectedCategory == ReactionCategory.heterocyclic
                               ? 'Heterocyclic mechanisms & advanced ring syntheses are actively curated.'
                               : 'Try searching for "Fischer Indole", "Aldol", "Cannizzaro", or "Diels-Alder"',
-                          style: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.8), fontSize: 13),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.8),
+                            fontSize: 13,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -172,23 +223,30 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
     final isSelected = _selectedCategory == category;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        selected: isSelected,
-        label: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+      child: SpringPress(
+        child: FilterChip(
+          selected: isSelected,
+          label: Text(
+            label,
+            style: TextStyle(
+              color: isSelected
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            ),
           ),
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+          selectedColor: Theme.of(context).colorScheme.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide.none,
+          ),
+          onSelected: (_) {
+            AppHaptics.selection();
+            setState(() => _selectedCategory = category);
+          },
         ),
-        backgroundColor: AppColors.surfaceElevated,
-        selectedColor: AppColors.purple,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide.none),
-        onSelected: (_) {
-          AppHaptics.selection();
-          setState(() => _selectedCategory = category);
-        },
       ),
     );
   }
@@ -212,54 +270,106 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.purple.withValues(alpha: 0.2),
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '${m.category.emoji} ${m.category.displayName}',
-                    style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 10.5),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 10.5,
+                    ),
                   ),
                 ),
                 const Spacer(),
-                const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textMuted, size: 14),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  size: 14,
+                ),
               ],
             ),
             const SizedBox(height: 10),
-            Text(m.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white)),
+            Text(
+              m.name,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
             const SizedBox(height: 6),
             ChemistryMarkdownView(
               text: m.summary,
-              textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.35),
+              textStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+                height: 1.35,
+              ),
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                const Icon(Icons.timeline, color: AppColors.purpleBright, size: 16),
+                Icon(
+                  Icons.timeline,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 16,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   '${m.steps.length} Stepwise Transformation${m.steps.length == 1 ? "" : "s"}',
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 if (Reaction3DDatabase.has3D(m.id)) ...[
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentCyan.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.35)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2.5,
                     ),
-                    child: const Row(
+                    decoration: BoxDecoration(
+                      color: AppColors.adaptive(
+                        context,
+                        AppColors.accentCyan,
+                      ).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ).withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.view_in_ar_rounded, size: 12, color: AppColors.accentCyan),
+                        Icon(
+                          Icons.view_in_ar_rounded,
+                          size: 12,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                        ),
                         SizedBox(width: 4),
                         Text(
                           '3D Models',
                           style: TextStyle(
-                            color: AppColors.accentCyan,
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentCyan,
+                            ),
                             fontSize: 10.5,
                             fontWeight: FontWeight.w800,
                           ),
@@ -285,21 +395,31 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+          title: Text(
+            m.name,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => setState(() {
-              _selectedMechanism = null;
-              _is3DMode = false;
-            }),
+          leading: SpringPress(
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => setState(() {
+                _selectedMechanism = null;
+                _is3DMode = false;
+              }),
+            ),
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.share_outlined, color: AppColors.purpleBright),
-              tooltip: 'Export Mechanism (PDF / Excel / SVG)',
-              onPressed: () => _showExportOptions(m),
+            SpringPress(
+              child: IconButton(
+                icon: Icon(
+                  Icons.share_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                tooltip: 'Export Mechanism (PDF / Excel / SVG)',
+                onPressed: () => _showExportOptions(m),
+              ),
             ),
           ],
         ),
@@ -309,34 +429,49 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
             // Overview Card
             GlowCard(
               padding: const EdgeInsets.all(18),
-              borderColor: AppColors.purple.withValues(alpha: 0.45),
+              borderColor: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.45),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.purple.withValues(alpha: 0.2),
+                          color: Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '${m.category.emoji} ${m.category.displayName}',
-                          style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 11),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
+                          ),
                         ),
                       ),
                       const Spacer(),
                       Icon(
                         m.isVerified ? Icons.verified : Icons.science_outlined,
-                        color: m.isVerified ? AppColors.success : AppColors.warning,
+                        color: m.isVerified
+                            ? AppColors.adaptive(context, AppColors.success)
+                            : AppColors.adaptive(context, AppColors.warning),
                         size: 18,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        m.isVerified ? 'Verified MSc Mechanism' : 'Needs chemical review',
+                        m.isVerified
+                            ? 'Verified MSc Mechanism'
+                            : 'Needs chemical review',
                         style: TextStyle(
-                          color: m.isVerified ? AppColors.success : AppColors.warning,
+                          color: m.isVerified
+                              ? AppColors.adaptive(context, AppColors.success)
+                              : AppColors.adaptive(context, AppColors.warning),
                           fontWeight: FontWeight.w700,
                           fontSize: 11,
                         ),
@@ -346,14 +481,21 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                   const SizedBox(height: 12),
                   ChemistryMarkdownView(
                     text: m.summary,
-                    textStyle: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: 14),
                   const Divider(color: Colors.white12),
                   const SizedBox(height: 10),
                   _buildSpecRow('Reactants', m.reactants),
                   const SizedBox(height: 8),
-                  _buildSpecRow('Reagents & Conditions', m.reagentsAndConditions),
+                  _buildSpecRow(
+                    'Reagents & Conditions',
+                    m.reagentsAndConditions,
+                  ),
                   const SizedBox(height: 8),
                   _buildSpecRow('Products', m.products),
                   if (m.regioselectivity != null) ...[
@@ -370,7 +512,10 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                   ],
                   if (m.representativeExample != null) ...[
                     const SizedBox(height: 8),
-                    _buildSpecRow('Representative example', m.representativeExample!),
+                    _buildSpecRow(
+                      'Representative example',
+                      m.representativeExample!,
+                    ),
                   ],
                 ],
               ),
@@ -382,101 +527,142 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceElevated,
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          AppHaptics.selection();
-                          setState(() => _is3DMode = false);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: !_is3DMode ? AppColors.purple : Colors.transparent,
-                            borderRadius: BorderRadius.circular(9),
-                            boxShadow: !_is3DMode
-                                ? [
-                                    BoxShadow(
-                                      color: AppColors.purple.withValues(alpha: 0.4),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.auto_awesome_motion_rounded,
-                                size: 15,
-                                color: !_is3DMode ? Colors.white : AppColors.textMuted,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '2D ChemDraw Flow',
-                                style: TextStyle(
-                                  color: !_is3DMode ? Colors.white : AppColors.textMuted,
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
+                      child: SpringPress(
+                        child: GestureDetector(
+                          onTap: () {
+                            AppHaptics.selection();
+                            setState(() => _is3DMode = false);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: !_is3DMode
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(9),
+                              boxShadow: !_is3DMode
+                                  ? [
+                                      BoxShadow(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withValues(alpha: 0.4),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome_motion_rounded,
+                                  size: 15,
+                                  color: !_is3DMode
+                                      ? Theme.of(context).colorScheme.onPrimary
+                                      : Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 6),
+                                Text(
+                                  '2D ChemDraw Flow',
+                                  style: TextStyle(
+                                    color: !_is3DMode
+                                        ? Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 4),
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          AppHaptics.selection();
-                          setState(() => _is3DMode = true);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            gradient: _is3DMode
-                                ? const LinearGradient(
-                                    colors: [AppColors.purple, AppColors.accentCyan],
-                                  )
-                                : null,
-                            borderRadius: BorderRadius.circular(9),
-                            boxShadow: _is3DMode
-                                ? [
-                                    BoxShadow(
-                                      color: AppColors.accentCyan.withValues(alpha: 0.35),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.view_in_ar_rounded,
-                                size: 15,
-                                color: _is3DMode ? Colors.white : AppColors.textMuted,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '3D Molecular Lab',
-                                style: TextStyle(
-                                  color: _is3DMode ? Colors.white : AppColors.textMuted,
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w800,
+                      child: SpringPress(
+                        child: GestureDetector(
+                          onTap: () {
+                            AppHaptics.selection();
+                            setState(() => _is3DMode = true);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: _is3DMode
+                                  ? LinearGradient(
+                                      colors: [
+                                        Theme.of(context).colorScheme.primary,
+                                        AppColors.adaptive(
+                                          context,
+                                          AppColors.accentCyan,
+                                        ),
+                                      ],
+                                    )
+                                  : null,
+                              borderRadius: BorderRadius.circular(9),
+                              boxShadow: _is3DMode
+                                  ? [
+                                      BoxShadow(
+                                        color: AppColors.adaptive(
+                                          context,
+                                          AppColors.accentCyan,
+                                        ).withValues(alpha: 0.35),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.view_in_ar_rounded,
+                                  size: 15,
+                                  color: _is3DMode
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 6),
+                                Text(
+                                  '3D Molecular Lab',
+                                  style: TextStyle(
+                                    color: _is3DMode
+                                        ? Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -493,32 +679,54 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
             else if (m.hasChemDrawSteps)
               GlowCard(
                 padding: const EdgeInsets.all(14),
-                borderColor: AppColors.purple.withValues(alpha: 0.4),
+                borderColor: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.4),
                 child: MechanismStepViewer(
                   mechanism: m,
-                  onSwitchTo3D: has3D ? () => setState(() => _is3DMode = true) : null,
+                  onSwitchTo3D: has3D
+                      ? () => setState(() => _is3DMode = true)
+                      : null,
                 ),
               )
             else if (m.svgContent != null && m.svgContent!.isNotEmpty) ...[
               Row(
                 children: [
-                  const Icon(Icons.polyline_rounded, color: AppColors.purpleBright, size: 18),
+                  Icon(
+                    Icons.polyline_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Vector Reaction Diagram',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.purple.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
                     ),
-                    child: const Text(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Text(
                       'Pinch to Zoom',
-                      style: TextStyle(color: AppColors.purpleBright, fontSize: 10.5, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
@@ -526,7 +734,8 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
               const SizedBox(height: 10),
               GlowCard(
                 padding: const EdgeInsets.all(6),
-                borderColor: AppColors.purple.withValues(alpha: 0.4),
+                borderColor: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.4),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: InteractiveViewer(
@@ -549,9 +758,13 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
             const SizedBox(height: 18),
 
             // Stepwise Mechanism Breakdown
-            const Text(
+            Text(
               'Step-by-Step Reaction Mechanism & Electron Movement',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
 
             const SizedBox(height: 10),
@@ -562,22 +775,51 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
 
             // Key Applications
             if (m.keyApplications.isNotEmpty) ...[
-              const Text('Synthetic & Academic Applications', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white)),
+              Text(
+                'Synthetic & Academic Applications',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
               const SizedBox(height: 8),
               GlowCard(
                 padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: m.keyApplications.map((app) => Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('• ', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w900, fontSize: 15)),
-                        Expanded(child: ChemistryMarkdownView(text: app, textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.35))),
-                      ],
-                    ),
-                  )).toList(),
+                  children: m.keyApplications
+                      .map(
+                        (app) => Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '• ',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              Expanded(
+                                child: ChemistryMarkdownView(
+                                  text: app,
+                                  textStyle: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontSize: 13,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -587,41 +829,72 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.purple,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => SmartFlashcardsGenerateScreen(prefilledTopic: m.name),
+                  child: SpringPress(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer,
+                        foregroundColor: Theme.of(context)
+                            .colorScheme
+                            .onPrimaryContainer,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.style_outlined, size: 18),
-                    label: const Text('Generate Flashcards', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => SmartFlashcardsGenerateScreen(
+                              prefilledTopic: m.name,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.style_outlined, size: 18),
+                      label: const Text(
+                        'Generate Flashcards',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: AppColors.border),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () {
-                      ref.read(shellTabProvider.notifier).state = 2; // Go to Ask AI
-                      Navigator.pop(context);
-                    },
-                    icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                  child: SpringPress(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Theme.of(context)
+                            .colorScheme
+                            .onSurface,
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        ref.read(shellTabProvider.notifier).state =
+                            2; // Go to Ask AI
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.chat_bubble_outline, size: 18),
 
-                    label: const Text('Ask ChemBuddy', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                      label: const Text(
+                        'Ask ChemBuddy',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -636,11 +909,23 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label.toUpperCase(), style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 10.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+          ),
+        ),
         const SizedBox(height: 2),
         ChemistryMarkdownView(
           text: value,
-          textStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+          textStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
         ),
       ],
     );
@@ -658,14 +943,27 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
               children: [
                 CircleAvatar(
                   radius: 12,
-                  backgroundColor: AppColors.purple,
-                  child: Text('${step.stepNumber}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer,
+                  child: Text(
+                    '${step.stepNumber}',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     step.title,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
               ],
@@ -673,30 +971,56 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
             const SizedBox(height: 8),
             ChemistryMarkdownView(
               text: step.description,
-              textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.35),
+              textStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+                height: 1.35,
+              ),
             ),
             if (step.curvedArrowNotes != null) ...[
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceElevated,
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('↪ ', style: TextStyle(color: AppColors.purpleBright, fontSize: 14, fontWeight: FontWeight.w900)),
+                    Text(
+                      '↪ ',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('CURVED ARROW & ELECTRON MOVEMENT', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 10, letterSpacing: 0.5)),
+                          Text(
+                            'CURVED ARROW & ELECTRON MOVEMENT',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 10,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           ChemistryMarkdownView(
                             text: step.curvedArrowNotes!,
-                            textStyle: const TextStyle(color: Colors.white, fontSize: 12, height: 1.3),
+                            textStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 12,
+                              height: 1.3,
+                            ),
                           ),
                         ],
                       ),
@@ -710,11 +1034,22 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Intermediate: ', style: TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700, fontSize: 12)),
+                  Text(
+                    'Intermediate: ',
+                    style: TextStyle(
+                      color: AppColors.adaptive(context, AppColors.warning),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
                   Expanded(
                     child: ChemistryMarkdownView(
                       text: step.intermediate!,
-                      textStyle: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700, fontSize: 12),
+                      textStyle: TextStyle(
+                        color: AppColors.adaptive(context, AppColors.warning),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -735,23 +1070,43 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
         // Stage Selector Header
         Row(
           children: [
-            const Icon(Icons.view_in_ar_rounded, color: AppColors.accentCyan, size: 18),
+            Icon(
+              Icons.view_in_ar_rounded,
+              color: AppColors.adaptive(context, AppColors.accentCyan),
+              size: 18,
+            ),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               '3D Conformations & Orbitals',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.white),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.accentCyan.withValues(alpha: 0.15),
+                color: AppColors.adaptive(
+                  context,
+                  AppColors.accentCyan,
+                ).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: AppColors.adaptive(
+                    context,
+                    AppColors.accentCyan,
+                  ).withValues(alpha: 0.4),
+                ),
               ),
-              child: const Text(
+              child: Text(
                 'Full 3D Orbitals',
-                style: TextStyle(color: AppColors.accentCyan, fontSize: 10.5, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  color: AppColors.adaptive(context, AppColors.accentCyan),
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],
@@ -789,7 +1144,10 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
         // 3D Canvas Card
         GlowCard(
           padding: const EdgeInsets.all(12),
-          borderColor: AppColors.accentCyan.withValues(alpha: 0.4),
+          borderColor: AppColors.adaptive(
+            context,
+            AppColors.accentCyan,
+          ).withValues(alpha: 0.4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -803,8 +1161,8 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                       children: [
                         Text(
                           activeMolecule.name,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 14.5,
                             fontWeight: FontWeight.w800,
                           ),
@@ -812,8 +1170,11 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                         const SizedBox(height: 2),
                         Text(
                           activeMolecule.formula,
-                          style: const TextStyle(
-                            color: AppColors.accentCyan,
+                          style: TextStyle(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentCyan,
+                            ),
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
@@ -822,9 +1183,12 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceElevated,
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.white12),
                     ),
@@ -833,12 +1197,32 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                       children: [
                         Text(
                           '${activeMolecule.atoms.length} atoms',
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        const Text(' • ', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                        Text(
+                          ' • ',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 11,
+                          ),
+                        ),
                         Text(
                           '${activeMolecule.bonds.length} bonds',
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -852,15 +1236,17 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                 key: ValueKey('${m.id}_${_selected3DStage.name}'),
                 molecule: activeMolecule,
                 height: 300,
-                subtitle: '${activeMolecule.atoms.length} atoms • ${activeMolecule.bonds.length} bonds',
+                subtitle:
+                    '${activeMolecule.atoms.length} atoms • ${activeMolecule.bonds.length} bonds',
               ),
 
-              if (activeMolecule.description != null && activeMolecule.description!.isNotEmpty) ...[
+              if (activeMolecule.description != null &&
+                  activeMolecule.description!.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
                   activeMolecule.description!,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 12.5,
                     height: 1.35,
                   ),
@@ -878,26 +1264,38 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.purple.withValues(alpha: 0.25),
-                  AppColors.accentCyan.withValues(alpha: 0.15),
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
+                  AppColors.adaptive(
+                    context,
+                    AppColors.accentCyan,
+                  ).withValues(alpha: 0.15),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.35)),
+              border: Border.all(
+                color: AppColors.adaptive(
+                  context,
+                  AppColors.accentCyan,
+                ).withValues(alpha: 0.35),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.psychology_outlined, color: AppColors.accentCyan, size: 18),
+                    Icon(
+                      Icons.psychology_outlined,
+                      color: AppColors.adaptive(context, AppColors.accentCyan),
+                      size: 18,
+                    ),
                     SizedBox(width: 8),
                     Text(
                       'MSc Stereochemical & Spatial Insight',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w800,
                         fontSize: 13,
                       ),
@@ -907,8 +1305,8 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                 const SizedBox(height: 8),
                 ChemistryMarkdownView(
                   text: set3D.keyTransformationNote,
-                  textStyle: const TextStyle(
-                    color: AppColors.textSecondary,
+                  textStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 12.5,
                     height: 1.4,
                   ),
@@ -930,51 +1328,65 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
   }) {
     final isSelected = _selected3DStage == stage;
     return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          AppHaptics.selection();
-          setState(() => _selected3DStage = stage);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? (highlight
-                    ? AppColors.warning.withValues(alpha: 0.25)
-                    : AppColors.accentCyan.withValues(alpha: 0.2))
-                : AppColors.surfaceElevated,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
+      child: SpringPress(
+        child: GestureDetector(
+          onTap: () {
+            AppHaptics.selection();
+            setState(() => _selected3DStage = stage);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            decoration: BoxDecoration(
               color: isSelected
-                  ? (highlight ? AppColors.warning : AppColors.accentCyan)
-                  : Colors.white12,
-              width: isSelected ? 1.5 : 1.0,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 15,
+                  ? (highlight
+                        ? AppColors.adaptive(
+                            context,
+                            AppColors.warning,
+                          ).withValues(alpha: 0.25)
+                        : AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ).withValues(alpha: 0.2))
+                  : Theme.of(context).colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
                 color: isSelected
-                    ? (highlight ? AppColors.warning : AppColors.accentCyan)
-                    : AppColors.textMuted,
+                    ? (highlight
+                          ? AppColors.adaptive(context, AppColors.warning)
+                          : AppColors.adaptive(context, AppColors.accentCyan))
+                    : Colors.white12,
+                width: isSelected ? 1.5 : 1.0,
               ),
-              const SizedBox(height: 3),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : AppColors.textMuted,
-                  fontSize: 10.5,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 15,
+                  color: isSelected
+                      ? (highlight
+                            ? AppColors.adaptive(context, AppColors.warning)
+                            : AppColors.adaptive(context, AppColors.accentCyan))
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-              ),
-            ],
+                const SizedBox(height: 3),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 10.5,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -985,7 +1397,7 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
     AppHaptics.selection();
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1002,10 +1414,15 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.purple.withValues(alpha: 0.2),
+                        color: Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.science_outlined, color: AppColors.purpleBright, size: 22),
+                      child: Icon(
+                        Icons.science_outlined,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -1014,8 +1431,8 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                         children: [
                           Text(
                             m.name,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                             ),
@@ -1023,9 +1440,14 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
-                          const Text(
+                          Text(
                             'Export Mechanism Dossier & Vector Diagram',
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
@@ -1033,85 +1455,173 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                   ],
                 ),
                 const SizedBox(height: 20),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.purple.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                SpringPress(
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.picture_as_pdf_outlined,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                    child: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.purpleBright),
+                    title: Text(
+                      'Academic PDF Dossier',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Publication-grade report with step-by-step mechanism & diagrams',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    tileColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHigh,
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Generating Academic PDF Dossier...'),
+                        ),
+                      );
+                      final file = await ExportService.instance
+                          .generateReactionPdf(singleReaction: m);
+                      await ExportService.instance.shareFile(
+                        file,
+                        subject: '${m.name} - MSc Mechanism Dossier',
+                        text:
+                            'Reaction Mechanism Dossier for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
+                      );
+                    },
                   ),
-                  title: const Text('Academic PDF Dossier', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                  subtitle: const Text('Publication-grade report with step-by-step mechanism & diagrams', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  tileColor: AppColors.surfaceElevated,
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Generating Academic PDF Dossier...')),
-                    );
-                    final file = await ExportService.instance.generateReactionPdf(singleReaction: m);
-                    await ExportService.instance.shareFile(
-                      file,
-                      subject: '${m.name} - MSc Mechanism Dossier',
-                      text: 'Reaction Mechanism Dossier for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
-                    );
-                  },
                 ),
                 const SizedBox(height: 10),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentCyan.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                SpringPress(
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.table_chart_outlined,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                      ),
                     ),
-                    child: const Icon(Icons.table_chart_outlined, color: AppColors.accentCyan),
+                    title: Text(
+                      'Excel / CSV Spreadsheet (XLV)',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Tabular breakdown with steps, electron flows & SVG markup',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    tileColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHigh,
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Generating Excel Spreadsheet...'),
+                        ),
+                      );
+                      final file = await ExportService.instance
+                          .generateReactionsCsv(mechanisms: [m]);
+                      await ExportService.instance.shareFile(
+                        file,
+                        subject: '${m.name} - Spreadsheet Data',
+                        text:
+                            'Excel spreadsheet for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
+                      );
+                    },
                   ),
-                  title: const Text('Excel / CSV Spreadsheet (XLV)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                  subtitle: const Text('Tabular breakdown with steps, electron flows & SVG markup', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  tileColor: AppColors.surfaceElevated,
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Generating Excel Spreadsheet...')),
-                    );
-                    final file = await ExportService.instance.generateReactionsCsv(mechanisms: [m]);
-                    await ExportService.instance.shareFile(
-                      file,
-                      subject: '${m.name} - Spreadsheet Data',
-                      text: 'Excel spreadsheet for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
-                    );
-                  },
                 ),
                 const SizedBox(height: 10),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.statusSuccess.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                SpringPress(
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.statusSuccess,
+                        ).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.draw_outlined,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.statusSuccess,
+                        ),
+                      ),
                     ),
-                    child: const Icon(Icons.draw_outlined, color: AppColors.statusSuccess),
+                    title: Text(
+                      'Vector SVG Diagram (.svg)',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Standalone vector file for ChemDraw, PowerPoint, or web publishing',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    tileColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHigh,
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Generating Vector SVG Diagram...'),
+                        ),
+                      );
+                      final file = await ExportService.instance
+                          .generateReactionSvg(mechanism: m);
+                      await ExportService.instance.shareFile(
+                        file,
+                        subject: '${m.name} - Vector SVG',
+                        text:
+                            'Vector SVG diagram for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
+                      );
+                    },
                   ),
-                  title: const Text('Vector SVG Diagram (.svg)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                  subtitle: const Text('Standalone vector file for ChemDraw, PowerPoint, or web publishing', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  tileColor: AppColors.surfaceElevated,
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Generating Vector SVG Diagram...')),
-                    );
-                    final file = await ExportService.instance.generateReactionSvg(mechanism: m);
-                    await ExportService.instance.shareFile(
-                      file,
-                      subject: '${m.name} - Vector SVG',
-                      text: 'Vector SVG diagram for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
-                    );
-                  },
                 ),
               ],
             ),
@@ -1126,7 +1636,7 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
     final allMechanisms = ReactionMechanismService.instance.mechanisms;
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1143,20 +1653,25 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.purple.withValues(alpha: 0.2),
+                        color: Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.menu_book_outlined, color: AppColors.purpleBright, size: 22),
+                      child: Icon(
+                        Icons.menu_book_outlined,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'MSc Reactions Compendium',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                             ),
@@ -1164,7 +1679,12 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                           const SizedBox(height: 2),
                           Text(
                             'Export all ${allMechanisms.length} curated MSc mechanisms',
-                            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
@@ -1172,58 +1692,115 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
                   ],
                 ),
                 const SizedBox(height: 20),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.purple.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                SpringPress(
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.picture_as_pdf_outlined,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                    child: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.purpleBright),
+                    title: Text(
+                      'Complete Compendium PDF',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Full monograph of all reactions with step-by-step schemes',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    tileColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHigh,
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Generating Compendium PDF (this may take a few seconds)...',
+                          ),
+                        ),
+                      );
+                      final file = await ExportService.instance
+                          .generateReactionPdf(reactions: allMechanisms);
+                      await ExportService.instance.shareFile(
+                        file,
+                        subject: 'MSc Organic Chemistry Compendium',
+                        text: 'Complete MSc Organic Chemistry Reaction Compendium from Chem Buddy by Prajwal A Kambar',
+                      );
+                    },
                   ),
-                  title: const Text('Complete Compendium PDF', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                  subtitle: const Text('Full monograph of all reactions with step-by-step schemes', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  tileColor: AppColors.surfaceElevated,
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Generating Compendium PDF (this may take a few seconds)...')),
-                    );
-                    final file = await ExportService.instance.generateReactionPdf(reactions: allMechanisms);
-                    await ExportService.instance.shareFile(
-                      file,
-                      subject: 'MSc Organic Chemistry Compendium',
-                      text: 'Complete MSc Organic Chemistry Reaction Compendium from Chem Buddy by Prajwal A Kambar',
-                    );
-                  },
                 ),
                 const SizedBox(height: 10),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentCyan.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                SpringPress(
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.table_chart_outlined,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                      ),
                     ),
-                    child: const Icon(Icons.table_chart_outlined, color: AppColors.accentCyan),
+                    title: Text(
+                      'Complete Catalog Spreadsheet (CSV/XLV)',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Excel-ready dataset of all reactions with detailed mechanisms & SVG code',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    tileColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHigh,
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Generating Reactions Spreadsheet...'),
+                        ),
+                      );
+                      final file = await ExportService.instance
+                          .generateReactionsCsv(mechanisms: allMechanisms);
+                      await ExportService.instance.shareFile(
+                        file,
+                        subject: 'MSc Reactions Catalog Spreadsheet',
+                        text: 'Reactions Catalog Spreadsheet exported from Chem Buddy by Prajwal A Kambar',
+                      );
+                    },
                   ),
-                  title: const Text('Complete Catalog Spreadsheet (CSV/XLV)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                  subtitle: const Text('Excel-ready dataset of all reactions with detailed mechanisms & SVG code', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  tileColor: AppColors.surfaceElevated,
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Generating Reactions Spreadsheet...')),
-                    );
-                    final file = await ExportService.instance.generateReactionsCsv(mechanisms: allMechanisms);
-                    await ExportService.instance.shareFile(
-                      file,
-                      subject: 'MSc Reactions Catalog Spreadsheet',
-                      text: 'Reactions Catalog Spreadsheet exported from Chem Buddy by Prajwal A Kambar',
-                    );
-                  },
                 ),
               ],
             ),
@@ -1233,4 +1810,3 @@ class _ReactionMechanismsScreenState extends ConsumerState<ReactionMechanismsScr
     );
   }
 }
-

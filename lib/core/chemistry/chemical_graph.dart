@@ -175,17 +175,17 @@ class ChemicalGraph {
 
   /// Calculates the bounding box (minX, minY, maxX, maxY) for layout scaling.
   ({double minX, double minY, double maxX, double maxY}) getBounds() {
-    if (atoms.isEmpty) return (minX: 0.0, minY: 0.0, maxX: 100.0, maxY: 100.0);
+    if (atoms.isEmpty) {return (minX: 0.0, minY: 0.0, maxX: 100.0, maxY: 100.0);}
     double minX = atoms.first.x;
     double maxX = atoms.first.x;
     double minY = atoms.first.y;
     double maxY = atoms.first.y;
 
     for (final a in atoms) {
-      if (a.x < minX) minX = a.x;
-      if (a.x > maxX) maxX = a.x;
-      if (a.y < minY) minY = a.y;
-      if (a.y > maxY) maxY = a.y;
+      if (a.x < minX) {minX = a.x;}
+      if (a.x > maxX) {maxX = a.x;}
+      if (a.y < minY) {minY = a.y;}
+      if (a.y > maxY) {maxY = a.y;}
     }
     return (minX: minX, minY: minY, maxX: maxX, maxY: maxY);
   }
@@ -206,7 +206,7 @@ class ChemicalGraph {
 
   /// Returns a scaled copy of this graph around its centroid.
   ChemicalGraph scale(double factor) {
-    if (atoms.isEmpty) return this;
+    if (atoms.isEmpty) {return this;}
     final bounds = getBounds();
     final cx = (bounds.minX + bounds.maxX) / 2.0;
     final cy = (bounds.minY + bounds.maxY) / 2.0;

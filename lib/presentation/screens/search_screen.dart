@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/services/global_search.dart';
 import '../providers/app_providers.dart';
@@ -31,9 +30,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final state = ref.watch(appControllerProvider);
     final hits = GlobalSearch.query(state, _q.text);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text('Search'),
       ),
       body: Padding(
@@ -52,7 +51,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ? GlowCard(
                       child: Text(
                         _q.text.trim().isEmpty ? 'Type to search everything stored on this device.' : 'No matches.',
-                        style: const TextStyle(color: AppColors.textSecondary),
+                        style:  TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                     )
                   : ListView.separated(
@@ -90,9 +89,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(hit.kind.toUpperCase(), style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w800)),
+                              Text(hit.kind.toUpperCase(), style:  TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 11, fontWeight: FontWeight.w800)),
                               Text(hit.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                              Text(hit.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                              Text(hit.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style:  TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
                             ],
                           ),
                         );

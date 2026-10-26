@@ -1,4 +1,7 @@
+import '../expressive_motion.dart';
+
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
@@ -47,16 +50,15 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
     _centeredMolecule = widget.molecule.centered();
     _isAutoRotating = widget.autoRotateInitial;
 
-    _autoRotateController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 16),
-    )..addListener(() {
-        if (_isAutoRotating && mounted) {
-          setState(() {
-            _yaw = (_yaw + 0.0075) % (2 * math.pi);
+    _autoRotateController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 16))
+          ..addListener(() {
+            if (_isAutoRotating && mounted) {
+              setState(() {
+                _yaw = (_yaw + 0.0075) % (2 * math.pi);
+              });
+            }
           });
-        }
-      });
 
     if (_isAutoRotating) {
       _autoRotateController.repeat();
@@ -157,7 +159,9 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
     if (closestIndex != null) {
       AppHaptics.selection();
       setState(() {
-        _selectedAtomIndex = (_selectedAtomIndex == closestIndex) ? null : closestIndex;
+        _selectedAtomIndex = (_selectedAtomIndex == closestIndex)
+            ? null
+            : closestIndex;
       });
     } else if (_selectedAtomIndex != null) {
       setState(() {
@@ -168,7 +172,8 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
 
   @override
   Widget build(BuildContext context) {
-    final selectedAtom = (_selectedAtomIndex != null &&
+    final selectedAtom =
+        (_selectedAtomIndex != null &&
             _selectedAtomIndex! < _centeredMolecule.atoms.length)
         ? _centeredMolecule.atoms[_selectedAtomIndex!]
         : null;
@@ -178,10 +183,14 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
       decoration: BoxDecoration(
         color: const Color(0xFF0F0B1E), // Deep space laboratory dark background
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.purple.withValues(alpha: 0.35), width: 1.2),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.purple.withValues(alpha: 0.15),
+            color: Theme.of(context).colorScheme.primary
+                .withValues(alpha: 0.15),
             blurRadius: 16,
             spreadRadius: 2,
             offset: const Offset(0, 4),
@@ -192,11 +201,7 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
       child: Stack(
         children: [
           // Subtle radial grid background
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _LabGridPainter(),
-            ),
-          ),
+          Positioned.fill(child: CustomPaint(painter: _LabGridPainter())),
 
           // 3D Canvas with gesture detector
           Positioned.fill(
@@ -239,7 +244,7 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
                       renderMode: _renderMode,
                       selectedAtomIndex: _selectedAtomIndex,
                       showLabels: _showLabels,
-                      primaryColor: AppColors.purpleBright,
+                      primaryColor: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 );
@@ -275,11 +280,18 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppColors.purple.withValues(alpha: 0.25),
+                              color: Theme.of(context).colorScheme.primary
+                                  .withValues(alpha: 0.25),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.primary
+                                    .withValues(alpha: 0.4),
+                              ),
                             ),
                             child: Text(
                               _centeredMolecule.formula,
@@ -297,7 +309,10 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
                         Text(
                           widget.subtitle!,
                           style: TextStyle(
-                            color: AppColors.textSecondary.withValues(alpha: 0.85),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.85),
                             fontSize: 11.5,
                             fontWeight: FontWeight.w500,
                           ),
@@ -311,20 +326,31 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
 
                 // Hint badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.white12),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.touch_app_outlined, size: 12, color: AppColors.accentCyan),
+                      Icon(
+                        Icons.touch_app_outlined,
+                        size: 12,
+                        color: AppColors.accentCyan,
+                      ),
                       SizedBox(width: 4),
                       Text(
                         'Drag to rotate',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -342,9 +368,16 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
               decoration: BoxDecoration(
                 color: const Color(0xFF1E1638).withValues(alpha: 0.88),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.purple.withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.4),
+                ),
                 boxShadow: const [
-                  BoxShadow(color: Colors.black45, blurRadius: 8, offset: Offset(0, 2)),
+                  BoxShadow(
+                    color: Colors.black45,
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
                 ],
               ),
               child: Row(
@@ -400,11 +433,16 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
               left: 12,
               right: 170, // Leave room for control buttons
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E1638).withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.6)),
+                  border: Border.all(
+                    color: AppColors.accentCyan.withValues(alpha: 0.6),
+                  ),
                   boxShadow: const [
                     BoxShadow(color: Colors.black45, blurRadius: 8),
                   ],
@@ -453,8 +491,10 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
                             const SizedBox(height: 1),
                             Text(
                               selectedAtom.note!,
-                              style: const TextStyle(
-                                color: AppColors.textMuted,
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -465,11 +505,19 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
                         ],
                       ),
                     ),
-                    InkWell(
-                      onTap: () => setState(() => _selectedAtomIndex = null),
-                      child: const Padding(
-                        padding: EdgeInsets.all(2.0),
-                        child: Icon(Icons.close, size: 14, color: AppColors.textMuted),
+                    SpringPress(
+                      child: InkWell(
+                        onTap: () => setState(() => _selectedAtomIndex = null),
+                        child: Padding(
+                          padding: EdgeInsets.all(2.0),
+                          child: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -489,20 +537,26 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
   }) {
     return Tooltip(
       message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.purple : Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            size: 16,
-            color: isActive ? Colors.white : AppColors.textSecondary,
+      child: SpringPress(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isActive
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 16,
+              color: isActive
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ),

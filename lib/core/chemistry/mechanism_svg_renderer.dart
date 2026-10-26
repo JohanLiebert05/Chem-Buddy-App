@@ -179,8 +179,8 @@ class MechanismSvgRenderer {
 
     // Solvent / Temp below arrow
     final conditionsList = <String>[];
-    if (solvent.isNotEmpty) conditionsList.add(solvent);
-    if (temperature.isNotEmpty) conditionsList.add(temperature);
+    if (solvent.isNotEmpty) {conditionsList.add(solvent);}
+    if (temperature.isNotEmpty) {conditionsList.add(temperature);}
     if (conditionsList.isNotEmpty) {
       final condText = _escapeXml(conditionsList.join(', '));
       buffer.writeln(
@@ -235,7 +235,7 @@ class MechanismSvgRenderer {
   ) {
     final a1 = graph.getAtom(bond.atom1Id);
     final a2 = graph.getAtom(bond.atom2Id);
-    if (a1 == null || a2 == null) return;
+    if (a1 == null || a2 == null) {return;}
 
     final bondColor = bond.isReacting ? config.reactingBondColor : config.defaultBondColor;
     final strokeWidth = bond.isReacting ? 3.5 : 2.5;
@@ -251,7 +251,7 @@ class MechanismSvgRenderer {
         final dx = a2.x - a1.x;
         final dy = a2.y - a1.y;
         final len = math.sqrt(dx * dx + dy * dy);
-        if (len == 0) break;
+        if (len == 0) {break;}
         final perpX = -dy / len * 3.0;
         final perpY = dx / len * 3.0;
 
@@ -265,7 +265,7 @@ class MechanismSvgRenderer {
         final dx = a2.x - a1.x;
         final dy = a2.y - a1.y;
         final len = math.sqrt(dx * dx + dy * dy);
-        if (len == 0) break;
+        if (len == 0) {break;}
         final perpX = -dy / len * 4.5;
         final perpY = dx / len * 4.5;
 
@@ -282,7 +282,7 @@ class MechanismSvgRenderer {
         final dx = a2.x - a1.x;
         final dy = a2.y - a1.y;
         final len = math.sqrt(dx * dx + dy * dy);
-        if (len == 0) break;
+        if (len == 0) {break;}
         final perpX = -dy / len * 3.5;
         final perpY = dx / len * 3.5;
 
@@ -297,7 +297,7 @@ class MechanismSvgRenderer {
         final dx = a2.x - a1.x;
         final dy = a2.y - a1.y;
         final len = math.sqrt(dx * dx + dy * dy);
-        if (len == 0) break;
+        if (len == 0) {break;}
         final perpX = -dy / len * 5.0;
         final perpY = dx / len * 5.0;
 

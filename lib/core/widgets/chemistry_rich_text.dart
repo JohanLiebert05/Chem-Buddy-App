@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
-import '../theme/app_colors.dart';
 import '../utils/chemistry_text_formatter.dart';
 
 /// Reusable inline chemistry text widget that renders mixed narrative,
@@ -25,11 +24,11 @@ class ChemistryRichText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (text.trim().isEmpty) return const SizedBox.shrink();
+    if (text.trim().isEmpty) {return const SizedBox.shrink();}
 
     final defaultStyle = textStyle ??
-        const TextStyle(
-          color: AppColors.textPrimary,
+         TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
           fontSize: 14.5,
           height: 1.45,
         );
@@ -46,11 +45,11 @@ class ChemistryRichText extends StatelessWidget {
             child: Math.tex(
               _cleanLatex(seg.content),
               mathStyle: MathStyle.text,
-              textStyle: defaultStyle.copyWith(color: Colors.white),
+              textStyle: defaultStyle.copyWith(color: Theme.of(context).colorScheme.onSurface),
               onErrorFallback: (err) => Text(
                 ChemistryTextFormatter.toUnicodeMath(seg.content),
                 style: defaultStyle.copyWith(
-                  color: AppColors.purpleBright,
+                  color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

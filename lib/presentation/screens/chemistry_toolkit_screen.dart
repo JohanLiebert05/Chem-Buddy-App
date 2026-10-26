@@ -1,4 +1,7 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -62,25 +65,260 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
   ];
 
   static const _toolsCatalog = [
-    _ToolkitToolInfo(categoryIndex: 0, title: 'Molar Mass Calculator', subtitle: 'Parse formulas & compute molecular/repeat-unit mass', icon: Icons.scale_rounded, keywords: ['molar mass', 'molecular weight', 'formula', 'polymer', 'benzoic acid']),
-    _ToolkitToolInfo(categoryIndex: 0, title: 'Molarity & Normality', subtitle: 'Compute moles per litre of solution & equivalent normality', icon: Icons.water_drop_rounded, keywords: ['molarity', 'normality', 'concentration', 'solution', 'mass', 'volume']),
-    _ToolkitToolInfo(categoryIndex: 0, title: 'Dilution Law (C1·V1 = C2·V2)', subtitle: 'Find required stock volume or target concentration upon dilution', icon: Icons.opacity_rounded, keywords: ['dilution', 'stock', 'volume', 'm1v1', 'm2v2', 'aliquot']),
-    _ToolkitToolInfo(categoryIndex: 1, title: 'Stoichiometry & Yield', subtitle: 'Determine theoretical yield, limiting reagent, and percent yield', icon: Icons.balance_rounded, keywords: ['stoichiometry', 'limiting reagent', 'yield', 'reaction', 'moles']),
-    _ToolkitToolInfo(categoryIndex: 1, title: 'Unit Conversion', subtitle: 'Convert pressure, energy, temperature, and concentration units', icon: Icons.swap_horiz_rounded, keywords: ['units', 'conversion', 'atm', 'bar', 'joule', 'kelvin', 'celsius']),
-    _ToolkitToolInfo(categoryIndex: 2, title: 'Crystal Field Theory (CFT)', subtitle: 'Calculate 10 Dq splitting, CFSE, and spin pairing states', icon: Icons.grain_rounded, keywords: ['cft', 'crystal field', '10 dq', 'cfse', 'octahedral', 'tetrahedral', 'd orbitals']),
-    _ToolkitToolInfo(categoryIndex: 3, title: 'pH & pOH Calculator', subtitle: 'Calculate hydronium/hydroxide concentration, pH, and pOH', icon: Icons.science_rounded, keywords: ['ph', 'poh', 'acid', 'base', 'h+', 'oh-', 'hydronium']),
-    _ToolkitToolInfo(categoryIndex: 3, title: 'Henderson-Hasselbalch & Buffers', subtitle: 'Calculate buffer pH and formulate laboratory buffer recipes in grams', icon: Icons.biotech_rounded, keywords: ['buffer', 'henderson', 'hasselbalch', 'pka', 'recipe', 'formulation', 'acetate']),
-    _ToolkitToolInfo(categoryIndex: 4, title: 'Gibbs Free Energy (ΔG)', subtitle: 'Evaluate thermodynamic spontaneity from enthalpy (ΔH) and entropy (ΔS)', icon: Icons.local_fire_department_rounded, keywords: ['gibbs', 'delta g', 'free energy', 'spontaneous', 'enthalpy', 'entropy']),
-    _ToolkitToolInfo(categoryIndex: 4, title: 'Arrhenius Kinetics (Ea)', subtitle: 'Calculate activation energy and rate constant temperature dependence', icon: Icons.speed_rounded, keywords: ['arrhenius', 'activation energy', 'ea', 'rate constant', 'kinetics']),
-    _ToolkitToolInfo(categoryIndex: 4, title: 'Integrated Rate Laws', subtitle: 'Determine 0th, 1st, or 2nd order kinetics, half-life, and time dependence', icon: Icons.timeline_rounded, keywords: ['rate law', 'half life', 'kinetics', 'first order', 'second order']),
-    _ToolkitToolInfo(categoryIndex: 5, title: 'Quantum Chemistry (1D Box)', subtitle: 'Solve particle-in-a-box energy eigenstates, transition wavelengths, and nodes', icon: Icons.blur_on_rounded, keywords: ['quantum', 'particle in a box', 'wavefunction', 'nodes', 'energy levels', 'planck']),
-    _ToolkitToolInfo(categoryIndex: 6, title: 'Beer-Lambert Law (A = εbc)', subtitle: 'Calculate absorbance, molar absorptivity, path length, and concentration', icon: Icons.lightbulb_rounded, keywords: ['beer', 'lambert', 'absorbance', 'spectroscopy', 'absorptivity', 'transmittance']),
-    _ToolkitToolInfo(categoryIndex: 6, title: 'Photon Energy & Wavelength', subtitle: 'Relate photon energy (E = hc/λ), frequency (ν), and wavenumber (cm⁻¹)', icon: Icons.waves_rounded, keywords: ['photon', 'energy', 'wavelength', 'wavenumber', 'frequency', 'planck']),
-    _ToolkitToolInfo(categoryIndex: 7, title: 'Nernst Equation', subtitle: 'Estimate non-standard electrode potential from reaction quotient (Q)', icon: Icons.bolt_rounded, keywords: ['nernst', 'cell potential', 'voltage', 'electrode', 'reaction quotient', 'q']),
-    _ToolkitToolInfo(categoryIndex: 7, title: 'Standard Cell Potential (E°cell)', subtitle: 'Calculate galvanic cell voltage from reduction potentials', icon: Icons.electric_bolt_rounded, keywords: ['cell potential', 'galvanic', 'e cell', 'reduction potential', 'cathode', 'anode']),
-    _ToolkitToolInfo(categoryIndex: 8, title: 'Analytical Error & Uncertainty', subtitle: 'Calculate absolute and relative error, standard deviation, and propagation', icon: Icons.calculate_rounded, keywords: ['error', 'uncertainty', 'accuracy', 'precision', 'standard deviation', 'relative error']),
-    _ToolkitToolInfo(categoryIndex: 8, title: 'Van Deemter Equation', subtitle: 'Optimize chromatographic column height equivalent to theoretical plate (HETP)', icon: Icons.filter_alt_rounded, keywords: ['van deemter', 'hetp', 'chromatography', 'column efficiency', 'flow rate']),
-    _ToolkitToolInfo(categoryIndex: 8, title: 'HPLC Calibration Curve Plotter', subtitle: 'Plot regression line, calculate R², LOD, LOQ, and quantify unknown sample concentration', icon: Icons.analytics_rounded, keywords: ['hplc', 'calibration', 'regression', 'r2', 'lod', 'loq', 'chromatogram']),
+    _ToolkitToolInfo(
+      categoryIndex: 0,
+      title: 'Molar Mass Calculator',
+      subtitle: 'Parse formulas & compute molecular/repeat-unit mass',
+      icon: Icons.scale_rounded,
+      keywords: [
+        'molar mass',
+        'molecular weight',
+        'formula',
+        'polymer',
+        'benzoic acid',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 0,
+      title: 'Molarity & Normality',
+      subtitle: 'Compute moles per litre of solution & equivalent normality',
+      icon: Icons.water_drop_rounded,
+      keywords: [
+        'molarity',
+        'normality',
+        'concentration',
+        'solution',
+        'mass',
+        'volume',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 0,
+      title: 'Dilution Law (C1·V1 = C2·V2)',
+      subtitle:
+          'Find required stock volume or target concentration upon dilution',
+      icon: Icons.opacity_rounded,
+      keywords: ['dilution', 'stock', 'volume', 'm1v1', 'm2v2', 'aliquot'],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 1,
+      title: 'Stoichiometry & Yield',
+      subtitle:
+          'Determine theoretical yield, limiting reagent, and percent yield',
+      icon: Icons.balance_rounded,
+      keywords: [
+        'stoichiometry',
+        'limiting reagent',
+        'yield',
+        'reaction',
+        'moles',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 1,
+      title: 'Unit Conversion',
+      subtitle:
+          'Convert pressure, energy, temperature, and concentration units',
+      icon: Icons.swap_horiz_rounded,
+      keywords: [
+        'units',
+        'conversion',
+        'atm',
+        'bar',
+        'joule',
+        'kelvin',
+        'celsius',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 2,
+      title: 'Crystal Field Theory (CFT)',
+      subtitle: 'Calculate 10 Dq splitting, CFSE, and spin pairing states',
+      icon: Icons.grain_rounded,
+      keywords: [
+        'cft',
+        'crystal field',
+        '10 dq',
+        'cfse',
+        'octahedral',
+        'tetrahedral',
+        'd orbitals',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 3,
+      title: 'pH & pOH Calculator',
+      subtitle: 'Calculate hydronium/hydroxide concentration, pH, and pOH',
+      icon: Icons.science_rounded,
+      keywords: ['ph', 'poh', 'acid', 'base', 'h+', 'oh-', 'hydronium'],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 3,
+      title: 'Henderson-Hasselbalch & Buffers',
+      subtitle: 'Calculate buffer pH and formulate laboratory buffer recipes in grams',
+      icon: Icons.biotech_rounded,
+      keywords: [
+        'buffer',
+        'henderson',
+        'hasselbalch',
+        'pka',
+        'recipe',
+        'formulation',
+        'acetate',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 4,
+      title: 'Gibbs Free Energy (ΔG)',
+      subtitle: 'Evaluate thermodynamic spontaneity from enthalpy (ΔH) and entropy (ΔS)',
+      icon: Icons.local_fire_department_rounded,
+      keywords: [
+        'gibbs',
+        'delta g',
+        'free energy',
+        'spontaneous',
+        'enthalpy',
+        'entropy',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 4,
+      title: 'Arrhenius Kinetics (Ea)',
+      subtitle: 'Calculate activation energy and rate constant temperature dependence',
+      icon: Icons.speed_rounded,
+      keywords: [
+        'arrhenius',
+        'activation energy',
+        'ea',
+        'rate constant',
+        'kinetics',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 4,
+      title: 'Integrated Rate Laws',
+      subtitle: 'Determine 0th, 1st, or 2nd order kinetics, half-life, and time dependence',
+      icon: Icons.timeline_rounded,
+      keywords: [
+        'rate law',
+        'half life',
+        'kinetics',
+        'first order',
+        'second order',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 5,
+      title: 'Quantum Chemistry (1D Box)',
+      subtitle: 'Solve particle-in-a-box energy eigenstates, transition wavelengths, and nodes',
+      icon: Icons.blur_on_rounded,
+      keywords: [
+        'quantum',
+        'particle in a box',
+        'wavefunction',
+        'nodes',
+        'energy levels',
+        'planck',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 6,
+      title: 'Beer-Lambert Law (A = εbc)',
+      subtitle: 'Calculate absorbance, molar absorptivity, path length, and concentration',
+      icon: Icons.lightbulb_rounded,
+      keywords: [
+        'beer',
+        'lambert',
+        'absorbance',
+        'spectroscopy',
+        'absorptivity',
+        'transmittance',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 6,
+      title: 'Photon Energy & Wavelength',
+      subtitle: 'Relate photon energy (E = hc/λ), frequency (ν), and wavenumber (cm⁻¹)',
+      icon: Icons.waves_rounded,
+      keywords: [
+        'photon',
+        'energy',
+        'wavelength',
+        'wavenumber',
+        'frequency',
+        'planck',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 7,
+      title: 'Nernst Equation',
+      subtitle: 'Estimate non-standard electrode potential from reaction quotient (Q)',
+      icon: Icons.bolt_rounded,
+      keywords: [
+        'nernst',
+        'cell potential',
+        'voltage',
+        'electrode',
+        'reaction quotient',
+        'q',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 7,
+      title: 'Standard Cell Potential (E°cell)',
+      subtitle: 'Calculate galvanic cell voltage from reduction potentials',
+      icon: Icons.electric_bolt_rounded,
+      keywords: [
+        'cell potential',
+        'galvanic',
+        'e cell',
+        'reduction potential',
+        'cathode',
+        'anode',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 8,
+      title: 'Analytical Error & Uncertainty',
+      subtitle: 'Calculate absolute and relative error, standard deviation, and propagation',
+      icon: Icons.calculate_rounded,
+      keywords: [
+        'error',
+        'uncertainty',
+        'accuracy',
+        'precision',
+        'standard deviation',
+        'relative error',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 8,
+      title: 'Van Deemter Equation',
+      subtitle: 'Optimize chromatographic column height equivalent to theoretical plate (HETP)',
+      icon: Icons.filter_alt_rounded,
+      keywords: [
+        'van deemter',
+        'hetp',
+        'chromatography',
+        'column efficiency',
+        'flow rate',
+      ],
+    ),
+    _ToolkitToolInfo(
+      categoryIndex: 8,
+      title: 'HPLC Calibration Curve Plotter',
+      subtitle: 'Plot regression line, calculate R², LOD, LOQ, and quantify unknown sample concentration',
+      icon: Icons.analytics_rounded,
+      keywords: [
+        'hplc',
+        'calibration',
+        'regression',
+        'r2',
+        'lod',
+        'loq',
+        'chromatogram',
+      ],
+    ),
   ];
 
   void _openToolSearchSheet(BuildContext context) {
@@ -94,7 +332,9 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
             final filtered = _toolsCatalog.where((tool) {
-              if (searchQuery.isEmpty) return true;
+              if (searchQuery.isEmpty) {
+                return true;
+              }
               final q = searchQuery.toLowerCase();
               return tool.title.toLowerCase().contains(q) ||
                   tool.subtitle.toLowerCase().contains(q) ||
@@ -109,8 +349,13 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
                 enableBlur: true,
                 blurSigma: 20,
                 borderRadius: 0,
-                customBorderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                backgroundColor: AppColors.surfaceContainerLow.withValues(alpha: 0.94),
+                customBorderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerLow
+                    .withValues(alpha: 0.94),
                 borderColor: Colors.white.withValues(alpha: 0.14),
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 child: ConstrainedBox(
@@ -135,43 +380,78 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Search Chemistry Tools',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onSurface,
                               letterSpacing: -0.2,
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
-                            onPressed: () => Navigator.pop(sheetContext),
+                          SpringPress(
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.close_rounded,
+                                size: 20,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                              onPressed: () => Navigator.pop(sheetContext),
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 10),
                       TextField(
                         autofocus: true,
-                        style: const TextStyle(fontSize: 14, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Search by tool, formula, or concept (e.g. Nernst, pH, M1V1)...',
-                          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.brandBright, size: 20),
+                          hintStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 20,
+                          ),
                           filled: true,
-                          fillColor: AppColors.surfaceContainerHigh,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.borderSubtle),
+                            borderSide: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant,
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.borderSubtle),
+                            borderSide: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.brandBright),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                         ),
                         onChanged: (val) {
@@ -181,86 +461,155 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
                       const SizedBox(height: 14),
                       Expanded(
                         child: filtered.isEmpty
-                            ? const Center(
+                            ? Center(
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(vertical: 32),
                                   child: Text(
                                     'No chemistry tools matched your search.',
-                                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ),
                               )
                             : ListView.separated(
                                 itemCount: filtered.length,
-                                separatorBuilder: (ctx, idx) => const SizedBox(height: 8),
+                                separatorBuilder: (ctx, idx) =>
+                                    const SizedBox(height: 8),
                                 itemBuilder: (ctx, idx) {
                                   final tool = filtered[idx];
-                                  final catName = _categories[tool.categoryIndex];
-                                  return InkWell(
-                                    onTap: () {
-                                      Navigator.pop(sheetContext);
-                                      setState(() => _selectedCategory = tool.categoryIndex);
-                                      AppHaptics.confirm();
-                                    },
-                                    borderRadius: BorderRadius.circular(14),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surfaceContainerHigh.withValues(alpha: 0.6),
-                                        borderRadius: BorderRadius.circular(14),
-                                        border: Border.all(color: AppColors.borderSubtle, width: 0.6),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(10),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.brandPrimary.withValues(alpha: 0.14),
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                            child: Icon(tool.icon, size: 20, color: AppColors.brandBright),
+                                  final catName =
+                                      _categories[tool.categoryIndex];
+                                  return SpringPress(
+                                    child: InkWell(
+                                      onTap: () {
+                                        Navigator.pop(sheetContext);
+                                        setState(
+                                          () => _selectedCategory =
+                                              tool.categoryIndex,
+                                        );
+                                        AppHaptics.confirm();
+                                      },
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainerHigh
+                                              .withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
                                           ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        tool.title,
-                                                        style: const TextStyle(
-                                                          fontSize: 14,
-                                                          fontWeight: FontWeight.w700,
-                                                          color: Colors.white,
+                                          border: Border.all(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .outlineVariant,
+                                            width: 0.6,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withValues(alpha: 0.14),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: Icon(
+                                                tool.icon,
+                                                size: 20,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Text(
+                                                          tool.title,
+                                                          style: TextStyle(
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            color:
+                                                                Theme.of(
+                                                                      context,
+                                                                    )
+                                                                    .colorScheme
+                                                                    .onSurface,
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                    Container(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                      decoration: BoxDecoration(
-                                                        color: AppColors.surfaceContainerHighest,
-                                                        borderRadius: BorderRadius.circular(6),
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 6,
+                                                              vertical: 2,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: Theme.of(context)
+                                                              .colorScheme
+                                                              .surfaceContainerHighest,
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                6,
+                                                              ),
+                                                        ),
+                                                        child: Text(
+                                                          catName,
+                                                          style: TextStyle(
+                                                            fontSize: 10,
+                                                            color:
+                                                                Theme.of(
+                                                                      context,
+                                                                    )
+                                                                    .colorScheme
+                                                                    .primary,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                        ),
                                                       ),
-                                                      child: Text(
-                                                        catName,
-                                                        style: const TextStyle(fontSize: 10, color: AppColors.brandBright, fontWeight: FontWeight.w600),
-                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    tool.subtitle,
+                                                    style: TextStyle(
+                                                      fontSize: 11.5,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
                                                     ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 2),
-                                                Text(
-                                                  tool.subtitle,
-                                                  style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
-                                                ),
-                                              ],
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
-                                        ],
+                                            const SizedBox(width: 6),
+                                            Icon(
+                                              Icons.arrow_forward_ios_rounded,
+                                              size: 14,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   );
@@ -292,12 +641,17 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text('Chemistry Toolkit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          title: const Text(
+            'Chemistry Toolkit',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.search_rounded),
-              tooltip: 'Search Calculators',
-              onPressed: () => _openToolSearchSheet(context),
+            SpringPress(
+              child: IconButton(
+                icon: const Icon(Icons.search_rounded),
+                tooltip: 'Search Calculators',
+                onPressed: () => _openToolSearchSheet(context),
+              ),
             ),
           ],
         ),
@@ -305,21 +659,21 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
           children: [
             // Pedagogical Header
-            const Text(
+            Text(
               'Chemistry Toolkit',
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 22,
                 letterSpacing: -0.4,
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Choose a problem type or search for a calculator.',
               style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 14),
@@ -327,34 +681,59 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
             // Liquid Glass Search Trigger Pill
             LiquidGlassContainer(
               borderRadius: 16,
-              backgroundColor: AppColors.surfaceContainerHigh.withValues(alpha: 0.72),
-              borderColor: AppColors.borderSubtle,
+              backgroundColor: Theme.of(context)
+                  .colorScheme
+                  .surfaceContainerHigh
+                  .withValues(alpha: 0.72),
+              borderColor: Theme.of(context).colorScheme.outlineVariant,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: InkWell(
-                onTap: () => _openToolSearchSheet(context),
-                borderRadius: BorderRadius.circular(16),
-                child: Row(
-                  children: [
-                    const Icon(Icons.search_rounded, size: 20, color: AppColors.brandBright),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Text(
-                        'Search calculators, formulas, or concepts...',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              child: SpringPress(
+                child: InkWell(
+                  onTap: () => _openToolSearchSheet(context),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search_rounded,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Search calculators, formulas, or concepts...',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
-                      child: const Text(
-                        '19 Tools',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '19 Tools',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -370,17 +749,33 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
                   final isSel = _selectedCategory == idx;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(title, style: TextStyle(color: isSel ? Colors.white : AppColors.textSecondary, fontWeight: isSel ? FontWeight.bold : FontWeight.normal)),
-                      selected: isSel,
-                      selectedColor: AppColors.brandPrimary,
-                      backgroundColor: AppColors.bg2,
-                      onSelected: (val) {
-                        if (val) {
-                          setState(() => _selectedCategory = idx);
-                          AppHaptics.selection();
-                        }
-                      },
+                    child: SpringPress(
+                      child: ChoiceChip(
+                        label: Text(
+                          title,
+                          style: TextStyle(
+                            color: isSel
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                            fontWeight: isSel
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        selected: isSel,
+                        selectedColor: Theme.of(context).colorScheme.primary,
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHigh,
+                        onSelected: (val) {
+                          if (val) {
+                            setState(() => _selectedCategory = idx);
+                            AppHaptics.selection();
+                          }
+                        },
+                      ),
                     ),
                   );
                 }).toList(),
@@ -392,18 +787,28 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderSubtle, width: 0.6),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  width: 0.6,
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.brandBright),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _categoryDescriptions[_selectedCategory],
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -414,7 +819,9 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
             if (_selectedCategory == 0) ...[
               _MolarMassCalculator(
                 onSelectTool: (tool) {
-                  if (tool == 'Molarity' || tool == 'Normality' || tool == 'Dilution') {
+                  if (tool == 'Molarity' ||
+                      tool == 'Normality' ||
+                      tool == 'Dilution') {
                     setState(() => _selectedCategory = 0);
                   }
                 },
@@ -511,9 +918,7 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
     } catch (e) {
       setState(() {
         _parsedResult = null;
-        _error = e is FormatException
-            ? e.message
-            : 'Could not parse chemical input. Try e.g. "benzoic acid", "C6H6", "CuSO4·5H2O", or "sodium chloride".';
+        _error = e is FormatException ? e.message : 'Could not parse chemical input. Try e.g. "benzoic acid", "C6H6", "CuSO4·5H2O", or "sodium chloride".';
       });
     }
   }
@@ -526,7 +931,11 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
         children: [
           Row(
             children: [
-              const Icon(Icons.science, color: AppColors.purpleBright, size: 20),
+              Icon(
+                Icons.science,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'Molar Mass Calculator',
@@ -535,9 +944,12 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
             ],
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Enter formula or chemical name (e.g. benzoic acid, ethanol, CuSO4·5H2O, C6H6, sodium chloride):',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -549,21 +961,31 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                     hintText: 'Enter formula or chemical name',
                   ),
                   onChanged: (_) {
-                    if (_error != null) setState(() => _error = null);
+                    if (_error != null) {
+                      setState(() => _error = null);
+                    }
                   },
                   onSubmitted: (_) => _calculate(),
                 ),
               ),
               const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: _calculate,
-                child: const Text('Calculate'),
+              SpringPress(
+                child: ElevatedButton(
+                  onPressed: _calculate,
+                  child: const Text('Calculate'),
+                ),
               ),
             ],
           ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
           if (_parsedResult != null) ...[
             const SizedBox(height: 14),
@@ -571,9 +993,14 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.bg0,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.success.withValues(alpha: 0.5)),
+                border: Border.all(
+                  color: AppColors.adaptive(
+                    context,
+                    AppColors.success,
+                  ).withValues(alpha: 0.5),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,27 +1012,40 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                         Expanded(
                           child: Text(
                             _parsedResult!.compoundName!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: _parsedResult!.isPolymerOrBiomolecule
-                                ? AppColors.accentCyan.withValues(alpha: 0.2)
-                                : AppColors.purple.withValues(alpha: 0.25),
+                                ? AppColors.adaptive(
+                                    context,
+                                    AppColors.accentCyan,
+                                  ).withValues(alpha: 0.2)
+                                : Theme.of(context).colorScheme.primary
+                                      .withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             _parsedResult!.isPolymerOrBiomolecule
-                                ? (_parsedResult!.polymerCategory ?? 'Biopolymer / Polymer')
+                                ? (_parsedResult!.polymerCategory ??
+                                      'Biopolymer / Polymer')
                                 : 'Verified Compound',
                             style: TextStyle(
-                              color: _parsedResult!.isPolymerOrBiomolecule ? AppColors.accentCyan : AppColors.purpleBright,
+                              color: _parsedResult!.isPolymerOrBiomolecule
+                                  ? AppColors.adaptive(
+                                      context,
+                                      AppColors.accentCyan,
+                                    )
+                                  : Theme.of(context).colorScheme.primary,
                               fontSize: 10.5,
                               fontWeight: FontWeight.w700,
                             ),
@@ -613,14 +1053,22 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                         ),
                       ],
                     ),
-                    if (_parsedResult!.iupacName != null && _parsedResult!.iupacName != _parsedResult!.compoundName) ...[
+                    if (_parsedResult!.iupacName != null &&
+                        _parsedResult!.iupacName !=
+                            _parsedResult!.compoundName) ...[
                       const SizedBox(height: 2),
                       Text(
                         'IUPAC: ${_parsedResult!.iupacName}',
-                        style: const TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
-                    const Divider(color: AppColors.borderSubtle, height: 16),
+                    Divider(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      height: 16,
+                    ),
                   ],
 
                   if (_parsedResult!.isPolymerOrBiomolecule) ...[
@@ -628,9 +1076,17 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                       padding: const EdgeInsets.all(10),
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.accentCyan.withValues(alpha: 0.1),
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ).withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -640,7 +1096,11 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                           Expanded(
                             child: Text(
                               'No single molecular formula — ${_parsedResult!.compoundName ?? "this compound"} is a macromolecule/polymer with variable chain length (degree of polymerization n).',
-                              style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.35),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 12,
+                                height: 1.35,
+                              ),
                             ),
                           ),
                         ],
@@ -655,16 +1115,23 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _parsedResult!.isPolymerOrBiomolecule ? 'Repeating Unit Formula:' : 'Molecular Formula:',
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            _parsedResult!.isPolymerOrBiomolecule
+                                ? 'Repeating Unit Formula:'
+                                : 'Molecular Formula:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             _parsedResult!.formattedFormula,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.purpleBright,
+                              color: Theme.of(context).colorScheme.primary,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -674,20 +1141,38 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            _parsedResult!.isPolymerOrBiomolecule ? 'Repeat Unit Mass:' : 'Molar Mass:',
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            _parsedResult!.isPolymerOrBiomolecule
+                                ? 'Repeat Unit Mass:'
+                                : 'Molar Mass:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             '${_parsedResult!.molarMass.toStringAsFixed(2)} g/mol',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.success,
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.success,
+                              ),
                             ),
                           ),
                           if (_parsedResult!.isPolymerOrBiomolecule)
-                            const Text('(per repeat unit n)', style: TextStyle(fontSize: 10.5, color: AppColors.textMuted)),
+                            Text(
+                              '(per repeat unit n)',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                            ),
                         ],
                       ),
                     ],
@@ -697,8 +1182,26 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        const Text('Typical Average MW Range: ', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-                        Text(_parsedResult!.typicalMolecularWeightRange!, style: const TextStyle(fontSize: 11.5, color: AppColors.accentGold, fontWeight: FontWeight.w700)),
+                        Text(
+                          'Typical Average MW Range: ',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
+                        Text(
+                          _parsedResult!.typicalMolecularWeightRange!,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentGold,
+                            ),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -707,33 +1210,57 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                     const SizedBox(height: 10),
                     ChemistryMarkdownView(
                       text: _parsedResult!.polymerExplanation!,
-                      textStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.35),
+                      textStyle: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        height: 1.35,
+                      ),
                       selectable: false,
                     ),
                   ],
 
                   if (_parsedResult!.elementBreakdown.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    const Text(
+                    Text(
                       'Elemental Composition:',
-                      style: TextStyle(fontSize: 11.5, color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 8,
                       runSpacing: 6,
-                      children: _parsedResult!.elementBreakdown.entries.map((entry) {
-                        final pct = _parsedResult!.elementPercentages[entry.key] ?? 0.0;
+                      children: _parsedResult!.elementBreakdown.entries.map((
+                        entry,
+                      ) {
+                        final pct =
+                            _parsedResult!.elementPercentages[entry.key] ?? 0.0;
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceElevated,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHigh,
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: AppColors.borderSubtle),
+                            border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant,
+                            ),
                           ),
                           child: Text(
                             '${entry.key} × ${entry.value} (${pct.toStringAsFixed(1)}%)',
-                            style: const TextStyle(fontSize: 11.5, color: Colors.white, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         );
                       }).toList(),
@@ -744,14 +1271,24 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Related Tools:',
-                        style: TextStyle(fontSize: 11.5, color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       if (_parsedResult!.isPolymerOrBiomolecule)
-                        const Text(
+                        Text(
                           '(Uses repeat unit mass)',
-                          style: TextStyle(fontSize: 10.5, color: AppColors.textMuted, fontStyle: FontStyle.italic),
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                     ],
                   ),
@@ -760,23 +1297,68 @@ class _MolarMassCalculatorState extends State<_MolarMassCalculator> {
                     spacing: 8,
                     runSpacing: 6,
                     children: [
-                      ActionChip(
-                        avatar: const Icon(Icons.water_drop_outlined, size: 14, color: AppColors.purpleBright),
-                        label: const Text('Molarity Calculator', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-                        backgroundColor: AppColors.surfaceElevated,
-                        onPressed: () => widget.onSelectTool?.call('Molarity'),
+                      SpringPress(
+                        child: ActionChip(
+                          avatar: Icon(
+                            Icons.water_drop_outlined,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          label: const Text(
+                            'Molarity Calculator',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
+                          onPressed: () =>
+                              widget.onSelectTool?.call('Molarity'),
+                        ),
                       ),
-                      ActionChip(
-                        avatar: const Icon(Icons.science_outlined, size: 14, color: AppColors.purpleBright),
-                        label: const Text('Normality Calculator', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-                        backgroundColor: AppColors.surfaceElevated,
-                        onPressed: () => widget.onSelectTool?.call('Normality'),
+                      SpringPress(
+                        child: ActionChip(
+                          avatar: Icon(
+                            Icons.science_outlined,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          label: const Text(
+                            'Normality Calculator',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
+                          onPressed: () =>
+                              widget.onSelectTool?.call('Normality'),
+                        ),
                       ),
-                      ActionChip(
-                        avatar: const Icon(Icons.opacity, size: 14, color: AppColors.purpleBright),
-                        label: const Text('Dilution Calculator', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-                        backgroundColor: AppColors.surfaceElevated,
-                        onPressed: () => widget.onSelectTool?.call('Dilution'),
+                      SpringPress(
+                        child: ActionChip(
+                          avatar: Icon(
+                            Icons.opacity,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          label: const Text(
+                            'Dilution Calculator',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
+                          onPressed: () =>
+                              widget.onSelectTool?.call('Dilution'),
+                        ),
                       ),
                     ],
                   ),
@@ -876,7 +1458,9 @@ class _MolarityCalculatorState extends State<_MolarityCalculator> {
   }
 
   void _onFieldChanged() {
-    if (_error != null) setState(() => _error = null);
+    if (_error != null) {
+      setState(() => _error = null);
+    }
   }
 
   @override
@@ -885,47 +1469,137 @@ class _MolarityCalculatorState extends State<_MolarityCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(r'Molarity & Normality (M = n/V)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            r'Molarity & Normality (M = n/V)',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _mass, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Mass (g)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _mass,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'Mass (g)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _molarMass, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Molar Mass (g/mol)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _molarMass,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Molar Mass (g/mol)',
+                  ),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: TextField(controller: _volume, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Volume (mL)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _volume,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'Volume (mL)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _nFactor, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'n-Factor (Acidity/Basicity)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _nFactor,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'n-Factor (Acidity/Basicity)',
+                  ),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: _calculate, child: const Text('Compute M & N')),
+          SpringPress(
+            child: ElevatedButton(
+              onPressed: _calculate,
+              child: const Text('Compute M & N'),
+            ),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
           if (_molarity != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.3))),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.3),
+                ),
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Column(
                     children: [
-                      const Text('MOLARITY (M)', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                      Text('${_molarity!.toStringAsFixed(4)} M', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.purpleBright)),
+                      Text(
+                        'MOLARITY (M)',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        '${_molarity!.toStringAsFixed(4)} M',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
                     ],
                   ),
                   Column(
                     children: [
-                      const Text('NORMALITY (N)', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                      Text('${_normality!.toStringAsFixed(4)} N', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.accentCyan)),
+                      Text(
+                        'NORMALITY (N)',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        '${_normality!.toStringAsFixed(4)} N',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -1001,7 +1675,9 @@ class _DilutionCalculatorState extends State<_DilutionCalculator> {
   }
 
   void _onFieldChanged() {
-    if (_error != null) setState(() => _error = null);
+    if (_error != null) {
+      setState(() => _error = null);
+    }
   }
 
   @override
@@ -1010,43 +1686,105 @@ class _DilutionCalculatorState extends State<_DilutionCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(r'Dilution Law (C1·V1 = C2·V2)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            r'Dilution Law (C1·V1 = C2·V2)',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _c1, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Initial C1 (M)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _c1,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Initial C1 (M)',
+                  ),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _v1, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Initial V1 (mL)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _v1,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Initial V1 (mL)',
+                  ),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _v2, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Final V2 (mL)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _v2,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'Final V2 (mL)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: _calculate, child: const Text('Calculate Final Conc C2')),
+          SpringPress(
+            child: ElevatedButton(
+              onPressed: _calculate,
+              child: const Text('Calculate Final Conc C2'),
+            ),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
           if (_c2 != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Final Concentration C2 = ${_c2!.toStringAsFixed(4)} M', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.success)),
+                  Text(
+                    'Final Concentration C2 = ${_c2!.toStringAsFixed(4)} M',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.adaptive(context, AppColors.success),
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     'Worked steps: C2 = (C1 × V1) / V2 = (${_c1.text} M × ${_v1.text} mL) / ${_v2.text} mL',
-                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    (double.tryParse(_v2.text) ?? 0) > (double.tryParse(_v1.text) ?? 0)
+                    (double.tryParse(_v2.text) ?? 0) >
+                            (double.tryParse(_v1.text) ?? 0)
                         ? 'Sanity check: Final volume exceeds initial volume (solution is diluted).'
                         : 'Note: Final volume is less than or equal to initial volume.',
-                    style: const TextStyle(fontSize: 11, color: AppColors.accentCyan),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.adaptive(context, AppColors.accentCyan),
+                    ),
                   ),
                 ],
               ),
@@ -1084,7 +1822,8 @@ class _PhCalculatorState extends State<_PhCalculator> {
     final h = double.tryParse(_hConc.text.trim());
     if (h == null || h <= 0) {
       setState(() {
-        _error = '[H⁺] ion concentration must be strictly positive (> 0 mol/L).';
+        _error =
+            '[H⁺] ion concentration must be strictly positive (> 0 mol/L).';
         _ph = null;
         _poh = null;
       });
@@ -1107,38 +1846,83 @@ class _PhCalculatorState extends State<_PhCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('pH & pOH Calculator', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'pH & pOH Calculator',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$\text{pH} = -\log[\text{H}^+], \quad \text{pOH} = 14 - \text{pH}$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _hConc,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: '[H+] Ion Concentration (mol/L)'),
+            decoration: const InputDecoration(
+              labelText: '[H+] Ion Concentration (mol/L)',
+            ),
             onChanged: (_) {
-              if (_error != null) setState(() => _error = null);
+              if (_error != null) {
+                setState(() => _error = null);
+              }
             },
           ),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: _calculate, child: const Text('Calculate pH')),
+          SpringPress(
+            child: ElevatedButton(
+              onPressed: _calculate,
+              child: const Text('Calculate pH'),
+            ),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
           if (_ph != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Text('pH: ${_ph!.toStringAsFixed(2)}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _ph! < 7 ? AppColors.danger : (_ph! > 7 ? AppColors.blue : AppColors.success))),
-                  Text('pOH: ${_poh!.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.accentCyan)),
+                  Text(
+                    'pH: ${_ph!.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: _ph! < 7
+                          ? AppColors.adaptive(context, AppColors.danger)
+                          : (_ph! > 7
+                                ? AppColors.adaptive(context, AppColors.blue)
+                                : AppColors.adaptive(
+                                    context,
+                                    AppColors.success,
+                                  )),
+                    ),
+                  ),
+                  Text(
+                    'pOH: ${_poh!.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.adaptive(context, AppColors.accentCyan),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1180,10 +1964,12 @@ class _HendersonHasselbalchCalculator extends StatefulWidget {
   const _HendersonHasselbalchCalculator();
 
   @override
-  State<_HendersonHasselbalchCalculator> createState() => _HendersonHasselbalchCalculatorState();
+  State<_HendersonHasselbalchCalculator> createState() =>
+      _HendersonHasselbalchCalculatorState();
 }
 
-class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCalculator> {
+class _HendersonHasselbalchCalculatorState
+    extends State<_HendersonHasselbalchCalculator> {
   // Mode: 0 = Buffer pH & Ratio, 1 = Lab Formulation Assistant
   int _activeMode = 0;
 
@@ -1298,7 +2084,8 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
     }
     if (ha == null || ha <= 0) {
       setState(() {
-        _error = 'Weak acid concentration [HA] must be strictly positive (> 0).';
+        _error =
+            'Weak acid concentration [HA] must be strictly positive (> 0).';
         _ph = null;
       });
       AppHaptics.error();
@@ -1338,7 +2125,8 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
     }
     if (conc == null || conc <= 0) {
       setState(() {
-        _formError = 'Total buffer concentration must be strictly positive (> 0 M).';
+        _formError =
+            'Total buffer concentration must be strictly positive (> 0 M).';
         _formulationResult = null;
       });
       AppHaptics.error();
@@ -1363,10 +2151,18 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
     final double baseMw = isCustom
         ? (double.tryParse(_customBaseMwCtrl.text.trim()) ?? 136.08)
         : _presets[_selectedPresetIdx].baseMw;
-    final bool acidIsLiquid = isCustom ? false : _presets[_selectedPresetIdx].acidIsLiquid;
-    final double? acidDensity = isCustom ? null : _presets[_selectedPresetIdx].acidDensity;
-    final String acidName = isCustom ? 'Weak Acid (HA)' : _presets[_selectedPresetIdx].acidName;
-    final String baseName = isCustom ? 'Conjugate Base (A⁻)' : _presets[_selectedPresetIdx].baseName;
+    final bool acidIsLiquid = isCustom
+        ? false
+        : _presets[_selectedPresetIdx].acidIsLiquid;
+    final double? acidDensity = isCustom
+        ? null
+        : _presets[_selectedPresetIdx].acidDensity;
+    final String acidName = isCustom
+        ? 'Weak Acid (HA)'
+        : _presets[_selectedPresetIdx].acidName;
+    final String baseName = isCustom
+        ? 'Conjugate Base (A⁻)'
+        : _presets[_selectedPresetIdx].baseName;
 
     final ratio = pow(10.0, targetPh - pKa).toDouble();
     final alphaBase = ratio / (1.0 + ratio);
@@ -1381,7 +2177,8 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
 
     final massBaseG = molesBase * baseMw;
     final massAcidG = molesAcid * acidMw;
-    final double? volAcidMl = (acidIsLiquid && acidDensity != null && acidDensity > 0)
+    final double? volAcidMl =
+        (acidIsLiquid && acidDensity != null && acidDensity > 0)
         ? (massAcidG / acidDensity)
         : null;
 
@@ -1414,7 +2211,9 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
   }
 
   void _onFieldChanged() {
-    if (_error != null) setState(() => _error = null);
+    if (_error != null) {
+      setState(() => _error = null);
+    }
   }
 
   @override
@@ -1426,20 +2225,38 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.science_outlined, color: AppColors.purpleBright, size: 20),
+                  Icon(
+                    Icons.science_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
                   SizedBox(width: 8),
-                  Text('Henderson-Hasselbalch Buffer Assistant', style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Henderson-Hasselbalch Buffer Assistant',
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.purple.withValues(alpha: 0.2),
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text('Acid-Base', style: TextStyle(color: AppColors.purpleBright, fontSize: 10, fontWeight: FontWeight.w700)),
+                child: Text(
+                  'Acid-Base',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ],
           ),
@@ -1448,81 +2265,169 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
           Row(
             children: [
               Expanded(
-                child: ChoiceChip(
-                  label: const Text('pH & Molar Ratio', style: TextStyle(fontSize: 12)),
-                  selected: _activeMode == 0,
-                  selectedColor: AppColors.purple.withValues(alpha: 0.35),
-                  backgroundColor: AppColors.bg0,
-                  onSelected: (val) {
-                    if (val) {
-                      setState(() => _activeMode = 0);
-                      AppHaptics.selection();
-                    }
-                  },
+                child: SpringPress(
+                  child: ChoiceChip(
+                    label: const Text(
+                      'pH & Molar Ratio',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    selected: _activeMode == 0,
+                    selectedColor: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.35),
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _activeMode = 0);
+                        AppHaptics.selection();
+                      }
+                    },
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: ChoiceChip(
-                  label: const Text('Formulation Recipe (g)', style: TextStyle(fontSize: 12)),
-                  selected: _activeMode == 1,
-                  selectedColor: AppColors.purple.withValues(alpha: 0.35),
-                  backgroundColor: AppColors.bg0,
-                  onSelected: (val) {
-                    if (val) {
-                      setState(() {
-                        _activeMode = 1;
-                        if (_formulationResult == null) _calculateFormulation();
-                      });
-                      AppHaptics.selection();
-                    }
-                  },
+                child: SpringPress(
+                  child: ChoiceChip(
+                    label: const Text(
+                      'Formulation Recipe (g)',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    selected: _activeMode == 1,
+                    selectedColor: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.35),
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() {
+                          _activeMode = 1;
+                          if (_formulationResult == null) {
+                            _calculateFormulation();
+                          }
+                        });
+                        AppHaptics.selection();
+                      }
+                    },
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           if (_activeMode == 0) ...[
-            const ChemistryMarkdownView(
+            ChemistryMarkdownView(
               text: r'$$\text{pH} = \text{p}K_a + \log\frac{[\text{A}^-]}{[\text{HA}]}, \quad \beta = 2.303 \, C_{\text{total}} \, \alpha_{\text{HA}} \, \alpha_{\text{A}^-}$$',
-              textStyle: TextStyle(fontSize: 12, color: AppColors.purpleBright),
+              textStyle: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               selectable: false,
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: TextField(controller: _pKa, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'pKa'), onChanged: (_) => _onFieldChanged())),
+                Expanded(
+                  child: TextField(
+                    controller: _pKa,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(labelText: 'pKa'),
+                    onChanged: (_) => _onFieldChanged(),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(controller: _salt, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: '[Conjugate Base]'), onChanged: (_) => _onFieldChanged())),
+                Expanded(
+                  child: TextField(
+                    controller: _salt,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: '[Conjugate Base]',
+                    ),
+                    onChanged: (_) => _onFieldChanged(),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(controller: _acid, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: '[Weak Acid]'), onChanged: (_) => _onFieldChanged())),
+                Expanded(
+                  child: TextField(
+                    controller: _acid,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(labelText: '[Weak Acid]'),
+                    onChanged: (_) => _onFieldChanged(),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            ElevatedButton(onPressed: _calculate, child: const Text('Compute Buffer pH')),
+            SpringPress(
+              child: ElevatedButton(
+                onPressed: _calculate,
+                child: const Text('Compute Buffer pH'),
+              ),
+            ),
             if (_error != null) ...[
               const SizedBox(height: 8),
-              Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+              Text(
+                _error!,
+                style: TextStyle(
+                  color: AppColors.adaptive(context, AppColors.danger),
+                  fontSize: 12,
+                ),
+              ),
             ],
             if (_ph != null) ...[
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Buffer pH = ${_ph!.toStringAsFixed(3)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.purpleBright)),
+                        Text(
+                          'Buffer pH = ${_ph!.toStringAsFixed(3)}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
-                            color: (_ph! >= 6.5 && _ph! <= 7.5 ? AppColors.success : AppColors.brandPrimary).withValues(alpha: 0.15),
+                            color:
+                                (_ph! >= 6.5 && _ph! <= 7.5
+                                        ? AppColors.adaptive(
+                                            context,
+                                            AppColors.success,
+                                          )
+                                        : Theme.of(context).colorScheme.primary)
+                                    .withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(_ph! < 7.0 ? 'Acidic Buffer' : (_ph! > 7.0 ? 'Basic Buffer' : 'Neutral Buffer'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                          child: Text(
+                            _ph! < 7.0
+                                ? 'Acidic Buffer'
+                                : (_ph! > 7.0
+                                      ? 'Basic Buffer'
+                                      : 'Neutral Buffer'),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -1530,16 +2435,49 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Molar Ratio [A⁻]/[HA]:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                        Text('${_ratio?.toStringAsFixed(3)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 12.5)),
+                        Text(
+                          'Molar Ratio [A⁻]/[HA]:',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '${_ratio?.toStringAsFixed(3)}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 12.5,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Fractions (α_base / α_acid):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                        Text('${((_alphaBase ?? 0) * 100).toStringAsFixed(1)}% / ${((_alphaAcid ?? 0) * 100).toStringAsFixed(1)}%', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentCyan, fontSize: 12.5)),
+                        Text(
+                          'Fractions (α_base / α_acid):',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '${((_alphaBase ?? 0) * 100).toStringAsFixed(1)}% / ${((_alphaAcid ?? 0) * 100).toStringAsFixed(1)}%',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.accentCyan,
+                            ),
+                            fontSize: 12.5,
+                          ),
+                        ),
                       ],
                     ),
                     if (_bufferCapacity != null) ...[
@@ -1547,8 +2485,26 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Buffer Capacity (β):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                          Text('${_bufferCapacity!.toStringAsFixed(4)} mol/(L·pH)', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 12.5)),
+                          Text(
+                            'Buffer Capacity (β):',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            '${_bufferCapacity!.toStringAsFixed(4)} mol/(L·pH)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.accentGold,
+                              ),
+                              fontSize: 12.5,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -1558,31 +2514,56 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
             ],
           ] else ...[
             // Mode 1: Formulation Assistant
-            const Text(
+            Text(
               'Select Standard Buffer System:',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: AppColors.bg0,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<int>(
                   value: _selectedPresetIdx,
                   isExpanded: true,
-                  dropdownColor: AppColors.bg1,
+                  dropdownColor: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerLow,
                   items: [
-                    ..._presets.asMap().entries.map((e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value.name, style: const TextStyle(fontSize: 13, color: Colors.white)),
-                    )),
-                    const DropdownMenuItem(
+                    ..._presets.asMap().entries.map(
+                      (e) => DropdownMenuItem(
+                        value: e.key,
+                        child: Text(
+                          e.value.name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ),
+                    DropdownMenuItem(
                       value: 999,
-                      child: Text('Custom Acid-Base Conjugate Pair', style: TextStyle(fontSize: 13, color: AppColors.accentCyan)),
+                      child: Text(
+                        'Custom Acid-Base Conjugate Pair',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                   onChanged: (val) {
@@ -1590,7 +2571,8 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
                       setState(() {
                         _selectedPresetIdx = val;
                         if (val < _presets.length) {
-                          _formTargetPhCtrl.text = _presets[val].pKa.toStringAsFixed(2);
+                          _formTargetPhCtrl.text = _presets[val].pKa
+                              .toStringAsFixed(2);
                         }
                       });
                       _calculateFormulation();
@@ -1603,33 +2585,97 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
             if (_selectedPresetIdx >= _presets.length) ...[
               Row(
                 children: [
-                  Expanded(child: TextField(controller: _customPkaCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Custom pKa'))),
+                  Expanded(
+                    child: TextField(
+                      controller: _customPkaCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Custom pKa',
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 8),
-                  Expanded(child: TextField(controller: _customAcidMwCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Acid MW (g/mol)'))),
+                  Expanded(
+                    child: TextField(
+                      controller: _customAcidMwCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Acid MW (g/mol)',
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 8),
-                  Expanded(child: TextField(controller: _customBaseMwCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Base MW (g/mol)'))),
+                  Expanded(
+                    child: TextField(
+                      controller: _customBaseMwCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Base MW (g/mol)',
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
             ],
             Row(
               children: [
-                Expanded(child: TextField(controller: _formTargetPhCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Target pH'))),
+                Expanded(
+                  child: TextField(
+                    controller: _formTargetPhCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(labelText: 'Target pH'),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(controller: _formConcCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Total Conc (M)'))),
+                Expanded(
+                  child: TextField(
+                    controller: _formConcCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Total Conc (M)',
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(controller: _formVolCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Volume (mL)'))),
+                Expanded(
+                  child: TextField(
+                    controller: _formVolCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(labelText: 'Volume (mL)'),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: _calculateFormulation,
-              icon: const Icon(Icons.calculate_outlined, size: 16),
-              label: const Text('Calculate Formulation Recipe'),
+            SpringPress(
+              child: ElevatedButton.icon(
+                onPressed: _calculateFormulation,
+                icon: const Icon(Icons.calculate_outlined, size: 16),
+                label: const Text('Calculate Formulation Recipe'),
+              ),
             ),
             if (_formError != null) ...[
               const SizedBox(height: 8),
-              Text(_formError!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+              Text(
+                _formError!,
+                style: TextStyle(
+                  color: AppColors.adaptive(context, AppColors.danger),
+                  fontSize: 12,
+                ),
+              ),
             ],
             if (_formulationResult != null) ...[
               const SizedBox(height: 12),
@@ -1655,10 +2701,18 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.bg0,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isOptimal ? AppColors.success.withValues(alpha: 0.5) : AppColors.accentGold.withValues(alpha: 0.5),
+          color: isOptimal
+              ? AppColors.adaptive(
+                  context,
+                  AppColors.success,
+                ).withValues(alpha: 0.5)
+              : AppColors.adaptive(
+                  context,
+                  AppColors.accentGold,
+                ).withValues(alpha: 0.5),
         ),
       ),
       child: Column(
@@ -1670,27 +2724,47 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
               Row(
                 children: [
                   Icon(
-                    isOptimal ? Icons.check_circle_outline : Icons.warning_amber_rounded,
-                    color: isOptimal ? AppColors.success : AppColors.accentGold,
+                    isOptimal
+                        ? Icons.check_circle_outline
+                        : Icons.warning_amber_rounded,
+                    color: isOptimal
+                        ? AppColors.adaptive(context, AppColors.success)
+                        : AppColors.adaptive(context, AppColors.accentGold),
                     size: 18,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     'Formulation for pH ${targetPh.toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 2.5,
+                ),
                 decoration: BoxDecoration(
-                  color: (isOptimal ? AppColors.success : AppColors.accentGold).withValues(alpha: 0.15),
+                  color:
+                      (isOptimal
+                              ? AppColors.adaptive(context, AppColors.success)
+                              : AppColors.adaptive(
+                                  context,
+                                  AppColors.accentGold,
+                                ))
+                          .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   isOptimal ? 'Optimal Range (pKa ± 1)' : 'Sub-optimal Range',
                   style: TextStyle(
-                    color: isOptimal ? AppColors.success : AppColors.accentGold,
+                    color: isOptimal
+                        ? AppColors.adaptive(context, AppColors.success)
+                        : AppColors.adaptive(context, AppColors.accentGold),
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1703,7 +2777,7 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.bg1,
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -1712,9 +2786,25 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text('1. Weigh $baseName:', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                      child: Text(
+                        '1. Weigh $baseName:',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
-                    Text('${massBaseG.toStringAsFixed(3)} g', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentCyan, fontSize: 13)),
+                    Text(
+                      '${massBaseG.toStringAsFixed(3)} g',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
                 const Divider(color: Colors.white12, height: 12),
@@ -1723,15 +2813,24 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
                   children: [
                     Expanded(
                       child: Text(
-                        volAcidMl != null ? '2. Pipette $acidName:' : '2. Weigh $acidName:',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        volAcidMl != null
+                            ? '2. Pipette $acidName:'
+                            : '2. Weigh $acidName:',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                     Text(
                       volAcidMl != null
                           ? '${volAcidMl.toStringAsFixed(2)} mL (${massAcidG.toStringAsFixed(3)} g)'
                           : '${massAcidG.toStringAsFixed(3)} g',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.brandBright, fontSize: 13),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -1739,22 +2838,49 @@ class _HendersonHasselbalchCalculatorState extends State<_HendersonHasselbalchCa
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Buffer Capacity (β):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                    Text('${beta.toStringAsFixed(4)} mol/(L·pH)', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 12.5)),
+                    Text(
+                      'Buffer Capacity (β):',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      '${beta.toStringAsFixed(4)} mol/(L·pH)',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentGold,
+                        ),
+                        fontSize: 12.5,
+                      ),
+                    ),
                   ],
                 ),
               ],
             ),
           ),
           const SizedBox(height: 12),
-          const Text('Laboratory Protocol 🧪:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)),
+          Text(
+            'Laboratory Protocol 🧪:',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+              fontSize: 12.5,
+            ),
+          ),
           const SizedBox(height: 6),
           Text(
             '1. Dissolve ${massBaseG.toStringAsFixed(3)} g of $baseName and ${volAcidMl != null ? "${volAcidMl.toStringAsFixed(2)} mL" : "${massAcidG.toStringAsFixed(3)} g"} of $acidName in ${(volMl * 0.8).round()} mL of deionized water.\n'
             '2. Stir thoroughly until completely dissolved.\n'
             '3. Calibrate pH meter and verify pH = ${targetPh.toStringAsFixed(2)} (adjust dropwise with 1M HCl or 1M NaOH if needed).\n'
             '4. Quantitatively dilute with deionized water to final volume of ${volMl.round()} mL in a volumetric flask.',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.4),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 11.5,
+              height: 1.4,
+            ),
           ),
         ],
       ),
@@ -1769,10 +2895,12 @@ class _GibbsFreeEnergyCalculator extends StatefulWidget {
   const _GibbsFreeEnergyCalculator();
 
   @override
-  State<_GibbsFreeEnergyCalculator> createState() => _GibbsFreeEnergyCalculatorState();
+  State<_GibbsFreeEnergyCalculator> createState() =>
+      _GibbsFreeEnergyCalculatorState();
 }
 
-class _GibbsFreeEnergyCalculatorState extends State<_GibbsFreeEnergyCalculator> {
+class _GibbsFreeEnergyCalculatorState
+    extends State<_GibbsFreeEnergyCalculator> {
   final _deltaH = TextEditingController(text: '-890.0'); // kJ/mol
   final _temp = TextEditingController(text: '298.15'); // K
   final _deltaS = TextEditingController(text: '-242.0'); // J/mol·K
@@ -1826,7 +2954,9 @@ class _GibbsFreeEnergyCalculatorState extends State<_GibbsFreeEnergyCalculator> 
   }
 
   void _onFieldChanged() {
-    if (_error != null) setState(() => _error = null);
+    if (_error != null) {
+      setState(() => _error = null);
+    }
   }
 
   @override
@@ -1835,51 +2965,125 @@ class _GibbsFreeEnergyCalculatorState extends State<_GibbsFreeEnergyCalculator> 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Gibbs Free Energy', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Gibbs Free Energy',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$\Delta G = \Delta H - T\Delta S$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _deltaH, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: const InputDecoration(labelText: 'ΔH (kJ/mol)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _deltaH,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'ΔH (kJ/mol)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _temp, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Temp T (K)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _temp,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'Temp T (K)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _deltaS, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: const InputDecoration(labelText: 'ΔS (J/mol·K)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _deltaS,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'ΔS (J/mol·K)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: _calculate, child: const Text('Calculate ΔG')),
+          SpringPress(
+            child: ElevatedButton(
+              onPressed: _calculate,
+              child: const Text('Calculate ΔG'),
+            ),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
           if (_deltaG != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('ΔG = ${_deltaG!.toStringAsFixed(2)} kJ/mol', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: _deltaG! < 0 ? AppColors.success : AppColors.danger)),
+                  Text(
+                    'ΔG = ${_deltaG!.toStringAsFixed(2)} kJ/mol',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: _deltaG! < 0
+                          ? AppColors.adaptive(context, AppColors.success)
+                          : AppColors.adaptive(context, AppColors.danger),
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(_deltaG! < 0 ? '✓ Spontaneous Reaction at this temperature' : '✗ Non-Spontaneous (requires energy input)', style: TextStyle(fontSize: 12, color: _deltaG! < 0 ? AppColors.success : AppColors.danger)),
+                  Text(
+                    _deltaG! < 0
+                        ? '✓ Spontaneous Reaction at this temperature'
+                        : '✗ Non-Spontaneous (requires energy input)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _deltaG! < 0
+                          ? AppColors.adaptive(context, AppColors.success)
+                          : AppColors.adaptive(context, AppColors.danger),
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     'Worked steps: ΔG = ΔH - (T × ΔS / 1000) = ${_deltaH.text} kJ/mol - (${_temp.text} K × ${_deltaS.text} J/mol·K / 1000) = ${_deltaG!.toStringAsFixed(2)} kJ/mol',
-                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _deltaG! < 0
                         ? 'Sanity check: Exergonic process (ΔG < 0); products are thermodynamically favored.'
                         : 'Sanity check: Endergonic process (ΔG > 0); reaction is non-spontaneous in forward direction.',
-                    style: const TextStyle(fontSize: 11, color: AppColors.accentCyan),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.adaptive(context, AppColors.accentCyan),
+                    ),
                   ),
                 ],
               ),
@@ -1957,7 +3161,9 @@ class _ArrheniusCalculatorState extends State<_ArrheniusCalculator> {
   }
 
   void _onFieldChanged() {
-    if (_error != null) setState(() => _error = null);
+    if (_error != null) {
+      setState(() => _error = null);
+    }
   }
 
   @override
@@ -1966,35 +3172,88 @@ class _ArrheniusCalculatorState extends State<_ArrheniusCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Arrhenius Equation (Rate Constant k)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Arrhenius Equation (Rate Constant k)',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$k = A \exp\left(-\frac{E_a}{RT}\right)$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _aFactor, decoration: const InputDecoration(labelText: 'A (Frequency Factor)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _aFactor,
+                  decoration: const InputDecoration(
+                    labelText: 'A (Frequency Factor)',
+                  ),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _ea, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Ea (kJ/mol)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _ea,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'Ea (kJ/mol)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _temp, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Temp (K)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _temp,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'Temp (K)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: _calculate, child: const Text('Compute Rate Constant k')),
+          SpringPress(
+            child: ElevatedButton(
+              onPressed: _calculate,
+              child: const Text('Compute Rate Constant k'),
+            ),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
           if (_k != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
-              child: Text('k = ${_k!.toStringAsExponential(4)} s⁻¹', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.accentCyan)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'k = ${_k!.toStringAsExponential(4)} s⁻¹',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.adaptive(context, AppColors.accentCyan),
+                ),
+              ),
             ),
           ],
         ],
@@ -2073,7 +3332,9 @@ class _BeerLambertCalculatorState extends State<_BeerLambertCalculator> {
   }
 
   void _onFieldChanged() {
-    if (_error != null) setState(() => _error = null);
+    if (_error != null) {
+      setState(() => _error = null);
+    }
   }
 
   @override
@@ -2082,40 +3343,106 @@ class _BeerLambertCalculatorState extends State<_BeerLambertCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Beer-Lambert Law (UV-Vis Absorbance)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Beer-Lambert Law (UV-Vis Absorbance)',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$A = \varepsilon \cdot c \cdot l$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _molarAbs, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'ε (M⁻¹cm⁻¹)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _molarAbs,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'ε (M⁻¹cm⁻¹)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _pathLength, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Path l (cm)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _pathLength,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'Path l (cm)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _conc, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Conc c (mol/L)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _conc,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Conc c (mol/L)',
+                  ),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: _calculate, child: const Text('Compute Absorbance A')),
+          SpringPress(
+            child: ElevatedButton(
+              onPressed: _calculate,
+              child: const Text('Compute Absorbance A'),
+            ),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
           if (_absorbance != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Text('Absorbance A: ${_absorbance!.toStringAsFixed(3)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.purpleBright)),
+                  Text(
+                    'Absorbance A: ${_absorbance!.toStringAsFixed(3)}',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                   if (_transmittance != null)
-                    Text('%T: ${_transmittance!.toStringAsFixed(2)}%', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.accentCyan)),
+                    Text(
+                      '%T: ${_transmittance!.toStringAsFixed(2)}%',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -2133,7 +3460,8 @@ class _PhotonEnergyCalculator extends StatefulWidget {
   const _PhotonEnergyCalculator();
 
   @override
-  State<_PhotonEnergyCalculator> createState() => _PhotonEnergyCalculatorState();
+  State<_PhotonEnergyCalculator> createState() =>
+      _PhotonEnergyCalculatorState();
 }
 
 class _PhotonEnergyCalculatorState extends State<_PhotonEnergyCalculator> {
@@ -2186,11 +3514,17 @@ class _PhotonEnergyCalculatorState extends State<_PhotonEnergyCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Photon Energy & Frequency', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Photon Energy & Frequency',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$E = h\nu = \frac{hc}{\lambda}$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 12),
@@ -2199,31 +3533,70 @@ class _PhotonEnergyCalculatorState extends State<_PhotonEnergyCalculator> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(labelText: 'Wavelength λ (nm)'),
             onChanged: (_) {
-              if (_error != null) setState(() => _error = null);
+              if (_error != null) {
+                setState(() => _error = null);
+              }
             },
           ),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: _calculate, child: const Text('Convert to Energy & Frequency')),
+          SpringPress(
+            child: ElevatedButton(
+              onPressed: _calculate,
+              child: const Text('Convert to Energy & Frequency'),
+            ),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
           if (_ev != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Text('${_ev!.toStringAsFixed(3)} eV', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.purpleBright)),
-                      Text('${_frequency!.toStringAsExponential(3)} Hz', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.accentCyan)),
+                      Text(
+                        '${_ev!.toStringAsFixed(3)} eV',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      Text(
+                        '${_frequency!.toStringAsExponential(3)} Hz',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text('Energy per mole: ${((_joules! * 6.02214076e23) / 1000).toStringAsFixed(1)} kJ/mol', style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                  Text(
+                    'Energy per mole: ${((_joules! * 6.02214076e23) / 1000).toStringAsFixed(1)} kJ/mol',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -2299,7 +3672,9 @@ class _NernstCalculatorState extends State<_NernstCalculator> {
   }
 
   void _onFieldChanged() {
-    if (_error != null) setState(() => _error = null);
+    if (_error != null) {
+      setState(() => _error = null);
+    }
   }
 
   @override
@@ -2308,49 +3683,110 @@ class _NernstCalculatorState extends State<_NernstCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Nernst Equation at 298 K', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Nernst Equation at 298 K',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$E = E^\circ - \frac{0.0592}{n} \log Q$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _eStd, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: const InputDecoration(labelText: 'E°cell (V)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _eStd,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'E°cell (V)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _nElectrons, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'n (electrons)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _nElectrons,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'n (electrons)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _qRatio, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Quotient Q'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _qRatio,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'Quotient Q'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: _calculate, child: const Text('Calculate Non-Standard E_cell')),
+          SpringPress(
+            child: ElevatedButton(
+              onPressed: _calculate,
+              child: const Text('Calculate Non-Standard E_cell'),
+            ),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
           if (_eCell != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Cell Potential E = ${_eCell!.toStringAsFixed(4)} V', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
+                  Text(
+                    'Cell Potential E = ${_eCell!.toStringAsFixed(4)} V',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.adaptive(context, AppColors.success),
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     'Worked steps: E = E° - (0.0592 / n) × log10(Q) = ${_eStd.text} V - (0.0592 / ${_nElectrons.text}) × log10(${_qRatio.text}) = ${_eCell!.toStringAsFixed(4)} V',
-                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _eCell! > 0
                         ? 'Sanity check: E_cell > 0 V indicates galvanic cell operates spontaneously in forward direction.'
                         : 'Sanity check: E_cell ≤ 0 V indicates reaction has reached equilibrium or requires external electrical energy.',
-                    style: const TextStyle(fontSize: 11, color: AppColors.accentCyan),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.adaptive(context, AppColors.accentCyan),
+                    ),
                   ),
                 ],
               ),
@@ -2369,7 +3805,8 @@ class _CellPotentialCalculator extends StatefulWidget {
   const _CellPotentialCalculator();
 
   @override
-  State<_CellPotentialCalculator> createState() => _CellPotentialCalculatorState();
+  State<_CellPotentialCalculator> createState() =>
+      _CellPotentialCalculatorState();
 }
 
 class _CellPotentialCalculatorState extends State<_CellPotentialCalculator> {
@@ -2426,7 +3863,9 @@ class _CellPotentialCalculatorState extends State<_CellPotentialCalculator> {
   }
 
   void _onFieldChanged() {
-    if (_error != null) setState(() => _error = null);
+    if (_error != null) {
+      setState(() => _error = null);
+    }
   }
 
   @override
@@ -2435,40 +3874,105 @@ class _CellPotentialCalculatorState extends State<_CellPotentialCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Standard Cell Potential & ΔG°', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Standard Cell Potential & ΔG°',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$E^\circ_{\text{cell}} = E^\circ_{\text{cathode}} - E^\circ_{\text{anode}}, \quad \Delta G^\circ = -nFE^\circ_{\text{cell}}$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _eCathode, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: const InputDecoration(labelText: 'E°cathode (V)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _eCathode,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'E°cathode (V)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _eAnode, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: const InputDecoration(labelText: 'E°anode (V)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _eAnode,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'E°anode (V)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: TextField(controller: _nElectrons, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'n (e-)'), onChanged: (_) => _onFieldChanged())),
+              Expanded(
+                child: TextField(
+                  controller: _nElectrons,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'n (e-)'),
+                  onChanged: (_) => _onFieldChanged(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: _calculate, child: const Text('Calculate E°cell & ΔG°')),
+          SpringPress(
+            child: ElevatedButton(
+              onPressed: _calculate,
+              child: const Text('Calculate E°cell & ΔG°'),
+            ),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
           if (_eCell != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bg0, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Text('E°cell: ${_eCell!.toStringAsFixed(3)} V', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.success)),
+                  Text(
+                    'E°cell: ${_eCell!.toStringAsFixed(3)} V',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.adaptive(context, AppColors.success),
+                    ),
+                  ),
                   if (_deltaGZero != null)
-                    Text('ΔG°: ${_deltaGZero!.toStringAsFixed(1)} kJ/mol', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _deltaGZero! < 0 ? AppColors.success : AppColors.danger)),
+                    Text(
+                      'ΔG°: ${_deltaGZero!.toStringAsFixed(1)} kJ/mol',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: _deltaGZero! < 0
+                            ? AppColors.adaptive(context, AppColors.success)
+                            : AppColors.adaptive(context, AppColors.danger),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -2486,7 +3990,8 @@ class _StoichiometryCalculator extends StatefulWidget {
   const _StoichiometryCalculator();
 
   @override
-  State<_StoichiometryCalculator> createState() => _StoichiometryCalculatorState();
+  State<_StoichiometryCalculator> createState() =>
+      _StoichiometryCalculatorState();
 }
 
 class _StoichiometryCalculatorState extends State<_StoichiometryCalculator> {
@@ -2547,9 +4052,13 @@ class _StoichiometryCalculatorState extends State<_StoichiometryCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.calculate_outlined, color: AppColors.purpleBright, size: 20),
+              Icon(
+                Icons.calculate_outlined,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'Mass ⇄ Mole ⇄ Particle Stoichiometry',
@@ -2558,9 +4067,12 @@ class _StoichiometryCalculatorState extends State<_StoichiometryCalculator> {
             ],
           ),
           const SizedBox(height: 4),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$n = \frac{m}{M}, \quad N = n \times N_A, \quad V_{\text{STP}} = n \times 22.414\text{ L}$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 12),
@@ -2569,7 +4081,9 @@ class _StoichiometryCalculatorState extends State<_StoichiometryCalculator> {
               Expanded(
                 child: TextField(
                   controller: _massController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: const InputDecoration(labelText: 'Mass (g)'),
                   onChanged: (_) => _compute(),
                 ),
@@ -2578,8 +4092,12 @@ class _StoichiometryCalculatorState extends State<_StoichiometryCalculator> {
               Expanded(
                 child: TextField(
                   controller: _molarMassController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Molar Mass (g/mol)'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Molar Mass (g/mol)',
+                  ),
                   onChanged: (_) => _compute(),
                 ),
               ),
@@ -2591,8 +4109,12 @@ class _StoichiometryCalculatorState extends State<_StoichiometryCalculator> {
               Expanded(
                 child: TextField(
                   controller: _actualYieldController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Actual Yield (g) [Optional]'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Actual Yield (g) [Optional]',
+                  ),
                   onChanged: (_) => _compute(),
                 ),
               ),
@@ -2603,42 +4125,112 @@ class _StoichiometryCalculatorState extends State<_StoichiometryCalculator> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.bg0,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.borderSubtle),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Chemical Amount (n):', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                      Text('${_moles!.toStringAsPrecision(4)} mol', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentCyan, fontSize: 14)),
+                      Text(
+                        'Chemical Amount (n):',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        '${_moles!.toStringAsPrecision(4)} mol',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                          fontSize: 14,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total Particles (N):', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                      Text('${_molecules!.toStringAsExponential(3)} particles', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                      Text(
+                        'Total Particles (N):',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        '${_molecules!.toStringAsExponential(3)} particles',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Gas Volume at STP (0°C, 1 atm):', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                      Text('${_gasStpLitres!.toStringAsPrecision(4)} L', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 13)),
+                      Text(
+                        'Gas Volume at STP (0°C, 1 atm):',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        '${_gasStpLitres!.toStringAsPrecision(4)} L',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentGold,
+                          ),
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ),
                   if (_percentYield != null) ...[
-                    const Divider(color: AppColors.borderSubtle, height: 16),
+                    Divider(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      height: 16,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Reaction Percent Yield:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                        Text('${_percentYield!.toStringAsFixed(1)}%', style: TextStyle(fontWeight: FontWeight.bold, color: _percentYield! >= 70 ? AppColors.success : AppColors.warning, fontSize: 14)),
+                        Text(
+                          'Reaction Percent Yield:',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          '${_percentYield!.toStringAsFixed(1)}%',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: _percentYield! >= 70
+                                ? AppColors.adaptive(context, AppColors.success)
+                                : AppColors.adaptive(
+                                    context,
+                                    AppColors.warning,
+                                  ),
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -2659,11 +4251,13 @@ class _UnitConversionCalculator extends StatefulWidget {
   const _UnitConversionCalculator();
 
   @override
-  State<_UnitConversionCalculator> createState() => _UnitConversionCalculatorState();
+  State<_UnitConversionCalculator> createState() =>
+      _UnitConversionCalculatorState();
 }
 
 class _UnitConversionCalculatorState extends State<_UnitConversionCalculator> {
-  int _dimension = 0; // 0: Pressure, 1: Energy & Spectra, 2: Concentration, 3: Temperature
+  int _dimension =
+      0; // 0: Pressure, 1: Energy & Spectra, 2: Concentration, 3: Temperature
   final _inputController = TextEditingController(text: '1.0');
   String _sourceUnit = 'atm';
 
@@ -2679,9 +4273,13 @@ class _UnitConversionCalculatorState extends State<_UnitConversionCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.sync_alt, color: AppColors.accentCyan, size: 20),
+              Icon(
+                Icons.sync_alt,
+                color: AppColors.adaptive(context, AppColors.accentCyan),
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'Chemistry Unit Conversions',
@@ -2722,22 +4320,40 @@ class _UnitConversionCalculatorState extends State<_UnitConversionCalculator> {
     final sel = _dimension == idx;
     return Padding(
       padding: const EdgeInsets.only(right: 6),
-      child: ChoiceChip(
-        label: Text(title, style: TextStyle(fontSize: 11.5, color: sel ? Colors.white : AppColors.textSecondary)),
-        selected: sel,
-        selectedColor: AppColors.purple,
-        backgroundColor: AppColors.surfaceElevated,
-        onSelected: (v) {
-          if (v) {
-            setState(() {
-              _dimension = idx;
-              if (idx == 0) _sourceUnit = 'atm';
-              if (idx == 1) _sourceUnit = 'kJ/mol';
-              if (idx == 2) _sourceUnit = 'M';
-              if (idx == 3) _sourceUnit = '°C';
-            });
-          }
-        },
+      child: SpringPress(
+        child: ChoiceChip(
+          label: Text(
+            title,
+            style: TextStyle(
+              fontSize: 11.5,
+              color: sel
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          selected: sel,
+          selectedColor: Theme.of(context).colorScheme.primary,
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+          onSelected: (v) {
+            if (v) {
+              setState(() {
+                _dimension = idx;
+                if (idx == 0) {
+                  _sourceUnit = 'atm';
+                }
+                if (idx == 1) {
+                  _sourceUnit = 'kJ/mol';
+                }
+                if (idx == 2) {
+                  _sourceUnit = 'M';
+                }
+                if (idx == 3) {
+                  _sourceUnit = '°C';
+                }
+              });
+            }
+          },
+        ),
       ),
     );
   }
@@ -2751,9 +4367,18 @@ class _UnitConversionCalculatorState extends State<_UnitConversionCalculator> {
       rows.add(MapEntry('Atmospheres (atm)', atm.toStringAsPrecision(4)));
       rows.add(MapEntry('Bar (bar)', (atm * 1.01325).toStringAsPrecision(4)));
       rows.add(MapEntry('Torr / mmHg', (atm * 760.0).toStringAsFixed(1)));
-      rows.add(MapEntry('Kilopascals (kPa)', (atm * 101.325).toStringAsPrecision(4)));
-      rows.add(MapEntry('Pascals (Pa)', (atm * 101325.0).toStringAsPrecision(5)));
-      rows.add(MapEntry('Pounds / sq inch (psi)', (atm * 14.696).toStringAsPrecision(4)));
+      rows.add(
+        MapEntry('Kilopascals (kPa)', (atm * 101.325).toStringAsPrecision(4)),
+      );
+      rows.add(
+        MapEntry('Pascals (Pa)', (atm * 101325.0).toStringAsPrecision(5)),
+      );
+      rows.add(
+        MapEntry(
+          'Pounds / sq inch (psi)',
+          (atm * 14.696).toStringAsPrecision(4),
+        ),
+      );
     } else if (_dimension == 1) {
       final kjMol = val;
       final joules = kjMol * 1000.0 / 6.02214e23;
@@ -2763,14 +4388,33 @@ class _UnitConversionCalculatorState extends State<_UnitConversionCalculator> {
       rows.add(MapEntry('kJ / mol', kjMol.toStringAsPrecision(4)));
       rows.add(MapEntry('kcal / mol', kcalMol.toStringAsPrecision(4)));
       rows.add(MapEntry('Electronvolts (eV)', ev.toStringAsPrecision(4)));
-      rows.add(MapEntry('Single Molecule Joules (J)', joules.toStringAsExponential(3)));
-      rows.add(MapEntry('Spectroscopic Wavenumber (cm⁻¹)', cmInv.toStringAsPrecision(4)));
+      rows.add(
+        MapEntry('Single Molecule Joules (J)', joules.toStringAsExponential(3)),
+      );
+      rows.add(
+        MapEntry(
+          'Spectroscopic Wavenumber (cm⁻¹)',
+          cmInv.toStringAsPrecision(4),
+        ),
+      );
     } else if (_dimension == 2) {
       final m = val;
       rows.add(MapEntry('Molarity (mol / L)', m.toStringAsPrecision(4)));
-      rows.add(MapEntry('Millimolar (mM)', (m * 1000.0).toStringAsPrecision(4)));
-      rows.add(MapEntry('Percent w/v (for MW 58.44)', '${(m * 5.844).toStringAsPrecision(3)} %'));
-      rows.add(MapEntry('ppm (mg / L for MW 58.44)', (m * 58440.0).toStringAsPrecision(4)));
+      rows.add(
+        MapEntry('Millimolar (mM)', (m * 1000.0).toStringAsPrecision(4)),
+      );
+      rows.add(
+        MapEntry(
+          'Percent w/v (for MW 58.44)',
+          '${(m * 5.844).toStringAsPrecision(3)} %',
+        ),
+      );
+      rows.add(
+        MapEntry(
+          'ppm (mg / L for MW 58.44)',
+          (m * 58440.0).toStringAsPrecision(4),
+        ),
+      );
     } else if (_dimension == 3) {
       final c = val;
       final k = c + 273.15;
@@ -2783,20 +4427,37 @@ class _UnitConversionCalculatorState extends State<_UnitConversionCalculator> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.bg0,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
-        children: rows.map((e) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(e.key, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-              Text(e.value, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 13)),
-            ],
-          ),
-        )).toList(),
+        children: rows
+            .map(
+              (e) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      e.key,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    Text(
+                      e.value,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -2809,7 +4470,8 @@ class _CrystalFieldCalculator extends StatefulWidget {
   const _CrystalFieldCalculator();
 
   @override
-  State<_CrystalFieldCalculator> createState() => _CrystalFieldCalculatorState();
+  State<_CrystalFieldCalculator> createState() =>
+      _CrystalFieldCalculatorState();
 }
 
 class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
@@ -2844,24 +4506,52 @@ class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
         if (_isStrongField) {
           // Low spin
           if (_dElectrons == 4) {
-            t2g = 4; eg = 0; unpaired = 2; cfseVal = -1.6; pairingCount = 1;
+            t2g = 4;
+            eg = 0;
+            unpaired = 2;
+            cfseVal = -1.6;
+            pairingCount = 1;
           } else if (_dElectrons == 5) {
-            t2g = 5; eg = 0; unpaired = 1; cfseVal = -2.0; pairingCount = 2;
+            t2g = 5;
+            eg = 0;
+            unpaired = 1;
+            cfseVal = -2.0;
+            pairingCount = 2;
           } else if (_dElectrons == 6) {
-            t2g = 6; eg = 0; unpaired = 0; cfseVal = -2.4; pairingCount = 2;
+            t2g = 6;
+            eg = 0;
+            unpaired = 0;
+            cfseVal = -2.4;
+            pairingCount = 2;
           } else {
-            t2g = 6; eg = 1; unpaired = 1; cfseVal = -1.8; pairingCount = 1;
+            t2g = 6;
+            eg = 1;
+            unpaired = 1;
+            cfseVal = -1.8;
+            pairingCount = 1;
           }
         } else {
           // High spin
           if (_dElectrons == 4) {
-            t2g = 3; eg = 1; unpaired = 4; cfseVal = -0.6;
+            t2g = 3;
+            eg = 1;
+            unpaired = 4;
+            cfseVal = -0.6;
           } else if (_dElectrons == 5) {
-            t2g = 3; eg = 2; unpaired = 5; cfseVal = 0.0;
+            t2g = 3;
+            eg = 2;
+            unpaired = 5;
+            cfseVal = 0.0;
           } else if (_dElectrons == 6) {
-            t2g = 4; eg = 2; unpaired = 4; cfseVal = -0.4;
+            t2g = 4;
+            eg = 2;
+            unpaired = 4;
+            cfseVal = -0.4;
           } else {
-            t2g = 5; eg = 2; unpaired = 3; cfseVal = -0.8;
+            t2g = 5;
+            eg = 2;
+            unpaired = 3;
+            cfseVal = -0.8;
           }
         }
       }
@@ -2878,7 +4568,10 @@ class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
         unpaired = _dElectrons;
         cfseVal = (-0.6 * 2) + (0.4 * t2g);
       } else if (_dElectrons == 5) {
-        eg = 2; t2g = 3; unpaired = 5; cfseVal = 0.0;
+        eg = 2;
+        t2g = 3;
+        unpaired = 5;
+        cfseVal = 0.0;
       } else if (_dElectrons <= 7) {
         eg = 2 + (_dElectrons - 5);
         t2g = 3;
@@ -2902,9 +4595,13 @@ class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.hub_rounded, color: AppColors.purpleBright, size: 20),
+              Icon(
+                Icons.hub_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'Crystal Field & Ligand Field Solver',
@@ -2919,15 +4616,34 @@ class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Coordination Geometry', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    Text(
+                      'Coordination Geometry',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     SegmentedButton<bool>(
                       segments: const [
-                        ButtonSegment(value: true, label: Text('Octahedral (Oₕ)', style: TextStyle(fontSize: 11))),
-                        ButtonSegment(value: false, label: Text('Tetrahedral (T_d)', style: TextStyle(fontSize: 11))),
+                        ButtonSegment(
+                          value: true,
+                          label: Text(
+                            'Octahedral (Oₕ)',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ),
+                        ButtonSegment(
+                          value: false,
+                          label: Text(
+                            'Tetrahedral (T_d)',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ),
                       ],
                       selected: {_isOctahedral},
-                      onSelectionChanged: (val) => setState(() => _isOctahedral = val.first),
+                      onSelectionChanged: (val) =>
+                          setState(() => _isOctahedral = val.first),
                     ),
                   ],
                 ),
@@ -2941,14 +4657,20 @@ class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('d-Electrons: d$_dElectrons', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text(
+                      'd-Electrons: d$_dElectrons',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     Slider(
                       value: _dElectrons.toDouble(),
                       min: 1,
                       max: 10,
                       divisions: 9,
                       label: 'd$_dElectrons',
-                      activeColor: AppColors.brandPrimary,
+                      activeColor: Theme.of(context).colorScheme.primary,
                       onChanged: (v) => setState(() => _dElectrons = v.round()),
                     ),
                   ],
@@ -2959,13 +4681,26 @@ class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Ligand Field', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                    Text(
+                      'Ligand Field',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    ChoiceChip(
-                      label: Text(_isStrongField ? 'Low Spin (Strong)' : 'High Spin (Weak)', style: const TextStyle(fontSize: 11)),
-                      selected: _isStrongField,
-                      selectedColor: AppColors.brandPrimary,
-                      onSelected: (b) => setState(() => _isStrongField = b),
+                    SpringPress(
+                      child: ChoiceChip(
+                        label: Text(
+                          _isStrongField
+                              ? 'Low Spin (Strong)'
+                              : 'High Spin (Weak)',
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        selected: _isStrongField,
+                        selectedColor: Theme.of(context).colorScheme.primary,
+                        onSelected: (b) => setState(() => _isStrongField = b),
+                      ),
                     ),
                   ],
                 ),
@@ -2976,9 +4711,11 @@ class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.bg0,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             child: Column(
               children: [
@@ -2986,7 +4723,10 @@ class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
                 const Divider(color: Colors.white12, height: 16),
                 _buildMetricRow('Unpaired Electrons (n)', '$unpaired'),
                 const Divider(color: Colors.white12, height: 16),
-                _buildMetricRow('Spin-Only Magnetic Moment (μₛₒ)', '${spinOnlyMu.toStringAsFixed(2)} BM'),
+                _buildMetricRow(
+                  'Spin-Only Magnetic Moment (μₛₒ)',
+                  '${spinOnlyMu.toStringAsFixed(2)} BM',
+                ),
                 const Divider(color: Colors.white12, height: 16),
                 _buildMetricRow(
                   'CFSE (Stabilization Energy)',
@@ -2999,18 +4739,26 @@ class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.bg1,
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, color: AppColors.accentCyan, size: 16),
+                Icon(
+                  Icons.info_outline,
+                  color: AppColors.adaptive(context, AppColors.accentCyan),
+                  size: 16,
+                ),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Spectrochemical Series: CO > CN⁻ > NO₂⁻ > phen > bpy > en > NH₃ > H₂O > F⁻ > Cl⁻ > SCN⁻ > Br⁻ > I⁻. Strong-field ligands cause large Δₒ > P favoring low-spin complexes.',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 11.5, height: 1.35),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 11.5,
+                      height: 1.35,
+                    ),
                   ),
                 ),
               ],
@@ -3025,15 +4773,30 @@ class _CrystalFieldCalculatorState extends State<_CrystalFieldCalculator> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 13.5)),
+        Text(
+          label,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12.5,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 13.5,
+          ),
+        ),
       ],
     );
   }
 
   static String _toSuper(int n) {
     const map = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
-    if (n >= 0 && n <= 9) return map[n];
+    if (n >= 0 && n <= 9) {
+      return map[n];
+    }
     return '$n';
   }
 }
@@ -3045,10 +4808,12 @@ class _IntegratedRateLawCalculator extends StatefulWidget {
   const _IntegratedRateLawCalculator();
 
   @override
-  State<_IntegratedRateLawCalculator> createState() => _IntegratedRateLawCalculatorState();
+  State<_IntegratedRateLawCalculator> createState() =>
+      _IntegratedRateLawCalculatorState();
 }
 
-class _IntegratedRateLawCalculatorState extends State<_IntegratedRateLawCalculator> {
+class _IntegratedRateLawCalculatorState
+    extends State<_IntegratedRateLawCalculator> {
   int _order = 1; // 0, 1, 2
   final _a0Ctrl = TextEditingController(text: '1.0');
   final _kCtrl = TextEditingController(text: '0.05');
@@ -3094,9 +4859,13 @@ class _IntegratedRateLawCalculatorState extends State<_IntegratedRateLawCalculat
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.timer_outlined, color: AppColors.purpleBright, size: 20),
+              Icon(
+                Icons.timer_outlined,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'Chemical Kinetics & Integrated Rate Laws',
@@ -3107,19 +4876,36 @@ class _IntegratedRateLawCalculatorState extends State<_IntegratedRateLawCalculat
           const SizedBox(height: 14),
           Row(
             children: [
-              const Text('Reaction Order: ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                'Reaction Order: ',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
               const SizedBox(width: 8),
               ...[0, 1, 2].map((ord) {
                 final isSel = _order == ord;
                 return Padding(
                   padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(
-                    label: Text(ord == 0 ? '0th Order' : (ord == 1 ? '1st Order' : '2nd Order'), style: TextStyle(fontSize: 11, color: isSel ? Colors.white : AppColors.textSecondary)),
-                    selected: isSel,
-                    selectedColor: AppColors.brandPrimary,
-                    onSelected: (b) {
-                      if (b) setState(() => _order = ord);
-                    },
+                  child: SpringPress(
+                    child: ChoiceChip(
+                      label: Text(
+                        ord == 0
+                            ? '0th Order'
+                            : (ord == 1 ? '1st Order' : '2nd Order'),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isSel
+                              ? Theme.of(context).colorScheme.onSurface
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      selected: isSel,
+                      selectedColor: Theme.of(context).colorScheme.primary,
+                      onSelected: (b) {
+                        if (b) {
+                          setState(() => _order = ord);
+                        }
+                      },
+                    ),
                   ),
                 );
               }),
@@ -3131,8 +4917,12 @@ class _IntegratedRateLawCalculatorState extends State<_IntegratedRateLawCalculat
               Expanded(
                 child: TextField(
                   controller: _a0Ctrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Initial [A]₀ (M)'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Initial [A]₀ (M)',
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -3140,9 +4930,12 @@ class _IntegratedRateLawCalculatorState extends State<_IntegratedRateLawCalculat
               Expanded(
                 child: TextField(
                   controller: _kCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(
-                    labelText: 'k (${_order == 0 ? "M/s" : (_order == 1 ? "s⁻¹" : "M⁻¹s⁻¹")})',
+                    labelText:
+                        'k (${_order == 0 ? "M/s" : (_order == 1 ? "s⁻¹" : "M⁻¹s⁻¹")})',
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -3151,7 +4944,9 @@ class _IntegratedRateLawCalculatorState extends State<_IntegratedRateLawCalculat
               Expanded(
                 child: TextField(
                   controller: _tCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: const InputDecoration(labelText: 'Time t (s)'),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -3162,38 +4957,73 @@ class _IntegratedRateLawCalculatorState extends State<_IntegratedRateLawCalculat
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.bg0,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ChemistryMarkdownView(
                   text: equation,
-                  textStyle: const TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 13),
+                  textStyle: TextStyle(
+                    color: AppColors.adaptive(context, AppColors.accentCyan),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                   selectable: false,
                 ),
                 const SizedBox(height: 4),
                 ChemistryMarkdownView(
                   text: linearPlot,
-                  textStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5),
+                  textStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11.5,
+                  ),
                   selectable: false,
                 ),
                 const Divider(color: Colors.white12, height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Remaining [A]ₜ', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-                    Text('${at.toStringAsPrecision(4)} M', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13.5)),
+                    Text(
+                      'Remaining [A]ₜ',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    Text(
+                      '${at.toStringAsPrecision(4)} M',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 13.5,
+                      ),
+                    ),
                   ],
                 ),
                 const Divider(color: Colors.white12, height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Half-Life (t₁/₂)', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-                    Text('${halfLife.toStringAsPrecision(4)} s', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.success, fontSize: 13.5)),
+                    Text(
+                      'Half-Life (t₁/₂)',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    Text(
+                      '${halfLife.toStringAsPrecision(4)} s',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.adaptive(context, AppColors.success),
+                        fontSize: 13.5,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -3212,10 +5042,12 @@ class _QuantumChemistryCalculator extends StatefulWidget {
   const _QuantumChemistryCalculator();
 
   @override
-  State<_QuantumChemistryCalculator> createState() => _QuantumChemistryCalculatorState();
+  State<_QuantumChemistryCalculator> createState() =>
+      _QuantumChemistryCalculatorState();
 }
 
-class _QuantumChemistryCalculatorState extends State<_QuantumChemistryCalculator> {
+class _QuantumChemistryCalculatorState
+    extends State<_QuantumChemistryCalculator> {
   final _lCtrl = TextEditingController(text: '1.0'); // nm
   final _nCtrl = TextEditingController(text: '1');
   final _vCtrl = TextEditingController(text: '1.0e6'); // m/s for de Broglie
@@ -3256,9 +5088,13 @@ class _QuantumChemistryCalculatorState extends State<_QuantumChemistryCalculator
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.waves_rounded, color: AppColors.purpleBright, size: 20),
+              Icon(
+                Icons.waves_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'Quantum Chemistry: 1D Box & de Broglie',
@@ -3267,11 +5103,21 @@ class _QuantumChemistryCalculatorState extends State<_QuantumChemistryCalculator
             ],
           ),
           const SizedBox(height: 14),
-          const Text('Particle in a 1D Box (Electron)', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            'Particle in a 1D Box (Electron)',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
           const SizedBox(height: 4),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$E_n = \frac{n^2 h^2}{8mL^2}$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 10),
@@ -3280,8 +5126,12 @@ class _QuantumChemistryCalculatorState extends State<_QuantumChemistryCalculator
               Expanded(
                 child: TextField(
                   controller: _lCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Box Length L (nm)'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Box Length L (nm)',
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -3290,7 +5140,9 @@ class _QuantumChemistryCalculatorState extends State<_QuantumChemistryCalculator
                 child: TextField(
                   controller: _nCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Quantum Number n'),
+                  decoration: const InputDecoration(
+                    labelText: 'Quantum Number n',
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -3300,42 +5152,67 @@ class _QuantumChemistryCalculatorState extends State<_QuantumChemistryCalculator
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.bg0,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
               children: [
-                _buildRow('Energy E_$n', '${enEv.toStringAsPrecision(4)} eV (${enJ.toStringAsPrecision(3)} J)'),
+                _buildRow(
+                  'Energy E_$n',
+                  '${enEv.toStringAsPrecision(4)} eV (${enJ.toStringAsPrecision(3)} J)',
+                ),
                 const Divider(color: Colors.white12, height: 14),
-                _buildRow('Transition ΔE (n → n+1)', '${(deltaEJ / eV).toStringAsPrecision(3)} eV'),
+                _buildRow(
+                  'Transition ΔE (n → n+1)',
+                  '${(deltaEJ / eV).toStringAsPrecision(3)} eV',
+                ),
                 const Divider(color: Colors.white12, height: 14),
-                _buildRow('Absorption Wavelength (λ)', '${lambdaNm.toStringAsPrecision(4)} nm'),
+                _buildRow(
+                  'Absorption Wavelength (λ)',
+                  '${lambdaNm.toStringAsPrecision(4)} nm',
+                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          const Text('de Broglie Wavelength', style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            'de Broglie Wavelength',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
           const SizedBox(height: 4),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$\lambda = \frac{h}{mv}$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 10),
           TextField(
             controller: _vCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: 'Electron Velocity v (m/s)', hintText: 'e.g. 1.0e6'),
+            decoration: const InputDecoration(
+              labelText: 'Electron Velocity v (m/s)',
+              hintText: 'e.g. 1.0e6',
+            ),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.bg0,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: _buildRow('de Broglie Wavelength', '${deBroglieNm.toStringAsPrecision(4)} nm (${(deBroglieNm * 10).toStringAsPrecision(4)} Å)'),
+            child: _buildRow(
+              'de Broglie Wavelength',
+              '${deBroglieNm.toStringAsPrecision(4)} nm (${(deBroglieNm * 10).toStringAsPrecision(4)} Å)',
+            ),
           ),
         ],
       ),
@@ -3346,8 +5223,21 @@ class _QuantumChemistryCalculatorState extends State<_QuantumChemistryCalculator
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-        Text(val, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+        Text(
+          title,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12.5,
+          ),
+        ),
+        Text(
+          val,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 13,
+          ),
+        ),
       ],
     );
   }
@@ -3360,11 +5250,15 @@ class _AnalyticalErrorCalculator extends StatefulWidget {
   const _AnalyticalErrorCalculator();
 
   @override
-  State<_AnalyticalErrorCalculator> createState() => _AnalyticalErrorCalculatorState();
+  State<_AnalyticalErrorCalculator> createState() =>
+      _AnalyticalErrorCalculatorState();
 }
 
-class _AnalyticalErrorCalculatorState extends State<_AnalyticalErrorCalculator> {
-  final _dataCtrl = TextEditingController(text: '12.45, 12.48, 12.46, 12.72, 12.47');
+class _AnalyticalErrorCalculatorState
+    extends State<_AnalyticalErrorCalculator> {
+  final _dataCtrl = TextEditingController(
+    text: '12.45, 12.48, 12.46, 12.72, 12.47',
+  );
 
   @override
   void dispose() {
@@ -3374,8 +5268,12 @@ class _AnalyticalErrorCalculatorState extends State<_AnalyticalErrorCalculator> 
 
   @override
   Widget build(BuildContext context) {
-    final rawTokens = _dataCtrl.text.split(RegExp(r'[,\s]+')).where((s) => s.isNotEmpty);
-    final values = rawTokens.map((s) => double.tryParse(s)).whereType<double>().toList()..sort();
+    final rawTokens = _dataCtrl.text
+        .split(RegExp(r'[,\s]+'))
+        .where((s) => s.isNotEmpty);
+    final values =
+        rawTokens.map((s) => double.tryParse(s)).whereType<double>().toList()
+          ..sort();
 
     final n = values.length;
     double mean = 0.0;
@@ -3405,15 +5303,23 @@ class _AnalyticalErrorCalculatorState extends State<_AnalyticalErrorCalculator> 
 
         // Q critical values at 90% confidence
         const qCritTable = {
-          3: 0.941, 4: 0.765, 5: 0.642, 6: 0.560,
-          7: 0.507, 8: 0.468, 9: 0.437, 10: 0.412
+          3: 0.941,
+          4: 0.765,
+          5: 0.642,
+          6: 0.560,
+          7: 0.507,
+          8: 0.468,
+          9: 0.437,
+          10: 0.412,
         };
         final qCrit = qCritTable[n] ?? 0.400;
 
         if (qCalc > qCrit) {
-          qTestResult = 'Suspect $suspectVal: Q_calc ($qCalc) > Q_crit ($qCrit) ⟹ REJECT Outlier at 90% CL';
+          qTestResult =
+              'Suspect $suspectVal: Q_calc ($qCalc) > Q_crit ($qCrit) ⟹ REJECT Outlier at 90% CL';
         } else {
-          qTestResult = 'Suspect $suspectVal: Q_calc ($qCalc) ≤ Q_crit ($qCrit) ⟹ RETAIN Value';
+          qTestResult =
+              'Suspect $suspectVal: Q_calc ($qCalc) ≤ Q_crit ($qCrit) ⟹ RETAIN Value';
         }
       }
     }
@@ -3422,9 +5328,13 @@ class _AnalyticalErrorCalculatorState extends State<_AnalyticalErrorCalculator> 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.analytics_outlined, color: AppColors.purpleBright, size: 20),
+              Icon(
+                Icons.analytics_outlined,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'Error Analysis & Dixon’s Q-Test (Outliers)',
@@ -3443,14 +5353,22 @@ class _AnalyticalErrorCalculatorState extends State<_AnalyticalErrorCalculator> 
           ),
           const SizedBox(height: 14),
           if (n < 3)
-            const Text('Please input at least 3 replicate observations to calculate statistics.', style: TextStyle(color: AppColors.textMuted, fontSize: 12))
+            Text(
+              'Please input at least 3 replicate observations to calculate statistics.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
+            )
           else
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.bg0,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
               child: Column(
                 children: [
@@ -3460,17 +5378,27 @@ class _AnalyticalErrorCalculatorState extends State<_AnalyticalErrorCalculator> 
                   const Divider(color: Colors.white12, height: 14),
                   _row('Standard Deviation (s)', stdDev.toStringAsFixed(4)),
                   const Divider(color: Colors.white12, height: 14),
-                  _row('Relative Std Dev (%RSD)', '${rsd.toStringAsFixed(2)} %'),
+                  _row(
+                    'Relative Std Dev (%RSD)',
+                    '${rsd.toStringAsFixed(2)} %',
+                  ),
                   const Divider(color: Colors.white12, height: 14),
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.bg1,
+                      color: Theme.of(context).colorScheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       'Dixon Q-Test (90% Conf.): $qTestResult',
-                      style: const TextStyle(fontSize: 11.5, color: AppColors.accentCyan, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -3485,8 +5413,21 @@ class _AnalyticalErrorCalculatorState extends State<_AnalyticalErrorCalculator> 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(l, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-        Text(v, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+        Text(
+          l,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12.5,
+          ),
+        ),
+        Text(
+          v,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 13,
+          ),
+        ),
       ],
     );
   }
@@ -3504,9 +5445,11 @@ class _VanDeemterCalculator extends StatefulWidget {
 
 class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
   final _aCtrl = TextEditingController(text: '0.08'); // Eddy diffusion (cm)
-  final _bCtrl = TextEditingController(text: '0.15'); // Longitudinal diffusion (cm^2/s)
+  final _bCtrl = TextEditingController(
+    text: '0.15',
+  ); // Longitudinal diffusion (cm^2/s)
   final _cCtrl = TextEditingController(text: '0.03'); // Mass transfer (s)
-  final _uCtrl = TextEditingController(text: '2.0');  // Flow velocity (cm/s)
+  final _uCtrl = TextEditingController(text: '2.0'); // Flow velocity (cm/s)
   final _colLengthCtrl = TextEditingController(text: '25.0'); // cm
 
   @override
@@ -3540,9 +5483,13 @@ class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.view_column_outlined, color: AppColors.purpleBright, size: 20),
+              Icon(
+                Icons.view_column_outlined,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'HPLC Van Deemter Column Efficiency',
@@ -3551,9 +5498,12 @@ class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
             ],
           ),
           const SizedBox(height: 14),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$H = A + \frac{B}{u} + C \cdot u, \quad u_{\text{opt}} = \sqrt{\frac{B}{C}}$$',
-            textStyle: TextStyle(fontSize: 12.5, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 10),
@@ -3570,7 +5520,9 @@ class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
               Expanded(
                 child: TextField(
                   controller: _bCtrl,
-                  decoration: const InputDecoration(labelText: 'B (Diff, cm²/s)'),
+                  decoration: const InputDecoration(
+                    labelText: 'B (Diff, cm²/s)',
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -3578,7 +5530,9 @@ class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
               Expanded(
                 child: TextField(
                   controller: _cCtrl,
-                  decoration: const InputDecoration(labelText: 'C (Mass Tr, s)'),
+                  decoration: const InputDecoration(
+                    labelText: 'C (Mass Tr, s)',
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -3590,7 +5544,9 @@ class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
               Expanded(
                 child: TextField(
                   controller: _uCtrl,
-                  decoration: const InputDecoration(labelText: 'Linear Velocity u (cm/s)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Linear Velocity u (cm/s)',
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -3598,7 +5554,9 @@ class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
               Expanded(
                 child: TextField(
                   controller: _colLengthCtrl,
-                  decoration: const InputDecoration(labelText: 'Column Length (cm)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Column Length (cm)',
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -3608,18 +5566,27 @@ class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.bg0,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
               children: [
-                _row('Plate Height at u = $u cm/s', '${currentH.toStringAsFixed(4)} cm'),
+                _row(
+                  'Plate Height at u = $u cm/s',
+                  '${currentH.toStringAsFixed(4)} cm',
+                ),
                 const Divider(color: Colors.white12, height: 14),
                 _row('Current Theoretical Plates (N)', '$currentPlates plates'),
                 const Divider(color: Colors.white12, height: 14),
-                _row('Optimal Velocity (u_opt)', '${uOpt.toStringAsFixed(3)} cm/s'),
+                _row(
+                  'Optimal Velocity (u_opt)',
+                  '${uOpt.toStringAsFixed(3)} cm/s',
+                ),
                 const Divider(color: Colors.white12, height: 14),
-                _row('Minimum Plate Height (H_min)', '${hMin.toStringAsFixed(4)} cm'),
+                _row(
+                  'Minimum Plate Height (H_min)',
+                  '${hMin.toStringAsFixed(4)} cm',
+                ),
                 const Divider(color: Colors.white12, height: 14),
                 _row('Maximum Theoretical Plates (N_max)', '$maxPlates plates'),
               ],
@@ -3634,8 +5601,21 @@ class _VanDeemterCalculatorState extends State<_VanDeemterCalculator> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(l, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-        Text(v, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+        Text(
+          l,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
+        ),
+        Text(
+          v,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 13,
+          ),
+        ),
       ],
     );
   }
@@ -3654,10 +5634,12 @@ class _HplcCalibrationCurveCalculator extends StatefulWidget {
   const _HplcCalibrationCurveCalculator();
 
   @override
-  State<_HplcCalibrationCurveCalculator> createState() => _HplcCalibrationCurveCalculatorState();
+  State<_HplcCalibrationCurveCalculator> createState() =>
+      _HplcCalibrationCurveCalculatorState();
 }
 
-class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCalculator> {
+class _HplcCalibrationCurveCalculatorState
+    extends State<_HplcCalibrationCurveCalculator> {
   final List<_CalibPoint> _points = [
     const _CalibPoint(10.0, 15200.0),
     const _CalibPoint(25.0, 37800.0),
@@ -3683,7 +5665,9 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
     final x = double.tryParse(_newConcCtrl.text.trim());
     final y = double.tryParse(_newAreaCtrl.text.trim());
     if (x == null || x < 0) {
-      setState(() => _error = 'Concentration must be a valid non-negative number.');
+      setState(
+        () => _error = 'Concentration must be a valid non-negative number.',
+      );
       AppHaptics.error();
       return;
     }
@@ -3704,7 +5688,9 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
 
   void _removePoint(int index) {
     if (_points.length <= 2) {
-      setState(() => _error = 'At least 2 calibration points are required for regression analysis.');
+      setState(
+        () => _error = 'At least 2 calibration points are required for regression analysis.',
+      );
       AppHaptics.error();
       return;
     }
@@ -3765,13 +5751,18 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
 
     // Unknown sample quantification
     final unkY = double.tryParse(_unknownAreaCtrl.text.trim());
-    final double? unkX = (unkY != null && slope != 0) ? ((unkY - intercept) / slope) : null;
+    final double? unkX = (unkY != null && slope != 0)
+        ? ((unkY - intercept) / slope)
+        : null;
     final bool isUnkInterpolated = (unkX != null && _points.isNotEmpty)
-        ? (unkX >= _points.first.concentration && unkX <= _points.last.concentration)
+        ? (unkX >= _points.first.concentration &&
+              unkX <= _points.last.concentration)
         : false;
 
     // Chart data
-    final spots = _points.map((p) => FlSpot(p.concentration, p.peakArea)).toList();
+    final spots = _points
+        .map((p) => FlSpot(p.concentration, p.peakArea))
+        .toList();
     final maxX = _points.isNotEmpty ? _points.last.concentration : 100.0;
     final lineSpots = [
       FlSpot(0, intercept > 0 ? intercept : 0),
@@ -3785,30 +5776,53 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.show_chart_rounded, color: AppColors.purpleBright, size: 20),
+                  Icon(
+                    Icons.show_chart_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
                   SizedBox(width: 8),
-                  Text('HPLC Calibration Curve Plotter', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    'HPLC Calibration Curve Plotter',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
-              InkWell(
-                onTap: _resetDefaults,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.purple.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(6),
+              SpringPress(
+                child: InkWell(
+                  onTap: _resetDefaults,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Reset Defaults',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                  child: const Text('Reset Defaults', style: TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w700)),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          const ChemistryMarkdownView(
+          ChemistryMarkdownView(
             text: r'$$y = m x + c, \quad R^2 = \frac{S_{xy}^2}{S_{xx}S_{yy}}, \quad \text{LOD} = \frac{3.3 \, s_{y/x}}{m}, \quad \text{LOQ} = \frac{10 \, s_{y/x}}{m}$$',
-            textStyle: TextStyle(fontSize: 12, color: AppColors.purpleBright),
+            textStyle: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             selectable: false,
           ),
           const SizedBox(height: 14),
@@ -3818,29 +5832,53 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
             height: 220,
             padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
             decoration: BoxDecoration(
-              color: AppColors.bg0,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             child: LineChart(
               LineChartData(
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: true,
-                  getDrawingHorizontalLine: (_) => const FlLine(color: AppColors.borderSubtle, strokeWidth: 0.8),
-                  getDrawingVerticalLine: (_) => const FlLine(color: AppColors.borderSubtle, strokeWidth: 0.8),
+                  getDrawingHorizontalLine: (_) => FlLine(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    strokeWidth: 0.8,
+                  ),
+                  getDrawingVerticalLine: (_) => FlLine(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    strokeWidth: 0.8,
+                  ),
                 ),
                 titlesData: FlTitlesData(
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 46,
                       getTitlesWidget: (val, meta) {
-                        if (val == meta.min || val == meta.max) return const SizedBox.shrink();
-                        final txt = val >= 1000 ? '${(val / 1000).toStringAsFixed(0)}k' : val.toStringAsFixed(0);
-                        return Text(txt, style: const TextStyle(color: AppColors.textMuted, fontSize: 10));
+                        if (val == meta.min || val == meta.max) {
+                          return const SizedBox.shrink();
+                        }
+                        final txt = val >= 1000
+                            ? '${(val / 1000).toStringAsFixed(0)}k'
+                            : val.toStringAsFixed(0);
+                        return Text(
+                          txt,
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 10,
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -3849,22 +5887,34 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
                       showTitles: true,
                       reservedSize: 24,
                       getTitlesWidget: (val, meta) {
-                        if (val == meta.min || val == meta.max) return const SizedBox.shrink();
-                        return Text(val.toStringAsFixed(0), style: const TextStyle(color: AppColors.textMuted, fontSize: 10));
+                        if (val == meta.min || val == meta.max) {
+                          return const SizedBox.shrink();
+                        }
+                        return Text(
+                          val.toStringAsFixed(0),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 10,
+                          ),
+                        );
                       },
                     ),
                   ),
                 ),
                 borderData: FlBorderData(
                   show: true,
-                  border: Border.all(color: AppColors.borderSubtle),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
                 ),
                 lineBarsData: [
                   // 1. Fitted Regression Line
                   LineChartBarData(
                     spots: lineSpots,
                     isCurved: false,
-                    color: AppColors.accentCyan,
+                    color: AppColors.adaptive(context, AppColors.accentCyan),
                     barWidth: 2.2,
                     dotData: const FlDotData(show: false),
                   ),
@@ -3876,12 +5926,13 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
                     barWidth: 0,
                     dotData: FlDotData(
                       show: true,
-                      getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                        radius: 5,
-                        color: AppColors.brandBright,
-                        strokeWidth: 2,
-                        strokeColor: Colors.white,
-                      ),
+                      getDotPainter: (spot, percent, barData, index) =>
+                          FlDotCirclePainter(
+                            radius: 5,
+                            color: Theme.of(context).colorScheme.primary,
+                            strokeWidth: 2,
+                            strokeColor: Colors.white,
+                          ),
                     ),
                   ),
                   // 3. Unknown Sample Point (if calculated)
@@ -3893,12 +5944,16 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
                       barWidth: 0,
                       dotData: FlDotData(
                         show: true,
-                        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                          radius: 6.5,
-                          color: AppColors.accentGold,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        ),
+                        getDotPainter: (spot, percent, barData, index) =>
+                            FlDotCirclePainter(
+                              radius: 6.5,
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.accentGold,
+                              ),
+                              strokeWidth: 2,
+                              strokeColor: Colors.white,
+                            ),
                       ),
                     ),
                 ],
@@ -3906,10 +5961,13 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
             ),
           ),
           const SizedBox(height: 6),
-          const Center(
+          Center(
             child: Text(
               'X-axis: Concentration (μg/mL)  •  Y-axis: Peak Area (mAU·s)',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 10.5),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 10.5,
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -3918,38 +5976,99 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.bg0,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Regression Equation:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-                    Text('y = ${slope.toStringAsFixed(2)} x + ${intercept.toStringAsFixed(1)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                    Text(
+                      'Regression Equation:',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    Text(
+                      'y = ${slope.toStringAsFixed(2)} x + ${intercept.toStringAsFixed(1)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
                 const Divider(color: Colors.white12, height: 14),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Coefficient of Determination (R²):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
+                    Text(
+                      'Coefficient of Determination (R²):',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
+                    ),
                     Row(
                       children: [
-                        Text(rSquared.toStringAsFixed(5), style: TextStyle(fontWeight: FontWeight.bold, color: rSquared >= 0.999 ? AppColors.statusSuccess : AppColors.accentGold, fontSize: 13)),
+                        Text(
+                          rSquared.toStringAsFixed(5),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: rSquared >= 0.999
+                                ? AppColors.adaptive(
+                                    context,
+                                    AppColors.statusSuccess,
+                                  )
+                                : AppColors.adaptive(
+                                    context,
+                                    AppColors.accentGold,
+                                  ),
+                            fontSize: 13,
+                          ),
+                        ),
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
                           decoration: BoxDecoration(
-                            color: (rSquared >= 0.999 ? AppColors.statusSuccess : AppColors.accentGold).withValues(alpha: 0.15),
+                            color:
+                                (rSquared >= 0.999
+                                        ? AppColors.adaptive(
+                                            context,
+                                            AppColors.statusSuccess,
+                                          )
+                                        : AppColors.adaptive(
+                                            context,
+                                            AppColors.accentGold,
+                                          ))
+                                    .withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            rSquared >= 0.999 ? 'ICH Q2 Linearity' : (rSquared >= 0.995 ? 'Acceptable' : 'Non-Linear'),
+                            rSquared >= 0.999
+                                ? 'ICH Q2 Linearity'
+                                : (rSquared >= 0.995
+                                      ? 'Acceptable'
+                                      : 'Non-Linear'),
                             style: TextStyle(
-                              color: rSquared >= 0.999 ? AppColors.statusSuccess : AppColors.accentGold,
+                              color: rSquared >= 0.999
+                                  ? AppColors.adaptive(
+                                      context,
+                                      AppColors.statusSuccess,
+                                    )
+                                  : AppColors.adaptive(
+                                      context,
+                                      AppColors.accentGold,
+                                    ),
                               fontSize: 9.5,
                               fontWeight: FontWeight.w700,
                             ),
@@ -3963,24 +6082,66 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Residual Std Dev (sy/x):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-                    Text(syx.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                    Text(
+                      'Residual Std Dev (sy/x):',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    Text(
+                      syx.toStringAsFixed(2),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
                 const Divider(color: Colors.white12, height: 14),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Limit of Detection (LOD, 3.3σ/S):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-                    Text('${lod.toStringAsFixed(3)} μg/mL', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentCyan, fontSize: 13)),
+                    Text(
+                      'Limit of Detection (LOD, 3.3σ/S):',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    Text(
+                      '${lod.toStringAsFixed(3)} μg/mL',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ),
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
                 const Divider(color: Colors.white12, height: 14),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Limit of Quantitation (LOQ, 10σ/S):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-                    Text('${loq.toStringAsFixed(3)} μg/mL', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.brandBright, fontSize: 13)),
+                    Text(
+                      'Limit of Quantitation (LOQ, 10σ/S):',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    Text(
+                      '${loq.toStringAsFixed(3)} μg/mL',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -3992,22 +6153,40 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.bg0,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.brandPrimary.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.3),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Unknown Sample Quantification 🔍', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white)),
+                Text(
+                  'Unknown Sample Quantification 🔍',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.5,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
                       child: TextField(
                         controller: _unknownAreaCtrl,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(labelText: 'Unknown Peak Area (mAU·s)', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: const InputDecoration(
+                          labelText: 'Unknown Peak Area (mAU·s)',
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
+                        ),
                         onChanged: (_) => setState(() {}),
                       ),
                     ),
@@ -4018,21 +6197,53 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Quantified Conc (x_unk):', style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5)),
-                      Text('${unkX.toStringAsFixed(3)} μg/mL', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 14)),
+                      Text(
+                        'Quantified Conc (x_unk):',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      Text(
+                        '${unkX.toStringAsFixed(3)} μg/mL',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentGold,
+                          ),
+                          fontSize: 14,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Interpolation Status:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                       Text(
-                        isUnkInterpolated ? '✓ Within linear calibration range' : '⚠️ Extrapolated beyond standard range',
+                        'Interpolation Status:',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                      Text(
+                        isUnkInterpolated
+                            ? '✓ Within linear calibration range'
+                            : '⚠️ Extrapolated beyond standard range',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: isUnkInterpolated ? AppColors.statusSuccess : AppColors.accentGold,
+                          color: isUnkInterpolated
+                              ? AppColors.adaptive(
+                                  context,
+                                  AppColors.statusSuccess,
+                                )
+                              : AppColors.adaptive(
+                                  context,
+                                  AppColors.accentGold,
+                                ),
                         ),
                       ),
                     ],
@@ -4044,27 +6255,78 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
           const SizedBox(height: 14),
 
           // Standards Data Table & Add Point
-          const Text('Calibration Standards Table:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
+          Text(
+            'Calibration Standards Table:',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
-              color: AppColors.bg0,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.borderSubtle),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             child: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: const BoxDecoration(
-                    color: AppColors.bg2,
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
                   ),
-                  child: const Row(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Row(
                     children: [
-                      Expanded(flex: 3, child: Text('Conc (x)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.textMuted))),
-                      Expanded(flex: 3, child: Text('Area (y)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.textMuted))),
-                      Expanded(flex: 3, child: Text('Calc (ŷ)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.textMuted))),
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          'Conc (x)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          'Area (y)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          'Calc (ŷ)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
+                      ),
                       SizedBox(width: 30),
                     ],
                   ),
@@ -4074,21 +6336,69 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
                   final pt = entry.value;
                   final yHat = slope * pt.concentration + intercept;
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.5))),
+                      border: Border(
+                        top: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        Expanded(flex: 3, child: Text(pt.concentration.toStringAsFixed(1), style: const TextStyle(fontSize: 12, color: Colors.white))),
-                        Expanded(flex: 3, child: Text(pt.peakArea.toStringAsFixed(0), style: const TextStyle(fontSize: 12, color: AppColors.accentCyan))),
-                        Expanded(flex: 3, child: Text(yHat.toStringAsFixed(0), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary))),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            pt.concentration.toStringAsFixed(1),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            pt.peakArea.toStringAsFixed(0),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.adaptive(
+                                context,
+                                AppColors.accentCyan,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            yHat.toStringAsFixed(0),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                          ),
+                        ),
                         SizedBox(
                           width: 30,
-                          child: IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.textMuted),
-                            onPressed: () => _removePoint(idx),
-                            padding: EdgeInsets.zero,
+                          child: SpringPress(
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                size: 16,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                              onPressed: () => _removePoint(idx),
+                              padding: EdgeInsets.zero,
+                            ),
                           ),
                         ),
                       ],
@@ -4104,29 +6414,58 @@ class _HplcCalibrationCurveCalculatorState extends State<_HplcCalibrationCurveCa
               Expanded(
                 child: TextField(
                   controller: _newConcCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Conc (x)', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Conc (x)',
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   controller: _newAreaCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Area (y)', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Area (y)',
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _addPoint,
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
-                child: const Text('Add'),
+              SpringPress(
+                child: ElevatedButton(
+                  onPressed: _addPoint,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: const Text('Add'),
+                ),
               ),
             ],
           ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.danger),
+                fontSize: 12,
+              ),
+            ),
           ],
         ],
       ),

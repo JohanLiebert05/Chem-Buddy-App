@@ -1,4 +1,7 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
@@ -42,26 +45,33 @@ class FlashcardEvaluationModal extends StatelessWidget {
     Color scoreColor;
     String scoreGrade;
     if (score >= 85) {
-      scoreColor = AppColors.success;
+      scoreColor = AppColors.adaptive(context, AppColors.success);
       scoreGrade = 'Excellent Recall';
     } else if (score >= 70) {
-      scoreColor = AppColors.blue;
+      scoreColor = AppColors.adaptive(context, AppColors.blue);
       scoreGrade = 'Solid Retention';
     } else if (score >= 40) {
-      scoreColor = AppColors.warning;
+      scoreColor = AppColors.adaptive(context, AppColors.warning);
       scoreGrade = 'Needs Polish';
     } else {
-      scoreColor = AppColors.danger;
+      scoreColor = AppColors.adaptive(context, AppColors.danger);
       scoreGrade = 'Review Required';
     }
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+        ),
       ),
-      padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).viewInsets.bottom + 32),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 32,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,21 +95,36 @@ class FlashcardEvaluationModal extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.purple.withValues(alpha: 0.2),
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.auto_awesome, color: AppColors.purpleBright, size: 20),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'AI Active Recall Evaluation',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white),
+                child: Icon(
+                  Icons.auto_awesome,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.close, color: AppColors.textMuted, size: 20),
-                onPressed: () => Navigator.pop(context),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'AI Active Recall Evaluation',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              SpringPress(
+                child: IconButton(
+                  icon: Icon(
+                    Icons.close,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 20,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
             ],
           ),
@@ -126,7 +151,11 @@ class FlashcardEvaluationModal extends StatelessWidget {
                     ),
                     Text(
                       '$score%',
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: scoreColor),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15,
+                        color: AppColors.readableText(context, scoreColor),
+                      ),
                     ),
                   ],
                 ),
@@ -137,12 +166,20 @@ class FlashcardEvaluationModal extends StatelessWidget {
                     children: [
                       Text(
                         scoreGrade,
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: scoreColor),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: AppColors.readableText(context, scoreColor),
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'Chemical Accuracy & Concept Alignment',
-                        style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -153,15 +190,25 @@ class FlashcardEvaluationModal extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Covered & Missed Terms
-          if (evaluation.coveredTerms.isNotEmpty || evaluation.missedTerms.isNotEmpty) ...[
+          if (evaluation.coveredTerms.isNotEmpty ||
+              evaluation.missedTerms.isNotEmpty) ...[
             if (evaluation.coveredTerms.isNotEmpty) ...[
               Row(
-                children: const [
-                  Icon(Icons.check_circle, color: AppColors.success, size: 15),
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: AppColors.adaptive(context, AppColors.success),
+                    size: 15,
+                  ),
                   SizedBox(width: 6),
                   Text(
                     'COVERED CONCEPTS',
-                    style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.8),
+                    style: TextStyle(
+                      color: AppColors.adaptive(context, AppColors.success),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                      letterSpacing: 0.8,
+                    ),
                   ),
                 ],
               ),
@@ -169,30 +216,59 @@ class FlashcardEvaluationModal extends StatelessWidget {
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: evaluation.coveredTerms.map((t) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.success.withValues(alpha: 0.4), width: 0.8),
-                  ),
-                  child: Text(
-                    '✓ $t',
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
-                  ),
-                )).toList(),
+                children: evaluation.coveredTerms
+                    .map(
+                      (t) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.success,
+                          ).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.success,
+                            ).withValues(alpha: 0.4),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          '✓ $t',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
               const SizedBox(height: 12),
             ],
 
             if (evaluation.missedTerms.isNotEmpty) ...[
               Row(
-                children: const [
-                  Icon(Icons.cancel, color: AppColors.danger, size: 15),
+                children: [
+                  Icon(
+                    Icons.cancel,
+                    color: AppColors.adaptive(context, AppColors.danger),
+                    size: 15,
+                  ),
                   SizedBox(width: 6),
                   Text(
                     'MISSED / INCOMPLETE TERMS',
-                    style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.8),
+                    style: TextStyle(
+                      color: AppColors.adaptive(context, AppColors.danger),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                      letterSpacing: 0.8,
+                    ),
                   ),
                 ],
               ),
@@ -200,18 +276,38 @@ class FlashcardEvaluationModal extends StatelessWidget {
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: evaluation.missedTerms.map((t) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.danger.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.danger.withValues(alpha: 0.4), width: 0.8),
-                  ),
-                  child: Text(
-                    '✗ $t',
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
-                  ),
-                )).toList(),
+                children: evaluation.missedTerms
+                    .map(
+                      (t) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.danger,
+                          ).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.danger,
+                            ).withValues(alpha: 0.4),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          '✗ $t',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
               const SizedBox(height: 12),
             ],
@@ -219,17 +315,27 @@ class FlashcardEvaluationModal extends StatelessWidget {
 
           // Feedback Note
           if (evaluation.feedback.isNotEmpty) ...[
-            const Text(
+            Text(
               'ACADEMIC FEEDBACK',
-              style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.8),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 11,
+                letterSpacing: 0.8,
+              ),
             ),
             const SizedBox(height: 6),
             GlowCard(
               padding: const EdgeInsets.all(12),
-              borderColor: AppColors.purple.withValues(alpha: 0.3),
+              borderColor: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.3),
               child: ChemistryMarkdownView(
                 text: evaluation.feedback,
-                textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13, height: 1.35),
+                textStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 13,
+                  height: 1.35,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -240,13 +346,21 @@ class FlashcardEvaluationModal extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.purple.withValues(alpha: 0.2),
+                color: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.4),
+                ),
               ),
               child: Text(
                 '✨ AI Recommendation: ${evaluation.recommendedLabel}',
-                style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                ),
               ),
             ),
           ),
@@ -260,9 +374,10 @@ class FlashcardEvaluationModal extends StatelessWidget {
                   context: context,
                   label: 'Again',
                   interval: preview?.againLabel ?? '<10m',
-                  color: AppColors.danger,
+                  color: AppColors.adaptive(context, AppColors.danger),
                   rating: FlashcardRating.again,
-                  isRecommended: evaluation.recommendedAction == FlashcardRating.again,
+                  isRecommended:
+                      evaluation.recommendedAction == FlashcardRating.again,
                 ),
               ),
               const SizedBox(width: 6),
@@ -271,9 +386,10 @@ class FlashcardEvaluationModal extends StatelessWidget {
                   context: context,
                   label: 'Hard',
                   interval: preview?.hardLabel ?? '1.2d',
-                  color: AppColors.warning,
+                  color: AppColors.adaptive(context, AppColors.warning),
                   rating: FlashcardRating.hard,
-                  isRecommended: evaluation.recommendedAction == FlashcardRating.hard,
+                  isRecommended:
+                      evaluation.recommendedAction == FlashcardRating.hard,
                 ),
               ),
               const SizedBox(width: 6),
@@ -282,9 +398,10 @@ class FlashcardEvaluationModal extends StatelessWidget {
                   context: context,
                   label: 'Good',
                   interval: preview?.goodLabel ?? '2.5d',
-                  color: AppColors.success,
+                  color: AppColors.adaptive(context, AppColors.success),
                   rating: FlashcardRating.good,
-                  isRecommended: evaluation.recommendedAction == FlashcardRating.good,
+                  isRecommended:
+                      evaluation.recommendedAction == FlashcardRating.good,
                 ),
               ),
               const SizedBox(width: 6),
@@ -293,9 +410,10 @@ class FlashcardEvaluationModal extends StatelessWidget {
                   context: context,
                   label: 'Easy',
                   interval: preview?.easyLabel ?? '4.0d',
-                  color: AppColors.blue,
+                  color: AppColors.adaptive(context, AppColors.blue),
                   rating: FlashcardRating.easy,
-                  isRecommended: evaluation.recommendedAction == FlashcardRating.easy,
+                  isRecommended:
+                      evaluation.recommendedAction == FlashcardRating.easy,
                 ),
               ),
             ],
@@ -315,43 +433,53 @@ class FlashcardEvaluationModal extends StatelessWidget {
   }) {
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.pop(context);
-          onApplyRating(rating);
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-          decoration: BoxDecoration(
-            color: isRecommended ? color.withValues(alpha: 0.22) : AppColors.surfaceElevated,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isRecommended ? color : AppColors.border,
-              width: isRecommended ? 2.0 : 1.0,
+      child: SpringPress(
+        child: InkWell(
+          onTap: () {
+            Navigator.pop(context);
+            onApplyRating(rating);
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+            decoration: BoxDecoration(
+              color: isRecommended
+                  ? color.withValues(alpha: 0.22)
+                  : Theme.of(context).colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isRecommended
+                    ? color
+                    : Theme.of(context).colorScheme.outlineVariant,
+                width: isRecommended ? 2.0 : 1.0,
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: isRecommended ? Colors.white : color,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isRecommended
+                        ? Theme.of(context).colorScheme.onSurface
+                        : color,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                interval,
-                style: TextStyle(
-                  color: isRecommended ? Colors.white70 : AppColors.textMuted,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(height: 2),
+                Text(
+                  interval,
+                  style: TextStyle(
+                    color: isRecommended
+                        ? Theme.of(context).colorScheme.onSurfaceVariant
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -1,7 +1,8 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/appearance.dart';
 
 /// Selective Apple Liquid Glass-inspired container
 ///
@@ -40,14 +41,33 @@ class LiquidGlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBorderRadius = customBorderRadius ?? BorderRadius.circular(borderRadius);
-    final effectiveBg = backgroundColor ?? AppColors.surfaceContainerLow.withValues(alpha: 0.78);
-    final effectiveBorder = borderColor ?? Colors.white.withValues(alpha: 0.12);
-    final effectiveShadows = shadows ??
+    final colors = Theme.of(context).colorScheme;
+    final tokens = GlassTokens.of(context);
+    final light = colors.brightness == Brightness.light;
+    final highContrast = MediaQuery.highContrastOf(context);
+    final opaque = highContrast || tokens.blur == 0;
+    final effectiveBlur = blurSigma.clamp(0.0, tokens.blur).toDouble();
+    final effectiveBorderRadius =
+        customBorderRadius ?? BorderRadius.circular(borderRadius);
+    final effectiveBg = (backgroundColor ?? colors.surfaceContainerLow)
+        .withValues(alpha: opaque ? 1 : tokens.opacity);
+    final effectiveBorder =
+        borderColor ??
+        colors.primary.withValues(
+          alpha: highContrast
+              ? .65
+              : light
+              ? .14
+              : .22,
+        );
+    final effectiveShadows =
+        shadows ??
         [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.28),
-            blurRadius: 18,
+            color: (light ? colors.primary : Colors.black).withValues(
+              alpha: light ? .055 : .24,
+            ),
+            blurRadius: light ? 28 : 22,
             offset: const Offset(0, 6),
           ),
         ];
@@ -55,22 +75,41 @@ class LiquidGlassContainer extends StatelessWidget {
     Widget content = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: effectiveBg,
+        gradient: opaque
+            ? null
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.alphaBlend(
+                    (light ? Colors.white : colors.primary).withValues(
+                      alpha: light ? .46 : .06,
+                    ),
+                    effectiveBg,
+                  ),
+                  effectiveBg,
+                  Color.alphaBlend(
+                    colors.tertiary.withValues(alpha: light ? .035 : .02),
+                    effectiveBg,
+                  ),
+                ],
+              ),
+        color: opaque ? effectiveBg : null,
         borderRadius: effectiveBorderRadius,
-        border: Border.all(
-          color: effectiveBorder,
-          width: borderWidth,
-        ),
+        border: Border.all(color: effectiveBorder, width: borderWidth),
       ),
       child: child,
     );
 
-    if (enableBlur && blurSigma > 0) {
+    if (enableBlur && !opaque && effectiveBlur > 0) {
       content = ClipRRect(
         borderRadius: effectiveBorderRadius,
         clipBehavior: clipBehavior,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          filter: ImageFilter.blur(
+            sigmaX: effectiveBlur,
+            sigmaY: effectiveBlur,
+          ),
           child: content,
         ),
       );

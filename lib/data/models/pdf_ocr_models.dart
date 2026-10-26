@@ -130,7 +130,7 @@ class DocumentOcrBundle {
 
   /// Compiles all pages into a unified text document with page citations.
   String get fullText {
-    if (pages.isEmpty) return '';
+    if (pages.isEmpty) {return '';}
     return pages
         .where((p) => p.cleanedText.trim().isNotEmpty)
         .map((p) => '--- Page ${p.pageNumber} ---\n${p.cleanedText.trim()}')
@@ -154,7 +154,7 @@ class DocumentOcrBundle {
 
   /// Percentage of pages that are scanned or handwritten.
   double get ocrPageRatio {
-    if (pages.isEmpty) return 0.0;
+    if (pages.isEmpty) {return 0.0;}
     final ocrPages = pages.where((p) => p.quality != PageQuality.digitalText).length;
     return ocrPages / pages.length;
   }

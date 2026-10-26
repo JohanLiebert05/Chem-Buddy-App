@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../widgets/app_error_boundary.dart';
 
 /// Navigation helper that wraps pushed destination screens in an [AppErrorBoundary]
@@ -16,10 +17,8 @@ class SafeNavigator {
     try {
       return await Navigator.of(context).push<T>(
         MaterialPageRoute<T>(
-          builder: (_) => AppErrorBoundary(
-            screenName: screenName,
-            child: screen,
-          ),
+          builder: (_) =>
+              AppErrorBoundary(screenName: screenName, child: screen),
           settings: RouteSettings(name: screenName),
         ),
       );
@@ -28,7 +27,9 @@ class SafeNavigator {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not open ${screenName ?? "page"}. Please try again.'),
+            content: Text(
+              'Could not open ${screenName ?? "page"}. Please try again.',
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -47,20 +48,22 @@ class SafeNavigator {
     try {
       return await Navigator.of(context).pushReplacement<T, TO>(
         MaterialPageRoute<T>(
-          builder: (_) => AppErrorBoundary(
-            screenName: screenName,
-            child: screen,
-          ),
+          builder: (_) =>
+              AppErrorBoundary(screenName: screenName, child: screen),
           settings: RouteSettings(name: screenName),
         ),
         result: result,
       );
     } catch (e, stack) {
-      debugPrint('[SafeNavigator] Error replacing route $screenName: $e\n$stack');
+      debugPrint(
+        '[SafeNavigator] Error replacing route $screenName: $e\n$stack',
+      );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not navigate to ${screenName ?? "page"}. Please try again.'),
+            content: Text(
+              'Could not navigate to ${screenName ?? "page"}. Please try again.',
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );

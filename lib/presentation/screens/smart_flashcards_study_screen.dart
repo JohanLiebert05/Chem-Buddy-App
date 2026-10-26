@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -25,10 +27,12 @@ class SmartFlashcardsStudyScreen extends ConsumerStatefulWidget {
   final ReviewMode review;
 
   @override
-  ConsumerState<SmartFlashcardsStudyScreen> createState() => _SmartFlashcardsStudyScreenState();
+  ConsumerState<SmartFlashcardsStudyScreen> createState() =>
+      _SmartFlashcardsStudyScreenState();
 }
 
-class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStudyScreen> {
+class _SmartFlashcardsStudyScreenState
+    extends ConsumerState<SmartFlashcardsStudyScreen> {
   final answer = TextEditingController();
   final _evalService = FlashcardEvaluationService();
   late List<SmartFlashcard> deck;
@@ -53,16 +57,32 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     List<SmartFlashcard> cards;
 
     if (widget.review == ReviewMode.due) {
-      cards = service.getDueCards(widget.setId.isNotEmpty ? widget.setId : null);
+      cards = service.getDueCards(
+        widget.setId.isNotEmpty ? widget.setId : null,
+      );
     } else if (widget.review == ReviewMode.newCards) {
-      cards = service.getNewCards(widget.setId.isNotEmpty ? widget.setId : null);
+      cards = service.getNewCards(
+        widget.setId.isNotEmpty ? widget.setId : null,
+      );
     } else if (widget.review == ReviewMode.spacedRepetition) {
-      cards = service.getSpacedRepetitionQueue(setId: widget.setId.isNotEmpty ? widget.setId : null);
+      cards = service.getSpacedRepetitionQueue(
+        setId: widget.setId.isNotEmpty ? widget.setId : null,
+      );
     } else if (widget.review == ReviewMode.difficult) {
-      final all = widget.setId.isNotEmpty ? service.cardsFor(widget.setId) : service.allCards();
-      cards = all.where((c) => c.status == FlashcardUiState.difficult || c.srState == FlashcardSrState.lapse).toList();
+      final all = widget.setId.isNotEmpty
+          ? service.cardsFor(widget.setId)
+          : service.allCards();
+      cards = all
+          .where(
+            (c) =>
+                c.status == FlashcardUiState.difficult ||
+                c.srState == FlashcardSrState.lapse,
+          )
+          .toList();
     } else {
-      cards = widget.setId.isNotEmpty ? service.cardsFor(widget.setId) : service.allCards();
+      cards = widget.setId.isNotEmpty
+          ? service.cardsFor(widget.setId)
+          : service.allCards();
     }
 
     deck = List<SmartFlashcard>.from(cards);
@@ -95,22 +115,39 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
   Widget build(BuildContext context) {
     if (deck.isEmpty) {
       return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(backgroundColor: AppColors.background, title: const Text('Smart Flashcards')),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          title: const Text('Smart Flashcards'),
+        ),
         body: Padding(
           padding: const EdgeInsets.all(20),
           child: GlowCard(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.check_circle_outline, size: 48, color: AppColors.success),
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 48,
+                  color: AppColors.adaptive(context, AppColors.success),
+                ),
                 const SizedBox(height: 12),
-                const Text('All caught up', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Colors.white)),
+                Text(
+                  'All caught up',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'No flashcards currently due for review in this queue. Great job staying consistent!',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13.5),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13.5,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 PrimaryButton(
@@ -125,15 +162,22 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     }
 
     final card = current;
-    if (card == null) return _complete();
+    if (card == null) {
+      return _complete();
+    }
 
-    final progress = _initialDeckSize > 0 ? (index / _initialDeckSize).clamp(0.0, 1.0) : 1.0;
-    final preview = ref.read(flashcardServiceProvider).scheduler.calculateSchedulePreview(card);
+    final progress = _initialDeckSize > 0
+        ? (index / _initialDeckSize).clamp(0.0, 1.0)
+        : 1.0;
+    final preview = ref
+        .read(flashcardServiceProvider)
+        .scheduler
+        .calculateSchedulePreview(card);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text('Flashcard Review'),
         actions: [
           Center(
@@ -141,7 +185,11 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
               padding: const EdgeInsets.only(right: 16),
               child: Text(
                 '${index + 1} / ${deck.length}',
-                style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.purpleBright, fontSize: 13),
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 13,
+                ),
               ),
             ),
           ),
@@ -155,7 +203,11 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
             children: [
               Text(
                 'Card ${index + 1} of ${deck.length}',
-                style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w700, fontSize: 12.5),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                ),
               ),
               _buildStateBadge(card),
             ],
@@ -166,7 +218,7 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
             child: LinearProgressIndicator(
               minHeight: 6,
               value: progress,
-              color: AppColors.purpleBright,
+              color: Theme.of(context).colorScheme.primary,
               backgroundColor: Colors.white12,
             ),
           ),
@@ -181,7 +233,8 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
               }
             },
             front: GlowCard(
-              borderColor: AppColors.purple.withValues(alpha: 0.40),
+              borderColor: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.40),
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,47 +243,91 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                     children: [
                       if (card.topic.isNotEmpty) ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppColors.purple.withValues(alpha: 0.2),
+                            color: Theme.of(context).colorScheme.primary
+                                .withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             card.topic.toUpperCase(),
-                            style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w800),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                       ],
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: _typeColor(card.cardType).withValues(alpha: 0.18),
+                          color: _typeColor(card.cardType)
+                              .withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: _typeColor(card.cardType).withValues(alpha: 0.4), width: 0.8),
+                          border: Border.all(
+                            color: _typeColor(card.cardType)
+                                .withValues(alpha: 0.4),
+                            width: 0.8,
+                          ),
                         ),
                         child: Text(
                           _typeLabel(card.cardType),
-                          style: TextStyle(color: _typeColor(card.cardType), fontSize: 10, fontWeight: FontWeight.w800),
+                          style: TextStyle(
+                            color: AppColors.readableText(
+                              context,
+                              _typeColor(card.cardType),
+                            ),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                       const Spacer(),
                       if (card.pageNumber != null)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2.5,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceElevated,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHigh,
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: AppColors.borderSubtle),
+                            border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.menu_book_rounded, size: 11, color: AppColors.textMuted),
+                              Icon(
+                                Icons.menu_book_rounded,
+                                size: 11,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 'Page ${card.pageNumber}',
-                                style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5, fontWeight: FontWeight.w700),
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ],
                           ),
@@ -240,39 +337,65 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                   const SizedBox(height: 12),
                   ChemistryMarkdownView(
                     text: card.question,
-                    textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.4, color: Colors.white),
+                    textStyle: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      height: 1.4,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 18),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Tap card to flip in 3D ↻',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2.5,
+                        ),
                         decoration: BoxDecoration(
-                          color: (card.srState == FlashcardSrState.lapse ? AppColors.statusDanger : AppColors.brandPrimary).withValues(alpha: 0.15),
+                          color:
+                              (card.srState == FlashcardSrState.lapse
+                                      ? AppColors.adaptive(
+                                          context,
+                                          AppColors.statusDanger,
+                                        )
+                                      : Theme.of(context).colorScheme.primary)
+                                  .withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           card.srState.name.toUpperCase(),
                           style: TextStyle(
-                            color: card.srState == FlashcardSrState.lapse ? AppColors.statusDanger : AppColors.brandBright,
+                            color: card.srState == FlashcardSrState.lapse
+                                ? AppColors.adaptive(
+                                    context,
+                                    AppColors.statusDanger,
+                                  )
+                                : Theme.of(context).colorScheme.primary,
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
-
                     ],
                   ),
                 ],
               ),
             ),
             back: GlowCard(
-              borderColor: AppColors.blue.withValues(alpha: 0.45),
+              borderColor: AppColors.adaptive(
+                context,
+                AppColors.blue,
+              ).withValues(alpha: 0.45),
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,64 +403,121 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.2),
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.success,
+                          ).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
+                        child: Text(
                           'OFFICIAL ANSWER',
-                          style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w800),
+                          style: TextStyle(
+                            color: AppColors.adaptive(
+                              context,
+                              AppColors.success,
+                            ),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                       if (card.isStrictPdfGrounded) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                          decoration: BoxDecoration(
-                            color: AppColors.brandPrimary.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.35)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2.5,
                           ),
-                          child: const Row(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary
+                                .withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary
+                                  .withValues(alpha: 0.35),
+                            ),
+                          ),
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.verified_rounded, size: 11, color: AppColors.brandBright),
+                              Icon(
+                                Icons.verified_rounded,
+                                size: 11,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                               SizedBox(width: 3),
-                              Text('PDF Grounded', style: TextStyle(color: AppColors.brandBright, fontSize: 10, fontWeight: FontWeight.w700)),
+                              Text(
+                                'PDF Grounded',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       ],
                       const Spacer(),
-                      const Text(
+                      Text(
                         'Tap to flip back ↻',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   ChemistryMarkdownView(
                     text: card.answer,
-                    textStyle: const TextStyle(fontSize: 15.5, height: 1.45, color: Colors.white),
+                    textStyle: TextStyle(
+                      fontSize: 15.5,
+                      height: 1.45,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   if (card.keyTerms.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
-                      children: card.keyTerms.map((term) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.purple.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4), width: 0.8),
-                        ),
-                        child: Text(
-                          term,
-                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
-                        ),
-                      )).toList(),
+                      children: card.keyTerms
+                          .map(
+                            (term) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary
+                                    .withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.primary
+                                      .withValues(alpha: 0.4),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Text(
+                                term,
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
                   ],
                   if (card.sourceSnippet.isNotEmpty) ...[
@@ -346,27 +526,46 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                       width: double.infinity,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.borderSubtle),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.format_quote_rounded, size: 13, color: AppColors.purpleBright),
+                              Icon(
+                                Icons.format_quote_rounded,
+                                size: 13,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                               const SizedBox(width: 4),
                               Text(
-                                card.pageNumber != null ? 'Source Quote (Page ${card.pageNumber})' : 'Source Document Quote',
-                                style: const TextStyle(color: AppColors.purpleBright, fontSize: 11, fontWeight: FontWeight.w700),
+                                card.pageNumber != null
+                                    ? 'Source Quote (Page ${card.pageNumber})'
+                                    : 'Source Document Quote',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Text(
                             card.sourceSnippet,
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5, fontStyle: FontStyle.italic, height: 1.35),
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 11.5,
+                              fontStyle: FontStyle.italic,
+                              height: 1.35,
+                            ),
                           ),
                         ],
                       ),
@@ -374,26 +573,44 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                   ],
                   if (card.sourceBacklink.isNotEmpty) ...[
                     const SizedBox(height: 14),
-                    InkWell(
-                      onTap: () => _showBacklinkSheet(context, card.sourceBacklink),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.brandPrimary.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.brandBright.withValues(alpha: 0.35)),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.link_rounded, size: 14, color: AppColors.brandBright),
-                            SizedBox(width: 6),
-                            Text(
-                              'View Original AI Source Explanation',
-                              style: TextStyle(color: AppColors.brandBright, fontSize: 11.5, fontWeight: FontWeight.w700),
+                    SpringPress(
+                      child: InkWell(
+                        onTap: () =>
+                            _showBacklinkSheet(context, card.sourceBacklink),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary
+                                .withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary
+                                  .withValues(alpha: 0.35),
                             ),
-                          ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.link_rounded,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'View Original AI Source Explanation',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -404,41 +621,59 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
           ),
           const SizedBox(height: 16),
 
-
-
           // Action Phase: Type Answer & Show Answer or Rate Recall
           if (phase == FlashcardUiState.unanswered) ...[
             GlowCard(
               padding: const EdgeInsets.all(16),
-              borderColor: AppColors.purple.withValues(alpha: 0.3),
+              borderColor: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.3),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'YOUR ANSWER (ACTIVE RECALL)',
-                    style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.8),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                      letterSpacing: 0.8,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: answer,
                     maxLines: 3,
-                    style: const TextStyle(color: Colors.white, fontSize: 14.5),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 14.5,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Type your answer here before revealing...',
-                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
                       filled: true,
-                      fillColor: AppColors.surfaceElevated,
+                      fillColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHigh,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.purpleBright),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                       contentPadding: const EdgeInsets.all(12),
                     ),
@@ -453,19 +688,30 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
             ),
           ],
 
-          if (phase == FlashcardUiState.revealed || phase == FlashcardUiState.submitted) ...[
+          if (phase == FlashcardUiState.revealed ||
+              phase == FlashcardUiState.submitted) ...[
             if (answer.text.trim().isNotEmpty) ...[
-              const Text(
+              Text(
                 'YOUR ANSWER',
-                style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 11.5, letterSpacing: 0.5),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11.5,
+                  letterSpacing: 0.5,
+                ),
               ),
               const SizedBox(height: 6),
               GlowCard(
-                borderColor: AppColors.purple.withValues(alpha: 0.4),
+                borderColor: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.4),
                 padding: const EdgeInsets.all(14),
                 child: Text(
                   answer.text.trim(),
-                  style: const TextStyle(fontSize: 14.5, height: 1.4, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    height: 1.4,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -473,39 +719,57 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
               // Evaluate My Answer with AI Button
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.purpleBright,
-                    side: BorderSide(
-                      color: _currentEvaluation != null ? AppColors.success : AppColors.purpleBright,
-                      width: 1.2,
+                child: SpringPress(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      side: BorderSide(
+                        color: _currentEvaluation != null
+                            ? AppColors.adaptive(context, AppColors.success)
+                            : Theme.of(context).colorScheme.primary,
+                        width: 1.2,
+                      ),
+                      backgroundColor: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.12),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    backgroundColor: AppColors.purple.withValues(alpha: 0.12),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: _evaluatingWithAi ? null : () => _evaluateWithAi(card, preview),
-                  icon: _evaluatingWithAi
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purpleBright),
-                        )
-                      : Icon(
-                          _currentEvaluation != null ? Icons.check_circle_outline : Icons.auto_awesome,
-                          size: 18,
-                          color: _currentEvaluation != null ? AppColors.success : AppColors.purpleBright,
-                        ),
-                  label: Text(
-                    _evaluatingWithAi
-                        ? 'Evaluating with AI...'
-                        : (_currentEvaluation != null
-                            ? 'AI Match: ${_currentEvaluation!.matchPercentage}% (${_currentEvaluation!.recommendedLabel}) • View Analysis'
-                            : 'Evaluate My Answer with AI'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13.5,
-                      color: _currentEvaluation != null ? AppColors.success : AppColors.purpleBright,
+                    onPressed: _evaluatingWithAi
+                        ? null
+                        : () => _evaluateWithAi(card, preview),
+                    icon: _evaluatingWithAi
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          )
+                        : Icon(
+                            _currentEvaluation != null
+                                ? Icons.check_circle_outline
+                                : Icons.auto_awesome,
+                            size: 18,
+                            color: _currentEvaluation != null
+                                ? AppColors.adaptive(context, AppColors.success)
+                                : Theme.of(context).colorScheme.primary,
+                          ),
+                    label: Text(
+                      _evaluatingWithAi
+                          ? 'Evaluating with AI...'
+                          : (_currentEvaluation != null
+                                ? 'AI Match: ${_currentEvaluation!.matchPercentage}% (${_currentEvaluation!.recommendedLabel}) • View Analysis'
+                                : 'Evaluate My Answer with AI'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.5,
+                        color: _currentEvaluation != null
+                            ? AppColors.adaptive(context, AppColors.success)
+                            : Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -513,41 +777,74 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
               const SizedBox(height: 14),
             ],
 
-            const Text(
+            Text(
               'CORRECT ANSWER',
-              style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w800, fontSize: 11.5, letterSpacing: 0.5),
+              style: TextStyle(
+                color: AppColors.adaptive(context, AppColors.success),
+                fontWeight: FontWeight.w800,
+                fontSize: 11.5,
+                letterSpacing: 0.5,
+              ),
             ),
             const SizedBox(height: 6),
             GlowCard(
-              borderColor: AppColors.blue.withValues(alpha: 0.35),
+              borderColor: AppColors.adaptive(
+                context,
+                AppColors.blue,
+              ).withValues(alpha: 0.35),
               padding: const EdgeInsets.all(18),
               child: ChemistryMarkdownView(
                 text: card.answer,
-                textStyle: const TextStyle(fontSize: 15.5, height: 1.45, color: Colors.white),
+                textStyle: TextStyle(
+                  fontSize: 15.5,
+                  height: 1.45,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
             if (card.keyTerms.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'MANDATORY KEY TERMS',
-                style: TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.8),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                  letterSpacing: 0.8,
+                ),
               ),
               const SizedBox(height: 6),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: card.keyTerms.map((term) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.purple.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.4), width: 0.8),
-                  ),
-                  child: Text(
-                    term,
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
-                  ),
-                )).toList(),
+                children: card.keyTerms
+                    .map(
+                      (term) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary
+                                .withValues(alpha: 0.4),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          term,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ],
             const SizedBox(height: 20),
@@ -556,22 +853,38 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'How well did you remember?',
-                  style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 13),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
                 if (_currentEvaluation != null) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.purple.withValues(alpha: 0.25),
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.purpleBright.withValues(alpha: 0.5), width: 0.8),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.5),
+                        width: 0.8,
+                      ),
                     ),
                     child: Text(
                       'AI Pick: ${_currentEvaluation!.recommendedLabel}',
-                      style: const TextStyle(color: AppColors.purpleBright, fontWeight: FontWeight.w800, fontSize: 11),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 ],
@@ -586,9 +899,11 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                   child: _buildAnkiRatingButton(
                     label: 'Again',
                     interval: preview.againLabel,
-                    color: AppColors.danger,
+                    color: AppColors.adaptive(context, AppColors.danger),
                     rating: FlashcardRating.again,
-                    isRecommended: _currentEvaluation?.recommendedAction == FlashcardRating.again,
+                    isRecommended:
+                        _currentEvaluation?.recommendedAction ==
+                        FlashcardRating.again,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -596,9 +911,11 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                   child: _buildAnkiRatingButton(
                     label: 'Hard',
                     interval: preview.hardLabel,
-                    color: AppColors.warning,
+                    color: AppColors.adaptive(context, AppColors.warning),
                     rating: FlashcardRating.hard,
-                    isRecommended: _currentEvaluation?.recommendedAction == FlashcardRating.hard,
+                    isRecommended:
+                        _currentEvaluation?.recommendedAction ==
+                        FlashcardRating.hard,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -606,9 +923,11 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                   child: _buildAnkiRatingButton(
                     label: 'Good',
                     interval: preview.goodLabel,
-                    color: AppColors.success,
+                    color: AppColors.adaptive(context, AppColors.success),
                     rating: FlashcardRating.good,
-                    isRecommended: _currentEvaluation?.recommendedAction == FlashcardRating.good,
+                    isRecommended:
+                        _currentEvaluation?.recommendedAction ==
+                        FlashcardRating.good,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -616,9 +935,11 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
                   child: _buildAnkiRatingButton(
                     label: 'Easy',
                     interval: preview.easyLabel,
-                    color: AppColors.blue,
+                    color: AppColors.adaptive(context, AppColors.blue),
                     rating: FlashcardRating.easy,
-                    isRecommended: _currentEvaluation?.recommendedAction == FlashcardRating.easy,
+                    isRecommended:
+                        _currentEvaluation?.recommendedAction ==
+                        FlashcardRating.easy,
                   ),
                 ),
               ],
@@ -631,17 +952,17 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
 
   Widget _buildStateBadge(SmartFlashcard card) {
     String label = 'Review';
-    Color color = AppColors.purpleBright;
+    Color color = Theme.of(context).colorScheme.primary;
 
     if (card.isNew) {
       label = 'New';
-      color = AppColors.blue;
+      color = AppColors.adaptive(context, AppColors.blue);
     } else if (card.isLearning) {
       label = 'Learning';
-      color = AppColors.warning;
+      color = AppColors.adaptive(context, AppColors.warning);
     } else if (card.isMature) {
       label = 'Mature';
-      color = AppColors.success;
+      color = AppColors.adaptive(context, AppColors.success);
     }
 
     return Container(
@@ -653,7 +974,11 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w700),
+        style: TextStyle(
+          color: AppColors.readableText(context, color),
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -665,45 +990,57 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     required FlashcardRating rating,
     bool isRecommended = false,
   }) {
-    return InkWell(
-      onTap: _savingRating ? null : () => _markWithRating(rating),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-        decoration: BoxDecoration(
-          color: isRecommended ? color.withValues(alpha: 0.24) : color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isRecommended ? color : color.withValues(alpha: 0.5),
-            width: isRecommended ? 2.0 : 1.0,
+    return SpringPress(
+      child: InkWell(
+        onTap: _savingRating ? null : () => _markWithRating(rating),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isRecommended
+                ? color.withValues(alpha: 0.24)
+                : color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isRecommended ? color : color.withValues(alpha: 0.5),
+              width: isRecommended ? 2.0 : 1.0,
+            ),
+            boxShadow: isRecommended
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
           ),
-          boxShadow: isRecommended
-              ? [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : null,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              interval,
-              style: TextStyle(color: isRecommended ? Colors.white : color, fontSize: 11, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              isRecommended ? '$label ★' : label,
-              style: TextStyle(
-                color: isRecommended ? Colors.white : Colors.white70,
-                fontSize: 12.5,
-                fontWeight: isRecommended ? FontWeight.w900 : FontWeight.w700,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                interval,
+                style: TextStyle(
+                  color: isRecommended
+                      ? Theme.of(context).colorScheme.onSurface
+                      : color,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                isRecommended ? '$label ★' : label,
+                style: TextStyle(
+                  color: isRecommended
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12.5,
+                  fontWeight: isRecommended ? FontWeight.w900 : FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -714,11 +1051,18 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     setState(() => phase = FlashcardUiState.revealed);
   }
 
-  Future<void> _evaluateWithAi(SmartFlashcard card, ReviewSchedulePreview preview) async {
+  Future<void> _evaluateWithAi(
+    SmartFlashcard card,
+    ReviewSchedulePreview preview,
+  ) async {
     final clean = answer.text.trim();
     if (clean.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please type your answer in the box first to evaluate with AI.')),
+        const SnackBar(
+          content: Text(
+            'Please type your answer in the box first to evaluate with AI.',
+          ),
+        ),
       );
       return;
     }
@@ -734,7 +1078,9 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
         topic: card.topic,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _evaluatingWithAi = false;
         _currentEvaluation = eval;
@@ -747,16 +1093,19 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
         onApplyRating: (rating) => _markWithRating(rating),
       );
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() => _evaluatingWithAi = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('AI Evaluation error: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('AI Evaluation error: $e')));
     }
   }
 
   Future<void> _markWithRating(FlashcardRating rating) async {
-    if (_savingRating) return;
+    if (_savingRating) {
+      return;
+    }
     _savingRating = true;
     AppHaptics.confirm();
 
@@ -843,7 +1192,11 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Couldn\'t save this review to cloud. Saved locally.')),
+          const SnackBar(
+            content: Text(
+              'Couldn\'t save this review to cloud. Saved locally.',
+            ),
+          ),
         );
       }
     } finally {
@@ -854,58 +1207,125 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
   Widget _complete() {
     final totalReviewed = _goodCount + _hardCount + _easyCount + _againCount;
     final totalSuccess = _goodCount + _easyCount;
-    final retention = totalReviewed > 0 ? ((totalSuccess / totalReviewed) * 100).round() : 100;
+    final retention = totalReviewed > 0
+        ? ((totalSuccess / totalReviewed) * 100).round()
+        : 100;
     final dueTomorrow = ref.read(flashcardServiceProvider).getDueCards().length;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(backgroundColor: AppColors.background, title: const Text('Review Complete')),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text('Review Complete'),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
         children: [
           GlowCard(
-            borderColor: AppColors.success.withValues(alpha: 0.4),
+            borderColor: AppColors.adaptive(
+              context,
+              AppColors.success,
+            ).withValues(alpha: 0.4),
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.military_tech_rounded, color: AppColors.purpleBright, size: 28),
+                    Icon(
+                      Icons.military_tech_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 28,
+                    ),
                     SizedBox(width: 10),
-                    Text('Review Complete', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: Colors.white)),
+                    Text(
+                      'Review Complete',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 20,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text('$totalReviewed cards reviewed in this session', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                Text(
+                  '$totalReviewed cards reviewed in this session',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
                 const SizedBox(height: 14),
                 Row(
                   children: [
-                    _buildStatPill('Good', _goodCount, AppColors.success),
+                    _buildStatPill(
+                      'Good',
+                      _goodCount,
+                      AppColors.adaptive(context, AppColors.success),
+                    ),
                     const SizedBox(width: 8),
-                    _buildStatPill('Hard', _hardCount, AppColors.warning),
+                    _buildStatPill(
+                      'Hard',
+                      _hardCount,
+                      AppColors.adaptive(context, AppColors.warning),
+                    ),
                     const SizedBox(width: 8),
-                    _buildStatPill('Easy', _easyCount, AppColors.blue),
+                    _buildStatPill(
+                      'Easy',
+                      _easyCount,
+                      AppColors.adaptive(context, AppColors.blue),
+                    ),
                     const SizedBox(width: 8),
-                    _buildStatPill('Again', _againCount, AppColors.danger),
+                    _buildStatPill(
+                      'Again',
+                      _againCount,
+                      AppColors.adaptive(context, AppColors.danger),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Divider(color: AppColors.border),
+                Divider(color: Theme.of(context).colorScheme.outlineVariant),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Recall Accuracy:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.5)),
-                    Text('$retention%', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.success)),
+                    Text(
+                      'Recall Accuracy:',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 13.5,
+                      ),
+                    ),
+                    Text(
+                      '$retention%',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        color: AppColors.adaptive(context, AppColors.success),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Next Review:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.5)),
-                    Text('$dueTomorrow cards due tomorrow', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.purpleBright)),
+                    Text(
+                      'Next Review:',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 13.5,
+                      ),
+                    ),
+                    Text(
+                      '$dueTomorrow cards due tomorrow',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -917,20 +1337,32 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
             onPressed: () => Navigator.pushReplacement(
               context,
               MaterialPageRoute<void>(
-                builder: (_) => SmartFlashcardsStudyScreen(setId: widget.setId, review: ReviewMode.due),
+                builder: (_) => SmartFlashcardsStudyScreen(
+                  setId: widget.setId,
+                  review: ReviewMode.due,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 10),
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: AppColors.border),
-              minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          SpringPress(
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Back to Flashcards',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Back to Flashcards', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -947,8 +1379,22 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
         ),
         child: Column(
           children: [
-            Text('$count', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: color)),
-            Text(label, style: TextStyle(fontSize: 10.5, color: color, fontWeight: FontWeight.w600)),
+            Text(
+              '$count',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                color: AppColors.readableText(context, color),
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10.5,
+                color: AppColors.readableText(context, color),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -959,11 +1405,11 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     AppHaptics.selection();
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.bg1,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        side: BorderSide(color: AppColors.borderHighlight),
+        side: BorderSide(color: Theme.of(context).colorScheme.primary),
       ),
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: 0.65,
@@ -977,20 +1423,43 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
             children: [
               Row(
                 children: [
-                  const Icon(Icons.menu_book_rounded, color: AppColors.brandBright, size: 20),
+                  Icon(
+                    Icons.menu_book_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
-                  const Text('Source AI Derivation & Notes', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800)),
+                  Text(
+                    'Source AI Derivation & Notes',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textMuted),
-                    onPressed: () => Navigator.pop(context),
+                  SpringPress(
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
                 ],
               ),
-              const Divider(color: AppColors.borderSubtle, height: 20),
+              Divider(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                height: 20,
+              ),
               ChemistryMarkdownView(
                 text: backlink,
-                textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13.5, height: 1.45),
+                textStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 13.5,
+                  height: 1.45,
+                ),
               ),
             ],
           ),
@@ -1002,17 +1471,17 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
   Color _typeColor(FlashcardType type) {
     switch (type) {
       case FlashcardType.recall:
-        return AppColors.blue;
+        return AppColors.adaptive(context, AppColors.blue);
       case FlashcardType.understanding:
-        return AppColors.purpleBright;
+        return Theme.of(context).colorScheme.primary;
       case FlashcardType.application:
-        return AppColors.accentCyan;
+        return AppColors.adaptive(context, AppColors.accentCyan);
       case FlashcardType.comparison:
-        return AppColors.accentGold;
+        return AppColors.adaptive(context, AppColors.accentGold);
       case FlashcardType.mechanism:
-        return AppColors.success;
+        return AppColors.adaptive(context, AppColors.success);
       case FlashcardType.examQuestion:
-        return AppColors.danger;
+        return AppColors.adaptive(context, AppColors.danger);
     }
   }
 
@@ -1033,4 +1502,3 @@ class _SmartFlashcardsStudyScreenState extends ConsumerState<SmartFlashcardsStud
     }
   }
 }
-

@@ -1,8 +1,9 @@
+import 'expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
-import '../theme/app_colors.dart';
 import '../utils/chemistry_text_formatter.dart';
 import '../utils/haptics.dart';
 
@@ -30,11 +31,14 @@ class ChemistryEquation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cleanExpr = _stripDelimiters(equation.trim());
-    if (cleanExpr.isEmpty) return const SizedBox.shrink();
+    if (cleanExpr.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-    final defaultStyle = textStyle ??
-        const TextStyle(
-          color: Colors.white,
+    final defaultStyle =
+        textStyle ??
+        TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
           fontSize: 15.5,
           fontWeight: FontWeight.w600,
         );
@@ -44,9 +48,12 @@ class ChemistryEquation extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated.withValues(alpha: 0.75),
+        color: Theme.of(context).colorScheme.surfaceContainerHigh
+            .withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.purple.withValues(alpha: 0.28)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.28),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,28 +65,34 @@ class ChemistryEquation extends StatelessWidget {
               children: [
                 Text(
                   label!,
-                  style: const TextStyle(
-                    color: AppColors.purpleBright,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 if (showCopyButton)
-                  InkWell(
-                    onTap: () {
-                      AppHaptics.tap();
-                      Clipboard.setData(ClipboardData(text: cleanExpr));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Equation copied to clipboard'),
-                          duration: Duration(seconds: 2),
+                  SpringPress(
+                    child: InkWell(
+                      onTap: () {
+                        AppHaptics.tap();
+                        Clipboard.setData(ClipboardData(text: cleanExpr));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Equation copied to clipboard'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(4),
+                      child: Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.copy,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(4),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(Icons.copy, size: 14, color: AppColors.textMuted),
+                      ),
                     ),
                   ),
               ],
@@ -96,7 +109,7 @@ class ChemistryEquation extends StatelessWidget {
               onErrorFallback: (err) => Text(
                 ChemistryTextFormatter.toUnicodeMath(cleanExpr),
                 style: defaultStyle.copyWith(
-                  color: AppColors.purpleBright,
+                  color: Theme.of(context).colorScheme.primary,
                   fontFamily: 'monospace',
                   fontSize: (defaultStyle.fontSize ?? 15.5) * 0.95,
                 ),
@@ -136,7 +149,10 @@ class ChemistryEquation extends StatelessWidget {
     s = s.replaceAll(r'^\circ C', r'^\circ\text{C}');
     s = s.replaceAll(r'^\circC', r'^\circ\text{C}');
     // Fix naked superscripts like ^- -> ^{-} or ^+ -> ^{+}
-    s = s.replaceAllMapped(RegExp(r'\^([-+])(?![{a-zA-Z0-9])'), (m) => '^{${m[1]}}');
+    s = s.replaceAllMapped(
+      RegExp(r'\^([-+])(?![{a-zA-Z0-9])'),
+      (m) => '^{${m[1]}}',
+    );
     return s;
   }
 }

@@ -33,22 +33,22 @@ class Subject {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'code': code,
-        'teacher': teacher,
-        'colorHex': colorHex,
-        'isElective': isElective,
-      };
+    'id': id,
+    'name': name,
+    'code': code,
+    'teacher': teacher,
+    'colorHex': colorHex,
+    'isElective': isElective,
+  };
 
   factory Subject.fromJson(Map<String, dynamic> json) => Subject(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        code: json['code'] as String,
-        teacher: json['teacher'] as String? ?? '',
-        colorHex: json['colorHex'] as int? ?? 0xFF8B5CF6,
-        isElective: json['isElective'] as bool? ?? false,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    code: json['code'] as String,
+    teacher: json['teacher'] as String? ?? '',
+    colorHex: json['colorHex'] as int? ?? 0xFF8B5CF6,
+    isElective: json['isElective'] as bool? ?? false,
+  );
 }
 
 enum AttendanceStatus { present, absent, postponed, excused }
@@ -73,14 +73,14 @@ class AttendanceRecord {
   final String? note;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'subjectId': subjectId,
-        'date': date.toIso8601String(),
-        'status': status.name,
-        if (slotId != null) 'slotId': slotId,
-        if (markedAt != null) 'markedAt': markedAt!.toIso8601String(),
-        if (note != null && note!.isNotEmpty) 'note': note,
-      };
+    'id': id,
+    'subjectId': subjectId,
+    'date': date.toIso8601String(),
+    'status': status.name,
+    if (slotId != null) 'slotId': slotId,
+    if (markedAt != null) 'markedAt': markedAt!.toIso8601String(),
+    if (note != null && note!.isNotEmpty) 'note': note,
+  };
 
   factory AttendanceRecord.fromJson(Map<String, dynamic> json) {
     final statusStr = json['status'] as String? ?? 'present';
@@ -93,7 +93,9 @@ class AttendanceRecord {
         orElse: () => AttendanceStatus.present,
       ),
       slotId: json['slotId'] as String?,
-      markedAt: json['markedAt'] != null ? DateTime.tryParse(json['markedAt'] as String) : null,
+      markedAt: json['markedAt'] != null
+          ? DateTime.tryParse(json['markedAt'] as String)
+          : null,
       note: json['note'] as String?,
     );
   }
@@ -129,22 +131,22 @@ class TimetableSlot {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'subjectId': subjectId,
-        'weekday': weekday,
-        'startMinutes': startMinutes,
-        'endMinutes': endMinutes,
-        'room': room,
-      };
+    'id': id,
+    'subjectId': subjectId,
+    'weekday': weekday,
+    'startMinutes': startMinutes,
+    'endMinutes': endMinutes,
+    'room': room,
+  };
 
   factory TimetableSlot.fromJson(Map<String, dynamic> json) => TimetableSlot(
-        id: json['id'] as String,
-        subjectId: json['subjectId'] as String,
-        weekday: json['weekday'] as int,
-        startMinutes: json['startMinutes'] as int,
-        endMinutes: json['endMinutes'] as int,
-        room: json['room'] as String? ?? '',
-      );
+    id: json['id'] as String,
+    subjectId: json['subjectId'] as String,
+    weekday: json['weekday'] as int,
+    startMinutes: json['startMinutes'] as int,
+    endMinutes: json['endMinutes'] as int,
+    room: json['room'] as String? ?? '',
+  );
 }
 
 enum EventType { test, assignment, seminar }
@@ -169,34 +171,34 @@ class AcademicEvent {
   final bool completed;
 
   AcademicEvent copyWith({bool? completed}) => AcademicEvent(
-        id: id,
-        title: title,
-        type: type,
-        dueDate: dueDate,
-        subjectId: subjectId,
-        description: description,
-        completed: completed ?? this.completed,
-      );
+    id: id,
+    title: title,
+    type: type,
+    dueDate: dueDate,
+    subjectId: subjectId,
+    description: description,
+    completed: completed ?? this.completed,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'type': type.name,
-        'dueDate': dueDate.toIso8601String(),
-        'subjectId': subjectId,
-        'description': description,
-        'completed': completed,
-      };
+    'id': id,
+    'title': title,
+    'type': type.name,
+    'dueDate': dueDate.toIso8601String(),
+    'subjectId': subjectId,
+    'description': description,
+    'completed': completed,
+  };
 
   factory AcademicEvent.fromJson(Map<String, dynamic> json) => AcademicEvent(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        type: EventType.values.byName(json['type'] as String),
-        dueDate: DateTime.parse(json['dueDate'] as String),
-        subjectId: json['subjectId'] as String?,
-        description: json['description'] as String? ?? '',
-        completed: json['completed'] as bool? ?? false,
-      );
+    id: json['id'] as String,
+    title: json['title'] as String,
+    type: EventType.values.byName(json['type'] as String),
+    dueDate: DateTime.parse(json['dueDate'] as String),
+    subjectId: json['subjectId'] as String?,
+    description: json['description'] as String? ?? '',
+    completed: json['completed'] as bool? ?? false,
+  );
 }
 
 class NoteItem {
@@ -215,20 +217,20 @@ class NoteItem {
   final String? subjectId;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'body': body,
-        'updatedAt': updatedAt.toIso8601String(),
-        'subjectId': subjectId,
-      };
+    'id': id,
+    'title': title,
+    'body': body,
+    'updatedAt': updatedAt.toIso8601String(),
+    'subjectId': subjectId,
+  };
 
   factory NoteItem.fromJson(Map<String, dynamic> json) => NoteItem(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        body: json['body'] as String,
-        updatedAt: DateTime.parse(json['updatedAt'] as String),
-        subjectId: json['subjectId'] as String?,
-      );
+    id: json['id'] as String,
+    title: json['title'] as String,
+    body: json['body'] as String,
+    updatedAt: DateTime.parse(json['updatedAt'] as String),
+    subjectId: json['subjectId'] as String?,
+  );
 }
 
 class UserProfile {
@@ -242,6 +244,7 @@ class UserProfile {
     this.semester = 1,
     this.onboarded = false,
     this.loggedIn = false,
+    this.isGuest = false,
   });
 
   final String? id;
@@ -253,6 +256,7 @@ class UserProfile {
   final int semester;
   final bool onboarded;
   final bool loggedIn;
+  final bool isGuest;
 
   UserProfile copyWith({
     String? id,
@@ -264,6 +268,7 @@ class UserProfile {
     int? semester,
     bool? onboarded,
     bool? loggedIn,
+    bool? isGuest,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -275,30 +280,33 @@ class UserProfile {
       semester: semester ?? this.semester,
       onboarded: onboarded ?? this.onboarded,
       loggedIn: loggedIn ?? this.loggedIn,
+      isGuest: isGuest ?? this.isGuest,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'fullName': fullName,
-        'email': email,
-        'registerNumber': registerNumber,
-        'role': role,
-        'university': university,
-        'semester': semester,
-        'onboarded': onboarded,
-        'loggedIn': loggedIn,
-      };
+    'id': id,
+    'fullName': fullName,
+    'email': email,
+    'registerNumber': registerNumber,
+    'role': role,
+    'university': university,
+    'semester': semester,
+    'onboarded': onboarded,
+    'loggedIn': loggedIn,
+    'isGuest': isGuest,
+  };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-        id: json['id'] as String?,
-        fullName: json['fullName'] as String? ?? '',
-        email: json['email'] as String? ?? '',
-        registerNumber: json['registerNumber'] as String? ?? '',
-        role: json['role'] as String? ?? 'student',
-        university: json['university'] as String? ?? '',
-        semester: json['semester'] as int? ?? 1,
-        onboarded: json['onboarded'] as bool? ?? false,
-        loggedIn: json['loggedIn'] as bool? ?? false,
-      );
+    id: json['id'] as String?,
+    fullName: json['fullName'] as String? ?? '',
+    email: json['email'] as String? ?? '',
+    registerNumber: json['registerNumber'] as String? ?? '',
+    role: json['role'] as String? ?? 'student',
+    university: json['university'] as String? ?? '',
+    semester: json['semester'] as int? ?? 1,
+    onboarded: json['onboarded'] as bool? ?? false,
+    loggedIn: json['loggedIn'] as bool? ?? false,
+    isGuest: json['isGuest'] as bool? ?? false,
+  );
 }

@@ -14,11 +14,11 @@ class StudentManagementScreen extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: () => ref.refresh(studentsProvider.future),
       child: studentsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.purple)),
-        error: (err, stack) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.danger))),
+        loading: () =>  Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
+        error: (err, stack) => Center(child: Text('Error: $err', style:  TextStyle(color: AppColors.adaptive(context, AppColors.danger)))),
         data: (students) {
           if (students.isEmpty) {
-            return const Center(child: Text('No students found', style: TextStyle(color: AppColors.textSecondary)));
+            return  Center(child: Text('No students found', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -29,13 +29,13 @@ class StudentManagementScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: GlowCard(
                   child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: AppColors.purple,
-                      child: Icon(Icons.person, color: Colors.white),
+                    leading:  CircleAvatar(
+                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      child: Icon(Icons.person, color: Theme.of(context).colorScheme.onPrimaryContainer),
                     ),
-                    title: Text(student['full_name'] ?? 'Unknown', style: const TextStyle(color: AppColors.textPrimary)),
-                    subtitle: Text(student['register_number'] ?? '', style: const TextStyle(color: AppColors.textSecondary)),
-                    trailing: const Icon(Icons.more_vert, color: AppColors.textMuted),
+                    title: Text(student['full_name'] ?? 'Unknown', style:  TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+                    subtitle: Text(student['register_number'] ?? '', style:  TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    trailing:  Icon(Icons.more_vert, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ),
               );

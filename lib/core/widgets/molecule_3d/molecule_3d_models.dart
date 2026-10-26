@@ -27,7 +27,7 @@ class Atom3D {
 
   /// Standard CPK (Corey-Pauling-Koltun) colors adapted for dark-mode aesthetics.
   Color get cpkColor {
-    if (customColor != null) return customColor!;
+    if (customColor != null) {return customColor!;}
     switch (symbol.toUpperCase()) {
       case 'C':
         return const Color(0xFF4B5563); // Graphite slate carbon
@@ -61,7 +61,7 @@ class Atom3D {
 
   /// Relative covalent radius for rendering in Ångströms.
   double get covalentRadius {
-    if (customRadius != null) return customRadius!;
+    if (customRadius != null) {return customRadius!;}
     switch (symbol.toUpperCase()) {
       case 'H':
         return 0.32;
@@ -165,7 +165,7 @@ class Molecule3D {
 
   /// Calculates the center of mass (centroid) of the molecule.
   (double, double, double) get centroid {
-    if (atoms.isEmpty) return (0.0, 0.0, 0.0);
+    if (atoms.isEmpty) {return (0.0, 0.0, 0.0);}
     double sumX = 0, sumY = 0, sumZ = 0;
     for (final a in atoms) {
       sumX += a.x;
@@ -199,7 +199,7 @@ class Molecule3D {
     double maxR2 = 0.0;
     for (final a in atoms) {
       final r2 = a.x * a.x + a.y * a.y + a.z * a.z;
-      if (r2 > maxR2) maxR2 = r2;
+      if (r2 > maxR2) {maxR2 = r2;}
     }
     return math.sqrt(maxR2);
   }

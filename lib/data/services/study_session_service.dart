@@ -92,7 +92,7 @@ class StudySessionService {
       currentMinutes += remaining;
     }
 
-    if (steps.isEmpty) return null;
+    if (steps.isEmpty) {return null;}
 
     return StudyPlan(
       id: const Uuid().v4(),

@@ -1,4 +1,7 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -22,12 +25,14 @@ class Pericyclic3DOrbitalView extends StatefulWidget {
   });
 
   @override
-  State<Pericyclic3DOrbitalView> createState() => _Pericyclic3DOrbitalViewState();
+  State<Pericyclic3DOrbitalView> createState() =>
+      _Pericyclic3DOrbitalViewState();
 }
 
-class _Pericyclic3DOrbitalViewState extends State<Pericyclic3DOrbitalView> with SingleTickerProviderStateMixin {
+class _Pericyclic3DOrbitalViewState extends State<Pericyclic3DOrbitalView>
+    with SingleTickerProviderStateMixin {
   double _rotX = -0.35; // pitch
-  double _rotY = 0.55;  // yaw
+  double _rotY = 0.55; // yaw
   double _zoom = 1.0;
   bool _autoSpin = false;
   late AnimationController _spinController;
@@ -35,17 +40,18 @@ class _Pericyclic3DOrbitalViewState extends State<Pericyclic3DOrbitalView> with 
   @override
   void initState() {
     super.initState();
-    _spinController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 12),
-    )..addListener(() {
-        if (_autoSpin) {
-          setState(() {
-            _rotY += 0.015;
-            if (_rotY > math.pi * 2) _rotY -= math.pi * 2;
+    _spinController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 12))
+          ..addListener(() {
+            if (_autoSpin) {
+              setState(() {
+                _rotY += 0.015;
+                if (_rotY > math.pi * 2) {
+                  _rotY -= math.pi * 2;
+                }
+              });
+            }
           });
-        }
-      });
   }
 
   @override
@@ -81,7 +87,10 @@ class _Pericyclic3DOrbitalViewState extends State<Pericyclic3DOrbitalView> with 
       decoration: BoxDecoration(
         color: const Color(0xFF070D18),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderSubtle.withValues(alpha: 0.6)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant
+              .withValues(alpha: 0.6),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.4),
@@ -96,9 +105,7 @@ class _Pericyclic3DOrbitalViewState extends State<Pericyclic3DOrbitalView> with 
           children: [
             // Background subtle 3D coordinate grid
             Positioned.fill(
-              child: CustomPaint(
-                painter: _GridBackgroundPainter(),
-              ),
+              child: CustomPaint(painter: _GridBackgroundPainter()),
             ),
 
             // Interactive 3D Canvas
@@ -140,21 +147,37 @@ class _Pericyclic3DOrbitalViewState extends State<Pericyclic3DOrbitalView> with 
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF0F172A).withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: AppColors.adaptive(
+                          context,
+                          AppColors.accentCyan,
+                        ).withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.view_in_ar_rounded, size: 14, color: AppColors.accentCyan),
+                        Icon(
+                          Icons.view_in_ar_rounded,
+                          size: 14,
+                          color: AppColors.adaptive(
+                            context,
+                            AppColors.accentCyan,
+                          ),
+                        ),
                         const SizedBox(width: 6),
                         Text(
-                          widget.transitionStateLabel ?? widget.activeOrbital.name,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          widget.transitionStateLabel ??
+                              widget.activeOrbital.name,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                           ),
@@ -165,8 +188,12 @@ class _Pericyclic3DOrbitalViewState extends State<Pericyclic3DOrbitalView> with 
                   Row(
                     children: [
                       _buildIconButton(
-                        icon: _autoSpin ? Icons.pause_circle_filled_rounded : Icons.play_circle_filled_rounded,
-                        color: _autoSpin ? AppColors.brandBright : Colors.white70,
+                        icon: _autoSpin
+                            ? Icons.pause_circle_filled_rounded
+                            : Icons.play_circle_filled_rounded,
+                        color: _autoSpin
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.white70,
                         tooltip: _autoSpin ? 'Pause Orbit' : 'Auto Orbit 3D',
                         onTap: _toggleAutoSpin,
                       ),
@@ -189,7 +216,10 @@ class _Pericyclic3DOrbitalViewState extends State<Pericyclic3DOrbitalView> with 
               left: 12,
               right: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F172A).withValues(alpha: 0.88),
                   borderRadius: BorderRadius.circular(10),
@@ -230,16 +260,18 @@ class _Pericyclic3DOrbitalViewState extends State<Pericyclic3DOrbitalView> with 
     return Material(
       color: const Color(0xFF0F172A).withValues(alpha: 0.85),
       borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white12),
+      child: SpringPress(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Icon(icon, color: color, size: 16),
           ),
-          child: Icon(icon, color: color, size: 16),
         ),
       ),
     );
@@ -256,17 +288,18 @@ class _Pericyclic3DOrbitalViewState extends State<Pericyclic3DOrbitalView> with 
             color: color,
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.6),
-                blurRadius: 4,
-              ),
+              BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 4),
             ],
           ),
         ),
         const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -340,28 +373,28 @@ class _Orbital3DPainter extends CustomPainter {
       final a = system.atoms[i];
       final p = project(a.x, a.y, a.z);
       projectedAtoms.add(p);
-      renderList.add(_RenderEntity(
-        depth: p.z,
-        type: _EntityType.atom,
-        index: i,
-        pos: p,
-      ));
+      renderList.add(
+        _RenderEntity(depth: p.z, type: _EntityType.atom, index: i, pos: p),
+      );
     }
 
     // 2. Project Bonds
     for (int b = 0; b < system.bonds.length; b++) {
       final bond = system.bonds[b];
-      if (bond.from < projectedAtoms.length && bond.to < projectedAtoms.length) {
+      if (bond.from < projectedAtoms.length &&
+          bond.to < projectedAtoms.length) {
         final p1 = projectedAtoms[bond.from];
         final p2 = projectedAtoms[bond.to];
         final avgZ = (p1.z + p2.z) / 2.0;
-        renderList.add(_RenderEntity(
-          depth: avgZ - 0.05,
-          type: _EntityType.bond,
-          index: b,
-          pos: p1,
-          targetPos: p2,
-        ));
+        renderList.add(
+          _RenderEntity(
+            depth: avgZ - 0.05,
+            type: _EntityType.bond,
+            index: b,
+            pos: p1,
+            targetPos: p2,
+          ),
+        );
       }
     }
 
@@ -369,12 +402,9 @@ class _Orbital3DPainter extends CustomPainter {
     for (int l = 0; l < orbital.lobes.length; l++) {
       final lobe = orbital.lobes[l];
       final p = project(lobe.x, lobe.y, lobe.z);
-      renderList.add(_RenderEntity(
-        depth: p.z,
-        type: _EntityType.lobe,
-        index: l,
-        pos: p,
-      ));
+      renderList.add(
+        _RenderEntity(depth: p.z, type: _EntityType.lobe, index: l, pos: p),
+      );
     }
 
     // 4. Sort all entities by depth (back to front)
@@ -418,8 +448,16 @@ class _Orbital3DPainter extends CustomPainter {
       if (len > 0) {
         final nx = -dy / len * 3.0;
         final ny = dx / len * 3.0;
-        canvas.drawLine(Offset(p1.x + nx, p1.y + ny), Offset(p2.x + nx, p2.y + ny), paint);
-        canvas.drawLine(Offset(p1.x - nx, p1.y - ny), Offset(p2.x - nx, p2.y - ny), paint);
+        canvas.drawLine(
+          Offset(p1.x + nx, p1.y + ny),
+          Offset(p2.x + nx, p2.y + ny),
+          paint,
+        );
+        canvas.drawLine(
+          Offset(p1.x - nx, p1.y - ny),
+          Offset(p2.x - nx, p2.y - ny),
+          paint,
+        );
       }
     } else {
       canvas.drawLine(Offset(p1.x, p1.y), Offset(p2.x, p2.y), paint);
@@ -480,7 +518,9 @@ class _Orbital3DPainter extends CustomPainter {
 
     final mainColor = isPos ? const Color(0xFF06B6D4) : const Color(0xFFF59E0B);
     final coreColor = isPos ? const Color(0xFF67E8F9) : const Color(0xFFFBBF24);
-    final shadowColor = isPos ? const Color(0xFF0E7490) : const Color(0xFFB45309);
+    final shadowColor = isPos
+        ? const Color(0xFF0E7490)
+        : const Color(0xFFB45309);
 
     final glowPaint = Paint()
       ..color = mainColor.withValues(alpha: 0.35)
@@ -490,12 +530,7 @@ class _Orbital3DPainter extends CustomPainter {
     final lobeShader = RadialGradient(
       center: const Alignment(-0.3, -0.3),
       radius: 0.75,
-      colors: [
-        Colors.white,
-        coreColor,
-        mainColor,
-        shadowColor,
-      ],
+      colors: [Colors.white, coreColor, mainColor, shadowColor],
       stops: const [0.0, 0.3, 0.7, 1.0],
     ).createShader(Rect.fromCircle(center: Offset(p.x, p.y), radius: radius));
 
@@ -530,24 +565,58 @@ class _Orbital3DPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _paintTransitionStateInteractions(Canvas canvas, _Point3D Function(double, double, double) project) {
+  void _paintTransitionStateInteractions(
+    Canvas canvas,
+    _Point3D Function(double, double, double) project,
+  ) {
     final greenDashed = Paint()
       ..color = const Color(0xFF10B981)
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke;
 
     if (system.atoms.length >= 6) {
-      final pDiene1 = project(system.atoms[0].x, system.atoms[0].y, system.atoms[0].z);
-      final pDieno1 = project(system.atoms[4].x, system.atoms[4].y, system.atoms[4].z);
-      _drawDashedLine(canvas, Offset(pDiene1.x, pDiene1.y), Offset(pDieno1.x, pDieno1.y), greenDashed);
+      final pDiene1 = project(
+        system.atoms[0].x,
+        system.atoms[0].y,
+        system.atoms[0].z,
+      );
+      final pDieno1 = project(
+        system.atoms[4].x,
+        system.atoms[4].y,
+        system.atoms[4].z,
+      );
+      _drawDashedLine(
+        canvas,
+        Offset(pDiene1.x, pDiene1.y),
+        Offset(pDieno1.x, pDieno1.y),
+        greenDashed,
+      );
 
-      final pDiene4 = project(system.atoms[3].x, system.atoms[3].y, system.atoms[3].z);
-      final pDieno2 = project(system.atoms[5].x, system.atoms[5].y, system.atoms[5].z);
-      _drawDashedLine(canvas, Offset(pDiene4.x, pDiene4.y), Offset(pDieno2.x, pDieno2.y), greenDashed);
+      final pDiene4 = project(
+        system.atoms[3].x,
+        system.atoms[3].y,
+        system.atoms[3].z,
+      );
+      final pDieno2 = project(
+        system.atoms[5].x,
+        system.atoms[5].y,
+        system.atoms[5].z,
+      );
+      _drawDashedLine(
+        canvas,
+        Offset(pDiene4.x, pDiene4.y),
+        Offset(pDieno2.x, pDieno2.y),
+        greenDashed,
+      );
 
       final midX = (pDiene1.x + pDieno1.x) / 2;
       final midY = (pDiene1.y + pDieno1.y) / 2;
-      _drawBadge(canvas, Offset(midX - 35, midY), 'Primary [4s+2s] σ Overlap', const Color(0xFF10B981));
+      _drawBadge(
+        canvas,
+        Offset(midX - 35, midY),
+        'Primary [4s+2s] σ Overlap',
+        const Color(0xFF10B981),
+      );
     }
 
     if (showSecondaryOverlap && system.atoms.length >= 7) {
@@ -556,16 +625,43 @@ class _Orbital3DPainter extends CustomPainter {
         ..strokeWidth = 2.2
         ..style = PaintingStyle.stroke;
 
-      final pDiene2 = project(system.atoms[1].x, system.atoms[1].y, system.atoms[1].z);
-      final pCarbonyl = project(system.atoms[6].x, system.atoms[6].y, system.atoms[6].z);
-      _drawDashedLine(canvas, Offset(pDiene2.x, pDiene2.y), Offset(pCarbonyl.x, pCarbonyl.y), purpleDashed);
+      final pDiene2 = project(
+        system.atoms[1].x,
+        system.atoms[1].y,
+        system.atoms[1].z,
+      );
+      final pCarbonyl = project(
+        system.atoms[6].x,
+        system.atoms[6].y,
+        system.atoms[6].z,
+      );
+      _drawDashedLine(
+        canvas,
+        Offset(pDiene2.x, pDiene2.y),
+        Offset(pCarbonyl.x, pCarbonyl.y),
+        purpleDashed,
+      );
 
-      final pDiene3 = project(system.atoms[2].x, system.atoms[2].y, system.atoms[2].z);
-      _drawDashedLine(canvas, Offset(pDiene3.x, pDiene3.y), Offset(pCarbonyl.x, pCarbonyl.y), purpleDashed);
+      final pDiene3 = project(
+        system.atoms[2].x,
+        system.atoms[2].y,
+        system.atoms[2].z,
+      );
+      _drawDashedLine(
+        canvas,
+        Offset(pDiene3.x, pDiene3.y),
+        Offset(pCarbonyl.x, pCarbonyl.y),
+        purpleDashed,
+      );
 
       final secMidX = (pDiene2.x + pCarbonyl.x) / 2;
       final secMidY = (pDiene2.y + pCarbonyl.y) / 2;
-      _drawBadge(canvas, Offset(secMidX + 15, secMidY), 'Secondary Overlap (Endo Rule)', const Color(0xFFA855F7));
+      _drawBadge(
+        canvas,
+        Offset(secMidX + 15, secMidY),
+        'Secondary Overlap (Endo Rule)',
+        const Color(0xFFA855F7),
+      );
     }
   }
 
@@ -575,7 +671,9 @@ class _Orbital3DPainter extends CustomPainter {
     final dx = p2.dx - p1.dx;
     final dy = p2.dy - p1.dy;
     final distance = math.sqrt(dx * dx + dy * dy);
-    if (distance == 0) return;
+    if (distance == 0) {
+      return;
+    }
 
     final unitX = dx / distance;
     final unitY = dy / distance;
@@ -613,14 +711,21 @@ class _Orbital3DPainter extends CustomPainter {
       textPainter.height + 4,
     );
 
-    final bgPaint = Paint()..color = const Color(0xFF0F172A).withValues(alpha: 0.9);
+    final bgPaint = Paint()
+      ..color = const Color(0xFF0F172A).withValues(alpha: 0.9);
     final borderPaint = Paint()
       ..color = color.withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
-    canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(4)), bgPaint);
-    canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(4)), borderPaint);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(4)),
+      bgPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(4)),
+      borderPaint,
+    );
     textPainter.paint(canvas, pos);
   }
 
@@ -664,11 +769,7 @@ class _Point3D {
   const _Point3D(this.x, this.y, this.z, this.persp);
 }
 
-enum _EntityType {
-  atom,
-  bond,
-  lobe,
-}
+enum _EntityType { atom, bond, lobe }
 
 class _RenderEntity {
   final double depth;

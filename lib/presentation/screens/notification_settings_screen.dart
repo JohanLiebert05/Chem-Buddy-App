@@ -1,3 +1,5 @@
+import '../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -15,8 +17,11 @@ class NotificationSettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final prefs = ref.watch(appControllerProvider).notificationPrefs;
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(backgroundColor: AppColors.background, title: const Text('Notifications')),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text('Notifications'),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
         children: [
@@ -29,54 +34,71 @@ class NotificationSettingsScreen extends ConsumerWidget {
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Enable all notifications'),
                     value: prefs.enabled,
-                    activeThumbColor: AppColors.purpleBright,
+                    activeThumbColor: Theme.of(context).colorScheme.primary,
                     onChanged: (v) => _save(ref, prefs.copyWith(enabled: v)),
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Class reminders'),
                     value: prefs.classReminders,
-                    onChanged: (v) => _save(ref, prefs.copyWith(classReminders: v)),
+                    onChanged: (v) =>
+                        _save(ref, prefs.copyWith(classReminders: v)),
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Class-time attendance prompt'),
-                    subtitle: const Text('Mark Present or Absent directly from the notification'),
+                    subtitle: const Text(
+                      'Mark Present or Absent directly from the notification',
+                    ),
                     value: prefs.attendancePromptAtClassStart,
-                    onChanged: (v) => _save(ref, prefs.copyWith(attendancePromptAtClassStart: v)),
+                    onChanged: (v) => _save(
+                      ref,
+                      prefs.copyWith(attendancePromptAtClassStart: v),
+                    ),
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Daily timetable'),
-                    subtitle: const Text('Morning overview at 8:30 AM with timetable & witty briefing'),
+                    subtitle: const Text(
+                      'Morning overview at 8:30 AM with timetable & witty briefing',
+                    ),
                     value: prefs.dailyTimetable,
-                    onChanged: (v) => _save(ref, prefs.copyWith(dailyTimetable: v)),
+                    onChanged: (v) =>
+                        _save(ref, prefs.copyWith(dailyTimetable: v)),
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Assignment reminders'),
                     value: prefs.assignmentReminders,
-                    onChanged: (v) => _save(ref, prefs.copyWith(assignmentReminders: v)),
+                    onChanged: (v) =>
+                        _save(ref, prefs.copyWith(assignmentReminders: v)),
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Exam reminders'),
                     value: prefs.examReminders,
-                    onChanged: (v) => _save(ref, prefs.copyWith(examReminders: v)),
+                    onChanged: (v) =>
+                        _save(ref, prefs.copyWith(examReminders: v)),
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Flashcard & study reminders'),
-                    subtitle: const Text('Due active recall decks & review sessions'),
+                    subtitle: const Text(
+                      'Due active recall decks & review sessions',
+                    ),
                     value: prefs.studyReminders,
-                    onChanged: (v) => _save(ref, prefs.copyWith(studyReminders: v)),
+                    onChanged: (v) =>
+                        _save(ref, prefs.copyWith(studyReminders: v)),
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Daily psychology facts'),
-                    subtitle: const Text('Daily once at 8:00 PM • Fascinating insights into human behavior & mind'),
+                    subtitle: const Text(
+                      'Daily once at 8:00 PM • Fascinating insights into human behavior & mind',
+                    ),
                     value: prefs.dailyPsychologyFact,
-                    onChanged: (v) => _save(ref, prefs.copyWith(dailyPsychologyFact: v)),
+                    onChanged: (v) =>
+                        _save(ref, prefs.copyWith(dailyPsychologyFact: v)),
                   ),
                 ],
               ),
@@ -87,37 +109,63 @@ class NotificationSettingsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Default reminder time', style: TextStyle(fontWeight: FontWeight.w800)),
+                const Text(
+                  'Default reminder time',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   children: [
                     for (final m in [5, 10, 15, 30, 60])
-                      ChoiceChip(
-                        label: Text(m == 60 ? '1 hour' : '$m min'),
-                        selected: prefs.defaultMinutesBefore == m,
-                        onSelected: (_) => _save(ref, prefs.copyWith(defaultMinutesBefore: m)),
-                      ),
-                    ActionChip(
-                      label: const Text('Custom'),
-                      onPressed: () async {
-                        final c = TextEditingController(text: '${prefs.defaultMinutesBefore}');
-                        final next = await showDialog<int>(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Minutes before class'),
-                            content: TextField(controller: c, keyboardType: TextInputType.number),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx, int.tryParse(c.text.trim())),
-                                child: const Text('Save'),
-                              ),
-                            ],
+                      SpringPress(
+                        child: ChoiceChip(
+                          label: Text(m == 60 ? '1 hour' : '$m min'),
+                          selected: prefs.defaultMinutesBefore == m,
+                          onSelected: (_) => _save(
+                            ref,
+                            prefs.copyWith(defaultMinutesBefore: m),
                           ),
-                        );
-                        if (next != null && next > 0) _save(ref, prefs.copyWith(defaultMinutesBefore: next));
-                      },
+                        ),
+                      ),
+                    SpringPress(
+                      child: ActionChip(
+                        label: const Text('Custom'),
+                        onPressed: () async {
+                          final c = TextEditingController(
+                            text: '${prefs.defaultMinutesBefore}',
+                          );
+                          final next = await showDialog<int>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Minutes before class'),
+                              content: TextField(
+                                controller: c,
+                                keyboardType: TextInputType.number,
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(
+                                    ctx,
+                                    int.tryParse(c.text.trim()),
+                                  ),
+                                  child: const Text('Save'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (next != null && next > 0) {
+                            _save(
+                              ref,
+                              prefs.copyWith(defaultMinutesBefore: next),
+                            );
+                          }
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -125,55 +173,88 @@ class NotificationSettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.purple,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            icon: const Icon(Icons.notifications_active_rounded),
-            label: const Text('Send Test Notification Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-            onPressed: () async {
-              final repo = ref.read(chemRepositoryProvider);
-              final stats = repo.overallStats();
-              final firstSub = repo.subjects().firstOrNull;
-              await NotificationService.instance.sendTestNotification(
-                stats: stats,
-                testSubjectId: firstSub?.id,
-                testSubjectName: firstSub?.name,
-              );
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Test notification dispatched! Check your notification shade to test 1-tap Present / Absent.'),
-                  backgroundColor: AppColors.statusSuccess,
+          SpringPress(
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor: Theme.of(context)
+                    .colorScheme
+                    .onPrimaryContainer,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              );
-            },
+              ),
+              icon: const Icon(Icons.notifications_active_rounded),
+              label: const Text(
+                'Send Test Notification Now',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+              onPressed: () async {
+                final repo = ref.read(chemRepositoryProvider);
+                final stats = repo.overallStats();
+                final firstSub = repo.subjects().firstOrNull;
+                await NotificationService.instance.sendTestNotification(
+                  stats: stats,
+                  testSubjectId: firstSub?.id,
+                  testSubjectName: firstSub?.name,
+                );
+                if (!context.mounted) {
+                  return;
+                }
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Test notification dispatched! Check your notification shade to test 1-tap Present / Absent.',
+                    ),
+                    backgroundColor: AppColors.adaptive(
+                      context,
+                      AppColors.statusSuccess,
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
           const SizedBox(height: 10),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.purpleBright,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            icon: const Icon(Icons.psychology_rounded),
-            label: const Text('Send Psychology Fact Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-            onPressed: () async {
-              await NotificationService.instance.sendTestPsychologyFactNotification();
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Psychology fact dispatched! Check your notification shade.'),
-                  backgroundColor: AppColors.statusSuccess,
+          SpringPress(
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor: Theme.of(context)
+                    .colorScheme
+                    .onPrimaryContainer,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              );
-            },
+              ),
+              icon: const Icon(Icons.psychology_rounded),
+              label: const Text(
+                'Send Psychology Fact Now',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+              onPressed: () async {
+                await NotificationService.instance
+                    .sendTestPsychologyFactNotification();
+                if (!context.mounted) {
+                  return;
+                }
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Psychology fact dispatched! Check your notification shade.',
+                    ),
+                    backgroundColor: AppColors.adaptive(
+                      context,
+                      AppColors.statusSuccess,
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
           const SizedBox(height: 10),
           PrimaryButton(
@@ -181,9 +262,15 @@ class NotificationSettingsScreen extends ConsumerWidget {
             onPressed: () async {
               final status = await Permission.notification.request();
               await NotificationService.instance.requestPermission();
-              if (!context.mounted) return;
+              if (!context.mounted) {
+                return;
+              }
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(status.isGranted ? 'Notifications allowed.' : 'Notifications were denied. Class reminders will stay off until you allow them in system settings.')),
+                SnackBar(
+                  content: Text(
+                    status.isGranted ? 'Notifications allowed.' : 'Notifications were denied. Class reminders will stay off until you allow them in system settings.',
+                  ),
+                ),
               );
             },
           ),

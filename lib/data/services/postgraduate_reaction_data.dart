@@ -11,10 +11,13 @@ class PostgraduateReactionData {
     ReactionMechanism(
       id: 'sharpless_epoxidation',
       name: 'Sharpless Asymmetric Epoxidation',
-      aliases: ['Sharpless Epoxidation', 'Katsuki-Sharpless Epoxidation', 'Enantioselective Epoxidation'],
+      aliases: [
+        'Sharpless Epoxidation',
+        'Katsuki-Sharpless Epoxidation',
+        'Enantioselective Epoxidation',
+      ],
       category: ReactionCategory.stereochemistry,
-      summary:
-          r'''Catalytic enantioselective epoxidation of primary and secondary allylic alcohols to chiral 2,3-epoxy alcohols using titanium tetraisopropoxide $\text{Ti}(\text{O-}i\text{-Pr})_4$, optically pure diethyl tartrate ((+) or (-)-DET), and tert-butyl hydroperoxide ($t\text{-BuOOH}$). Governed by the Katsuki-Sharpless stereochemical mnemonic yielding >90% ee.''',
+      summary: r'''Catalytic enantioselective epoxidation of primary and secondary allylic alcohols to chiral 2,3-epoxy alcohols using titanium tetraisopropoxide $\text{Ti}(\text{O-}i\text{-Pr})_4$, optically pure diethyl tartrate ((+) or (-)-DET), and tert-butyl hydroperoxide ($t\text{-BuOOH}$). Governed by the Katsuki-Sharpless stereochemical mnemonic yielding >90% ee.''',
       reactants: r'''Allylic alcohol ($\text{R-CH=CH-CH}_2\text{OH}$), tert-Butyl hydroperoxide ($t\text{-BuOOH}$)''',
       reagentsAndConditions: r'''$\text{Ti}(\text{O-}i\text{-Pr})_4$ (5-10 mol%), (+)- or (-)-Diethyl tartrate (DET, 10-12 mol%), 4Å Molecular Sieves, $\text{CH}_2\text{Cl}_2$, $-20^\circ\text{C}$''',
       products: r'''Chiral 2,3-epoxy alcohol (up to >98% ee)''',
@@ -39,7 +42,8 @@ class PostgraduateReactionData {
           description: r'''Ligand exchange between $\text{Ti}(\text{O-}i\text{-Pr})_4$ and diethyl tartrate (DET) establishes a dynamic $C_2$-symmetric bimetallic dimer $[\text{Ti}_2(\text{DET})_2(\text{O-}i\text{-Pr})_4]$ as the active catalytic template.''',
           curvedArrowNotes: r'''Nucleophilic attack of tartrate hydroxyl groups onto titanium with displacement of isopropanol ligands.''',
           intermediate: r'''$[\text{Ti}_2(\text{DET})_2(\text{O-}i\text{-Pr})_4]$ Dimeric Chiral Complex''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -90,7 +94,8 @@ class PostgraduateReactionData {
           description: r'''The allylic alcohol and tert-butyl hydroperoxide displace remaining isopropoxide ligands, binding to adjacent titanium atoms in a rigid, chiral, bidentate coordination sphere.''',
           curvedArrowNotes: r'''Coordination of allylic alkoxide and alkylperoxo ligands to Ti centers locks conformational flexibility.''',
           intermediate: r'''$[\text{Ti}_2(\text{DET})_2(t\text{-BuOO})(\text{OCH}_2\text{CH=CHR})]$ Ternary Complex''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -143,7 +148,8 @@ class PostgraduateReactionData {
           description: r'''Electrophilic oxygen of the coordinated peroxide is transferred intramolecularly to the coordinated alkene face dictated by DET chirality. Subsequent ligand exchange regenerates catalyst.''',
           curvedArrowNotes: r'''Curved arrow from alkene $\pi$-bond onto electrophilic oxygen of Ti-coordinated peroxo group, displacing $t\text{-BuO}^-$.''',
           intermediate: r'''Chiral 2,3-Epoxy alcohol + $t\text{-BuOH}$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -187,10 +193,13 @@ class PostgraduateReactionData {
     ReactionMechanism(
       id: 'suzuki_coupling',
       name: 'Suzuki-Miyaura Cross-Coupling',
-      aliases: ['Suzuki Coupling', 'Suzuki-Miyaura Reaction', 'Pd-Catalyzed Biaryl Coupling'],
+      aliases: [
+        'Suzuki Coupling',
+        'Suzuki-Miyaura Reaction',
+        'Pd-Catalyzed Biaryl Coupling',
+      ],
       category: ReactionCategory.organometallics,
-      summary:
-          r'''Palladium-catalyzed cross-coupling between organoboron compounds (e.g. arylboronic acids) and organic halides/triflates in the presence of base. Forms robust carbon-carbon (sp2-sp2) biaryl or alkenyl bonds with high functional group tolerance and non-toxic boronic acid byproducts.''',
+      summary: r'''Palladium-catalyzed cross-coupling between organoboron compounds (e.g. arylboronic acids) and organic halides/triflates in the presence of base. Forms robust carbon-carbon (sp2-sp2) biaryl or alkenyl bonds with high functional group tolerance and non-toxic boronic acid byproducts.''',
       reactants: r'''Aryl/Alkenyl halide or triflate ($\text{Ar-X}$), Arylboronic acid ($\text{Ar\'-B(OH)}_2$)''',
       reagentsAndConditions: r'''$\text{Pd(PPh}_3)_4$ or $\text{Pd(dppf)Cl}_2$ (1-5 mol%), Base ($\text{Na}_2\text{CO}_3, \text{K}_3\text{PO}_4, \text{CsF}$), $\text{THF/H}_2\text{O}$ or Toluene/EtOH, $60-100^\circ\text{C}$''',
       products: r'''Biaryl or substituted alkene ($\text{Ar-Ar\'}$), Boric acid / borate salt''',
@@ -215,7 +224,8 @@ class PostgraduateReactionData {
           description: r'''Aryl halide $\text{Ar-X}$ coordinates to and oxidatively adds across the coordinatively unsaturated 14e- $[\text{Pd(0)L}_2]$ complex, forming a square-planar $16\text{e}^-$ $[\text{Ar-Pd(II)L}_2\text{-X}]$ intermediate.''',
           curvedArrowNotes: r'''Nucleophilic Pd(0) d-orbital attacks C-X $\sigma^*$ antibonding orbital, cleaving C-X bond.''',
           intermediate: r'''$trans-[\text{Ar-Pd(II)L}_2\text{-X}]$ Square-Planar Adduct''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -268,7 +278,8 @@ class PostgraduateReactionData {
           description: r'''Inorganic base ($\text{OH}^-$) coordinates to neutral arylboronic acid $\text{Ar\'-B(OH)}_2$ to generate a nucleophilic, negatively charged tetrahedral borate $[\text{Ar\'-B(OH)}_3]^-$, which transfers the aryl carbanion to $\text{Pd(II)}$, displacing halide.''',
           curvedArrowNotes: r'''Curved arrow from nucleophilic B-Ar\' bond to electrophilic Pd(II) center, with halide departure.''',
           intermediate: r'''$cis-[\text{Ar-Pd(II)L}_2\text{-Ar\']}$ Diaryl Palladium Complex''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -329,7 +340,8 @@ class PostgraduateReactionData {
           description: r'''The two mutually cis aryl ligands undergo concerted intramolecular reductive elimination to forge the new C-C biaryl bond, regenerating active $[\text{Pd(0)L}_2]$ to restart the catalytic cycle.''',
           curvedArrowNotes: r'''Concerted electron flow from Pd-Ar and Pd-Ar\' bonding orbitals to form Ar-Ar\' $\sigma$-bond while transferring 2 electrons back onto Pd(0).''',
           intermediate: r'''Biaryl ($\text{Ar-Ar\'}$) + Regenerated $[\text{Pd(0)L}_2]$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -379,8 +391,7 @@ class PostgraduateReactionData {
       name: 'Mitsunobu Reaction',
       aliases: ['Mitsunobu Inversion', 'Phosphonium-Mediated Substitution'],
       category: ReactionCategory.rearrangements,
-      summary:
-          r'''Stereospecific conversion of primary and secondary alcohols into esters, ethers, amines, or thioethers using diethyl azodicarboxylate (DEAD) or DIAD, triphenylphosphine (PPh3), and a pronucleophile with pKa < 15. Proceeds with 100% Walden inversion of configuration at secondary chiral carbinols.''',
+      summary: r'''Stereospecific conversion of primary and secondary alcohols into esters, ethers, amines, or thioethers using diethyl azodicarboxylate (DEAD) or DIAD, triphenylphosphine (PPh3), and a pronucleophile with pKa < 15. Proceeds with 100% Walden inversion of configuration at secondary chiral carbinols.''',
       reactants: r'''Alcohol ($\text{R-OH}$), Pronucleophile with $\text{p}K_a < 15$ (e.g. $\text{PhCOOH, Phthalimide}$)''',
       reagentsAndConditions: r'''$\text{PPh}_3$ (1.2 equiv), DEAD or DIAD (1.2 equiv), Anhydrous THF, $0^\circ\text{C}$ to room temperature''',
       products: r'''Inverted product (e.g. Inverted ester $\text{R-OC(O)Ph}$), $\text{O=PPh}_3$, Diethyl hydrazinedicarboxylate''',
@@ -405,7 +416,8 @@ class PostgraduateReactionData {
           description: r'''Nucleophilic addition of triphenylphosphine $\text{PPh}_3$ to the azo nitrogen of diethyl azodicarboxylate (DEAD) generates the zwitterionic Morrison-Brunn-Huisgen phosphonium betaine $[\text{Ph}_3\text{P}^+-\text{N}(\text{CO}_2\text{Et})-\bar{\text{N}}\text{CO}_2\text{Et}]$.''',
           curvedArrowNotes: r'''PPh3 phosphorus lone pair attacks the electron-deficient azo nitrogen, shifting pi-electrons onto the adjacent nitrogen.''',
           intermediate: r'''$[\text{Ph}_3\text{P}^+-\text{N}(\text{CO}_2\text{Et})-\bar{\text{N}}\text{CO}_2\text{Et}]$ Betaine''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -447,7 +459,8 @@ class PostgraduateReactionData {
           description: r'''The basic nitrogen of the betaine deprotonates the acidic pronucleophile $\text{Nu-H}$ ($\text{p}K_a < 15$). The alcohol $\text{R-OH}$ then attacks the electrophilic phosphonium center, displacing the hydrazine anion to form an active alkoxyphosphonium intermediate $[\text{Ph}_3\text{P}^+-\text{O-R}]$.''',
           curvedArrowNotes: r'''Alcohol oxygen attacks phosphonium cation with expulsion of reduced hydrazine leaving group.''',
           intermediate: r'''$[\text{Ph}_3\text{P}^+-\text{O-R}] + \text{Nu}^-$ Alkoxyphosphonium Salt''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -490,8 +503,10 @@ class PostgraduateReactionData {
           title: 'SN2 Backside Displacement with 100% Inversion',
           description: r'''The nucleophile $\text{Nu}^-$ performs an $S_N2$ backside attack at the carbinol carbon of the alkoxyphosphonium intermediate, displacing triphenylphosphine oxide $\text{O=PPh}_3$ and affording the product with complete inversion of configuration.''',
           curvedArrowNotes: r'''Nucleophile attacks back-lobe of C-O sigma* orbital at 180 degrees, releasing triphenylphosphine oxide.''',
-          intermediate: r'''Inverted Product ($\text{R-Nu}$) + $\text{O=PPh}_3$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          intermediate:
+              r'''Inverted Product ($\text{R-Nu}$) + $\text{O=PPh}_3$''',
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -539,10 +554,13 @@ class PostgraduateReactionData {
     ReactionMechanism(
       id: 'baeyer_villiger',
       name: 'Baeyer-Villiger Oxidation',
-      aliases: ['Baeyer-Villiger Rearrangement', 'Ketone to Ester Oxidation', 'Lactone Synthesis'],
+      aliases: [
+        'Baeyer-Villiger Rearrangement',
+        'Ketone to Ester Oxidation',
+        'Lactone Synthesis',
+      ],
       category: ReactionCategory.oxidationReduction,
-      summary:
-          r'''Oxidative cleavage of ketones to esters, or cyclic ketones to ring-expanded lactones, using peroxyacids (e.g. mCPBA, trifluoroperacetic acid). Proceeds via the tetrahedral Criegee intermediate with concerted alkyl migration occurring with complete stereochemical retention.''',
+      summary: r'''Oxidative cleavage of ketones to esters, or cyclic ketones to ring-expanded lactones, using peroxyacids (e.g. mCPBA, trifluoroperacetic acid). Proceeds via the tetrahedral Criegee intermediate with concerted alkyl migration occurring with complete stereochemical retention.''',
       reactants: r'''Ketone ($\text{R-CO-R\'}$), Peroxyacid ($\text{mCPBA}, \text{CF}_3\text{CO}_3\text{H}$)''',
       reagentsAndConditions: r'''$\text{mCPBA}$ (1.1-1.5 equiv), $\text{NaHCO}_3$ buffer, $\text{CH}_2\text{Cl}_2$, room temperature''',
       products: r'''Ester or Lactone ($\text{R-C(O)O-R\'}$), Carboxylic acid byproduct''',
@@ -567,7 +585,8 @@ class PostgraduateReactionData {
           description: r'''Peroxyacid ($m\text{CPBA}$) nucleophilically attacks the electrophilic carbonyl carbon of the ketone, producing a tetrahedral adduct.''',
           curvedArrowNotes: r'''Peracid peroxy oxygen attacks carbonyl carbon, shifting pi-electrons onto carbonyl oxygen.''',
           intermediate: r'''Peroxyhemiacetal Tetrahedral Adduct''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -607,8 +626,10 @@ class PostgraduateReactionData {
           title: 'Criegee Intermediate Formation',
           description: r'''Rapid intramolecular proton transfer stabilizes the adduct into the classical Criegee intermediate, activating the peroxy oxygen for departure of the carboxylate leaving group.''',
           curvedArrowNotes: r'''Proton migration from peroxy oxygen to carbonyl oxygen sets up leaving group departure.''',
-          intermediate: r'''Criegee Intermediate $[\text{R}_2\text{C(OH)OO(CO)Ar}]$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          intermediate:
+              r'''Criegee Intermediate $[\text{R}_2\text{C(OH)OO(CO)Ar}]$''',
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -654,7 +675,8 @@ class PostgraduateReactionData {
           description: r'''The more substituted alkyl group migrates to the adjacent electron-deficient peroxy oxygen with complete stereoretention, simultaneously expelling $m$-chlorobenzoate. Deprotonation delivers the ester/lactone.''',
           curvedArrowNotes: r'''Migration of C-C sigma-bond to peroxy oxygen as the weak O-O bond cleaves.''',
           intermediate: r'''Ester / Lactone + $m\text{-Chlorobenzoic acid}$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -696,8 +718,7 @@ class PostgraduateReactionData {
       name: 'Swern Oxidation',
       aliases: ['Swern Carbonyl Synthesis', 'DMSO-Oxalyl Chloride Oxidation'],
       category: ReactionCategory.oxidationReduction,
-      summary:
-          r'''Mild, chemoselective oxidation of primary alcohols to aldehydes (without over-oxidation to carboxylic acids) and secondary alcohols to ketones using dimethyl sulfoxide (DMSO), oxalyl chloride $(COCl)_2$, and triethylamine at low temperature ($-78^\circ\text{C}$).''',
+      summary: r'''Mild, chemoselective oxidation of primary alcohols to aldehydes (without over-oxidation to carboxylic acids) and secondary alcohols to ketones using dimethyl sulfoxide (DMSO), oxalyl chloride $(COCl)_2$, and triethylamine at low temperature ($-78^\circ\text{C}$).''',
       reactants: r'''$1^\circ$ or $2^\circ$ Alcohol ($\text{R-CH}_2\text{OH}$ or $\text{R}_2\text{CHOH}$)''',
       reagentsAndConditions: r'''$\text{DMSO}$ (2.2 equiv), Oxalyl chloride $(COCl)_2$ (1.1 equiv), $\text{Et}_3\text{N}$ (3-5 equiv), $\text{CH}_2\text{Cl}_2$, $-78^\circ\text{C}$ to room temperature''',
       products: r'''Aldehyde or Ketone ($\text{R-CHO}$ or $\text{R}_2\text{C=O}$), $\text{Me}_2\text{S}, \text{CO}_2, \text{CO}, \text{Et}_3\text{NH}^+\text{Cl}^-$''',
@@ -722,7 +743,8 @@ class PostgraduateReactionData {
           description: r'''DMSO attacks oxalyl chloride at $-78^\circ\text{C}$, followed by rapid collapse with loss of $\text{CO}_2$ and $\text{CO}$ to generate the highly electrophilic chlorodimethylsulfonium chloride intermediate.''',
           curvedArrowNotes: r'''DMSO oxygen attacks oxalyl carbonyl; fragmentation expels CO2 and CO gases.''',
           intermediate: r'''$[\text{Me}_2\text{S}^+-\text{Cl}]\text{Cl}^-$ Chlorodimethylsulfonium Cation''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -764,7 +786,8 @@ class PostgraduateReactionData {
           description: r'''The alcohol oxygen attacks the sulfur atom of the chlorodimethylsulfonium cation, displacing chloride ion to form the alkoxydimethylsulfonium intermediate.''',
           curvedArrowNotes: r'''Alcohol hydroxyl oxygen attacks electrophilic sulfur cation with chloride departure.''',
           intermediate: r'''$[\text{R-CH}_2\text{-O-S}^+\text{Me}_2]$ Alkoxydimethylsulfonium Adduct''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -806,7 +829,8 @@ class PostgraduateReactionData {
           description: r'''Triethylamine deprotonates a methyl group on sulfur to create a sulfur ylide. The carbanion then executes an intramolecular 5-membered cyclic elimination, abstracting the carbinol proton to yield the carbonyl and expel dimethyl sulfide.''',
           curvedArrowNotes: r'''Intramolecular 5-membered cyclic proton abstraction from carbinol carbon, with C=O double bond formation and Me2S departure.''',
           intermediate: r'''Aldehyde / Ketone + $\text{Me}_2\text{S} + \text{Et}_3\text{NH}^+\text{Cl}^-$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -851,10 +875,12 @@ class PostgraduateReactionData {
     ReactionMechanism(
       id: 'birch_reduction',
       name: 'Birch Reduction',
-      aliases: ['Dissolving Metal Aromatic Reduction', '1,4-Cyclohexadiene Synthesis'],
+      aliases: [
+        'Dissolving Metal Aromatic Reduction',
+        '1,4-Cyclohexadiene Synthesis',
+      ],
       category: ReactionCategory.oxidationReduction,
-      summary:
-          r'''Dissolving metal reduction of aromatic rings using alkali metals (Na, Li) in liquid ammonia in the presence of an alcohol (t-BuOH). Produces non-conjugated 1,4-cyclohexadienes under kinetic protonation control with high regiochemical predictability dictated by aromatic substituents.''',
+      summary: r'''Dissolving metal reduction of aromatic rings using alkali metals (Na, Li) in liquid ammonia in the presence of an alcohol (t-BuOH). Produces non-conjugated 1,4-cyclohexadienes under kinetic protonation control with high regiochemical predictability dictated by aromatic substituents.''',
       reactants: r'''Aromatic compound (e.g. Anisole or Benzoic acid), Alkali metal ($\text{Na}$ or $\text{Li}$)''',
       reagentsAndConditions: r'''$\text{Na}$ or $\text{Li}$ (2-3 equiv), Liquid $\text{NH}_3$, $t\text{-BuOH}$ or $\text{EtOH}$, $-78^\circ\text{C}$ to $-33^\circ\text{C}$''',
       products: r'''Non-conjugated 1,4-cyclohexadiene''',
@@ -878,8 +904,10 @@ class PostgraduateReactionData {
           title: 'First Single Electron Transfer (SET)',
           description: r'''A solvated electron $e^-(\text{NH}_3)$ from dissolved sodium transfers into the aromatic ring $\pi^*$ LUMO, generating a resonance-delocalized radical anion.''',
           curvedArrowNotes: r'''Single-barbed fishhook arrow representing single electron transfer from solvated electron to aromatic ring LUMO.''',
-          intermediate: r'''$[\text{Ar}^{\bullet-}]$ Radical Anion Intermediate''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          intermediate:
+              r'''$[\text{Ar}^{\bullet-}]$ Radical Anion Intermediate''',
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -928,7 +956,8 @@ class PostgraduateReactionData {
           description: r'''The radical anion is kinetically protonated by tert-butanol at the carbon with the highest carbanionic charge density (ortho/meta for EDG, ipso/para for EWG), yielding a neutral cyclohexadienyl radical.''',
           curvedArrowNotes: r'''Carbanion pair attacks proton of t-BuOH; fishhook radical remains delocalized across remaining 5 carbons.''',
           intermediate: r'''Cyclohexadienyl Radical Intermediate''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -973,8 +1002,10 @@ class PostgraduateReactionData {
           title: 'Second SET & Final Protonation',
           description: r'''A second solvated electron reduces the cyclohexadienyl radical to a cyclohexadienyl anion, which undergoes rapid kinetic protonation at the central carbon, delivering the non-conjugated 1,4-diene.''',
           curvedArrowNotes: r'''Fishhook transfer of second electron, followed by two-electron proton transfer from alcohol delivering 1,4-diene.''',
-          intermediate: r'''1,4-Cyclohexadiene + $t\text{-BuO}^- \text{Na}^+$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          intermediate:
+              r'''1,4-Cyclohexadiene + $t\text{-BuO}^- \text{Na}^+$''',
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1016,10 +1047,12 @@ class PostgraduateReactionData {
     ReactionMechanism(
       id: 'heck_coupling',
       name: 'Heck Cross-Coupling',
-      aliases: ['Mizoroki-Heck Reaction', 'Palladium-Catalyzed Alkene Arylation'],
+      aliases: [
+        'Mizoroki-Heck Reaction',
+        'Palladium-Catalyzed Alkene Arylation',
+      ],
       category: ReactionCategory.organometallics,
-      summary:
-          r'''Palladium-catalyzed cross-coupling of aryl/alkenyl halides or triflates with alkenes in the presence of base. Proceeds via oxidative addition, stereospecific syn-migratory insertion, and syn-beta-hydride elimination to furnish trans-(E)-substituted alkenes.''',
+      summary: r'''Palladium-catalyzed cross-coupling of aryl/alkenyl halides or triflates with alkenes in the presence of base. Proceeds via oxidative addition, stereospecific syn-migratory insertion, and syn-beta-hydride elimination to furnish trans-(E)-substituted alkenes.''',
       reactants: r'''Aryl / Alkenyl halide ($\text{Ar-X}$), Terminal or electron-poor alkene ($\text{CH}_2\text{=CH-R}$)''',
       reagentsAndConditions: r'''$\text{Pd(OAc)}_2$ or $\text{Pd(PPh}_3)_4$ (1-5 mol%), Phosphine ligand, $\text{Et}_3\text{N}$ or $\text{K}_2\text{CO}_3$, DMF or MeCN, $80-120^\circ\text{C}$''',
       products: r'''trans-(E)-Substituted alkene ($\text{Ar-CH=CH-R}$), $\text{Et}_3\text{NH}^+\text{X}^-$''',
@@ -1042,9 +1075,11 @@ class PostgraduateReactionData {
           stepNumber: 1,
           title: 'Oxidative Addition to Pd(0)',
           description: r'''Aryl halide $\text{Ar-X}$ oxidatively adds to the 14e- $[\text{Pd(0)L}_2]$ complex to generate trans-$[\text{Ar-Pd(II)L}_2\text{-X}]$.''',
-          curvedArrowNotes: r'''Pd(0) d-electrons insert into Ar-X sigma-bond.''',
+          curvedArrowNotes:
+              r'''Pd(0) d-electrons insert into Ar-X sigma-bond.''',
           intermediate: r'''trans-$[\text{Ar-Pd(II)L}_2\text{-X}]$ Adduct''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1090,7 +1125,8 @@ class PostgraduateReactionData {
           description: r'''The alkene coordinates to Pd(II) and undergoes stereospecific syn-addition across the Pd-Ar bond, forming a neutral sigma-alkylpalladium intermediate.''',
           curvedArrowNotes: r'''Syn-addition of Ar and Pd across alkene double bond in a 4-center coplanar transition state.''',
           intermediate: r'''sigma-Alkylpalladium Insertion Intermediate''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1131,7 +1167,8 @@ class PostgraduateReactionData {
           description: r'''Internal rotation aligns a beta-hydrogen syn-periplanar to Pd, followed by syn-beta-hydride elimination to release the (E)-alkene. Base deprotonates $[\text{H-Pd(II)-X}]$ to regenerate active $[\text{Pd(0)L}_2]$.''',
           curvedArrowNotes: r'''Pd abstracts syn-beta-hydrogen with double bond reformation and release of (E)-alkene.''',
           intermediate: r'''(E)-Alkene + Regenerated $[\text{Pd(0)L}_2]$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1177,13 +1214,16 @@ class PostgraduateReactionData {
     ReactionMechanism(
       id: 'corey_chaykovsky',
       name: 'Corey-Chaykovsky Reaction',
-      aliases: ['Corey-Chaykovsky Epoxidation', 'Sulfur Ylide Epoxidation / Cyclopropanation'],
+      aliases: [
+        'Corey-Chaykovsky Epoxidation',
+        'Sulfur Ylide Epoxidation / Cyclopropanation',
+      ],
       category: ReactionCategory.rearrangements,
-      summary:
-          r'''Reaction of sulfur ylides with aldehydes, ketones, or imines to synthesize epoxides, cyclopropanes, or aziridines. Dimethylsulfonium methylide delivers epoxides via kinetic 1,2-addition, whereas dimethyloxosulfonium methylide adds 1,4-conjugate to alpha,beta-unsaturated systems to form cyclopropanes.''',
+      summary: r'''Reaction of sulfur ylides with aldehydes, ketones, or imines to synthesize epoxides, cyclopropanes, or aziridines. Dimethylsulfonium methylide delivers epoxides via kinetic 1,2-addition, whereas dimethyloxosulfonium methylide adds 1,4-conjugate to alpha,beta-unsaturated systems to form cyclopropanes.''',
       reactants: r'''Carbonyl compound (Ketone / Aldehyde), Trimethylsulfonium iodide / NaH''',
       reagentsAndConditions: r'''$\text{Me}_3\text{S}^+\text{I}^-$ (1.2 equiv), $\text{NaH}$ (1.2 equiv), Anhydrous DMSO/THF, $0^\circ\text{C}$ to room temperature''',
-      products: r'''Epoxide (Oxirane), Dimethyl sulfide ($\text{Me}_2\text{S}$)''',
+      products:
+          r'''Epoxide (Oxirane), Dimethyl sulfide ($\text{Me}_2\text{S}$)''',
       regioselectivity: r'''Sulfonium methylide ($Me_2S=CH_2$) attacks under kinetic control (1,2-addition to enones giving epoxides); Oxosulfonium methylide ($Me_2S(O)=CH_2$) undergoes reversible 1,4-conjugate addition giving cyclopropanes.''',
       stereochemistry: r'''Diastereoselective ring closure governed by anti-periplanar alignment of the alkoxide oxygen and sulfonium leaving group during intramolecular SN2 displacement.''',
       drivingForce: r'''Relief of charge separation in the zwitterionic betaine intermediate and expulsion of the neutral, volatile dimethyl sulfide leaving group ($Me_2S$).''',
@@ -1204,8 +1244,10 @@ class PostgraduateReactionData {
           title: 'Sulfur Ylide Generation',
           description: r'''Deprotonation of trimethylsulfonium iodide with NaH generates dimethylsulfonium methylide as a nucleophilic sulfur ylide.''',
           curvedArrowNotes: r'''Hydride abstracts methyl proton forming H2 gas and carbanionic ylide.''',
-          intermediate: r'''$[\text{Me}_2\text{S}^+-\text{CH}_2^-]$ Sulfur Ylide''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          intermediate:
+              r'''$[\text{Me}_2\text{S}^+-\text{CH}_2^-]$ Sulfur Ylide''',
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1247,7 +1289,8 @@ class PostgraduateReactionData {
           description: r'''The ylide carbanion attacks the electrophilic carbonyl carbon in a 1,2-addition, generating a tetrahedral zwitterionic betaine intermediate.''',
           curvedArrowNotes: r'''Ylide carbanion attacks carbonyl carbon, pushing pi-electrons to oxygen.''',
           intermediate: r'''$[\text{Me}_2\text{S}^+-\text{CH}_2-\text{C(R}_2)-\text{O}^-]$ Betaine Intermediate''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1291,7 +1334,8 @@ class PostgraduateReactionData {
           description: r'''The alkoxide oxygen executes an intramolecular $S_N2$ backside attack on the methylene carbon, expelling dimethyl sulfide as a neutral leaving group to close the 3-membered oxirane ring.''',
           curvedArrowNotes: r'''Alkoxide oxygen attacks CH2 carbon, cleanly displacing neutral Me2S.''',
           intermediate: r'''Epoxide (Oxirane) + $\text{Me}_2\text{S}$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1333,10 +1377,13 @@ class PostgraduateReactionData {
     ReactionMechanism(
       id: 'stille_coupling',
       name: 'Stille Cross-Coupling',
-      aliases: ['Stille Reaction', 'Migita-Kosugi-Stille Coupling', 'Organotin Cross-Coupling'],
+      aliases: [
+        'Stille Reaction',
+        'Migita-Kosugi-Stille Coupling',
+        'Organotin Cross-Coupling',
+      ],
       category: ReactionCategory.organometallics,
-      summary:
-          r'''Palladium-catalyzed cross-coupling reaction between organotin compounds (organostannanes) and organic halides or pseudohalides. Features exceptional functional group tolerance due to the mild, neutral nature of organostannanes.''',
+      summary: r'''Palladium-catalyzed cross-coupling reaction between organotin compounds (organostannanes) and organic halides or pseudohalides. Features exceptional functional group tolerance due to the mild, neutral nature of organostannanes.''',
       reactants: r'''Organohalide / Triflate ($\text{R-X}$), Organostannane ($\text{R\'-SnBu}_3$)''',
       reagentsAndConditions: r'''$\text{Pd(PPh}_3)_4$ (1-5 mol%), LiCl, CuI (cocatalyst), 1,4-Dioxane or Toluene, $80-110^\circ\text{C}$''',
       products: r'''Cross-coupled product ($\text{R-R\'}$), Trialkyltin halide ($\text{Bu}_3\text{Sn-X}$)''',
@@ -1361,7 +1408,8 @@ class PostgraduateReactionData {
           description: r'''Organohalide $\text{R-X}$ oxidatively adds across $[\text{Pd(0)L}_2]$ to yield a 16-electron square-planar trans-$[\text{R-Pd(II)L}_2\text{-X}]$ complex.''',
           curvedArrowNotes: r'''Pd(0) inserts into R-X bond with loss of coordinate ligand.''',
           intermediate: r'''trans-$[\text{R-Pd(II)L}_2\text{-X}]$ Complex''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1402,7 +1450,8 @@ class PostgraduateReactionData {
           description: r'''The organostannane $\text{R\'-SnBu}_3$ transfers its organic group to Pd(II) via an open or cyclic associative transition state, generating cis-$[\text{R-Pd(II)L}_2\text{-R\']}$ and trialkyltin halide.''',
           curvedArrowNotes: r'''Transmetalation: R\' group transfers from Sn to Pd, displacing halide onto Sn.''',
           intermediate: r'''cis-$[\text{R-Pd(II)L}_2\text{-R\']}$ Complex''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1444,7 +1493,8 @@ class PostgraduateReactionData {
           description: r'''Cis-oriented R and R\' groups undergo concerted reductive elimination, forging the new C-C bond and regenerating the active $[\text{Pd(0)L}_2]$ catalyst.''',
           curvedArrowNotes: r'''Concerted C-C bond formation with simultaneous return of 2 electrons to Pd(0).''',
           intermediate: r'''Cross-Coupled Product ($\text{R-R\'}$) + Regenerated $[\text{Pd(0)L}_2]$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1487,8 +1537,7 @@ class PostgraduateReactionData {
       name: 'Favorskii Rearrangement',
       aliases: ['Favorskii Ester Synthesis', 'Cyclopropanone Ring Contraction'],
       category: ReactionCategory.rearrangements,
-      summary:
-          r'''Base-catalyzed rearrangement of alpha-haloketones into carboxylic acid derivatives (esters, amides, acids) via a strained cyclopropanone intermediate. Cyclic alpha-haloketones undergo stereospecific ring contraction to provide smaller cycloalkane carboxylic acid derivatives.''',
+      summary: r'''Base-catalyzed rearrangement of alpha-haloketones into carboxylic acid derivatives (esters, amides, acids) via a strained cyclopropanone intermediate. Cyclic alpha-haloketones undergo stereospecific ring contraction to provide smaller cycloalkane carboxylic acid derivatives.''',
       reactants: r'''$\alpha$-Haloketone (e.g. 2-Chlorocyclohexanone), Alkoxide base ($\text{RONa}$)''',
       reagentsAndConditions: r'''$\text{NaOMe}$ or $\text{NaOEt}$ (1.5 equiv), $\text{MeOH}$ or $\text{EtOH}$, $0^\circ\text{C}$ to $60^\circ\text{C}$''',
       products: r'''Ring-contracted ester (e.g. Methyl cyclopentanecarboxylate), Halide salt''',
@@ -1513,7 +1562,8 @@ class PostgraduateReactionData {
           description: r'''Alkoxide base deprotonates the alpha\'-carbon. The resulting enolate executes an intramolecular $S_N2$ displacement of the alpha-halogen, constructing a highly strained cyclopropanone intermediate.''',
           curvedArrowNotes: r'''Enolate alpha-carbon attacks alpha\'-carbon with Walden inversion, displacing chloride.''',
           intermediate: r'''Strained Cyclopropanone Intermediate''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1560,7 +1610,8 @@ class PostgraduateReactionData {
           description: r'''Alkoxide ($RO^-$) attacks the carbonyl carbon of the cyclopropanone, relieving angle strain partially and forming a tetrahedral hemiacetal alkoxide intermediate.''',
           curvedArrowNotes: r'''Alkoxide lone pair attacks carbonyl carbon, shifting pi-electrons to oxygen.''',
           intermediate: r'''Tetrahedral Hemiacetal Alkoxide Adduct''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1600,7 +1651,8 @@ class PostgraduateReactionData {
           description: r'''The tetrahedral intermediate collapses, expelling a cyclopropane C-C bond towards the carbon that can better stabilize negative charge. Subsequent protonation yields the ring-contracted ester.''',
           curvedArrowNotes: r'''Alkoxide electrons reform C=O double bond, cleaving strained 3-membered ring bond to carbanion, which captures proton from alcohol solvent.''',
           intermediate: r'''Ring-Contracted Ester + $\text{RO}^-$''',
-          svgContent: r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+          svgContent:
+              r'''<svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E54D2E"/>
@@ -1637,7 +1689,6 @@ class PostgraduateReactionData {
         ),
       ],
     ),
-
   ];
 
   static final Map<String, Reaction3DSet> molecular3DSets = {
@@ -1645,760 +1696,1532 @@ class PostgraduateReactionData {
       reactionId: 'sharpless_epoxidation',
       title: 'Sharpless Asymmetric Epoxidation',
       keyTransformationNote: 'Observe chiral facial delivery: (E)-allylic alcohol coordinated with titanium tartrate peroxo complex, followed by stereospecific oxygen insertion yielding (2R,3R)-epoxygeraniol.',
-      reactant:
-        const Molecule3D(
-          id: 'sharpless_reactant',
-          name: 'Geraniol (Allylic Alcohol)',
-          formula: 'C10H18O',
-          iupacName: '(2E)-3,7-dimethylocta-2,6-dien-1-ol',
-          description: 'Planar (E)-allylic double bond positioned for coordination to chiral titanate.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'C2 allylic alkene carbon'),
-            Atom3D(symbol: 'C', x: 1.34, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'C3 substituted alkene carbon'),
-            Atom3D(symbol: 'C', x: -0.75, y: 1.25, z: 0.0, hybridization: 'sp³', note: 'C1 hydroxymethyl carbon'),
-            Atom3D(symbol: 'O', x: -0.2, y: 2.45, z: 0.2, hybridization: 'sp³', note: 'Coordinating hydroxyl oxygen'),
-            Atom3D(symbol: 'H', x: -0.8, y: 3.1, z: 0.25, note: 'Hydroxyl proton'),
-            Atom3D(symbol: 'C', x: 2.1, y: 1.25, z: 0.0, hybridization: 'sp³', note: 'C4 methyl group'),
-            Atom3D(symbol: 'C', x: 2.1, y: -1.25, z: 0.0, hybridization: 'sp³', note: 'C5 prenyl tail carbon'),
-            Atom3D(symbol: 'H', x: -0.5, y: -0.9, z: 0.0, note: 'Alkene C2 proton'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4),
-            Bond3D(atomIndex1: 1, atomIndex2: 5),
-            Bond3D(atomIndex1: 1, atomIndex2: 6),
-            Bond3D(atomIndex1: 0, atomIndex2: 7),
-          ],
-        ),
-      intermediate:
-        const Molecule3D(
-          id: 'sharpless_intermediate',
-          name: 'Titanium-Tartrate Peroxo Complex',
-          formula: '[Ti(DET)(OiPr)(tBuOO)(AllylO)]',
-          iupacName: 'bimetallic titanate chiral ternary complex',
-          description: 'Chiral pocket holding allylic alcohol and peroxide oxygen in proximity.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'C2 alkene center'),
-            Atom3D(symbol: 'C', x: 1.34, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'C3 alkene center'),
-            Atom3D(symbol: 'O', x: 0.67, y: 0.8, z: 1.6, note: 'Electrophilic peroxo oxygen migrating to alkene'),
-            Atom3D(symbol: 'O', x: 1.8, y: 1.4, z: 1.8, note: 'Peroxide oxygen bound to t-Bu'),
-            Atom3D(symbol: 'C', x: 2.8, y: 2.2, z: 1.8, note: 'tert-Butyl quaternary carbon'),
-            Atom3D(symbol: 'C', x: -0.75, y: 1.25, z: 0.0),
-            Atom3D(symbol: 'O', x: -0.2, y: 2.45, z: 0.2, note: 'Ti-coordinated allylic oxygen'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 0, atomIndex2: 2, type: BondType3D.partial),
-            Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.partial),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4),
-            Bond3D(atomIndex1: 0, atomIndex2: 5),
-            Bond3D(atomIndex1: 5, atomIndex2: 6),
-          ],
-        ),
-      product:
-        const Molecule3D(
-          id: 'sharpless_product',
-          name: '(2R,3R)-Epoxygeraniol',
-          formula: 'C10H18O2',
-          iupacName: '[(2R,3R)-3-methyl-3-(4-methylpent-3-en-1-yl)oxiran-2-yl]methanol',
-          description: 'Enantiopure (2R,3R) oxirane ring with preserved stereocenter.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'C2 chiral stereocenter (R)'),
-            Atom3D(symbol: 'C', x: 1.45, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'C3 chiral stereocenter (R)'),
-            Atom3D(symbol: 'O', x: 0.72, y: 1.2, z: 0.0, hybridization: 'sp³', note: 'Epoxide oxirane ring oxygen'),
-            Atom3D(symbol: 'C', x: -0.8, y: -1.25, z: 0.0, hybridization: 'sp³', note: 'C1 hydroxymethyl'),
-            Atom3D(symbol: 'O', x: -0.25, y: -2.45, z: 0.1, hybridization: 'sp³'),
-            Atom3D(symbol: 'H', x: -0.85, y: -3.15, z: 0.15),
-            Atom3D(symbol: 'C', x: 2.15, y: -1.25, z: 0.0),
-            Atom3D(symbol: 'C', x: 2.15, y: 1.25, z: 0.0),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 1, atomIndex2: 2),
-            Bond3D(atomIndex1: 0, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4),
-            Bond3D(atomIndex1: 4, atomIndex2: 5),
-            Bond3D(atomIndex1: 1, atomIndex2: 6),
-            Bond3D(atomIndex1: 1, atomIndex2: 7),
-          ],
-        ),
+      reactant: const Molecule3D(
+        id: 'sharpless_reactant',
+        name: 'Geraniol (Allylic Alcohol)',
+        formula: 'C10H18O',
+        iupacName: '(2E)-3,7-dimethylocta-2,6-dien-1-ol',
+        description: 'Planar (E)-allylic double bond positioned for coordination to chiral titanate.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'C2 allylic alkene carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.34,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'C3 substituted alkene carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: -0.75,
+            y: 1.25,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'C1 hydroxymethyl carbon',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: -0.2,
+            y: 2.45,
+            z: 0.2,
+            hybridization: 'sp³',
+            note: 'Coordinating hydroxyl oxygen',
+          ),
+          Atom3D(
+            symbol: 'H',
+            x: -0.8,
+            y: 3.1,
+            z: 0.25,
+            note: 'Hydroxyl proton',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 2.1,
+            y: 1.25,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'C4 methyl group',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 2.1,
+            y: -1.25,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'C5 prenyl tail carbon',
+          ),
+          Atom3D(
+            symbol: 'H',
+            x: -0.5,
+            y: -0.9,
+            z: 0.0,
+            note: 'Alkene C2 proton',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4),
+          Bond3D(atomIndex1: 1, atomIndex2: 5),
+          Bond3D(atomIndex1: 1, atomIndex2: 6),
+          Bond3D(atomIndex1: 0, atomIndex2: 7),
+        ],
+      ),
+      intermediate: const Molecule3D(
+        id: 'sharpless_intermediate',
+        name: 'Titanium-Tartrate Peroxo Complex',
+        formula: '[Ti(DET)(OiPr)(tBuOO)(AllylO)]',
+        iupacName: 'bimetallic titanate chiral ternary complex',
+        description: 'Chiral pocket holding allylic alcohol and peroxide oxygen in proximity.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'C2 alkene center',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.34,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'C3 alkene center',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 0.67,
+            y: 0.8,
+            z: 1.6,
+            note: 'Electrophilic peroxo oxygen migrating to alkene',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 1.8,
+            y: 1.4,
+            z: 1.8,
+            note: 'Peroxide oxygen bound to t-Bu',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 2.8,
+            y: 2.2,
+            z: 1.8,
+            note: 'tert-Butyl quaternary carbon',
+          ),
+          Atom3D(symbol: 'C', x: -0.75, y: 1.25, z: 0.0),
+          Atom3D(
+            symbol: 'O',
+            x: -0.2,
+            y: 2.45,
+            z: 0.2,
+            note: 'Ti-coordinated allylic oxygen',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 0, atomIndex2: 2, type: BondType3D.partial),
+          Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.partial),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4),
+          Bond3D(atomIndex1: 0, atomIndex2: 5),
+          Bond3D(atomIndex1: 5, atomIndex2: 6),
+        ],
+      ),
+      product: const Molecule3D(
+        id: 'sharpless_product',
+        name: '(2R,3R)-Epoxygeraniol',
+        formula: 'C10H18O2',
+        iupacName:
+            '[(2R,3R)-3-methyl-3-(4-methylpent-3-en-1-yl)oxiran-2-yl]methanol',
+        description:
+            'Enantiopure (2R,3R) oxirane ring with preserved stereocenter.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'C2 chiral stereocenter (R)',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.45,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'C3 chiral stereocenter (R)',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 0.72,
+            y: 1.2,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Epoxide oxirane ring oxygen',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: -0.8,
+            y: -1.25,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'C1 hydroxymethyl',
+          ),
+          Atom3D(symbol: 'O', x: -0.25, y: -2.45, z: 0.1, hybridization: 'sp³'),
+          Atom3D(symbol: 'H', x: -0.85, y: -3.15, z: 0.15),
+          Atom3D(symbol: 'C', x: 2.15, y: -1.25, z: 0.0),
+          Atom3D(symbol: 'C', x: 2.15, y: 1.25, z: 0.0),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 1, atomIndex2: 2),
+          Bond3D(atomIndex1: 0, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4),
+          Bond3D(atomIndex1: 4, atomIndex2: 5),
+          Bond3D(atomIndex1: 1, atomIndex2: 6),
+          Bond3D(atomIndex1: 1, atomIndex2: 7),
+        ],
+      ),
     ),
     'suzuki_coupling': Reaction3DSet(
       reactionId: 'suzuki_coupling',
       title: 'Suzuki-Miyaura Cross-Coupling',
       keyTransformationNote: 'Observe transition from aryl halide + boronic acid to square-planar Pd(II) intermediate, followed by reductive elimination to biaryl.',
-      reactant:
-        const Molecule3D(
-          id: 'suzuki_reactant',
-          name: 'Bromobenzene + Phenylboronic Acid',
-          formula: 'C6H5Br + C6H5B(OH)2',
-          iupacName: 'bromobenzene and phenylboronic acid',
-          description: 'Electrophilic aryl halide and nucleophilic organoboron coupling partners.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Aryl C-Br ipso carbon'),
-            Atom3D(symbol: 'Br', x: 0.0, y: 0.0, z: 1.9, note: 'Halide leaving group'),
-            Atom3D(symbol: 'C', x: 1.2, y: 0.7, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: 1.2, y: 2.1, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: 0.0, y: 2.8, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: -1.2, y: 2.1, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: -1.2, y: 0.7, z: 0.0, hybridization: 'sp²'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 0, atomIndex2: 2, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 3, atomIndex2: 4, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 4, atomIndex2: 5, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 5, atomIndex2: 6, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 6, atomIndex2: 0, type: BondType3D.aromatic),
-          ],
-        ),
-      intermediate:
-        const Molecule3D(
-          id: 'suzuki_intermediate',
-          name: 'cis-Bis(triphenylphosphine)diphenylpalladium(II)',
-          formula: '[Pd(PPh3)2(Ph)2]',
-          iupacName: 'cis-diphenylbis(triphenylphosphine)palladium(II)',
-          description: 'Square-planar 16e- Pd(II) complex with cis-oriented phenyl ligands ready for elimination.',
-          atoms: [
-            Atom3D(symbol: 'Pd', x: 0.0, y: 0.0, z: 0.0, note: 'Square-planar Pd(II) center'),
-            Atom3D(symbol: 'C', x: 2.05, y: 0.0, z: 0.0, note: 'Phenyl ligand 1 ipso carbon'),
-            Atom3D(symbol: 'C', x: 0.0, y: 2.05, z: 0.0, note: 'Phenyl ligand 2 ipso carbon'),
-            Atom3D(symbol: 'P', x: -2.3, y: 0.0, z: 0.0, note: 'PPh3 ligand 1'),
-            Atom3D(symbol: 'P', x: 0.0, y: -2.3, z: 0.0, note: 'PPh3 ligand 2'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 0, atomIndex2: 3),
-            Bond3D(atomIndex1: 0, atomIndex2: 4),
-            Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.partial),
-          ],
-        ),
-      product:
-        const Molecule3D(
-          id: 'suzuki_product',
-          name: 'Biphenyl',
-          formula: 'C12H10',
-          iupacName: '1,1\'-biphenyl',
-          description: 'Robust sp2-sp2 biaryl product with dihedral twist angle.',
-          atoms: [
-            Atom3D(symbol: 'C', x: -0.75, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Ring 1 ipso carbon'),
-            Atom3D(symbol: 'C', x: 0.75, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Ring 2 ipso carbon'),
-            Atom3D(symbol: 'C', x: -1.45, y: 1.2, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: -2.85, y: 1.2, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: -3.55, y: 0.0, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: -2.85, y: -1.2, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: -1.45, y: -1.2, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: 1.45, y: 1.15, z: 0.4, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: 2.85, y: 1.15, z: 0.4, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: 3.55, y: 0.0, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: 2.85, y: -1.15, z: -0.4, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: 1.45, y: -1.15, z: -0.4, hybridization: 'sp²'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 0, atomIndex2: 2, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 3, atomIndex2: 4, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 4, atomIndex2: 5, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 5, atomIndex2: 6, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 6, atomIndex2: 0, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 1, atomIndex2: 7, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 7, atomIndex2: 8, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 8, atomIndex2: 9, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 9, atomIndex2: 10, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 10, atomIndex2: 11, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 11, atomIndex2: 1, type: BondType3D.aromatic),
-          ],
-        ),
+      reactant: const Molecule3D(
+        id: 'suzuki_reactant',
+        name: 'Bromobenzene + Phenylboronic Acid',
+        formula: 'C6H5Br + C6H5B(OH)2',
+        iupacName: 'bromobenzene and phenylboronic acid',
+        description: 'Electrophilic aryl halide and nucleophilic organoboron coupling partners.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Aryl C-Br ipso carbon',
+          ),
+          Atom3D(
+            symbol: 'Br',
+            x: 0.0,
+            y: 0.0,
+            z: 1.9,
+            note: 'Halide leaving group',
+          ),
+          Atom3D(symbol: 'C', x: 1.2, y: 0.7, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: 1.2, y: 2.1, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: 0.0, y: 2.8, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: -1.2, y: 2.1, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: -1.2, y: 0.7, z: 0.0, hybridization: 'sp²'),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 0, atomIndex2: 2, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 3, atomIndex2: 4, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 4, atomIndex2: 5, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 5, atomIndex2: 6, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 6, atomIndex2: 0, type: BondType3D.aromatic),
+        ],
+      ),
+      intermediate: const Molecule3D(
+        id: 'suzuki_intermediate',
+        name: 'cis-Bis(triphenylphosphine)diphenylpalladium(II)',
+        formula: '[Pd(PPh3)2(Ph)2]',
+        iupacName: 'cis-diphenylbis(triphenylphosphine)palladium(II)',
+        description: 'Square-planar 16e- Pd(II) complex with cis-oriented phenyl ligands ready for elimination.',
+        atoms: [
+          Atom3D(
+            symbol: 'Pd',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            note: 'Square-planar Pd(II) center',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 2.05,
+            y: 0.0,
+            z: 0.0,
+            note: 'Phenyl ligand 1 ipso carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 2.05,
+            z: 0.0,
+            note: 'Phenyl ligand 2 ipso carbon',
+          ),
+          Atom3D(symbol: 'P', x: -2.3, y: 0.0, z: 0.0, note: 'PPh3 ligand 1'),
+          Atom3D(symbol: 'P', x: 0.0, y: -2.3, z: 0.0, note: 'PPh3 ligand 2'),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 0, atomIndex2: 3),
+          Bond3D(atomIndex1: 0, atomIndex2: 4),
+          Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.partial),
+        ],
+      ),
+      product: const Molecule3D(
+        id: 'suzuki_product',
+        name: 'Biphenyl',
+        formula: 'C12H10',
+        iupacName: '1,1\'-biphenyl',
+        description: 'Robust sp2-sp2 biaryl product with dihedral twist angle.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: -0.75,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Ring 1 ipso carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 0.75,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Ring 2 ipso carbon',
+          ),
+          Atom3D(symbol: 'C', x: -1.45, y: 1.2, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: -2.85, y: 1.2, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: -3.55, y: 0.0, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: -2.85, y: -1.2, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: -1.45, y: -1.2, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: 1.45, y: 1.15, z: 0.4, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: 2.85, y: 1.15, z: 0.4, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: 3.55, y: 0.0, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: 2.85, y: -1.15, z: -0.4, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: 1.45, y: -1.15, z: -0.4, hybridization: 'sp²'),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 0, atomIndex2: 2, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 3, atomIndex2: 4, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 4, atomIndex2: 5, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 5, atomIndex2: 6, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 6, atomIndex2: 0, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 1, atomIndex2: 7, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 7, atomIndex2: 8, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 8, atomIndex2: 9, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 9, atomIndex2: 10, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 10, atomIndex2: 11, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 11, atomIndex2: 1, type: BondType3D.aromatic),
+        ],
+      ),
     ),
     'mitsunobu_reaction': Reaction3DSet(
       reactionId: 'mitsunobu_reaction',
       title: 'Mitsunobu Reaction',
       keyTransformationNote: 'Observe 100% Walden inversion: (R)-2-octanol activated as alkoxyphosphonium undergoes backside attack by benzoate to furnish (S)-2-octyl benzoate.',
-      reactant:
-        const Molecule3D(
-          id: 'mitsunobu_reactant',
-          name: '(R)-2-Octanol',
-          formula: 'C8H18O',
-          iupacName: '(2R)-octan-2-ol',
-          description: 'Chiral secondary alcohol with (R) stereocenter.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Chiral C2 carbon (R)'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.45, hybridization: 'sp³', note: 'Hydroxyl oxygen'),
-            Atom3D(symbol: 'H', x: 0.85, y: 0.0, z: 1.85, note: 'Hydroxyl proton'),
-            Atom3D(symbol: 'C', x: 1.45, y: 0.0, z: -0.52, hybridization: 'sp³', note: 'C1 methyl'),
-            Atom3D(symbol: 'C', x: -0.75, y: 1.25, z: -0.52, hybridization: 'sp³', note: 'C3 hexyl chain'),
-            Atom3D(symbol: 'H', x: -0.5, y: -0.9, z: -0.35, note: 'Alpha-hydrogen'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2),
-            Bond3D(atomIndex1: 0, atomIndex2: 3),
-            Bond3D(atomIndex1: 0, atomIndex2: 4),
-            Bond3D(atomIndex1: 0, atomIndex2: 5),
-          ],
-        ),
-      intermediate:
-        const Molecule3D(
-          id: 'mitsunobu_intermediate',
-          name: 'Alkoxyphosphonium Ion + Benzoate',
-          formula: '[Ph3P-O-CH(CH3)C6H13]+ + PhCOO-',
-          iupacName: 'alkoxyphosphonium intermediate',
-          description: 'Positively charged phosphorus activating oxygen as leaving group for SN2.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Chiral carbinol carbon'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.45, note: 'Leaving oxygen'),
-            Atom3D(symbol: 'P', x: 0.0, y: 0.0, z: 3.1, formalCharge: '+1', note: 'Phosphonium cation'),
-            Atom3D(symbol: 'C', x: 1.45, y: 0.0, z: -0.52),
-            Atom3D(symbol: 'C', x: -0.75, y: 1.25, z: -0.52),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: -2.3, formalCharge: '-1', note: 'Nucleophile attacking 180 deg backside'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2),
-            Bond3D(atomIndex1: 0, atomIndex2: 3),
-            Bond3D(atomIndex1: 0, atomIndex2: 4),
-            Bond3D(atomIndex1: 0, atomIndex2: 5, type: BondType3D.partial),
-          ],
-        ),
-      product:
-        const Molecule3D(
-          id: 'mitsunobu_product',
-          name: '(S)-2-Octyl Benzoate',
-          formula: 'C15H22O2',
-          iupacName: '[(2S)-octan-2-yl] benzoate',
-          description: 'Inverted (S) stereocenter with ester linkage.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Inverted chiral C2 carbon (S)'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: -1.45, hybridization: 'sp³', note: 'Inverted ester oxygen'),
-            Atom3D(symbol: 'C', x: 1.2, y: 0.0, z: -2.15, hybridization: 'sp²', note: 'Benzoate carbonyl carbon'),
-            Atom3D(symbol: 'O', x: 2.25, y: 0.0, z: -1.55, hybridization: 'sp²', note: 'Carbonyl oxygen'),
-            Atom3D(symbol: 'C', x: 1.45, y: 0.0, z: 0.52, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: -0.75, y: 1.25, z: 0.52, hybridization: 'sp³'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 0, atomIndex2: 4),
-            Bond3D(atomIndex1: 0, atomIndex2: 5),
-          ],
-        ),
+      reactant: const Molecule3D(
+        id: 'mitsunobu_reactant',
+        name: '(R)-2-Octanol',
+        formula: 'C8H18O',
+        iupacName: '(2R)-octan-2-ol',
+        description: 'Chiral secondary alcohol with (R) stereocenter.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Chiral C2 carbon (R)',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 0.0,
+            y: 0.0,
+            z: 1.45,
+            hybridization: 'sp³',
+            note: 'Hydroxyl oxygen',
+          ),
+          Atom3D(
+            symbol: 'H',
+            x: 0.85,
+            y: 0.0,
+            z: 1.85,
+            note: 'Hydroxyl proton',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.45,
+            y: 0.0,
+            z: -0.52,
+            hybridization: 'sp³',
+            note: 'C1 methyl',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: -0.75,
+            y: 1.25,
+            z: -0.52,
+            hybridization: 'sp³',
+            note: 'C3 hexyl chain',
+          ),
+          Atom3D(
+            symbol: 'H',
+            x: -0.5,
+            y: -0.9,
+            z: -0.35,
+            note: 'Alpha-hydrogen',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2),
+          Bond3D(atomIndex1: 0, atomIndex2: 3),
+          Bond3D(atomIndex1: 0, atomIndex2: 4),
+          Bond3D(atomIndex1: 0, atomIndex2: 5),
+        ],
+      ),
+      intermediate: const Molecule3D(
+        id: 'mitsunobu_intermediate',
+        name: 'Alkoxyphosphonium Ion + Benzoate',
+        formula: '[Ph3P-O-CH(CH3)C6H13]+ + PhCOO-',
+        iupacName: 'alkoxyphosphonium intermediate',
+        description: 'Positively charged phosphorus activating oxygen as leaving group for SN2.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Chiral carbinol carbon',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.45, note: 'Leaving oxygen'),
+          Atom3D(
+            symbol: 'P',
+            x: 0.0,
+            y: 0.0,
+            z: 3.1,
+            formalCharge: '+1',
+            note: 'Phosphonium cation',
+          ),
+          Atom3D(symbol: 'C', x: 1.45, y: 0.0, z: -0.52),
+          Atom3D(symbol: 'C', x: -0.75, y: 1.25, z: -0.52),
+          Atom3D(
+            symbol: 'O',
+            x: 0.0,
+            y: 0.0,
+            z: -2.3,
+            formalCharge: '-1',
+            note: 'Nucleophile attacking 180 deg backside',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2),
+          Bond3D(atomIndex1: 0, atomIndex2: 3),
+          Bond3D(atomIndex1: 0, atomIndex2: 4),
+          Bond3D(atomIndex1: 0, atomIndex2: 5, type: BondType3D.partial),
+        ],
+      ),
+      product: const Molecule3D(
+        id: 'mitsunobu_product',
+        name: '(S)-2-Octyl Benzoate',
+        formula: 'C15H22O2',
+        iupacName: '[(2S)-octan-2-yl] benzoate',
+        description: 'Inverted (S) stereocenter with ester linkage.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Inverted chiral C2 carbon (S)',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 0.0,
+            y: 0.0,
+            z: -1.45,
+            hybridization: 'sp³',
+            note: 'Inverted ester oxygen',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.2,
+            y: 0.0,
+            z: -2.15,
+            hybridization: 'sp²',
+            note: 'Benzoate carbonyl carbon',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 2.25,
+            y: 0.0,
+            z: -1.55,
+            hybridization: 'sp²',
+            note: 'Carbonyl oxygen',
+          ),
+          Atom3D(symbol: 'C', x: 1.45, y: 0.0, z: 0.52, hybridization: 'sp³'),
+          Atom3D(symbol: 'C', x: -0.75, y: 1.25, z: 0.52, hybridization: 'sp³'),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 0, atomIndex2: 4),
+          Bond3D(atomIndex1: 0, atomIndex2: 5),
+        ],
+      ),
     ),
     'baeyer_villiger': Reaction3DSet(
       reactionId: 'baeyer_villiger',
       title: 'Baeyer-Villiger Oxidation',
       keyTransformationNote: 'Observe ring expansion: cyclohexanone forms tetrahedral Criegee intermediate, followed by concerted migration of C-C bond to peroxy oxygen to yield epsilon-caprolactone.',
-      reactant:
-        const Molecule3D(
-          id: 'baeyer_reactant',
-          name: 'Cyclohexanone',
-          formula: 'C6H10O',
-          iupacName: 'cyclohexanone',
-          description: 'Chair conformation cyclic ketone with electrophilic carbonyl.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Carbonyl carbon C1'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.22, hybridization: 'sp²', note: 'Carbonyl oxygen'),
-            Atom3D(symbol: 'C', x: 1.25, y: 0.0, z: -0.85, hybridization: 'sp³', note: 'Alpha-carbon C2'),
-            Atom3D(symbol: 'C', x: 1.25, y: 1.45, z: -1.45, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: 0.0, y: 2.15, z: -0.85, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: -1.25, y: 1.45, z: -1.45, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: -1.25, y: 0.0, z: -0.85, hybridization: 'sp³', note: 'Alpha-carbon C6'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4),
-            Bond3D(atomIndex1: 4, atomIndex2: 5),
-            Bond3D(atomIndex1: 5, atomIndex2: 6),
-            Bond3D(atomIndex1: 6, atomIndex2: 0),
-          ],
-        ),
-      intermediate:
-        const Molecule3D(
-          id: 'baeyer_intermediate',
-          name: 'Criegee Intermediate',
-          formula: 'C13H15ClO4',
-          iupacName: 'tetrahedral peroxyhemiacetal adduct',
-          description: 'Tetrahedral center with peroxide O-O bond ready for migration.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Tetrahedral C1 carbon'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.45, note: 'Hydroxyl group'),
-            Atom3D(symbol: 'O', x: 1.4, y: 0.0, z: 0.35, note: 'Peroxy oxygen accepting alkyl migration'),
-            Atom3D(symbol: 'O', x: 2.15, y: 1.2, z: 0.35, note: 'Peroxy oxygen bound to aroyl group'),
-            Atom3D(symbol: 'C', x: 0.0, y: 1.45, z: -0.75, note: 'Migrating alpha-carbon'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 0, atomIndex2: 4),
-            Bond3D(atomIndex1: 2, atomIndex2: 4, type: BondType3D.partial),
-          ],
-        ),
-      product:
-        const Molecule3D(
-          id: 'baeyer_product',
-          name: 'epsilon-Caprolactone',
-          formula: 'C6H10O2',
-          iupacName: 'oxepan-2-one',
-          description: '7-membered cyclic lactone formed by oxygen insertion.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Lactone carbonyl C2'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.22, note: 'Exocyclic carbonyl oxygen'),
-            Atom3D(symbol: 'O', x: 1.35, y: 0.0, z: -0.45, note: 'Inserted ring oxygen O1'),
-            Atom3D(symbol: 'C', x: 2.15, y: 1.15, z: -0.85, hybridization: 'sp³', note: 'Ring carbon C7'),
-            Atom3D(symbol: 'C', x: 1.55, y: 2.45, z: -1.35, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: 0.0, y: 2.75, z: -1.05, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: -1.15, y: 2.05, z: -1.65, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: -1.15, y: 0.6, z: -0.85, hybridization: 'sp³', note: 'Alpha-carbon C3'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4),
-            Bond3D(atomIndex1: 4, atomIndex2: 5),
-            Bond3D(atomIndex1: 5, atomIndex2: 6),
-            Bond3D(atomIndex1: 6, atomIndex2: 7),
-            Bond3D(atomIndex1: 7, atomIndex2: 0),
-          ],
-        ),
+      reactant: const Molecule3D(
+        id: 'baeyer_reactant',
+        name: 'Cyclohexanone',
+        formula: 'C6H10O',
+        iupacName: 'cyclohexanone',
+        description:
+            'Chair conformation cyclic ketone with electrophilic carbonyl.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Carbonyl carbon C1',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 0.0,
+            y: 0.0,
+            z: 1.22,
+            hybridization: 'sp²',
+            note: 'Carbonyl oxygen',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.25,
+            y: 0.0,
+            z: -0.85,
+            hybridization: 'sp³',
+            note: 'Alpha-carbon C2',
+          ),
+          Atom3D(symbol: 'C', x: 1.25, y: 1.45, z: -1.45, hybridization: 'sp³'),
+          Atom3D(symbol: 'C', x: 0.0, y: 2.15, z: -0.85, hybridization: 'sp³'),
+          Atom3D(
+            symbol: 'C',
+            x: -1.25,
+            y: 1.45,
+            z: -1.45,
+            hybridization: 'sp³',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: -1.25,
+            y: 0.0,
+            z: -0.85,
+            hybridization: 'sp³',
+            note: 'Alpha-carbon C6',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4),
+          Bond3D(atomIndex1: 4, atomIndex2: 5),
+          Bond3D(atomIndex1: 5, atomIndex2: 6),
+          Bond3D(atomIndex1: 6, atomIndex2: 0),
+        ],
+      ),
+      intermediate: const Molecule3D(
+        id: 'baeyer_intermediate',
+        name: 'Criegee Intermediate',
+        formula: 'C13H15ClO4',
+        iupacName: 'tetrahedral peroxyhemiacetal adduct',
+        description:
+            'Tetrahedral center with peroxide O-O bond ready for migration.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Tetrahedral C1 carbon',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.45, note: 'Hydroxyl group'),
+          Atom3D(
+            symbol: 'O',
+            x: 1.4,
+            y: 0.0,
+            z: 0.35,
+            note: 'Peroxy oxygen accepting alkyl migration',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 2.15,
+            y: 1.2,
+            z: 0.35,
+            note: 'Peroxy oxygen bound to aroyl group',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 1.45,
+            z: -0.75,
+            note: 'Migrating alpha-carbon',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 0, atomIndex2: 4),
+          Bond3D(atomIndex1: 2, atomIndex2: 4, type: BondType3D.partial),
+        ],
+      ),
+      product: const Molecule3D(
+        id: 'baeyer_product',
+        name: 'epsilon-Caprolactone',
+        formula: 'C6H10O2',
+        iupacName: 'oxepan-2-one',
+        description: '7-membered cyclic lactone formed by oxygen insertion.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Lactone carbonyl C2',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 0.0,
+            y: 0.0,
+            z: 1.22,
+            note: 'Exocyclic carbonyl oxygen',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 1.35,
+            y: 0.0,
+            z: -0.45,
+            note: 'Inserted ring oxygen O1',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 2.15,
+            y: 1.15,
+            z: -0.85,
+            hybridization: 'sp³',
+            note: 'Ring carbon C7',
+          ),
+          Atom3D(symbol: 'C', x: 1.55, y: 2.45, z: -1.35, hybridization: 'sp³'),
+          Atom3D(symbol: 'C', x: 0.0, y: 2.75, z: -1.05, hybridization: 'sp³'),
+          Atom3D(
+            symbol: 'C',
+            x: -1.15,
+            y: 2.05,
+            z: -1.65,
+            hybridization: 'sp³',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: -1.15,
+            y: 0.6,
+            z: -0.85,
+            hybridization: 'sp³',
+            note: 'Alpha-carbon C3',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4),
+          Bond3D(atomIndex1: 4, atomIndex2: 5),
+          Bond3D(atomIndex1: 5, atomIndex2: 6),
+          Bond3D(atomIndex1: 6, atomIndex2: 7),
+          Bond3D(atomIndex1: 7, atomIndex2: 0),
+        ],
+      ),
     ),
     'swern_oxidation': Reaction3DSet(
       reactionId: 'swern_oxidation',
       title: 'Swern Oxidation',
       keyTransformationNote: 'Observe chemoselective alcohol oxidation: benzyl alcohol activated by sulfonium cation, followed by 5-membered cyclic elimination yielding benzaldehyde.',
-      reactant:
-        const Molecule3D(
-          id: 'swern_reactant',
-          name: 'Benzyl Alcohol',
-          formula: 'C7H8O',
-          iupacName: 'phenylmethanol',
-          description: 'Primary benzylic alcohol with intact carbinol methylene.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Carbinol carbon'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.45, note: 'Hydroxyl oxygen'),
-            Atom3D(symbol: 'H', x: 0.85, y: 0.0, z: 1.85, note: 'Hydroxyl proton'),
-            Atom3D(symbol: 'C', x: 1.45, y: 0.0, z: -0.52, hybridization: 'sp²', note: 'Phenyl ipso carbon'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2),
-            Bond3D(atomIndex1: 0, atomIndex2: 3),
-          ],
-        ),
-      intermediate:
-        const Molecule3D(
-          id: 'swern_intermediate',
-          name: 'Alkoxydimethylsulfonium Cation',
-          formula: '[PhCH2-O-SMe2]+',
-          iupacName: 'alkoxydimethylsulfonium intermediate',
-          description: 'Positively charged sulfur activating carbinol proton for elimination.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Carbinol carbon'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.45, note: 'Oxygen atom'),
-            Atom3D(symbol: 'S', x: 0.0, y: 1.65, z: 1.8, formalCharge: '+1', note: 'Sulfonium cation'),
-            Atom3D(symbol: 'C', x: 1.4, y: 2.1, z: 1.2, note: 'Methyl 1'),
-            Atom3D(symbol: 'C', x: -1.2, y: 2.4, z: 1.2, note: 'Methyl 2 (deprotonated to ylide)'),
-            Atom3D(symbol: 'H', x: 0.9, y: -0.5, z: 0.35, note: 'Carbinol proton abstracted in elimination'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 2, atomIndex2: 4),
-            Bond3D(atomIndex1: 0, atomIndex2: 5),
-          ],
-        ),
-      product:
-        const Molecule3D(
-          id: 'swern_product',
-          name: 'Benzaldehyde',
-          formula: 'C7H6O',
-          iupacName: 'benzaldehyde',
-          description: 'Oxidized aldehyde product without over-oxidation.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Carbonyl carbon'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.22, note: 'Carbonyl oxygen'),
-            Atom3D(symbol: 'H', x: -0.95, y: 0.0, z: -0.55, note: 'Aldehyde proton'),
-            Atom3D(symbol: 'C', x: 1.25, y: 0.0, z: -0.8, hybridization: 'sp²', note: 'Phenyl ipso carbon'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 0, atomIndex2: 3),
-          ],
-        ),
+      reactant: const Molecule3D(
+        id: 'swern_reactant',
+        name: 'Benzyl Alcohol',
+        formula: 'C7H8O',
+        iupacName: 'phenylmethanol',
+        description: 'Primary benzylic alcohol with intact carbinol methylene.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Carbinol carbon',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.45, note: 'Hydroxyl oxygen'),
+          Atom3D(
+            symbol: 'H',
+            x: 0.85,
+            y: 0.0,
+            z: 1.85,
+            note: 'Hydroxyl proton',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.45,
+            y: 0.0,
+            z: -0.52,
+            hybridization: 'sp²',
+            note: 'Phenyl ipso carbon',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2),
+          Bond3D(atomIndex1: 0, atomIndex2: 3),
+        ],
+      ),
+      intermediate: const Molecule3D(
+        id: 'swern_intermediate',
+        name: 'Alkoxydimethylsulfonium Cation',
+        formula: '[PhCH2-O-SMe2]+',
+        iupacName: 'alkoxydimethylsulfonium intermediate',
+        description: 'Positively charged sulfur activating carbinol proton for elimination.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Carbinol carbon',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.45, note: 'Oxygen atom'),
+          Atom3D(
+            symbol: 'S',
+            x: 0.0,
+            y: 1.65,
+            z: 1.8,
+            formalCharge: '+1',
+            note: 'Sulfonium cation',
+          ),
+          Atom3D(symbol: 'C', x: 1.4, y: 2.1, z: 1.2, note: 'Methyl 1'),
+          Atom3D(
+            symbol: 'C',
+            x: -1.2,
+            y: 2.4,
+            z: 1.2,
+            note: 'Methyl 2 (deprotonated to ylide)',
+          ),
+          Atom3D(
+            symbol: 'H',
+            x: 0.9,
+            y: -0.5,
+            z: 0.35,
+            note: 'Carbinol proton abstracted in elimination',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 2, atomIndex2: 4),
+          Bond3D(atomIndex1: 0, atomIndex2: 5),
+        ],
+      ),
+      product: const Molecule3D(
+        id: 'swern_product',
+        name: 'Benzaldehyde',
+        formula: 'C7H6O',
+        iupacName: 'benzaldehyde',
+        description: 'Oxidized aldehyde product without over-oxidation.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Carbonyl carbon',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.22, note: 'Carbonyl oxygen'),
+          Atom3D(
+            symbol: 'H',
+            x: -0.95,
+            y: 0.0,
+            z: -0.55,
+            note: 'Aldehyde proton',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.25,
+            y: 0.0,
+            z: -0.8,
+            hybridization: 'sp²',
+            note: 'Phenyl ipso carbon',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 0, atomIndex2: 3),
+        ],
+      ),
     ),
     'birch_reduction': Reaction3DSet(
       reactionId: 'birch_reduction',
       title: 'Birch Reduction',
       keyTransformationNote: 'Observe loss of full aromaticity: anisole undergoes two SET and two protonation steps to yield non-conjugated 1-methoxycyclohexa-1,4-diene.',
-      reactant:
-        const Molecule3D(
-          id: 'birch_reactant',
-          name: 'Anisole',
-          formula: 'C7H8O',
-          iupacName: 'methoxybenzene',
-          description: 'Planar aromatic benzene ring with electron-donating methoxy group.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'C1 ipso carbon'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.37, note: 'Methoxy oxygen'),
-            Atom3D(symbol: 'C', x: 1.2, y: 0.0, z: 2.1, note: 'Methoxy methyl'),
-            Atom3D(symbol: 'C', x: 1.2, y: 0.7, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: 1.2, y: 2.1, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: 0.0, y: 2.8, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: -1.2, y: 2.1, z: 0.0, hybridization: 'sp²'),
-            Atom3D(symbol: 'C', x: -1.2, y: 0.7, z: 0.0, hybridization: 'sp²'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2),
-            Bond3D(atomIndex1: 0, atomIndex2: 3, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 3, atomIndex2: 4, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 4, atomIndex2: 5, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 5, atomIndex2: 6, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 6, atomIndex2: 7, type: BondType3D.aromatic),
-            Bond3D(atomIndex1: 7, atomIndex2: 0, type: BondType3D.aromatic),
-          ],
-        ),
-      intermediate:
-        const Molecule3D(
-          id: 'birch_intermediate',
-          name: 'Cyclohexadienyl Radical',
-          formula: '[C7H9O]•',
-          iupacName: 'cyclohexadienyl radical intermediate',
-          description: 'Neutral radical with one sp3 methylene and delocalized pentadienyl radical.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, note: 'C1 methoxy carbon'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.37),
-            Atom3D(symbol: 'C', x: 1.25, y: 0.7, z: 0.0),
-            Atom3D(symbol: 'C', x: 1.25, y: 2.1, z: 0.0),
-            Atom3D(symbol: 'C', x: 0.0, y: 2.8, z: -0.3, hybridization: 'sp³', note: 'Protonated sp3 carbon with two hydrogens'),
-            Atom3D(symbol: 'C', x: -1.25, y: 2.1, z: 0.0),
-            Atom3D(symbol: 'C', x: -1.25, y: 0.7, z: 0.0),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4),
-            Bond3D(atomIndex1: 4, atomIndex2: 5),
-            Bond3D(atomIndex1: 5, atomIndex2: 6),
-            Bond3D(atomIndex1: 6, atomIndex2: 0),
-          ],
-        ),
-      product:
-        const Molecule3D(
-          id: 'birch_product',
-          name: '1-Methoxycyclohexa-1,4-diene',
-          formula: 'C7H10O',
-          iupacName: '1-methoxycyclohexa-1,4-diene',
-          description: 'Non-conjugated 1,4-diene with two isolated double bonds.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'C1 enol ether carbon'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.37, note: 'Methoxy group'),
-            Atom3D(symbol: 'C', x: 1.3, y: 0.0, z: -0.3, hybridization: 'sp²', note: 'C2 alkene carbon'),
-            Atom3D(symbol: 'C', x: 2.15, y: 1.25, z: -0.5, hybridization: 'sp³', note: 'C3 methylene sp3'),
-            Atom3D(symbol: 'C', x: 1.3, y: 2.45, z: -0.3, hybridization: 'sp²', note: 'C4 alkene carbon'),
-            Atom3D(symbol: 'C', x: 0.0, y: 2.45, z: 0.0, hybridization: 'sp²', note: 'C5 alkene carbon'),
-            Atom3D(symbol: 'C', x: -0.85, y: 1.25, z: 0.25, hybridization: 'sp³', note: 'C6 methylene sp3'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 0, atomIndex2: 2, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4),
-            Bond3D(atomIndex1: 4, atomIndex2: 5, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 5, atomIndex2: 6),
-            Bond3D(atomIndex1: 6, atomIndex2: 0),
-          ],
-        ),
+      reactant: const Molecule3D(
+        id: 'birch_reactant',
+        name: 'Anisole',
+        formula: 'C7H8O',
+        iupacName: 'methoxybenzene',
+        description: 'Planar aromatic benzene ring with electron-donating methoxy group.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'C1 ipso carbon',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.37, note: 'Methoxy oxygen'),
+          Atom3D(symbol: 'C', x: 1.2, y: 0.0, z: 2.1, note: 'Methoxy methyl'),
+          Atom3D(symbol: 'C', x: 1.2, y: 0.7, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: 1.2, y: 2.1, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: 0.0, y: 2.8, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: -1.2, y: 2.1, z: 0.0, hybridization: 'sp²'),
+          Atom3D(symbol: 'C', x: -1.2, y: 0.7, z: 0.0, hybridization: 'sp²'),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2),
+          Bond3D(atomIndex1: 0, atomIndex2: 3, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 3, atomIndex2: 4, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 4, atomIndex2: 5, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 5, atomIndex2: 6, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 6, atomIndex2: 7, type: BondType3D.aromatic),
+          Bond3D(atomIndex1: 7, atomIndex2: 0, type: BondType3D.aromatic),
+        ],
+      ),
+      intermediate: const Molecule3D(
+        id: 'birch_intermediate',
+        name: 'Cyclohexadienyl Radical',
+        formula: '[C7H9O]•',
+        iupacName: 'cyclohexadienyl radical intermediate',
+        description: 'Neutral radical with one sp3 methylene and delocalized pentadienyl radical.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            note: 'C1 methoxy carbon',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.37),
+          Atom3D(symbol: 'C', x: 1.25, y: 0.7, z: 0.0),
+          Atom3D(symbol: 'C', x: 1.25, y: 2.1, z: 0.0),
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 2.8,
+            z: -0.3,
+            hybridization: 'sp³',
+            note: 'Protonated sp3 carbon with two hydrogens',
+          ),
+          Atom3D(symbol: 'C', x: -1.25, y: 2.1, z: 0.0),
+          Atom3D(symbol: 'C', x: -1.25, y: 0.7, z: 0.0),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4),
+          Bond3D(atomIndex1: 4, atomIndex2: 5),
+          Bond3D(atomIndex1: 5, atomIndex2: 6),
+          Bond3D(atomIndex1: 6, atomIndex2: 0),
+        ],
+      ),
+      product: const Molecule3D(
+        id: 'birch_product',
+        name: '1-Methoxycyclohexa-1,4-diene',
+        formula: 'C7H10O',
+        iupacName: '1-methoxycyclohexa-1,4-diene',
+        description: 'Non-conjugated 1,4-diene with two isolated double bonds.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'C1 enol ether carbon',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.37, note: 'Methoxy group'),
+          Atom3D(
+            symbol: 'C',
+            x: 1.3,
+            y: 0.0,
+            z: -0.3,
+            hybridization: 'sp²',
+            note: 'C2 alkene carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 2.15,
+            y: 1.25,
+            z: -0.5,
+            hybridization: 'sp³',
+            note: 'C3 methylene sp3',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.3,
+            y: 2.45,
+            z: -0.3,
+            hybridization: 'sp²',
+            note: 'C4 alkene carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 2.45,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'C5 alkene carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: -0.85,
+            y: 1.25,
+            z: 0.25,
+            hybridization: 'sp³',
+            note: 'C6 methylene sp3',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 0, atomIndex2: 2, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4),
+          Bond3D(atomIndex1: 4, atomIndex2: 5, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 5, atomIndex2: 6),
+          Bond3D(atomIndex1: 6, atomIndex2: 0),
+        ],
+      ),
     ),
     'heck_coupling': Reaction3DSet(
       reactionId: 'heck_coupling',
       title: 'Heck Cross-Coupling',
       keyTransformationNote: 'Observe syn-addition across double bond followed by C-C rotation and syn-beta-hydride elimination to furnish (E)-methyl cinnamate.',
-      reactant:
-        const Molecule3D(
-          id: 'heck_reactant',
-          name: 'Iodobenzene + Methyl Acrylate',
-          formula: 'C6H5I + C4H6O2',
-          iupacName: 'iodobenzene and methyl prop-2-enoate',
-          description: 'Aryl iodide and electron-poor alkene substrates.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Phenyl ipso carbon'),
-            Atom3D(symbol: 'I', x: 0.0, y: 0.0, z: 2.1, note: 'Iodine leaving group'),
-            Atom3D(symbol: 'C', x: 3.5, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Alkene terminal CH2'),
-            Atom3D(symbol: 'C', x: 4.8, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Alkene CH'),
-            Atom3D(symbol: 'C', x: 5.6, y: 1.25, z: 0.0, hybridization: 'sp²', note: 'Ester carbonyl'),
-            Atom3D(symbol: 'O', x: 6.8, y: 1.25, z: 0.0),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 3, atomIndex2: 4),
-            Bond3D(atomIndex1: 4, atomIndex2: 5, type: BondType3D.doubleBond),
-          ],
-        ),
-      intermediate:
-        const Molecule3D(
-          id: 'heck_intermediate',
-          name: 'Syn-Insertion Palladacycle',
-          formula: '[Ph-CH2-CH(CO2Me)-Pd(PPh3)2-I]',
-          iupacName: 'sigma-alkylpalladium intermediate',
-          description: 'Intermediate showing syn-conformation of beta-hydrogen and Pd.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Benzylic carbon bonded to phenyl'),
-            Atom3D(symbol: 'C', x: 1.5, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Beta-carbon holding Pd and ester'),
-            Atom3D(symbol: 'Pd', x: 1.5, y: 2.05, z: 0.0, note: 'Pd(II) center'),
-            Atom3D(symbol: 'H', x: 0.0, y: 1.1, z: 0.0, note: 'Syn-coplanar beta-H for elimination'),
-            Atom3D(symbol: 'C', x: 2.5, y: -1.1, z: 0.0, note: 'CO2Me ester group'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2),
-            Bond3D(atomIndex1: 0, atomIndex2: 3),
-            Bond3D(atomIndex1: 1, atomIndex2: 4),
-            Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.partial),
-          ],
-        ),
-      product:
-        const Molecule3D(
-          id: 'heck_product',
-          name: 'trans-Methyl Cinnamate',
-          formula: 'C10H10O2',
-          iupacName: 'methyl (2E)-3-phenylprop-2-enoate',
-          description: 'Extended conjugated (E)-trans alkene product.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Phenyl ipso carbon'),
-            Atom3D(symbol: 'C', x: 1.45, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Alpha-alkene carbon'),
-            Atom3D(symbol: 'C', x: 2.2, y: 1.2, z: 0.0, hybridization: 'sp²', note: 'Beta-alkene carbon (E)'),
-            Atom3D(symbol: 'C', x: 3.65, y: 1.2, z: 0.0, hybridization: 'sp²', note: 'Ester carbonyl'),
-            Atom3D(symbol: 'O', x: 4.35, y: 2.2, z: 0.0, note: 'Carbonyl oxygen'),
-            Atom3D(symbol: 'O', x: 4.25, y: 0.0, z: 0.0, note: 'Methoxy oxygen'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 3, atomIndex2: 5),
-          ],
-        ),
+      reactant: const Molecule3D(
+        id: 'heck_reactant',
+        name: 'Iodobenzene + Methyl Acrylate',
+        formula: 'C6H5I + C4H6O2',
+        iupacName: 'iodobenzene and methyl prop-2-enoate',
+        description: 'Aryl iodide and electron-poor alkene substrates.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Phenyl ipso carbon',
+          ),
+          Atom3D(
+            symbol: 'I',
+            x: 0.0,
+            y: 0.0,
+            z: 2.1,
+            note: 'Iodine leaving group',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 3.5,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Alkene terminal CH2',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 4.8,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Alkene CH',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 5.6,
+            y: 1.25,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Ester carbonyl',
+          ),
+          Atom3D(symbol: 'O', x: 6.8, y: 1.25, z: 0.0),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 3, atomIndex2: 4),
+          Bond3D(atomIndex1: 4, atomIndex2: 5, type: BondType3D.doubleBond),
+        ],
+      ),
+      intermediate: const Molecule3D(
+        id: 'heck_intermediate',
+        name: 'Syn-Insertion Palladacycle',
+        formula: '[Ph-CH2-CH(CO2Me)-Pd(PPh3)2-I]',
+        iupacName: 'sigma-alkylpalladium intermediate',
+        description:
+            'Intermediate showing syn-conformation of beta-hydrogen and Pd.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Benzylic carbon bonded to phenyl',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.5,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Beta-carbon holding Pd and ester',
+          ),
+          Atom3D(symbol: 'Pd', x: 1.5, y: 2.05, z: 0.0, note: 'Pd(II) center'),
+          Atom3D(
+            symbol: 'H',
+            x: 0.0,
+            y: 1.1,
+            z: 0.0,
+            note: 'Syn-coplanar beta-H for elimination',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 2.5,
+            y: -1.1,
+            z: 0.0,
+            note: 'CO2Me ester group',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2),
+          Bond3D(atomIndex1: 0, atomIndex2: 3),
+          Bond3D(atomIndex1: 1, atomIndex2: 4),
+          Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.partial),
+        ],
+      ),
+      product: const Molecule3D(
+        id: 'heck_product',
+        name: 'trans-Methyl Cinnamate',
+        formula: 'C10H10O2',
+        iupacName: 'methyl (2E)-3-phenylprop-2-enoate',
+        description: 'Extended conjugated (E)-trans alkene product.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Phenyl ipso carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.45,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Alpha-alkene carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 2.2,
+            y: 1.2,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Beta-alkene carbon (E)',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 3.65,
+            y: 1.2,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Ester carbonyl',
+          ),
+          Atom3D(symbol: 'O', x: 4.35, y: 2.2, z: 0.0, note: 'Carbonyl oxygen'),
+          Atom3D(symbol: 'O', x: 4.25, y: 0.0, z: 0.0, note: 'Methoxy oxygen'),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 3, atomIndex2: 5),
+        ],
+      ),
     ),
     'corey_chaykovsky': Reaction3DSet(
       reactionId: 'corey_chaykovsky',
       title: 'Corey-Chaykovsky Reaction',
       keyTransformationNote: 'Observe ylide addition and intramolecular ring closure: dimethylsulfonium methylide attacks cyclohexanone, followed by displacement of Me2S to form 1-oxaspiro[2.5]octane.',
-      reactant:
-        const Molecule3D(
-          id: 'corey_reactant',
-          name: 'Cyclohexanone + Dimethylsulfonium Methylide',
-          formula: 'C6H10O + C3H8S',
-          iupacName: 'cyclohexanone and dimethylsulfaniumylmethylide',
-          description: 'Ketone and sulfur ylide nucleophile.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Carbonyl carbon'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.22, note: 'Carbonyl oxygen'),
-            Atom3D(symbol: 'C', x: 2.5, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Ylide carbanion carbon'),
-            Atom3D(symbol: 'S', x: 4.2, y: 0.0, z: 0.0, formalCharge: '+1', note: 'Sulfonium sulfur'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-          ],
-        ),
-      intermediate:
-        const Molecule3D(
-          id: 'corey_intermediate',
-          name: 'Zwitterionic Betaine Intermediate',
-          formula: '[C9H18OS]',
-          iupacName: '2-(dimethylsulfonio)ethan-1-olate intermediate',
-          description: 'Tetrahedral alkoxide aligned anti-periplanar to departing sulfonium.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Tetrahedral quaternary center'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.45, formalCharge: '-1', note: 'Nucleophilic alkoxide'),
-            Atom3D(symbol: 'C', x: 1.45, y: 0.0, z: -0.5, hybridization: 'sp³', note: 'Methylene carbon'),
-            Atom3D(symbol: 'S', x: 1.45, y: 1.8, z: -0.5, formalCharge: '+1', note: 'Departing Me2S leaving group'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.partial),
-          ],
-        ),
-      product:
-        const Molecule3D(
-          id: 'corey_product',
-          name: '1-Oxaspiro[2.5]octane',
-          formula: 'C7H12O',
-          iupacName: '1-oxaspiro[2.5]octane',
-          description: 'Spirocyclic oxirane epoxide on cyclohexane framework.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Spiro quaternary carbon'),
-            Atom3D(symbol: 'C', x: 1.25, y: 0.0, z: 0.7, hybridization: 'sp³', note: 'Oxirane methylene carbon'),
-            Atom3D(symbol: 'O', x: 0.6, y: 1.15, z: 0.0, hybridization: 'sp³', note: 'Oxirane ring oxygen'),
-            Atom3D(symbol: 'C', x: -1.25, y: 0.0, z: -0.85, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: -1.25, y: 1.45, z: -1.45, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: 0.0, y: 2.15, z: -0.85, hybridization: 'sp³'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 0),
-            Bond3D(atomIndex1: 0, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4),
-            Bond3D(atomIndex1: 4, atomIndex2: 5),
-          ],
-        ),
+      reactant: const Molecule3D(
+        id: 'corey_reactant',
+        name: 'Cyclohexanone + Dimethylsulfonium Methylide',
+        formula: 'C6H10O + C3H8S',
+        iupacName: 'cyclohexanone and dimethylsulfaniumylmethylide',
+        description: 'Ketone and sulfur ylide nucleophile.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Carbonyl carbon',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.22, note: 'Carbonyl oxygen'),
+          Atom3D(
+            symbol: 'C',
+            x: 2.5,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Ylide carbanion carbon',
+          ),
+          Atom3D(
+            symbol: 'S',
+            x: 4.2,
+            y: 0.0,
+            z: 0.0,
+            formalCharge: '+1',
+            note: 'Sulfonium sulfur',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+        ],
+      ),
+      intermediate: const Molecule3D(
+        id: 'corey_intermediate',
+        name: 'Zwitterionic Betaine Intermediate',
+        formula: '[C9H18OS]',
+        iupacName: '2-(dimethylsulfonio)ethan-1-olate intermediate',
+        description: 'Tetrahedral alkoxide aligned anti-periplanar to departing sulfonium.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Tetrahedral quaternary center',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 0.0,
+            y: 0.0,
+            z: 1.45,
+            formalCharge: '-1',
+            note: 'Nucleophilic alkoxide',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.45,
+            y: 0.0,
+            z: -0.5,
+            hybridization: 'sp³',
+            note: 'Methylene carbon',
+          ),
+          Atom3D(
+            symbol: 'S',
+            x: 1.45,
+            y: 1.8,
+            z: -0.5,
+            formalCharge: '+1',
+            note: 'Departing Me2S leaving group',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.partial),
+        ],
+      ),
+      product: const Molecule3D(
+        id: 'corey_product',
+        name: '1-Oxaspiro[2.5]octane',
+        formula: 'C7H12O',
+        iupacName: '1-oxaspiro[2.5]octane',
+        description: 'Spirocyclic oxirane epoxide on cyclohexane framework.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Spiro quaternary carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.25,
+            y: 0.0,
+            z: 0.7,
+            hybridization: 'sp³',
+            note: 'Oxirane methylene carbon',
+          ),
+          Atom3D(
+            symbol: 'O',
+            x: 0.6,
+            y: 1.15,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Oxirane ring oxygen',
+          ),
+          Atom3D(symbol: 'C', x: -1.25, y: 0.0, z: -0.85, hybridization: 'sp³'),
+          Atom3D(
+            symbol: 'C',
+            x: -1.25,
+            y: 1.45,
+            z: -1.45,
+            hybridization: 'sp³',
+          ),
+          Atom3D(symbol: 'C', x: 0.0, y: 2.15, z: -0.85, hybridization: 'sp³'),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 0),
+          Bond3D(atomIndex1: 0, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4),
+          Bond3D(atomIndex1: 4, atomIndex2: 5),
+        ],
+      ),
     ),
     'stille_coupling': Reaction3DSet(
       reactionId: 'stille_coupling',
       title: 'Stille Cross-Coupling',
       keyTransformationNote: 'Observe organostannane transmetalation: vinyl group transfer from tin to Pd(II), followed by reductive elimination to form styrene.',
-      reactant:
-        const Molecule3D(
-          id: 'stille_reactant',
-          name: 'Bromobenzene + Tributyl(vinyl)stannane',
-          formula: 'C6H5Br + C14H30Sn',
-          iupacName: 'bromobenzene and tributyl(ethenyl)stannane',
-          description: 'Organohalide and organostannane partners.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Aryl ipso carbon'),
-            Atom3D(symbol: 'Br', x: 0.0, y: 0.0, z: 1.9, note: 'Bromine leaving group'),
-            Atom3D(symbol: 'Sn', x: 3.5, y: 0.0, z: 0.0, note: 'Tin atom'),
-            Atom3D(symbol: 'C', x: 5.5, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Vinyl C1 carbon'),
-            Atom3D(symbol: 'C', x: 6.7, y: 0.5, z: 0.0, hybridization: 'sp²', note: 'Vinyl C2 methylene'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4, type: BondType3D.doubleBond),
-          ],
-        ),
-      intermediate:
-        const Molecule3D(
-          id: 'stille_intermediate',
-          name: 'cis-Bis(triphenylphosphine)phenyl(vinyl)palladium(II)',
-          formula: '[Pd(PPh3)2(Ph)(CH=CH2)]',
-          iupacName: 'cis-phenyl(ethenyl)bis(triphenylphosphine)palladium(II)',
-          description: 'Square-planar complex with cis-coordinated phenyl and vinyl groups.',
-          atoms: [
-            Atom3D(symbol: 'Pd', x: 0.0, y: 0.0, z: 0.0, note: 'Square-planar Pd(II)'),
-            Atom3D(symbol: 'C', x: 2.05, y: 0.0, z: 0.0, note: 'Phenyl ipso carbon'),
-            Atom3D(symbol: 'C', x: 0.0, y: 2.05, z: 0.0, note: 'Vinyl alpha carbon'),
-            Atom3D(symbol: 'C', x: 0.0, y: 3.35, z: 0.0, note: 'Vinyl beta methylene'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.partial),
-          ],
-        ),
-      product:
-        const Molecule3D(
-          id: 'stille_product',
-          name: 'Styrene',
-          formula: 'C8H8',
-          iupacName: 'ethenylbenzene',
-          description: 'Cross-coupled vinylbenzene product.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Phenyl ipso carbon'),
-            Atom3D(symbol: 'C', x: 1.45, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Vinyl alpha carbon'),
-            Atom3D(symbol: 'C', x: 2.3, y: 1.15, z: 0.0, hybridization: 'sp²', note: 'Vinyl beta carbon'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.doubleBond),
-          ],
-        ),
+      reactant: const Molecule3D(
+        id: 'stille_reactant',
+        name: 'Bromobenzene + Tributyl(vinyl)stannane',
+        formula: 'C6H5Br + C14H30Sn',
+        iupacName: 'bromobenzene and tributyl(ethenyl)stannane',
+        description: 'Organohalide and organostannane partners.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Aryl ipso carbon',
+          ),
+          Atom3D(
+            symbol: 'Br',
+            x: 0.0,
+            y: 0.0,
+            z: 1.9,
+            note: 'Bromine leaving group',
+          ),
+          Atom3D(symbol: 'Sn', x: 3.5, y: 0.0, z: 0.0, note: 'Tin atom'),
+          Atom3D(
+            symbol: 'C',
+            x: 5.5,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Vinyl C1 carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 6.7,
+            y: 0.5,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Vinyl C2 methylene',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4, type: BondType3D.doubleBond),
+        ],
+      ),
+      intermediate: const Molecule3D(
+        id: 'stille_intermediate',
+        name: 'cis-Bis(triphenylphosphine)phenyl(vinyl)palladium(II)',
+        formula: '[Pd(PPh3)2(Ph)(CH=CH2)]',
+        iupacName: 'cis-phenyl(ethenyl)bis(triphenylphosphine)palladium(II)',
+        description: 'Square-planar complex with cis-coordinated phenyl and vinyl groups.',
+        atoms: [
+          Atom3D(
+            symbol: 'Pd',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            note: 'Square-planar Pd(II)',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 2.05,
+            y: 0.0,
+            z: 0.0,
+            note: 'Phenyl ipso carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 2.05,
+            z: 0.0,
+            note: 'Vinyl alpha carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 3.35,
+            z: 0.0,
+            note: 'Vinyl beta methylene',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 3, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.partial),
+        ],
+      ),
+      product: const Molecule3D(
+        id: 'stille_product',
+        name: 'Styrene',
+        formula: 'C8H8',
+        iupacName: 'ethenylbenzene',
+        description: 'Cross-coupled vinylbenzene product.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Phenyl ipso carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 1.45,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Vinyl alpha carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 2.3,
+            y: 1.15,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Vinyl beta carbon',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.doubleBond),
+        ],
+      ),
     ),
     'favorskii_rearrangement': Reaction3DSet(
       reactionId: 'favorskii_rearrangement',
       title: 'Favorskii Rearrangement',
       keyTransformationNote: 'Observe ring contraction: 2-chlorocyclohexanone enolizes to cyclopropanone, followed by nucleophilic attack of methoxide and ring-cleavage to methyl cyclopentanecarboxylate.',
-      reactant:
-        const Molecule3D(
-          id: 'favorskii_reactant',
-          name: '2-Chlorocyclohexanone',
-          formula: 'C6H9ClO',
-          iupacName: '2-chlorocyclohexan-1-one',
-          description: 'Alpha-haloketone starting material with equatorial chlorine.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Carbonyl carbon C1'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.22, note: 'Carbonyl oxygen'),
-            Atom3D(symbol: 'C', x: 1.25, y: 0.0, z: -0.85, hybridization: 'sp³', note: 'C2 bearing Cl'),
-            Atom3D(symbol: 'Cl', x: 1.25, y: 0.0, z: -2.65, note: 'Leaving chloride'),
-            Atom3D(symbol: 'C', x: -1.25, y: 0.0, z: -0.85, hybridization: 'sp³', note: 'C6 alpha-prime carbon'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-            Bond3D(atomIndex1: 0, atomIndex2: 4),
-          ],
-        ),
-      intermediate:
-        const Molecule3D(
-          id: 'favorskii_intermediate',
-          name: 'Bicyclo[3.1.0]hexan-6-one',
-          formula: 'C6H8O',
-          iupacName: 'bicyclo[3.1.0]hexan-6-one',
-          description: 'Highly strained 3-membered cyclopropanone fused to cyclopentane ring.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp²', note: 'Strained cyclopropanone carbonyl'),
-            Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.2, note: 'Carbonyl oxygen'),
-            Atom3D(symbol: 'C', x: 1.15, y: 0.0, z: -0.9, hybridization: 'sp³', note: 'Bridgehead carbon 1'),
-            Atom3D(symbol: 'C', x: -1.15, y: 0.0, z: -0.9, hybridization: 'sp³', note: 'Bridgehead carbon 2'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 0, atomIndex2: 2),
-            Bond3D(atomIndex1: 0, atomIndex2: 3),
-            Bond3D(atomIndex1: 2, atomIndex2: 3),
-          ],
-        ),
-      product:
-        const Molecule3D(
-          id: 'favorskii_product',
-          name: 'Methyl Cyclopentanecarboxylate',
-          formula: 'C7H12O2',
-          iupacName: 'methyl cyclopentanecarboxylate',
-          description: 'Ring-contracted 5-membered cyclopentane ester.',
-          atoms: [
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 0.0, hybridization: 'sp³', note: 'Cyclopentyl C1 carbon'),
-            Atom3D(symbol: 'C', x: 0.0, y: 0.0, z: 1.5, hybridization: 'sp²', note: 'Ester carbonyl carbon'),
-            Atom3D(symbol: 'O', x: 0.9, y: 0.0, z: 2.3, note: 'Carbonyl oxygen'),
-            Atom3D(symbol: 'O', x: -1.25, y: 0.0, z: 1.95, note: 'Ester methoxy oxygen'),
-            Atom3D(symbol: 'C', x: -1.45, y: 0.0, z: 3.35, note: 'Methoxy methyl carbon'),
-            Atom3D(symbol: 'C', x: 1.25, y: 0.65, z: -0.65, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: 0.75, y: 2.1, z: -0.75, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: -0.75, y: 2.1, z: -0.75, hybridization: 'sp³'),
-            Atom3D(symbol: 'C', x: -1.25, y: 0.65, z: -0.65, hybridization: 'sp³'),
-          ],
-          bonds: [
-            Bond3D(atomIndex1: 0, atomIndex2: 1),
-            Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.doubleBond),
-            Bond3D(atomIndex1: 1, atomIndex2: 3),
-            Bond3D(atomIndex1: 3, atomIndex2: 4),
-            Bond3D(atomIndex1: 0, atomIndex2: 5),
-            Bond3D(atomIndex1: 5, atomIndex2: 6),
-            Bond3D(atomIndex1: 6, atomIndex2: 7),
-            Bond3D(atomIndex1: 7, atomIndex2: 8),
-            Bond3D(atomIndex1: 8, atomIndex2: 0),
-          ],
-        ),
+      reactant: const Molecule3D(
+        id: 'favorskii_reactant',
+        name: '2-Chlorocyclohexanone',
+        formula: 'C6H9ClO',
+        iupacName: '2-chlorocyclohexan-1-one',
+        description:
+            'Alpha-haloketone starting material with equatorial chlorine.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Carbonyl carbon C1',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.22, note: 'Carbonyl oxygen'),
+          Atom3D(
+            symbol: 'C',
+            x: 1.25,
+            y: 0.0,
+            z: -0.85,
+            hybridization: 'sp³',
+            note: 'C2 bearing Cl',
+          ),
+          Atom3D(
+            symbol: 'Cl',
+            x: 1.25,
+            y: 0.0,
+            z: -2.65,
+            note: 'Leaving chloride',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: -1.25,
+            y: 0.0,
+            z: -0.85,
+            hybridization: 'sp³',
+            note: 'C6 alpha-prime carbon',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+          Bond3D(atomIndex1: 0, atomIndex2: 4),
+        ],
+      ),
+      intermediate: const Molecule3D(
+        id: 'favorskii_intermediate',
+        name: 'Bicyclo[3.1.0]hexan-6-one',
+        formula: 'C6H8O',
+        iupacName: 'bicyclo[3.1.0]hexan-6-one',
+        description: 'Highly strained 3-membered cyclopropanone fused to cyclopentane ring.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp²',
+            note: 'Strained cyclopropanone carbonyl',
+          ),
+          Atom3D(symbol: 'O', x: 0.0, y: 0.0, z: 1.2, note: 'Carbonyl oxygen'),
+          Atom3D(
+            symbol: 'C',
+            x: 1.15,
+            y: 0.0,
+            z: -0.9,
+            hybridization: 'sp³',
+            note: 'Bridgehead carbon 1',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: -1.15,
+            y: 0.0,
+            z: -0.9,
+            hybridization: 'sp³',
+            note: 'Bridgehead carbon 2',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 0, atomIndex2: 2),
+          Bond3D(atomIndex1: 0, atomIndex2: 3),
+          Bond3D(atomIndex1: 2, atomIndex2: 3),
+        ],
+      ),
+      product: const Molecule3D(
+        id: 'favorskii_product',
+        name: 'Methyl Cyclopentanecarboxylate',
+        formula: 'C7H12O2',
+        iupacName: 'methyl cyclopentanecarboxylate',
+        description: 'Ring-contracted 5-membered cyclopentane ester.',
+        atoms: [
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            hybridization: 'sp³',
+            note: 'Cyclopentyl C1 carbon',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: 0.0,
+            y: 0.0,
+            z: 1.5,
+            hybridization: 'sp²',
+            note: 'Ester carbonyl carbon',
+          ),
+          Atom3D(symbol: 'O', x: 0.9, y: 0.0, z: 2.3, note: 'Carbonyl oxygen'),
+          Atom3D(
+            symbol: 'O',
+            x: -1.25,
+            y: 0.0,
+            z: 1.95,
+            note: 'Ester methoxy oxygen',
+          ),
+          Atom3D(
+            symbol: 'C',
+            x: -1.45,
+            y: 0.0,
+            z: 3.35,
+            note: 'Methoxy methyl carbon',
+          ),
+          Atom3D(symbol: 'C', x: 1.25, y: 0.65, z: -0.65, hybridization: 'sp³'),
+          Atom3D(symbol: 'C', x: 0.75, y: 2.1, z: -0.75, hybridization: 'sp³'),
+          Atom3D(symbol: 'C', x: -0.75, y: 2.1, z: -0.75, hybridization: 'sp³'),
+          Atom3D(
+            symbol: 'C',
+            x: -1.25,
+            y: 0.65,
+            z: -0.65,
+            hybridization: 'sp³',
+          ),
+        ],
+        bonds: [
+          Bond3D(atomIndex1: 0, atomIndex2: 1),
+          Bond3D(atomIndex1: 1, atomIndex2: 2, type: BondType3D.doubleBond),
+          Bond3D(atomIndex1: 1, atomIndex2: 3),
+          Bond3D(atomIndex1: 3, atomIndex2: 4),
+          Bond3D(atomIndex1: 0, atomIndex2: 5),
+          Bond3D(atomIndex1: 5, atomIndex2: 6),
+          Bond3D(atomIndex1: 6, atomIndex2: 7),
+          Bond3D(atomIndex1: 7, atomIndex2: 8),
+          Bond3D(atomIndex1: 8, atomIndex2: 0),
+        ],
+      ),
     ),
   };
 }

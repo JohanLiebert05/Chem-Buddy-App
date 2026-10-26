@@ -110,12 +110,12 @@ class TimetableEntry {
   static int parseClock(String raw) {
     final text = raw.trim().toUpperCase().replaceAll('.', ':');
     final match = RegExp(r'(\d{1,2}):?(\d{2})?\s*(AM|PM)?').firstMatch(text);
-    if (match == null) return 9 * 60;
+    if (match == null) {return 9 * 60;}
     var hour = int.tryParse(match.group(1) ?? '9') ?? 9;
     final minute = int.tryParse(match.group(2) ?? '0') ?? 0;
     final period = match.group(3);
-    if (period == 'PM' && hour < 12) hour += 12;
-    if (period == 'AM' && hour == 12) hour = 0;
+    if (period == 'PM' && hour < 12) {hour += 12;}
+    if (period == 'AM' && hour == 12) {hour = 0;}
     return hour * 60 + minute;
   }
 }

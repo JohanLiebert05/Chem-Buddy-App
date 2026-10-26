@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_colors.dart';
 
 class University {
@@ -17,20 +18,20 @@ class University {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'short_name': shortName,
-        'state': state,
-        'country': country,
-      };
+    'id': id,
+    'name': name,
+    'short_name': shortName,
+    'state': state,
+    'country': country,
+  };
 
   factory University.fromJson(Map<String, dynamic> json) => University(
-        id: json['id']?.toString() ?? '',
-        name: json['name']?.toString() ?? 'General MSc Chemistry',
-        shortName: json['short_name']?.toString() ?? 'GENERAL',
-        state: json['state']?.toString() ?? '',
-        country: json['country']?.toString() ?? 'India',
-      );
+    id: json['id']?.toString() ?? '',
+    name: json['name']?.toString() ?? 'General MSc Chemistry',
+    shortName: json['short_name']?.toString() ?? 'GENERAL',
+    state: json['state']?.toString() ?? '',
+    country: json['country']?.toString() ?? 'India',
+  );
 }
 
 class SyllabusSubject {
@@ -55,17 +56,18 @@ class SyllabusSubject {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'university_id': universityId,
-        'name': name,
-        'code': code,
-        'semester': semester,
-        'description': description,
-        'sort_order': sortOrder,
-        'is_active': isActive,
-      };
+    'id': id,
+    'university_id': universityId,
+    'name': name,
+    'code': code,
+    'semester': semester,
+    'description': description,
+    'sort_order': sortOrder,
+    'is_active': isActive,
+  };
 
-  factory SyllabusSubject.fromJson(Map<String, dynamic> json) => SyllabusSubject(
+  factory SyllabusSubject.fromJson(Map<String, dynamic> json) =>
+      SyllabusSubject(
         id: json['id']?.toString() ?? '',
         universityId: json['university_id']?.toString(),
         name: json['name']?.toString() ?? 'Chemistry Subject',
@@ -95,22 +97,22 @@ class SyllabusUnit {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'subject_id': subjectId,
-        'name': name,
-        'unit_number': unitNumber,
-        'description': description,
-        'sort_order': sortOrder,
-      };
+    'id': id,
+    'subject_id': subjectId,
+    'name': name,
+    'unit_number': unitNumber,
+    'description': description,
+    'sort_order': sortOrder,
+  };
 
   factory SyllabusUnit.fromJson(Map<String, dynamic> json) => SyllabusUnit(
-        id: json['id']?.toString() ?? '',
-        subjectId: json['subject_id']?.toString() ?? '',
-        name: json['name']?.toString() ?? 'Unit',
-        unitNumber: json['unit_number'] as int?,
-        description: json['description']?.toString(),
-        sortOrder: (json['sort_order'] as num? ?? 0).toInt(),
-      );
+    id: json['id']?.toString() ?? '',
+    subjectId: json['subject_id']?.toString() ?? '',
+    name: json['name']?.toString() ?? 'Unit',
+    unitNumber: json['unit_number'] as int?,
+    description: json['description']?.toString(),
+    sortOrder: (json['sort_order'] as num? ?? 0).toInt(),
+  );
 }
 
 class SyllabusTopic {
@@ -171,24 +173,24 @@ class SyllabusTopic {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'unit_id': unitId,
-        'name': name,
-        'description': description,
-        'sort_order': sortOrder,
-        'importance': importance,
-        'has_mechanism': hasMechanism,
-        'mechanism_ids': mechanismIds,
-      };
+    'id': id,
+    'unit_id': unitId,
+    'name': name,
+    'description': description,
+    'sort_order': sortOrder,
+    'importance': importance,
+    'has_mechanism': hasMechanism,
+    'mechanism_ids': mechanismIds,
+  };
 
   factory SyllabusTopic.fromJson(Map<String, dynamic> json) => SyllabusTopic(
-        id: json['id']?.toString() ?? '',
-        unitId: json['unit_id']?.toString() ?? '',
-        name: json['name']?.toString() ?? 'Topic',
-        description: json['description']?.toString(),
-        sortOrder: (json['sort_order'] as num? ?? 0).toInt(),
-        importance: json['importance']?.toString() ?? 'medium',
-        hasMechanism: json['has_mechanism'] as bool? ?? false,
-        mechanismIds: List<String>.from(json['mechanism_ids'] as List? ?? []),
-      );
+    id: json['id']?.toString() ?? '',
+    unitId: json['unit_id']?.toString() ?? '',
+    name: json['name']?.toString() ?? 'Topic',
+    description: json['description']?.toString(),
+    sortOrder: (json['sort_order'] as num? ?? 0).toInt(),
+    importance: json['importance']?.toString() ?? 'medium',
+    hasMechanism: json['has_mechanism'] as bool? ?? false,
+    mechanismIds: List<String>.from(json['mechanism_ids'] as List? ?? []),
+  );
 }

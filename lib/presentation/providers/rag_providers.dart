@@ -123,10 +123,10 @@ class ChatController extends Notifier<ChatState> {
 
   Future<void> sendMessage(String question, {String? subject, String? modelPrompt, String? mode}) async {
     // Prevent duplicate requests while an answer is currently being computed
-    if (state.isLoading) return;
+    if (state.isLoading) {return;}
 
     final trimmed = question.trim();
-    if (trimmed.isEmpty) return;
+    if (trimmed.isEmpty) {return;}
 
     final ragService = ref.read(ragServiceProvider);
     final userId = SupabaseService.instance.userId ?? 'anonymous';

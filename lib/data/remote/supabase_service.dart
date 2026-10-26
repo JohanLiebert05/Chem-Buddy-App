@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -7,7 +8,8 @@ class SupabaseService {
   static final instance = SupabaseService._();
 
   static const defaultUrl = 'https://tqhrvvcxrrkppdfrbxnz.supabase.co';
-  static const defaultAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxaHJ2dmN4cnJrcHBkZnJieG56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MTQxOTksImV4cCI6MjEwMjM5MDE5OX0.ulLIKMS13JTOSgNA5V4btIjLZy98aB5aFWoQ4Qx4U4s';
+  static const defaultAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxaHJ2dmN4cnJrcHBkZnJieG56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MTQxOTksImV4cCI6MjEwMjM5MDE5OX0.ulLIKMS13JTOSgNA5V4btIjLZy98aB5aFWoQ4Qx4U4s';
 
   bool configured = false;
 
@@ -19,9 +21,11 @@ class SupabaseService {
 
     const dartUrl = String.fromEnvironment('SUPABASE_URL');
     const dartKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-    
+
     var url = dartUrl.isNotEmpty ? dartUrl : (dotenv.env['SUPABASE_URL'] ?? '');
-    var key = dartKey.isNotEmpty ? dartKey : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
+    var key = dartKey.isNotEmpty
+        ? dartKey
+        : (dotenv.env['SUPABASE_ANON_KEY'] ?? '');
 
     if (url.isEmpty || url.contains('YOUR_PROJECT')) {
       url = defaultUrl;
@@ -40,7 +44,9 @@ class SupabaseService {
 
   Future<bool> checkConnection() async {
     final c = client;
-    if (c == null) return false;
+    if (c == null) {
+      return false;
+    }
     try {
       final res = await c.from('profiles').select('id').limit(1);
       return res.isNotEmpty;
@@ -61,26 +67,49 @@ class SupabaseService {
     return client?.auth.signInWithPassword(email: email, password: password);
   }
 
-  Future<AuthResponse?> signUpWithRegisterNumber(String fullName, String registerNumber, String password) async {
-    final email = '${registerNumber.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '')}@chembuddy.local';
-    final res = await client?.auth.signUp(email: email, password: password, data: {'full_name': fullName, 'register_number': registerNumber});
+  Future<AuthResponse?> signUpWithRegisterNumber(
+    String fullName,
+    String registerNumber,
+    String password,
+  ) async {
+    final email =
+        '${registerNumber.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '')}@chembuddy.local';
+    final res = await client?.auth.signUp(
+      email: email,
+      password: password,
+      data: {'full_name': fullName, 'register_number': registerNumber},
+    );
     final user = res?.user;
     if (user != null) {
-      await upsert('profiles', {'id': user.id, 'register_number': registerNumber, 'full_name': fullName});
+      await upsert('profiles', {
+        'id': user.id,
+        'register_number': registerNumber,
+        'full_name': fullName,
+      });
     }
     return res;
   }
 
-  Future<AuthResponse?> signInWithRegisterNumber(String registerNumber, String password) async {
-    final email = '${registerNumber.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '')}@chembuddy.local';
+  Future<AuthResponse?> signInWithRegisterNumber(
+    String registerNumber,
+    String password,
+  ) async {
+    final email =
+        '${registerNumber.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '')}@chembuddy.local';
     return client?.auth.signInWithPassword(email: email, password: password);
   }
 
   Future<bool> registerNumberExists(String registerNumber) async {
     final c = client;
-    if (c == null) return false;
+    if (c == null) {
+      return false;
+    }
     try {
-      final res = await c.from('profiles').select('id').eq('register_number', registerNumber).maybeSingle();
+      final res = await c
+          .from('profiles')
+          .select('id')
+          .eq('register_number', registerNumber)
+          .maybeSingle();
       return res != null;
     } catch (_) {
       return false;
@@ -90,7 +119,9 @@ class SupabaseService {
   Future<Map<String, dynamic>?> fetchProfile() async {
     final c = client;
     final uid = userId;
-    if (c == null || uid == null) return null;
+    if (c == null || uid == null) {
+      return null;
+    }
     try {
       return await c.from('profiles').select().eq('id', uid).maybeSingle();
     } catch (_) {
@@ -101,7 +132,9 @@ class SupabaseService {
   Future<void> updateProfile(Map<String, dynamic> data) async {
     final c = client;
     final uid = userId;
-    if (c == null || uid == null) return;
+    if (c == null || uid == null) {
+      return;
+    }
     try {
       await c.from('profiles').update(data).eq('id', uid);
     } catch (_) {}
@@ -113,16 +146,18 @@ class SupabaseService {
 
   Future<void> upsert(String table, Map<String, dynamic> row) async {
     final c = client;
-    if (c == null) return;
-    try {
-      await c.from(table).upsert(row);
-    } catch (_) {}
+    if (c == null || userId == null) {
+      throw StateError('Sign in before syncing.');
+    }
+    await c.from(table).upsert(row);
   }
 
   Future<List<Map<String, dynamic>>> fetchOwn(String table) async {
     final c = client;
     final uid = userId;
-    if (c == null || uid == null) return [];
+    if (c == null || uid == null) {
+      return [];
+    }
     try {
       final data = await c.from(table).select().eq('user_id', uid);
       return List<Map<String, dynamic>>.from(data);
@@ -133,10 +168,10 @@ class SupabaseService {
 
   Future<void> remove(String table, String id) async {
     final c = client;
-    if (c == null) return;
-    try {
-      await c.from(table).delete().eq('id', id);
-    } catch (_) {}
+    if (c == null || userId == null) {
+      throw StateError('Sign in before syncing.');
+    }
+    await c.from(table).delete().eq('id', id);
   }
 
   /// Calls a Supabase Edge Function with automatic exponential backoff retry for 429 rate limits,
@@ -147,24 +182,36 @@ class SupabaseService {
     Duration timeout = const Duration(seconds: 45),
     int maxRetries = 3,
   }) async {
+    if (userId == null && !(body.length == 1 && body['prompt'] == 'ping')) {
+      throw StateError(
+        'Sign in to use cloud AI. Guest study data stays on this device.',
+      );
+    }
     final c = client;
     if (c == null) {
-      throw StateError('Unable to connect to cloud services. Please check your internet connection and try again.');
+      throw StateError(
+        'Unable to connect to cloud services. Please check your internet connection and try again.',
+      );
     }
 
     int attempt = 0;
     while (true) {
       attempt++;
       try {
-        final response = await c.functions.invoke(name, body: body).timeout(
-          timeout,
-          onTimeout: () => throw StateError('Request timed out while waiting for $name (${timeout.inSeconds}s). Please check your network.'),
-        );
+        final response = await c.functions
+            .invoke(name, body: body)
+            .timeout(
+              timeout,
+              onTimeout: () => throw StateError(
+                'Request timed out while waiting for $name (${timeout.inSeconds}s). Please check your network.',
+              ),
+            );
         if (response.status >= 400) {
           if (response.status == 429 && attempt <= maxRetries) {
             // Exponential backoff + jitter (e.g., attempt 1: ~1000-1350ms, attempt 2: ~2000-2350ms, attempt 3: ~4000-4350ms)
             final jitterMs = math.Random().nextInt(350);
-            final delayMs = (1000 * math.pow(2, attempt - 1)).toInt() + jitterMs;
+            final delayMs =
+                (1000 * math.pow(2, attempt - 1)).toInt() + jitterMs;
             await Future<void>.delayed(Duration(milliseconds: delayMs));
             continue;
           }
@@ -173,7 +220,9 @@ class SupabaseService {
             final detail = data['detail'] != null ? ' (${data['detail']})' : '';
             throw StateError('${data['error']}$detail');
           }
-          throw StateError('The $name service encountered an issue (HTTP ${response.status}). Please try again.');
+          throw StateError(
+            'The $name service encountered an issue (HTTP ${response.status}). Please try again.',
+          );
         }
         return response.data;
       } on FunctionException catch (fe) {
@@ -190,21 +239,29 @@ class SupabaseService {
           throw StateError('Sign in required to use cloud AI features.');
         }
         if (fe.status == 429) {
-          throw StateError('AI service rate limit reached. Please wait a moment and retry.');
+          throw StateError(
+            'AI service rate limit reached. Please wait a moment and retry.',
+          );
         }
-        throw StateError('Cloud service temporarily unavailable (${fe.status}).');
+        throw StateError(
+          'Cloud service temporarily unavailable (${fe.status}).',
+        );
       } catch (e) {
         if (attempt <= maxRetries &&
             (e.toString().contains('429') ||
-             e.toString().contains('rate limit') ||
-             e.toString().contains('RESOURCE_EXHAUSTED'))) {
+                e.toString().contains('rate limit') ||
+                e.toString().contains('RESOURCE_EXHAUSTED'))) {
           final jitterMs = math.Random().nextInt(350);
           final delayMs = (1000 * math.pow(2, attempt - 1)).toInt() + jitterMs;
           await Future<void>.delayed(Duration(milliseconds: delayMs));
           continue;
         }
-        if (e is StateError) rethrow;
-        throw StateError('Network connection issue ($e). Please check your internet and try again.');
+        if (e is StateError) {
+          rethrow;
+        }
+        throw StateError(
+          'Network connection issue ($e). Please check your internet and try again.',
+        );
       }
     }
   }

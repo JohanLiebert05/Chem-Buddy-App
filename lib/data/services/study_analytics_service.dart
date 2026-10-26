@@ -140,8 +140,8 @@ class StudyAnalyticsService {
     var learningCount = 0;
 
     for (final c in cards) {
-      if (c.srState == FlashcardSrState.mature) matureCount++;
-      if (c.srState == FlashcardSrState.learning || c.srState == FlashcardSrState.lapse) learningCount++;
+      if (c.srState == FlashcardSrState.mature) {matureCount++;}
+      if (c.srState == FlashcardSrState.learning || c.srState == FlashcardSrState.lapse) {learningCount++;}
 
       if (c.lastReviewedAt != null &&
           c.lastReviewedAt!.isAfter(todayStart) &&

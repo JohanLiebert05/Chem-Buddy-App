@@ -57,7 +57,7 @@ class DocumentIngestionService {
   }) async {
     final ragService = RagService(remote: remote);
     final client = remote.client;
-    if (client == null) throw StateError('Not authenticated');
+    if (client == null) {throw StateError('Not authenticated');}
 
     try {
       await client.from('rag_documents').update({'status': 'processing'}).eq('id', documentId);
@@ -82,7 +82,7 @@ class DocumentIngestionService {
 
   Future<List<RagDocument>> listDocuments() async {
     final client = remote.client;
-    if (client == null) return [];
+    if (client == null) {return [];}
 
     final response = await client.from('rag_documents').select().order('created_at', ascending: false);
     return (response as List).map((e) => RagDocument.fromJson(e as Map<String, dynamic>)).toList();
@@ -90,7 +90,7 @@ class DocumentIngestionService {
 
   Future<void> deleteDocument(String id) async {
     final client = remote.client;
-    if (client == null) return;
+    if (client == null) {return;}
 
     final docData = await client.from('rag_documents').select('storage_path').eq('id', id).maybeSingle();
     if (docData != null && docData['storage_path'] != null) {

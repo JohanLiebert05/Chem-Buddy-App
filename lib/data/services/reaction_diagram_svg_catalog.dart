@@ -98,7 +98,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 1. SN1 REACTION SVG
-  static const String sn1Svg = """
+  static const String sn1Svg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Step 1: Heterolytic C-X Cleavage (Slow, RDS)</text>
@@ -140,7 +141,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 2. SN2 REACTION SVG
-  static const String sn2Svg = """
+  static const String sn2Svg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Concerted Bimolecular Nucleophilic Substitution (Walden Inversion)</text>
@@ -179,7 +181,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 3. E1 ELIMINATION SVG
-  static const String e1Svg = """
+  static const String e1Svg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">E1 Elimination: Carbocation Formation & Base Deprotonation (Zaitsev Alkene)</text>
@@ -207,7 +210,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 4. E2 ELIMINATION SVG
-  static const String e2Svg = """
+  static const String e2Svg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Concerted E2: Anti-Periplanar Geometry (180° H-C-C-Br Dihedral Angle)</text>
@@ -244,7 +248,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 5. CANNIZZARO REACTION SVG
-  static const String cannizzaroSvg = """
+  static const String cannizzaroSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Cannizzaro Reaction: Base-Induced Disproportionation via Intermolecular Hydride (H⁻) Transfer</text>
@@ -272,7 +277,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 6. ALDOL CONDENSATION SVG
-  static const String aldolSvg = """
+  static const String aldolSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Aldol Condensation: Enolate Addition followed by E1cB Dehydration</text>
@@ -305,7 +311,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 7. WITTIG REACTION SVG
-  static const String wittigSvg = """
+  static const String wittigSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Wittig Reaction: Phosphonium Ylide [2+2] Cycloaddition & Retro-[2+2] Alkene Synthesis</text>
@@ -337,7 +344,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 8. DIELS-ALDER CYCLOADDITION SVG
-  static const String dielsAlderSvg = """
+  static const String dielsAlderSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Diels-Alder [4+2] Cycloaddition: Concerted Suprafacial Electron Movement & Endo Selectivity</text>
@@ -368,7 +376,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 9. GRIGNARD REACTION SVG
-  static const String grignardSvg = """
+  static const String grignardSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Grignard Reaction: Organomagnesium Nucleophilic Carbanion Addition</text>
@@ -397,7 +406,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 10. BECKMANN REARRANGEMENT SVG
-  static const String beckmannSvg = """
+  static const String beckmannSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Beckmann Rearrangement: Acid-Catalyzed Stereospecific Anti-Migration to Nitrilium Ion</text>
@@ -424,7 +434,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 11. BENZOIN CONDENSATION SVG
-  static const String benzoinSvg = """
+  static const String benzoinSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Benzoin Condensation: Cyanide-Catalyzed Umpolung (Reversed Polarity) Nucleophilic Addition</text>
@@ -449,7 +460,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 12. MICHAEL ADDITION SVG
-  static const String michaelSvg = """
+  static const String michaelSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Michael Addition: Thermodynamically Controlled 1,4-Conjugate Addition of Stabilized Enolates</text>
@@ -476,7 +488,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 13. CLAISEN ESTER CONDENSATION SVG
-  static const String claisenSvg = """
+  static const String claisenSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Claisen Ester Condensation: Base-Promoted Nucleophilic Acyl Substitution via Tetrahedral Intermediate</text>
@@ -501,7 +514,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 14. BAEYER-VILLIGER OXIDATION SVG
-  static const String baeyerVilligerSvg = """
+  static const String baeyerVilligerSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Baeyer-Villiger Oxidation: Peroxyacid Addition & Concerted Criegee Migration to Ester/Lactone</text>
@@ -527,7 +541,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 15. FAVORSKII REARRANGEMENT SVG
-  static const String favorskiiSvg = """
+  static const String favorskiiSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Favorskii Rearrangement: Base-Promoted Intramolecular Displacement via Cyclopropanone</text>
@@ -553,7 +568,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 16. MANNICH REACTION SVG
-  static const String mannichSvg = """
+  static const String mannichSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Mannich Reaction: 3-Component Condensation via Electrophilic Iminium Ion</text>
@@ -577,7 +593,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 17. PINACOL-PINACOLONE REARRANGEMENT SVG
-  static const String pinacolSvg = """
+  static const String pinacolSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Pinacol Rearrangement: Acid-Catalyzed 1,2-Alkyl/Aryl Shift in 1,2-Diols</text>
@@ -605,7 +622,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 18. ROBINSON ANNULATION SVG
-  static const String robinsonSvg = """
+  static const String robinsonSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Robinson Annulation: Michael Addition Followed by Intramolecular Aldol Cyclization</text>
@@ -631,7 +649,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 19. CURTIUS REARRANGEMENT SVG
-  static const String curtiusSvg = """
+  static const String curtiusSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Curtius Rearrangement: Thermal Decomposition of Acyl Azide to Isocyanate & 1° Amine</text>
@@ -659,7 +678,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 20. COPE REARRANGEMENT SVG
-  static const String copeSvg = """
+  static const String copeSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Cope Rearrangement: Thermal [3,3]-Sigmatropic Concerted Pericyclic Shift in 1,5-Hexadienes</text>
@@ -685,7 +705,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 21. CLAISEN SIGMATROPIC REARRANGEMENT SVG
-  static const String claisenSigmatropicSvg = """
+  static const String claisenSigmatropicSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Claisen Sigmatropic: Thermal [3,3]-Rearrangement of Allyl Vinyl / Phenyl Ethers</text>
@@ -712,7 +733,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 22. FISCHER INDOLE SYNTHESIS SVG
-  static const String fischerIndoleSvg = """
+  static const String fischerIndoleSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Fischer Indole Synthesis: Acid-Catalyzed Cyclization via [3,3]-Sigmatropic Rearrangement</text>
@@ -738,7 +760,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 23. PAAL-KNORR SYNTHESIS SVG
-  static const String paalKnorrSvg = """
+  static const String paalKnorrSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Paal-Knorr Pyrrole Synthesis: Condensation of 1,4-Dicarbonyl Compounds</text>
@@ -764,7 +787,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 24. CHICHIBABIN REACTION SVG
-  static const String chichibabinSvg = """
+  static const String chichibabinSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Chichibabin Amination: Nucleophilic Aromatic Substitution of Pyridine with Sodamide</text>
@@ -790,7 +814,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 25. ORGANOMETALLIC: OXIDATIVE ADDITION SVG
-  static const String oxidativeAdditionSvg = """
+  static const String oxidativeAdditionSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Oxidative Addition: Metal Center Oxidation (Mⁿ → Mⁿ⁺²) & Coordination Number Increase</text>
@@ -814,7 +839,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 26. ORGANOMETALLIC: MIGRATORY INSERTION SVG
-  static const String migratoryInsertionSvg = """
+  static const String migratoryInsertionSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Migratory Insertion: Intramolecular Cis-Migration of Ligand R onto Coordinated CO / Alkene</text>
@@ -839,7 +865,8 @@ class ReactionDiagramSvgCatalog {
 """;
 
   // 27. ORGANOMETALLIC: REDUCTIVE ELIMINATION SVG
-  static const String reductiveEliminationSvg = """
+  static const String reductiveEliminationSvg =
+      """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader
   <text x="30" y="30" fill="#A78BFA" font-family="sans-serif" font-size="12.5" font-weight="bold">Reductive Elimination: Metal Reduction (Mⁿ⁺² → Mⁿ) & C-C / C-H Coupling Product Release</text>
@@ -866,7 +893,10 @@ class ReactionDiagramSvgCatalog {
 
   // GENERIC DEFAULT MECHANISM
   static String defaultGenericSvg(String name) {
-    final cleanName = name.replaceAll('_', ' ').replaceAll('-', ' ').toUpperCase();
+    final cleanName = name
+        .replaceAll('_', ' ')
+        .replaceAll('-', ' ')
+        .toUpperCase();
     return """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="100%" height="100%">
   $_svgHeader

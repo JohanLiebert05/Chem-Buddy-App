@@ -6,13 +6,16 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/library_models.dart';
+import '../local/local_store.dart';
 
 final _uuid = const Uuid();
 
 Future<Directory> _root() async {
   final docs = await getApplicationDocumentsDirectory();
-  final dir = Directory(p.join(docs.path, 'ChemBuddy', 'PDFs'));
-  if (!await dir.exists()) await dir.create(recursive: true);
+  final dir = Directory(p.join(docs.path, 'ChemBuddy', 'PDFs',
+      _safe(HiveBoxes.activeAccount ?? 'legacy')),
+  );
+  if (!await dir.exists()) {await dir.create(recursive: true);}
   return dir;
 }
 
@@ -23,7 +26,7 @@ Future<PdfDoc?> importPdf({required String subjectId}) async {
     withData: false,
   );
   final file = result?.files.single;
-  if (file == null || file.path == null) return null;
+  if (file == null || file.path == null) {return null;}
   if (!file.path!.toLowerCase().endsWith('.pdf')) {
     throw const FormatException('Only PDF files can be added to the library.');
   }
@@ -33,7 +36,7 @@ Future<PdfDoc?> importPdf({required String subjectId}) async {
   }
   final root = await _root();
   final folder = Directory(p.join(root.path, _safe(subjectId)));
-  if (!await folder.exists()) await folder.create(recursive: true);
+  if (!await folder.exists()) {await folder.create(recursive: true);}
   var name = file.name;
   var dest = File(p.join(folder.path, name));
   var i = 1;
@@ -57,7 +60,7 @@ Future<PdfDoc?> importPdf({required String subjectId}) async {
 
 Future<void> deleteFile(String path) async {
   final file = File(path);
-  if (await file.exists()) await file.delete();
+  if (await file.exists()) {await file.delete();}
 }
 
 bool exists(String path) => File(path).existsSync();

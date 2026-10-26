@@ -1,8 +1,12 @@
+import '../../core/widgets/expressive_motion.dart';
+import '../../core/theme/app_colors.dart';
+
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
 import '../../core/chemistry/mechanism_svg_renderer.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../data/services/reaction_curation_repository.dart';
 
@@ -20,21 +24,26 @@ class AnimatedMechanismViewer extends StatefulWidget {
   });
 
   @override
-  State<AnimatedMechanismViewer> createState() => _AnimatedMechanismViewerState();
+  State<AnimatedMechanismViewer> createState() =>
+      _AnimatedMechanismViewerState();
 }
 
 class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
   late int _currentStepIndex;
   bool _isPlaying = false;
   Timer? _playbackTimer;
-  final TransformationController _transformController = TransformationController();
+  final TransformationController _transformController =
+      TransformationController();
 
   List<CuratedReactionStep> get _steps => widget.reaction.steps;
 
   @override
   void initState() {
     super.initState();
-    _currentStepIndex = widget.initialStepIndex.clamp(0, _steps.isEmpty ? 0 : _steps.length - 1);
+    _currentStepIndex = widget.initialStepIndex.clamp(
+      0,
+      _steps.isEmpty ? 0 : _steps.length - 1,
+    );
   }
 
   @override
@@ -58,8 +67,12 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
 
   void _startPlayback() {
     _playbackTimer?.cancel();
-    _playbackTimer = Timer.periodic(const Duration(milliseconds: 3200), (timer) {
-      if (!mounted) return;
+    _playbackTimer = Timer.periodic(const Duration(milliseconds: 3200), (
+      timer,
+    ) {
+      if (!mounted) {
+        return;
+      }
       if (_currentStepIndex < _steps.length - 1) {
         setState(() {
           _currentStepIndex++;
@@ -102,10 +115,13 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFF1E293B)),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             'No mechanism steps available for this reaction.',
-            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+            style: TextStyle(
+              color: AppColors.readableText(context, Color(0xFF94A3B8)),
+              fontSize: 14,
+            ),
           ),
         ),
       );
@@ -140,7 +156,7 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
         border: Border.all(color: const Color(0xFF1E293B)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -157,12 +173,13 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.electricViolet.withValues(alpha:0.15),
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.account_tree_rounded,
-                    color: AppColors.electricViolet,
+                    color: Theme.of(context).colorScheme.primary,
                     size: 20,
                   ),
                 ),
@@ -173,8 +190,11 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
                     children: [
                       Text(
                         widget.reaction.reactionName,
-                        style: const TextStyle(
-                          color: Color(0xFFF8FAFC),
+                        style: TextStyle(
+                          color: AppColors.readableText(
+                            context,
+                            Color(0xFFF8FAFC),
+                          ),
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
@@ -183,8 +203,11 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
                       ),
                       Text(
                         'Step ${_currentStepIndex + 1} of ${_steps.length}',
-                        style: const TextStyle(
-                          color: Color(0xFF38BDF8),
+                        style: TextStyle(
+                          color: AppColors.readableText(
+                            context,
+                            Color(0xFF38BDF8),
+                          ),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -195,25 +218,39 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
                 if (step.isRds)
                   Container(
                     margin: const EdgeInsets.only(right: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withValues(alpha:0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha:0.5)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                    child: const Text(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Text(
                       'RDS',
                       style: TextStyle(
-                        color: Color(0xFFFBBF24),
+                        color: AppColors.readableText(
+                          context,
+                          Color(0xFFFBBF24),
+                        ),
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-                IconButton(
-                  onPressed: _resetZoom,
-                  icon: const Icon(Icons.refresh_rounded, color: Color(0xFF94A3B8), size: 20),
-                  tooltip: 'Reset Zoom',
+                SpringPress(
+                  child: IconButton(
+                    onPressed: _resetZoom,
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      color: Color(0xFF94A3B8),
+                      size: 20,
+                    ),
+                    tooltip: 'Reset Zoom',
+                  ),
                 ),
               ],
             ),
@@ -235,10 +272,7 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
                 minScale: 0.6,
                 maxScale: 3.5,
                 child: Center(
-                  child: SvgPicture.string(
-                    svgContent,
-                    fit: BoxFit.contain,
-                  ),
+                  child: SvgPicture.string(svgContent, fit: BoxFit.contain),
                 ),
               ),
             ),
@@ -254,8 +288,11 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
                   children: [
                     Text(
                       step.stepTitle,
-                      style: const TextStyle(
-                        color: Color(0xFFF1F5F9),
+                      style: TextStyle(
+                        color: AppColors.readableText(
+                          context,
+                          Color(0xFFF1F5F9),
+                        ),
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -263,14 +300,25 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
                     const Spacer(),
                     if (step.isReversible)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF8B5CF6).withValues(alpha:0.15),
+                          color: const Color(0xFF8B5CF6)
+                              .withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text(
+                        child: Text(
                           '⇌ Reversible',
-                          style: TextStyle(color: Color(0xFFA78BFA), fontSize: 10, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: AppColors.readableText(
+                              context,
+                              Color(0xFFA78BFA),
+                            ),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                   ],
@@ -278,13 +326,14 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
                 const SizedBox(height: 6),
                 Text(
                   step.stepDescription,
-                  style: const TextStyle(
-                    color: Color(0xFF94A3B8),
+                  style: TextStyle(
+                    color: AppColors.readableText(context, Color(0xFF94A3B8)),
                     fontSize: 13,
                     height: 1.45,
                   ),
                 ),
-                if (step.bondChanges.isNotEmpty || step.chargeChanges.isNotEmpty) ...[
+                if (step.bondChanges.isNotEmpty ||
+                    step.chargeChanges.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
@@ -292,28 +341,56 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
                     children: [
                       if (step.bondChanges.isNotEmpty)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0284C7).withValues(alpha:0.15),
+                            color: const Color(0xFF0284C7)
+                                .withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: const Color(0xFF0284C7).withValues(alpha:0.3)),
+                            border: Border.all(
+                              color: const Color(0xFF0284C7)
+                                  .withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Text(
                             'Bonds: ${step.bondChanges}',
-                            style: const TextStyle(color: Color(0xFF38BDF8), fontSize: 11, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: AppColors.readableText(
+                                context,
+                                Color(0xFF38BDF8),
+                              ),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       if (step.chargeChanges.isNotEmpty)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC4899).withValues(alpha:0.15),
+                            color: const Color(0xFFEC4899)
+                                .withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: const Color(0xFFEC4899).withValues(alpha:0.3)),
+                            border: Border.all(
+                              color: const Color(0xFFEC4899)
+                                  .withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Text(
                             'Charges: ${step.chargeChanges}',
-                            style: const TextStyle(color: Color(0xFFF472B6), fontSize: 11, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: AppColors.readableText(
+                                context,
+                                Color(0xFFF472B6),
+                              ),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                     ],
@@ -332,42 +409,57 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
             child: Row(
               children: [
                 // Previous Step Button
-                IconButton(
-                  onPressed: _currentStepIndex > 0 ? () => _goToStep(_currentStepIndex - 1) : null,
-                  icon: const Icon(Icons.skip_previous_rounded),
-                  color: const Color(0xFF38BDF8),
-                  disabledColor: const Color(0xFF334155),
-                  tooltip: 'Previous Step',
+                SpringPress(
+                  child: IconButton(
+                    onPressed: _currentStepIndex > 0
+                        ? () => _goToStep(_currentStepIndex - 1)
+                        : null,
+                    icon: const Icon(Icons.skip_previous_rounded),
+                    color: const Color(0xFF38BDF8),
+                    disabledColor: const Color(0xFF334155),
+                    tooltip: 'Previous Step',
+                  ),
                 ),
 
                 // Play / Pause Button
                 Container(
                   decoration: BoxDecoration(
-                    color: AppColors.electricViolet,
+                    color: Theme.of(context).colorScheme.primary,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.electricViolet.withValues(alpha:0.4),
+                        color: Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.4),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: IconButton(
-                    onPressed: _togglePlayPause,
-                    icon: Icon(_isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded),
-                    color: Colors.white,
-                    tooltip: _isPlaying ? 'Pause' : 'Auto Play',
+                  child: SpringPress(
+                    child: IconButton(
+                      onPressed: _togglePlayPause,
+                      icon: Icon(
+                        _isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                      ),
+                      color: Colors.white,
+                      tooltip: _isPlaying ? 'Pause' : 'Auto Play',
+                    ),
                   ),
                 ),
 
                 // Next Step Button
-                IconButton(
-                  onPressed: _currentStepIndex < _steps.length - 1 ? () => _goToStep(_currentStepIndex + 1) : null,
-                  icon: const Icon(Icons.skip_next_rounded),
-                  color: const Color(0xFF38BDF8),
-                  disabledColor: const Color(0xFF334155),
-                  tooltip: 'Next Step',
+                SpringPress(
+                  child: IconButton(
+                    onPressed: _currentStepIndex < _steps.length - 1
+                        ? () => _goToStep(_currentStepIndex + 1)
+                        : null,
+                    icon: const Icon(Icons.skip_next_rounded),
+                    color: const Color(0xFF38BDF8),
+                    disabledColor: const Color(0xFF334155),
+                    tooltip: 'Next Step',
+                  ),
                 ),
 
                 const SizedBox(width: 8),
@@ -378,16 +470,20 @@ class _AnimatedMechanismViewerState extends State<AnimatedMechanismViewer> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(_steps.length, (idx) {
                       final isCurrent = idx == _currentStepIndex;
-                      return GestureDetector(
-                        onTap: () => _goToStep(idx),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: isCurrent ? 24 : 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: isCurrent ? const Color(0xFF38BDF8) : const Color(0xFF334155),
-                            borderRadius: BorderRadius.circular(4),
+                      return SpringPress(
+                        child: GestureDetector(
+                          onTap: () => _goToStep(idx),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: isCurrent ? 24 : 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isCurrent
+                                  ? const Color(0xFF38BDF8)
+                                  : const Color(0xFF334155),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
                         ),
                       );

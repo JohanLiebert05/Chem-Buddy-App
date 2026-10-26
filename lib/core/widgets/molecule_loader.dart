@@ -202,8 +202,8 @@ class _BenzeneMoleculeLoaderState extends State<BenzeneMoleculeLoader> with Tick
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFFE2E8F0),
+                  style:  TextStyle(
+                    color: AppColors.readableText(context, Color(0xFFE2E8F0)),
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.2,

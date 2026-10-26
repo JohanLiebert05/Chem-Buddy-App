@@ -20,7 +20,7 @@ class SearchHit {
 class GlobalSearch {
   static List<SearchHit> query(AppState state, String raw) {
     final q = raw.trim().toLowerCase();
-    if (q.isEmpty) return const [];
+    if (q.isEmpty) {return const [];}
     bool has(String? v) => (v ?? '').toLowerCase().contains(q);
     final hits = <SearchHit>[];
 

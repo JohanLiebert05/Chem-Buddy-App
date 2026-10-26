@@ -1,8 +1,13 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'presentation/providers/appearance_provider.dart';
 import 'core/widgets/app_error_boundary.dart';
 import 'data/local/local_store.dart';
 import 'data/remote/notification_service.dart';
@@ -14,7 +19,9 @@ Future<void> main() async {
   // 1. Intercept Flutter framework render and layout errors with in-theme error card
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    debugPrint('[FlutterError] Caught framework error: ${details.exceptionAsString()}');
+    debugPrint(
+      '[FlutterError] Caught framework error: ${details.exceptionAsString()}',
+    );
   };
 
   // 2. Custom ErrorWidget to replace red/grey crash screen with ChemBuddy fallback card
@@ -24,7 +31,9 @@ Future<void> main() async {
 
   // 3. Catch unhandled asynchronous Dart exceptions across isolates and futures
   PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
-    debugPrint('[PlatformDispatcher] Unhandled async exception: $error\n$stack');
+    debugPrint(
+      '[PlatformDispatcher] Unhandled async exception: $error\n$stack',
+    );
     // Return true to indicate the error has been handled and avoid terminating the app
     return true;
   };
@@ -47,5 +56,18 @@ Future<void> main() async {
     debugPrint('[Main] Error initializing Notifications: $e');
   }
 
-  runApp(const ProviderScope(child: ChemBuddyApp()));
+  SharedPreferences? appearanceStorage;
+  try {
+    appearanceStorage = await SharedPreferences.getInstance();
+  } catch (e) {
+    debugPrint('[Appearance] Preferences unavailable: $e');
+  }
+  runApp(
+    ProviderScope(
+      overrides: [
+        appearanceStorageProvider.overrideWithValue(appearanceStorage),
+      ],
+      child: const ChemBuddyApp(),
+    ),
+  );
 }

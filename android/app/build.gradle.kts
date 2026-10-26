@@ -4,6 +4,8 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val previewBuild = System.getenv("CHEMBUDDY_PREVIEW_BUILD") == "true"
+
 android {
     namespace = "com.chembuddy.chem_buddy"
     compileSdk = 36
@@ -17,7 +19,8 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.chembuddy.chem_buddy"
+        applicationId = if (previewBuild) "com.chembuddy.chem_buddy.preview" else "com.chembuddy.chem_buddy"
+        resValue("string", "app_name", if (previewBuild) "ChemBuddy Preview" else "ChemBuddy")
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -30,11 +33,22 @@ android {
         versionName = flutter.versionName
     }
 
+    val keystorePath = System.getenv("CHEMBUDDY_KEYSTORE_PATH")
+    signingConfigs {
+        if (!keystorePath.isNullOrBlank()) {
+            create("production") {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("CHEMBUDDY_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("CHEMBUDDY_KEY_ALIAS")
+                keyPassword = System.getenv("CHEMBUDDY_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
             isShrinkResources = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (previewBuild) signingConfigs.getByName("debug") else signingConfigs.findByName("production")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

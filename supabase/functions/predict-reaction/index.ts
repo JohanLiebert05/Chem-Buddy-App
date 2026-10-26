@@ -278,11 +278,8 @@ function getAvailableGeminiKeys(): string[] {
     }
   }
 
-  // Guaranteed active pool from ask-chembuddy
-  const hardcodedFallbacks = [
-    atob("QVEuQWI4Uk42TFdoRHRwWlppYkYzY08wbjJ0RVdGOWt2enlNVzUwcjRfVE9sZkVpUF9jSHc="),
-    atob("QVEuQWI4Uk42TFloMi01alpsTUFkdl9CaXE0cHMzZ2RxeXlpSDVBNV95c09kMktyZWptVHc="),
-    atob("QVEuQWI4Uk42THB0RlUxXzdBR3NKbnZ6cVpaeVpYRDZCSnlzNzlkWmJKUGpENEpjWnhVUHc="),
+  // Provider keys come only from server-managed environment variables.
+  const hardcodedFallbacks: string[] = [
   ];
   for (const hf of hardcodedFallbacks) {
     if (hf && hf.length > 5 && !keys.includes(hf)) {

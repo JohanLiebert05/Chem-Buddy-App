@@ -151,7 +151,7 @@ class SmilesSvgGenerator {
   // ---------------------------------------------------------------------------
 
   static List<ChemicalAtom> _layoutCoordinates(List<ChemicalAtom> atoms, List<ChemicalBond> bonds) {
-    if (atoms.isEmpty) return atoms;
+    if (atoms.isEmpty) {return atoms;}
     if (atoms.length == 1) {
       return [atoms[0].copyWith(x: 100, y: 100)];
     }
@@ -240,7 +240,7 @@ class SmilesSvgGenerator {
   ) {
     final parentPt = coords[parentIdx]!;
     final neighbors = adj[parentIdx]!.where((n) => !visited[n.neighbor]).toList();
-    if (neighbors.isEmpty) return;
+    if (neighbors.isEmpty) {return;}
 
     const bondLength = 38.0;
 
@@ -288,7 +288,7 @@ class SmilesSvgGenerator {
 
       for (final edge in adj[u]!) {
         final v = edge.neighbor;
-        if (v == p) continue;
+        if (v == p) {continue;}
         if (visited[v]) {
           // Cycle detected: extract cycle from path
           final vIdx = path.indexOf(v);
@@ -312,7 +312,7 @@ class SmilesSvgGenerator {
     }
 
     for (int i = 0; i < n; i++) {
-      if (cycles.length >= 3) break;
+      if (cycles.length >= 3) {break;}
       dfs(i, -1, []);
     }
 
@@ -382,7 +382,7 @@ class SmilesSvgGenerator {
     for (final bond in graph.bonds) {
       final a1 = graph.getAtom(bond.atom1Id);
       final a2 = graph.getAtom(bond.atom2Id);
-      if (a1 == null || a2 == null) continue;
+      if (a1 == null || a2 == null) {continue;}
 
       final x1 = a1.x * scale + offsetX;
       final y1 = a1.y * scale + offsetY;
@@ -434,7 +434,7 @@ class SmilesSvgGenerator {
         final dx = x2 - x1;
         final dy = y2 - y1;
         final len = math.sqrt(dx * dx + dy * dy);
-        if (len == 0) break;
+        if (len == 0) {break;}
         final perpX = -dy / len * 3.2;
         final perpY = dx / len * 3.2;
 
@@ -450,7 +450,7 @@ class SmilesSvgGenerator {
         final dx = x2 - x1;
         final dy = y2 - y1;
         final len = math.sqrt(dx * dx + dy * dy);
-        if (len == 0) break;
+        if (len == 0) {break;}
         final perpX = -dy / len * 4.2;
         final perpY = dx / len * 4.2;
 
@@ -466,7 +466,7 @@ class SmilesSvgGenerator {
     final hasCharge = atom.formalCharge != 0;
 
     // Skeletal vertices for carbon atoms without charges
-    if (isCarbon && !hasCharge) return;
+    if (isCarbon && !hasCharge) {return;}
 
     final color = _getElementCpkColor(atom.element);
     final label = _formatAtomLabel(atom);
@@ -494,10 +494,10 @@ class SmilesSvgGenerator {
 
   static String _formatAtomLabel(ChemicalAtom atom) {
     final el = atom.element.toUpperCase();
-    if (el == 'O' && atom.implicitHydrogens == 1) return 'OH';
+    if (el == 'O' && atom.implicitHydrogens == 1) {return 'OH';}
     if (el == 'N') {
-      if (atom.implicitHydrogens == 2) return 'NH₂';
-      if (atom.implicitHydrogens == 1) return 'NH';
+      if (atom.implicitHydrogens == 2) {return 'NH₂';}
+      if (atom.implicitHydrogens == 1) {return 'NH';}
     }
     return el;
   }
@@ -1191,8 +1191,8 @@ class SmilesSvgGenerator {
 
     // Default implicit hydrogens
     final elUp = element.toUpperCase();
-    if (elUp == 'O' && formalCharge == 0) implicitH = 1;
-    if (elUp == 'N' && formalCharge == 0) implicitH = 2;
+    if (elUp == 'O' && formalCharge == 0) {implicitH = 1;}
+    if (elUp == 'N' && formalCharge == 0) {implicitH = 2;}
 
     return ChemicalAtom(
       id: 'A$idx',

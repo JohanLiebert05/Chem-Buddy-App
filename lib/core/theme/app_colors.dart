@@ -7,6 +7,39 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
+  static Color? readableText(BuildContext context, Color? color) {
+    if (color == null || Theme.of(context).brightness == Brightness.dark) {
+      return color;
+    }
+    final background = Theme.of(context).colorScheme.surfaceContainerHigh
+        .computeLuminance();
+    final luminance = Color.alphaBlend(
+      color,
+      Theme.of(context).colorScheme.surfaceContainerHigh,
+    ).computeLuminance();
+    final contrast =
+        (background > luminance ? background + .05 : luminance + .05) /
+        (background > luminance ? luminance + .05 : background + .05);
+    return contrast >= 4.5 ? color : adaptive(context, color).withAlpha(255);
+  }
+
+  /// Keep semantic/category hues while making their text readable on light surfaces.
+  static Color adaptive(BuildContext context, Color color) {
+    final scheme = Theme.of(context).colorScheme;
+    if (scheme.brightness == Brightness.dark) {
+      return color;
+    }
+    final background = scheme.surfaceContainerHigh.computeLuminance();
+    var hsl = HSLColor.fromColor(color).withLightness(.34);
+    var result = hsl.toColor();
+    while ((background + .05) / (result.computeLuminance() + .05) < 4.5 &&
+        hsl.lightness > .12) {
+      hsl = hsl.withLightness((hsl.lightness - .02).clamp(.0, 1.0));
+      result = hsl.toColor();
+    }
+    return result.withAlpha(color.a == 1 ? 255 : (color.a * 255).round());
+  }
+
   // ─── Core Canvas & Surface Tones ───────────────────────────────────
   /// Deepest background — scaffold, app canvas
   static const bg0 = Color(0xFF0A0914);
@@ -102,8 +135,12 @@ class AppColors {
 
   /// Returns a semantic color for attendance percentage thresholds.
   static Color attendanceColor(double percent) {
-    if (percent >= 75) return success;
-    if (percent >= 65) return warning;
+    if (percent >= 75) {
+      return success;
+    }
+    if (percent >= 65) {
+      return warning;
+    }
     return danger;
   }
 }

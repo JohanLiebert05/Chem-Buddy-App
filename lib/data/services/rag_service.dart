@@ -87,21 +87,11 @@ class RagService {
         mode: mode,
       );
 
-      if (geminiRes.text.isNotEmpty && !geminiRes.text.startsWith('Error: All Gemini keys exhausted') && !geminiRes.text.startsWith('Error: No active Gemini API keys')) {
+      if (geminiRes.text.isNotEmpty && !geminiRes.text.startsWith('Error:')) {
         return RagResponse(
           answer: geminiRes.text,
-          sources: documentName != null
-              ? [
-                  RagSource(
-                    documentTitle: documentName,
-                    fileName: documentName,
-                    pageNumber: 1,
-                    subject: subject ?? 'Attached Material',
-                    topic: 'Uploaded Study Notes',
-                    similarity: 1.0,
-                  )
-                ]
-              : const [],
+          // No page-level retrieval occurred on this fallback.
+          sources: const [],
           hasContext: documentText != null && documentText.isNotEmpty,
           chunksUsed: documentText != null ? 1 : 0,
         );
@@ -141,7 +131,7 @@ class RagService {
           .where((p) => p.cleanedText.trim().length >= 20)
           .map((p) => {
                 'pageNumber': p.pageNumber,
-                'text': p.cleanedText.trim(),
+                'text': p.cleanedText.trim()
               })
           .toList();
     }

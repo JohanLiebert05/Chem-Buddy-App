@@ -1311,23 +1311,23 @@ class ReactionMechanismService {
     final q = query.trim().toLowerCase();
     // 1. Exact ID match takes highest precedence
     for (final m in curatedMechanisms) {
-      if (m.id.toLowerCase() == q) return m;
+      if (m.id.toLowerCase() == q) {return m;}
     }
     // 2. Exact name or exact alias match
     for (final m in curatedMechanisms) {
-      if (m.name.toLowerCase() == q) return m;
+      if (m.name.toLowerCase() == q) {return m;}
       for (final alias in m.aliases) {
-        if (alias.toLowerCase() == q) return m;
+        if (alias.toLowerCase() == q) {return m;}
       }
     }
     // 3. Name contains query
     for (final m in curatedMechanisms) {
-      if (m.name.toLowerCase().contains(q)) return m;
+      if (m.name.toLowerCase().contains(q)) {return m;}
     }
     // 4. Alias contains query
     for (final m in curatedMechanisms) {
       for (final alias in m.aliases) {
-        if (alias.toLowerCase().contains(q)) return m;
+        if (alias.toLowerCase().contains(q)) {return m;}
       }
     }
     return null;
@@ -1337,8 +1337,8 @@ class ReactionMechanismService {
   List<ReactionMechanism> search(String query, {ReactionCategory? category}) {
     final q = query.trim().toLowerCase();
     return curatedMechanisms.where((m) {
-      if (category != null && m.category != category) return false;
-      if (q.isEmpty) return true;
+      if (category != null && m.category != category) {return false;}
+      if (q.isEmpty) {return true;}
       return m.name.toLowerCase().contains(q) ||
           m.summary.toLowerCase().contains(q) ||
           m.reactants.toLowerCase().contains(q) ||

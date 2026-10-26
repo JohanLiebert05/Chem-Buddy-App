@@ -1,6 +1,10 @@
-import 'dart:convert';
-import 'package:flutter/material.dart';
+import '../../core/widgets/expressive_motion.dart';
 import '../../core/theme/app_colors.dart';
+
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+
 import '../../core/utils/haptics.dart';
 import '../../data/remote/supabase_service.dart';
 import '../../data/services/reaction_curation_repository.dart';
@@ -90,22 +94,32 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
             'reaction_name': widget.reaction.reactionName,
             'reactants_smiles': widget.reactantSmiles,
             'product_smiles': widget.productSmiles,
-            'reagent': widget.reagent.isNotEmpty ? widget.reagent : widget.reaction.conditions,
-            'solvent': widget.solvent.isNotEmpty ? widget.solvent : widget.reaction.solvent,
+            'reagent': widget.reagent.isNotEmpty
+                ? widget.reagent
+                : widget.reaction.conditions,
+            'solvent': widget.solvent.isNotEmpty
+                ? widget.solvent
+                : widget.reaction.solvent,
             'temperature': widget.reaction.temperature,
-            'steps': widget.reaction.steps.map((s) => {
-              'step_number': s.stepNumber,
-              'step_title': s.stepTitle,
-              'step_description': s.stepDescription,
-              'bond_changes': s.bondChanges,
-            }).toList(),
+            'steps': widget.reaction.steps
+                .map(
+                  (s) => {
+                    'step_number': s.stepNumber,
+                    'step_title': s.stepTitle,
+                    'step_description': s.stepDescription,
+                    'bond_changes': s.bondChanges,
+                  },
+                )
+                .toList(),
             'type': 'full',
           },
         );
 
         if (res.status == 200 && res.data != null) {
           final dynamic raw = res.data;
-          final Map<dynamic, dynamic> map = raw is Map ? raw : jsonDecode(raw.toString());
+          final Map<dynamic, dynamic> map = raw is Map
+              ? raw
+              : jsonDecode(raw.toString());
           if (map['success'] == true && map['data'] is Map) {
             _populateFromData(Map<String, dynamic>.from(map['data'] as Map));
             setState(() => _isLoading = false);
@@ -125,12 +139,16 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
   void _populateFromData(Map<String, dynamic> data) {
     _explanationData = data;
     if (data['mcqs'] is List) {
-      _mcqs = (data['mcqs'] as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      _mcqs = (data['mcqs'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } else {
       _mcqs = _generateDefaultMcqs();
     }
     if (data['viva'] is List) {
-      _vivaQuestions = (data['viva'] as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      _vivaQuestions = (data['viva'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } else {
       _vivaQuestions = _generateDefaultViva();
     }
@@ -139,10 +157,14 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
   void _populateFromCuratedData() {
     _explanationData = {
       'summary': widget.reaction.description,
-      'why_it_happens': 'Driven by thermodynamic bond enthalpy favorability and transition state stabilization under ${widget.reaction.conditions}.',
+      'why_it_happens':
+          'Driven by thermodynamic bond enthalpy favorability and transition state stabilization under ${widget.reaction.conditions}.',
       'electron_movement': 'Electron pairs shift from the electron-rich nucleophilic center into the electrophilic orbital as detailed in the curved arrow steps.',
-      'role_of_reagents': 'Conditions: ${widget.reaction.conditions}. Solvent: ${widget.reaction.solvent}. Temperature: ${widget.reaction.temperature}.',
-      'stereochemical_outcome': widget.reaction.stereochemistryNotes.isNotEmpty ? widget.reaction.stereochemistryNotes : 'Governed by orbital symmetry and steric trajectory.',
+      'role_of_reagents':
+          'Conditions: ${widget.reaction.conditions}. Solvent: ${widget.reaction.solvent}. Temperature: ${widget.reaction.temperature}.',
+      'stereochemical_outcome': widget.reaction.stereochemistryNotes.isNotEmpty
+          ? widget.reaction.stereochemistryNotes
+          : 'Governed by orbital symmetry and steric trajectory.',
       'exam_points': [
         'Selectivity: ${widget.reaction.selectivityNotes}',
         'Major product rule: ${widget.reaction.majorProductRule}',
@@ -162,7 +184,8 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
   List<Map<String, dynamic>> _generateDefaultMcqs() {
     return [
       {
-        'question': 'What is the primary factor dictating the rate-determining step in ${widget.reaction.reactionName}?',
+        'question':
+            'What is the primary factor dictating the rate-determining step in ${widget.reaction.reactionName}?',
         'options': [
           'Steric hindrance and orbital approach trajectory',
           'Solvent boiling point only',
@@ -175,7 +198,9 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
       {
         'question': 'Which stereochemical outcome is strictly observed for this transformation?',
         'options': [
-          widget.reaction.stereochemistryNotes.isNotEmpty ? widget.reaction.stereochemistryNotes : 'Stereospecific inversion / control',
+          widget.reaction.stereochemistryNotes.isNotEmpty
+              ? widget.reaction.stereochemistryNotes
+              : 'Stereospecific inversion / control',
           'Random scrambling without preference',
           'Complete loss of all stereocenters',
           '100% retention at all centers regardless of mechanism',
@@ -184,7 +209,8 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
         'explanation': 'The stereochemical pathway is governed by frontier molecular orbital (FMO) alignment and steric factors.',
       },
       {
-        'question': 'Why is ${widget.reaction.solvent.isNotEmpty ? widget.reaction.solvent : "the specified solvent"} chosen for this reaction?',
+        'question':
+            'Why is ${widget.reaction.solvent.isNotEmpty ? widget.reaction.solvent : "the specified solvent"} chosen for this reaction?',
         'options': [
           'It stabilizes the appropriate transition state or ionic intermediates without impeding reactivity',
           'It changes the elemental composition of the product',
@@ -200,7 +226,8 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
   List<Map<String, dynamic>> _generateDefaultViva() {
     return [
       {
-        'question': 'Explain the frontier molecular orbital (FMO) interactions taking place in ${widget.reaction.reactionName}.',
+        'question':
+            'Explain the frontier molecular orbital (FMO) interactions taking place in ${widget.reaction.reactionName}.',
         'model_answer': 'The highest occupied molecular orbital (HOMO) of the nucleophile/electron-donor overlaps with the lowest unoccupied molecular orbital (LUMO, typically σ* or π*) of the electrophilic partner, leading to bond reorganization.',
         'key_concept': 'HOMO-LUMO Overlap',
       },
@@ -244,10 +271,15 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.electricViolet.withValues(alpha:0.15),
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.school_rounded, color: AppColors.electricViolet, size: 22),
+                  child: Icon(
+                    Icons.school_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -256,24 +288,39 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
                     children: [
                       Text(
                         widget.reaction.reactionName,
-                        style: const TextStyle(
-                          color: Color(0xFFF8FAFC),
+                        style: TextStyle(
+                          color: AppColors.readableText(
+                            context,
+                            Color(0xFFF8FAFC),
+                          ),
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const Text(
+                      Text(
                         'MSc Mechanism & Pedagogy Masterclass',
-                        style: TextStyle(color: Color(0xFF38BDF8), fontSize: 12, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: AppColors.readableText(
+                            context,
+                            Color(0xFF38BDF8),
+                          ),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded, color: Color(0xFF94A3B8)),
+                SpringPress(
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -289,9 +336,15 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
             labelColor: const Color(0xFF38BDF8),
             unselectedLabelColor: const Color(0xFF94A3B8),
             tabs: const [
-              Tab(icon: Icon(Icons.lightbulb_outline_rounded, size: 18), text: 'Concepts'),
+              Tab(
+                icon: Icon(Icons.lightbulb_outline_rounded, size: 18),
+                text: 'Concepts',
+              ),
               Tab(icon: Icon(Icons.quiz_outlined, size: 18), text: 'MCQs'),
-              Tab(icon: Icon(Icons.record_voice_over_outlined, size: 18), text: 'Viva Voce'),
+              Tab(
+                icon: Icon(Icons.record_voice_over_outlined, size: 18),
+                text: 'Viva Voce',
+              ),
             ],
           ),
 
@@ -299,7 +352,9 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
           Expanded(
             child: _isLoading
                 ? Center(
-                    child: CircularProgressIndicator(color: AppColors.electricViolet),
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   )
                 : TabBarView(
                     controller: _tabController,
@@ -324,7 +379,8 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
           title: 'What & Why It Happens',
           icon: Icons.auto_awesome_rounded,
           iconColor: const Color(0xFF38BDF8),
-          body: data['why_it_happens'] as String? ?? widget.reaction.description,
+          body:
+              data['why_it_happens'] as String? ?? widget.reaction.description,
         ),
         const SizedBox(height: 14),
         _buildConceptCard(
@@ -338,21 +394,31 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
           title: 'Stereochemical Pathway',
           icon: Icons.threed_rotation_rounded,
           iconColor: const Color(0xFF8B5CF6),
-          body: data['stereochemical_outcome'] as String? ?? widget.reaction.stereochemistryNotes,
+          body:
+              data['stereochemical_outcome'] as String? ??
+              widget.reaction.stereochemistryNotes,
         ),
         const SizedBox(height: 14),
         _buildListCard(
           title: 'Key Exam Highlights (MSc)',
           icon: Icons.verified_rounded,
           iconColor: const Color(0xFF10B981),
-          items: (data['exam_points'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+          items:
+              (data['exam_points'] as List<dynamic>?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              [],
         ),
         const SizedBox(height: 14),
         _buildListCard(
           title: 'Common Student Pitfalls',
           icon: Icons.warning_amber_rounded,
           iconColor: const Color(0xFFF59E0B),
-          items: (data['common_pitfalls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+          items:
+              (data['common_pitfalls'] as List<dynamic>?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              [],
         ),
       ],
     );
@@ -360,8 +426,13 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
 
   Widget _buildMcqsTab() {
     if (_mcqs.isEmpty) {
-      return const Center(
-        child: Text('No MCQs available.', style: TextStyle(color: Color(0xFF94A3B8))),
+      return Center(
+        child: Text(
+          'No MCQs available.',
+          style: TextStyle(
+            color: AppColors.readableText(context, Color(0xFF94A3B8)),
+          ),
+        ),
       );
     }
 
@@ -370,7 +441,11 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
       itemCount: _mcqs.length,
       itemBuilder: (ctx, i) {
         final mcq = _mcqs[i];
-        final options = (mcq['options'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+        final options =
+            (mcq['options'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [];
         final correctIdx = (mcq['correct_index'] as num?)?.toInt() ?? 0;
         final selectedIdx = _selectedMcqAnswers[i];
         final explanation = mcq['explanation'] as String? ?? '';
@@ -379,7 +454,7 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B).withValues(alpha:0.5),
+            color: const Color(0xFF1E293B).withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFF334155)),
           ),
@@ -388,8 +463,8 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
             children: [
               Text(
                 'Q${i + 1}. ${mcq['question']}',
-                style: const TextStyle(
-                  color: Color(0xFFF8FAFC),
+                style: TextStyle(
+                  color: AppColors.readableText(context, Color(0xFFF8FAFC)),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   height: 1.4,
@@ -405,51 +480,75 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
                 if (selectedIdx != null) {
                   if (isCorrect) {
                     optBorder = const Color(0xFF10B981);
-                    optBg = const Color(0xFF10B981).withValues(alpha:0.15);
+                    optBg = const Color(0xFF10B981).withValues(alpha: 0.15);
                   } else if (isSelected) {
                     optBorder = const Color(0xFFEF4444);
-                    optBg = const Color(0xFFEF4444).withValues(alpha:0.15);
+                    optBg = const Color(0xFFEF4444).withValues(alpha: 0.15);
                   }
                 }
 
-                return GestureDetector(
-                  onTap: () {
-                    if (selectedIdx == null) {
-                      AppHaptics.selection();
-                      setState(() {
-                        _selectedMcqAnswers[i] = optIdx;
-                      });
-                    }
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: optBg,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: optBorder),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          '${String.fromCharCode(65 + optIdx)}.',
-                          style: TextStyle(
-                            color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFF94A3B8),
-                            fontWeight: FontWeight.w700,
+                return SpringPress(
+                  child: GestureDetector(
+                    onTap: () {
+                      if (selectedIdx == null) {
+                        AppHaptics.selection();
+                        setState(() {
+                          _selectedMcqAnswers[i] = optIdx;
+                        });
+                      }
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: optBg,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: optBorder),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            '${String.fromCharCode(65 + optIdx)}.',
+                            style: TextStyle(
+                              color: AppColors.readableText(
+                                context,
+                                isSelected
+                                    ? const Color(0xFF38BDF8)
+                                    : const Color(0xFF94A3B8),
+                              ),
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            options[optIdx],
-                            style: const TextStyle(color: Color(0xFFE2E8F0), fontSize: 13),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              options[optIdx],
+                              style: TextStyle(
+                                color: AppColors.readableText(
+                                  context,
+                                  Color(0xFFE2E8F0),
+                                ),
+                                fontSize: 13,
+                              ),
+                            ),
                           ),
-                        ),
-                        if (selectedIdx != null && isCorrect)
-                          const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 18),
-                        if (selectedIdx != null && isSelected && !isCorrect)
-                          const Icon(Icons.cancel_rounded, color: Color(0xFFEF4444), size: 18),
-                      ],
+                          if (selectedIdx != null && isCorrect)
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: Color(0xFF10B981),
+                              size: 18,
+                            ),
+                          if (selectedIdx != null && isSelected && !isCorrect)
+                            const Icon(
+                              Icons.cancel_rounded,
+                              color: Color(0xFFEF4444),
+                              size: 18,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -466,12 +565,23 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.info_outline_rounded, color: Color(0xFF38BDF8), size: 16),
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        color: Color(0xFF38BDF8),
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           explanation,
-                          style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12, height: 1.4),
+                          style: TextStyle(
+                            color: AppColors.readableText(
+                              context,
+                              Color(0xFF94A3B8),
+                            ),
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
                         ),
                       ),
                     ],
@@ -487,8 +597,13 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
 
   Widget _buildVivaTab() {
     if (_vivaQuestions.isEmpty) {
-      return const Center(
-        child: Text('No viva questions available.', style: TextStyle(color: Color(0xFF94A3B8))),
+      return Center(
+        child: Text(
+          'No viva questions available.',
+          style: TextStyle(
+            color: AppColors.readableText(context, Color(0xFF94A3B8)),
+          ),
+        ),
       );
     }
 
@@ -502,7 +617,7 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
         return Container(
           margin: const EdgeInsets.only(bottom: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B).withValues(alpha:0.5),
+            color: const Color(0xFF1E293B).withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFF334155)),
           ),
@@ -517,17 +632,24 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF8B5CF6).withValues(alpha:0.2),
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.psychology_rounded, color: Color(0xFFA78BFA), size: 18),
+                      child: const Icon(
+                        Icons.psychology_rounded,
+                        color: Color(0xFFA78BFA),
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Viva Q${i + 1}: ${viva['question']}',
-                        style: const TextStyle(
-                          color: Color(0xFFF8FAFC),
+                        style: TextStyle(
+                          color: AppColors.readableText(
+                            context,
+                            Color(0xFFF8FAFC),
+                          ),
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           height: 1.4,
@@ -537,39 +659,51 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
                   ],
                 ),
               ),
-              InkWell(
-                onTap: () {
-                  AppHaptics.selection();
-                  setState(() {
-                    if (isRevealed) {
-                      _revealedViva.remove(i);
-                    } else {
-                      _revealedViva.add(i);
-                    }
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: const BoxDecoration(
-                    border: Border(top: BorderSide(color: Color(0xFF334155))),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        isRevealed ? 'Hide Model Answer' : 'Show Model Answer',
-                        style: const TextStyle(
-                          color: Color(0xFF38BDF8),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+              SpringPress(
+                child: InkWell(
+                  onTap: () {
+                    AppHaptics.selection();
+                    setState(() {
+                      if (isRevealed) {
+                        _revealedViva.remove(i);
+                      } else {
+                        _revealedViva.add(i);
+                      }
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: const BoxDecoration(
+                      border: Border(top: BorderSide(color: Color(0xFF334155))),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          isRevealed
+                              ? 'Hide Model Answer'
+                              : 'Show Model Answer',
+                          style: TextStyle(
+                            color: AppColors.readableText(
+                              context,
+                              Color(0xFF38BDF8),
+                            ),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      Icon(
-                        isRevealed ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                        color: const Color(0xFF38BDF8),
-                        size: 18,
-                      ),
-                    ],
+                        const Spacer(),
+                        Icon(
+                          isRevealed
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          color: const Color(0xFF38BDF8),
+                          size: 18,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -589,14 +723,24 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
                         if (viva['key_concept'] != null) ...[
                           Text(
                             'Key Concept: ${viva['key_concept']}',
-                            style: const TextStyle(color: Color(0xFFF59E0B), fontSize: 11, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              color: AppColors.readableText(
+                                context,
+                                Color(0xFFF59E0B),
+                              ),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                           const SizedBox(height: 6),
                         ],
                         Text(
                           viva['model_answer'] as String? ?? '',
-                          style: const TextStyle(
-                            color: Color(0xFFCBD5E1),
+                          style: TextStyle(
+                            color: AppColors.readableText(
+                              context,
+                              Color(0xFFCBD5E1),
+                            ),
                             fontSize: 13,
                             height: 1.5,
                           ),
@@ -621,7 +765,7 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withValues(alpha:0.5),
+        color: const Color(0xFF1E293B).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF334155)),
       ),
@@ -634,14 +778,22 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
               const SizedBox(width: 8),
               Text(
                 title,
-                style: TextStyle(color: iconColor, fontSize: 14, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: AppColors.readableText(context, iconColor),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 10),
           Text(
             body,
-            style: const TextStyle(color: Color(0xFFE2E8F0), fontSize: 13, height: 1.5),
+            style: TextStyle(
+              color: AppColors.readableText(context, Color(0xFFE2E8F0)),
+              fontSize: 13,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -657,7 +809,7 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withValues(alpha:0.5),
+        color: const Color(0xFF1E293B).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF334155)),
       ),
@@ -670,7 +822,11 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
               const SizedBox(width: 8),
               Text(
                 title,
-                style: TextStyle(color: iconColor, fontSize: 14, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: AppColors.readableText(context, iconColor),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
@@ -681,11 +837,24 @@ class _ReactionPedagogySheetState extends State<ReactionPedagogySheet>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ', style: TextStyle(color: Color(0xFF38BDF8), fontWeight: FontWeight.bold)),
+                  Text(
+                    '• ',
+                    style: TextStyle(
+                      color: AppColors.readableText(context, Color(0xFF38BDF8)),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   Expanded(
                     child: Text(
                       item,
-                      style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 13, height: 1.4),
+                      style: TextStyle(
+                        color: AppColors.readableText(
+                          context,
+                          Color(0xFFCBD5E1),
+                        ),
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],

@@ -231,7 +231,7 @@ class GeminiFlashcardService {
 
   /// Parses JSON responses, handles markdown fences, schemas, and extracts key_terms.
   List<GeneratedCard> _parse(dynamic raw, String defaultTopic, {DocumentOcrBundle? bundle}) {
-    if (raw == null) return const [];
+    if (raw == null) {return const [];}
     Map<String, dynamic>? data;
 
     if (raw is Map<String, dynamic>) {
@@ -260,7 +260,7 @@ class GeminiFlashcardService {
           try {
             final sub = text.substring(startIdx, endIdx + 1);
             final decoded = jsonDecode(sub);
-            if (decoded is Map<String, dynamic>) data = decoded;
+            if (decoded is Map<String, dynamic>) {data = decoded;}
           } catch (_) {}
         }
 
@@ -271,21 +271,21 @@ class GeminiFlashcardService {
             try {
               final subArr = text.substring(startArr, endArr + 1);
               final decodedArr = jsonDecode(subArr);
-              if (decodedArr is List) data = {'flashcards': decodedArr};
+              if (decodedArr is List) {data = {'flashcards': decodedArr};}
             } catch (_) {}
           }
         }
       }
     }
 
-    if (data == null) return const [];
+    if (data == null) {return const [];}
     if (data['error'] != null && data['flashcards'] == null) {
       debugPrint('[GeminiFlashcardService] API reported error: ${data['error']}');
       return const [];
     }
 
     final rawList = data['flashcards'];
-    if (rawList is! List) return const [];
+    if (rawList is! List) {return const [];}
 
     return rawList
         .whereType<Map>()
@@ -339,15 +339,15 @@ class GeminiFlashcardService {
   static int _locatePageForText(String text, DocumentOcrBundle bundle) {
     final lower = text.toLowerCase();
     final words = lower.split(RegExp(r'\s+')).where((w) => w.length > 3).take(5).toList();
-    if (words.isEmpty) return 1;
+    if (words.isEmpty) {return 1;}
 
     for (final page in bundle.pages) {
       final pLower = page.cleanedText.toLowerCase();
       var matchCount = 0;
       for (final w in words) {
-        if (pLower.contains(w)) matchCount++;
+        if (pLower.contains(w)) {matchCount++;}
       }
-      if (matchCount >= 2) return page.pageNumber;
+      if (matchCount >= 2) {return page.pageNumber;}
     }
     return 1;
   }
@@ -359,7 +359,7 @@ class GeminiFlashcardService {
     final lowerQ = cleanQ.toLowerCase();
 
     // 1. Length constraints
-    if (cleanQ.length < 8 || cleanA.length < 8) return false;
+    if (cleanQ.length < 8 || cleanA.length < 8) {return false;}
 
     // 2. Reject trivial questions
     if (lowerQ == 'what is chemistry?' ||
@@ -371,7 +371,7 @@ class GeminiFlashcardService {
 
     // 3. Deduplication
     final normQ = lowerQ.replaceAll(RegExp(r'[^\w\s]'), '');
-    if (!seen.add(normQ)) return false;
+    if (!seen.add(normQ)) {return false;}
 
     // 4. Grounding verification
     return _isGrounded(cleanA, sourceText);
@@ -393,7 +393,7 @@ class GeminiFlashcardService {
     final sourceLower = sourceText.toLowerCase();
     var matchCount = 0;
     for (final w in answerWords) {
-      if (sourceLower.contains(w)) matchCount++;
+      if (sourceLower.contains(w)) {matchCount++;}
     }
     return answerWords.isEmpty || (matchCount / answerWords.length) >= 0.35;
   }
@@ -438,9 +438,9 @@ class GeminiFlashcardService {
     // Pass 1: If bundle is present, synthesize page-by-page to guarantee exact page citations
     if (bundle != null && bundle.pages.isNotEmpty) {
       for (final p in bundle.pages) {
-        if (cards.length >= count) break;
+        if (cards.length >= count) {break;}
         final pageText = p.cleanedText.trim();
-        if (pageText.length < 20) continue;
+        if (pageText.length < 20) {continue;}
 
         final units = pageText
             .split(RegExp(r'\n+|\.(?=\s)'))
@@ -449,7 +449,7 @@ class GeminiFlashcardService {
             .toList();
 
         for (final unit in units) {
-          if (cards.length >= count) break;
+          if (cards.length >= count) {break;}
           final chunkType = _classifyChunk(unit);
           final res = _generateTypedCard(unit, chunkType, topic);
           if (res != null) {
@@ -475,7 +475,7 @@ class GeminiFlashcardService {
           .toList();
 
       for (final unit in units) {
-        if (cards.length >= count) break;
+        if (cards.length >= count) {break;}
         final chunkType = _classifyChunk(unit);
         final res = _generateTypedCard(unit, chunkType, topic);
         if (res != null) {
@@ -495,7 +495,7 @@ class GeminiFlashcardService {
     if (cards.length < count) {
       final lines = sourceText.split(RegExp(r'[\r\n]+')).map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
       for (final line in lines) {
-        if (cards.length >= count) break;
+        if (cards.length >= count) {break;}
         if (line.length >= 15) {
           final chunkType = _classifyChunk(line);
           final res = _generateTypedCard(line, chunkType, topic);
@@ -640,10 +640,10 @@ class GeminiFlashcardService {
     String topic,
   ) {
     final clean = chunk.replaceAll(RegExp(r'^[#\-*•\d\.\s]+'), '').trim();
-    if (clean.length < 15) return null;
+    if (clean.length < 15) {return null;}
 
     final words = clean.split(RegExp(r'\s+')).where((w) => w.length > 3).take(4).join(' ');
-    if (words.isEmpty) return null;
+    if (words.isEmpty) {return null;}
 
     switch (type) {
       case _ChunkType.comparison:
@@ -743,7 +743,7 @@ class GeminiFlashcardService {
     ];
 
     for (final term in chemistryLexicon) {
-      if (terms.length >= 5) break;
+      if (terms.length >= 5) {break;}
       if (text.toLowerCase().contains(term.toLowerCase())) {
         terms.add(term);
       }
@@ -752,7 +752,7 @@ class GeminiFlashcardService {
     if (terms.length < 3) {
       final matches = RegExp(r'\b[A-Z][a-zA-Z0-9_\-]{3,}\b').allMatches(text);
       for (final m in matches) {
-        if (terms.length >= 4) break;
+        if (terms.length >= 4) {break;}
         final word = m.group(0)!;
         if (!['What', 'Explain', 'Which', 'When', 'Where', 'Define', 'State', 'Show', 'This', 'That', 'From', 'With', 'Your', 'Their'].contains(word)) {
           terms.add(word);
@@ -770,7 +770,7 @@ class GeminiFlashcardService {
   /// Evaluates and ranks candidate flashcards by academic quality, exam relevance,
   /// chemical formula precision, and conceptual density.
   static List<GeneratedCard> _rankCandidateCards(List<GeneratedCard> cards, String topic) {
-    if (cards.length <= 1) return cards;
+    if (cards.length <= 1) {return cards;}
 
     // Deduplicate first
     final seenNorm = <String>{};
@@ -788,24 +788,24 @@ class GeminiFlashcardService {
       final full = '${card.question} ${card.answer}';
 
       // Presence of chemical formulas / subscripts (e.g. H₂SO₄, Fe³⁺, etc.)
-      if (RegExp(r'[₀-₉]|[⁰-⁹]').hasMatch(full)) score += 5.0;
+      if (RegExp(r'[₀-₉]|[⁰-⁹]').hasMatch(full)) {score += 5.0;}
 
       // Presence of reaction arrows / equilibrium
-      if (full.contains('→') || full.contains('⇌') || full.contains('↔')) score += 5.0;
+      if (full.contains('→') || full.contains('⇌') || full.contains('↔')) {score += 5.0;}
 
       // Higher weight for mechanisms and named reactions
-      if (card.cardType == FlashcardType.mechanism) score += 6.0;
-      if (card.cardType == FlashcardType.examQuestion) score += 4.0;
-      if (card.cardType == FlashcardType.comparison) score += 4.0;
+      if (card.cardType == FlashcardType.mechanism) {score += 6.0;}
+      if (card.cardType == FlashcardType.examQuestion) {score += 4.0;}
+      if (card.cardType == FlashcardType.comparison) {score += 4.0;}
 
       // Structured answer bonus
-      if (card.answer.contains('Key idea:') || card.answer.contains('Why / Mechanism:')) score += 3.0;
+      if (card.answer.contains('Key idea:') || card.answer.contains('Why / Mechanism:')) {score += 3.0;}
 
       // Rich key terms bonus
       score += (card.keyTerms.length.clamp(0, 5) * 1.5);
 
       // Penalize excessively short or vague answers
-      if (card.answer.length < 30) score -= 8.0;
+      if (card.answer.length < 30) {score -= 8.0;}
 
       return (card: card, score: score);
     }).toList();

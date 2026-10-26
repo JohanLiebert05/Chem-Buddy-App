@@ -181,9 +181,6 @@ function getAvailableGeminiKeys(): string[] {
     Deno.env.get("GEMINI_KEY_2"),
     Deno.env.get("GEMINI_KEY_3"),
     Deno.env.get("GEMINI_KEY_4"),
-    atob("QVEuQWI4Uk42TFdoRHRwWlppYkYzY08wbjJ0RVdGOWt2enlNVzUwcjRfVE9sZkVpUF9jSHc="),
-    atob("QVEuQWI4Uk42TFloMi01alpsTUFkdl9CaXE0cHMzZ2RxeXlpSDVBNV95c09kMktyZWptVHc="),
-    atob("QVEuQWI4Uk42THB0RlUxXzdBR3NKbnZ6cVpaeVpYRDZCSnlzNzlkWmJKUGpENEpjWnhVUHc="),
   ].filter((k): k is string => !!k && k.trim().length > 5);
 
   return Array.from(new Set(fallbacks));

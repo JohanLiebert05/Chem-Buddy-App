@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/appearance.dart';
 
 /// Clean ambient background with a very subtle molecular hex grid accent.
 class HexBackground extends StatelessWidget {
@@ -12,22 +12,57 @@ class HexBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (context.findAncestorWidgetOfExactType<HexBackground>() != null) {
+      return child;
+    }
+    final colors = Theme.of(context).colorScheme;
+    final glass = GlassTokens.of(context);
     return Stack(
       fit: StackFit.expand,
       children: [
-        const DecoratedBox(
+        DecoratedBox(
           decoration: BoxDecoration(
             gradient: RadialGradient(
               center: Alignment(0, -0.7),
               radius: 1.4,
               colors: [
-                Color(0xFF171329), // Subtle dark violet top aura
-                AppColors.bg0,     // Deep canvas base
+                Color.alphaBlend(
+                  colors.primary.withValues(
+                    alpha:
+                        glass.glow *
+                        (colors.brightness == Brightness.light ? .46 : 1),
+                  ),
+                  colors.surface,
+                ),
+                colors.surface,
               ],
             ),
           ),
         ),
-        const CustomPaint(painter: _SubtleHexPainter(), size: Size.infinite),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(1, .45),
+                  radius: 1.0,
+                  colors: [
+                    colors.tertiary.withValues(
+                      alpha:
+                          glass.glow *
+                          (colors.brightness == Brightness.light ? .25 : .55),
+                    ),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        CustomPaint(
+          painter: _SubtleHexPainter(colors.primary.withValues(alpha: .025)),
+          size: Size.infinite,
+        ),
         child,
       ],
     );
@@ -35,14 +70,15 @@ class HexBackground extends StatelessWidget {
 }
 
 class _SubtleHexPainter extends CustomPainter {
-  const _SubtleHexPainter();
+  const _SubtleHexPainter(this.color);
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.6
-      ..color = const Color(0x06A78BFA); // Extremely faint, whisper-level accent
+      ..color = color; // Extremely faint, whisper-level accent
 
     const radius = 34.0;
     final h = radius * math.sqrt(3);
@@ -71,5 +107,6 @@ class _SubtleHexPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _SubtleHexPainter oldDelegate) =>
+      color != oldDelegate.color;
 }

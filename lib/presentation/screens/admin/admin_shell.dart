@@ -1,5 +1,7 @@
+import '../../../core/widgets/expressive_motion.dart';
+
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
+
 import '../../../core/widgets/hex_background.dart';
 import '../../shell/main_shell.dart';
 import 'admin_dashboard_screen.dart';
@@ -52,20 +54,36 @@ class _AdminShellState extends State<AdminShell> {
               top: MediaQuery.of(context).padding.top + 4,
               right: 8,
               child: Material(
-                color: AppColors.purple,
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(20),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () => setState(() => _studentView = false),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.swap_horiz, size: 16, color: Colors.white),
-                        SizedBox(width: 4),
-                        Text('Admin', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-                      ],
+                child: SpringPress(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () => setState(() => _studentView = false),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.swap_horiz,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Admin',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -80,14 +98,27 @@ class _AdminShellState extends State<AdminShell> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Admin Console', style: TextStyle(color: AppColors.purple)),
+          title: Text(
+            'Admin Console',
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           actions: [
-            TextButton.icon(
-              onPressed: () => setState(() => _studentView = true),
-              icon: const Icon(Icons.swap_horiz, color: AppColors.purple),
-              label: const Text('Student View', style: TextStyle(color: AppColors.purple)),
+            SpringPress(
+              child: TextButton.icon(
+                onPressed: () => setState(() => _studentView = true),
+                icon: Icon(
+                  Icons.swap_horiz,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: Text(
+                  'Student View',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -106,14 +137,31 @@ class _AdminShellState extends State<AdminShell> {
               child: NavigationBar(
                 height: 68,
                 backgroundColor: Colors.transparent,
-                indicatorColor: AppColors.purple.withValues(alpha: 0.22),
+                indicatorColor: Theme.of(context).colorScheme.primary
+                    .withValues(alpha: 0.22),
                 selectedIndex: _currentIndex,
                 onDestinationSelected: _goTo,
                 destinations: const [
-                  NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Dashboard'),
-                  NavigationDestination(icon: Icon(Icons.people_outline), selectedIcon: Icon(Icons.people), label: 'Students'),
-                  NavigationDestination(icon: Icon(Icons.article_outlined), selectedIcon: Icon(Icons.article), label: 'Content'),
-                  NavigationDestination(icon: Icon(Icons.auto_awesome_outlined), selectedIcon: Icon(Icons.auto_awesome), label: 'Knowledge'),
+                  NavigationDestination(
+                    icon: Icon(Icons.dashboard_outlined),
+                    selectedIcon: Icon(Icons.dashboard),
+                    label: 'Dashboard',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.people_outline),
+                    selectedIcon: Icon(Icons.people),
+                    label: 'Students',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.article_outlined),
+                    selectedIcon: Icon(Icons.article),
+                    label: 'Content',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.auto_awesome_outlined),
+                    selectedIcon: Icon(Icons.auto_awesome),
+                    label: 'Knowledge',
+                  ),
                 ],
               ),
             ),
