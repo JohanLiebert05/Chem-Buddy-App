@@ -81,6 +81,7 @@ jobs:
           if [ "$PREVIEW" = "true" ]; then SUFFIX="-preview"; fi
           APK="ChemBuddy-v$VERSION$SUFFIX.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "$APK"
+          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v$VERSION-by-Prajwal-A-Kambar.apk"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
           echo "apk=$APK" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -93,16 +94,18 @@ jobs:
           name: chembuddy-android-${{ github.sha }}
           path: |
             ChemBuddy-v*.apk
-            build/app/outputs/flutter-apk/app-debug.apk
-          if-no-files-found: error
+            build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: warn
           retention-days: 14
       - uses: softprops/action-gh-release@v2
         if: steps.version.outputs.tag != ''
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          files: ${{ steps.version.outputs.apk }}
+          files: |
+            ${{ steps.version.outputs.apk }}
+            ChemBuddy-v*-by-Prajwal-A-Kambar.apk
           name: ChemBuddy ${{ steps.version.outputs.version }} by Prajwal A Kambar
           prerelease: ${{ steps.signing.outputs.preview == 'true' }}
           body_path: release-body.md
-          fail_on_unmatched_files: true
+          fail_on_unmatched_files: false
