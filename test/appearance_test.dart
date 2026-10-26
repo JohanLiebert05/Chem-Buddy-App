@@ -179,6 +179,9 @@ void main() {
     await tester.tap(find.byKey(const Key('surprise-theme')));
     await tester.pumpAndSettle();
     expect(container.read(appearanceProvider).seed, isNot(before));
+    expect(ThemePalette.nameFor(container.read(appearanceProvider).seed), 'Your discovery');
+    await tester.scrollUntilVisible(find.text('Your discovery'), -200);
+    await tester.pumpAndSettle();
     expect(find.text('Your discovery'), findsOneWidget);
     await tester.ensureVisible(find.text('Undo'));
     await tester.pumpAndSettle();

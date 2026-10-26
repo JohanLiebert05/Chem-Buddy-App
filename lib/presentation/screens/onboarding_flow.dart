@@ -619,7 +619,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           children: [
             Row(
               children: [
-                const ChemBuddyLogo(size: 48),
+                const ChemBuddyLogo(size: 48, animated: false),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text('ChemBuddy', style: theme.textTheme.titleLarge),

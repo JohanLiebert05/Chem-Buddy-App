@@ -105,12 +105,13 @@ class NotificationService {
         ),
       ],
     );
-    await _plugin.initialize(
-      InitializationSettings(android: android, iOS: darwin),
-      onDidReceiveNotificationResponse:
-          NotificationService.handleAttendanceAction,
-      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
-    );
+    try {
+      await _plugin.initialize(
+        InitializationSettings(android: android, iOS: darwin),
+        onDidReceiveNotificationResponse:
+            NotificationService.handleAttendanceAction,
+        onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+      );
 
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
@@ -166,10 +167,14 @@ class NotificationService {
         debugPrint('[NotificationService] Exact alarm permission request: $e');
       }
     }
-    ready = true;
-    debugPrint(
-      '[NotificationService] Initialized with 5 channels and permissions',
-    );
+      ready = true;
+      debugPrint(
+        '[NotificationService] Initialized with 5 channels and permissions',
+      );
+    } catch (e) {
+      debugPrint('[NotificationService] Platform initialization skipped: $e');
+      ready = false;
+    }
   }
 
   Future<bool> requestPermission() async {

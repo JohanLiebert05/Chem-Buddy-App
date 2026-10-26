@@ -33,6 +33,7 @@ void main() {
     final gesture = await tester.startGesture(
       tester.getCenter(find.text('Open')),
     );
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 90));
     final pressed = tester
         .widget<Transform>(
@@ -79,6 +80,7 @@ void main() {
     final gesture = await tester.startGesture(
       tester.getCenter(find.text('Open')),
     );
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 90));
     expect(
       tester
