@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:chem_buddy/core/widgets/expressive_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,10 +15,6 @@ import 'package:chem_buddy/presentation/shell/main_shell.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  // These are layout tests on a desktop host; phone notification plugins are
-  // exercised separately from widget rendering and tab-state preservation.
-  setUp(() => debugDefaultTargetPlatformOverride = TargetPlatform.linux);
-  tearDown(() => debugDefaultTargetPlatformOverride = null);
 
   setUpAll(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
