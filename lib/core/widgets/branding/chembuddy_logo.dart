@@ -1,5 +1,7 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import '../../theme/app_colors.dart';
 
 /// The official ChemBuddy logo badge widget.
@@ -20,7 +22,8 @@ class ChemBuddyLogo extends StatefulWidget {
   State<ChemBuddyLogo> createState() => _ChemBuddyLogoState();
 }
 
-class _ChemBuddyLogoState extends State<ChemBuddyLogo> with TickerProviderStateMixin {
+class _ChemBuddyLogoState extends State<ChemBuddyLogo>
+    with TickerProviderStateMixin {
   late final AnimationController _spinController;
   late final AnimationController _pulseController;
 
@@ -35,11 +38,35 @@ class _ChemBuddyLogoState extends State<ChemBuddyLogo> with TickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 2200),
     );
+  }
 
-    if (widget.animated) {
-      _spinController.repeat();
-      _pulseController.repeat(reverse: true);
+  void _syncMotion() {
+    final animate = widget.animated && !MediaQuery.disableAnimationsOf(context);
+    if (animate) {
+      if (!_spinController.isAnimating) {
+        _spinController.repeat();
+      }
+      if (!_pulseController.isAnimating) {
+        _pulseController.repeat(reverse: true);
+      }
+    } else {
+      _spinController.stop();
+      _pulseController.stop();
+      _spinController.value = 0;
+      _pulseController.value = 0;
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncMotion();
+  }
+
+  @override
+  void didUpdateWidget(covariant ChemBuddyLogo oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncMotion();
   }
 
   @override
@@ -54,7 +81,10 @@ class _ChemBuddyLogoState extends State<ChemBuddyLogo> with TickerProviderStateM
     return AnimatedBuilder(
       animation: Listenable.merge([_spinController, _pulseController]),
       builder: (context, child) {
-        final pulse = 0.96 + (_pulseController.value * 0.08);
+        final pulse =
+            widget.animated && !MediaQuery.disableAnimationsOf(context)
+            ? 0.96 + (_pulseController.value * 0.08)
+            : 1.0;
         return Transform.scale(
           scale: pulse,
           child: Container(
@@ -72,13 +102,16 @@ class _ChemBuddyLogoState extends State<ChemBuddyLogo> with TickerProviderStateM
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25 + (_pulseController.value * 0.15)),
+                        color: Theme.of(context).colorScheme.primary.withValues(
+                          alpha: 0.25 + (_pulseController.value * 0.15),
+                        ),
                         blurRadius: widget.size * 0.35,
                         spreadRadius: widget.size * 0.05,
                       ),
                     ],
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.5),
                       width: widget.size * 0.03,
                     ),
                   )
@@ -118,10 +151,24 @@ class _ChemBuddyLogoPainter extends CustomPainter {
     final r = size.width * 0.42;
 
     // 1. Orbital Ring 1 (60 deg tilt)
-    _drawOrbital(canvas, c, r * 0.95, r * 0.38, spin + (math.pi / 3), AppColors.purpleBright);
+    _drawOrbital(
+      canvas,
+      c,
+      r * 0.95,
+      r * 0.38,
+      spin + (math.pi / 3),
+      AppColors.purpleBright,
+    );
 
     // 2. Orbital Ring 2 (-60 deg tilt)
-    _drawOrbital(canvas, c, r * 0.95, r * 0.38, -spin - (math.pi / 3), AppColors.accentCyan);
+    _drawOrbital(
+      canvas,
+      c,
+      r * 0.95,
+      r * 0.38,
+      -spin - (math.pi / 3),
+      AppColors.accentCyan,
+    );
 
     // 3. Orbital Ring 3 (Horizontal)
     _drawOrbital(canvas, c, r * 0.95, r * 0.35, spin * 0.8, AppColors.blue);
@@ -130,7 +177,14 @@ class _ChemBuddyLogoPainter extends CustomPainter {
     _drawHexagonCore(canvas, c, size.width * 0.22);
   }
 
-  void _drawOrbital(Canvas canvas, Offset center, double rx, double ry, double angle, Color color) {
+  void _drawOrbital(
+    Canvas canvas,
+    Offset center,
+    double rx,
+    double ry,
+    double angle,
+    Color color,
+  ) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
@@ -178,11 +232,7 @@ class _ChemBuddyLogoPainter extends CustomPainter {
     // Hexagon fill with glowing gradient
     final fillPaint = Paint()
       ..shader = RadialGradient(
-        colors: [
-          Colors.white,
-          AppColors.purpleBright,
-          AppColors.purpleDeep,
-        ],
+        colors: [Colors.white, AppColors.purpleBright, AppColors.purpleDeep],
         stops: const [0.0, 0.5, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
 

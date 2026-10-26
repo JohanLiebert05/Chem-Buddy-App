@@ -55,9 +55,15 @@ class Appearance {
 }
 
 class ThemePalette {
-  const ThemePalette(this.name, this.caption, this.seed);
+  const ThemePalette(
+    this.name,
+    this.caption,
+    this.seed, {
+    this.swatches = const [],
+  });
   final String name;
   final String caption;
+  final List<Color> swatches;
   final Color seed;
 
   static const all = [
@@ -75,8 +81,36 @@ class ThemePalette {
     ThemePalette('Graphite', 'Slate · minimal', Color(0xFF78858E)),
   ];
 
+  static const blancosSeed = Color(0xFF202020);
+  static const pellaraSeed = Color(0xFFFFD600);
+  static const rcbSeed = Color(0xFFDA1736);
+
+  static const fanCollection = [
+    ThemePalette(
+      'Blancos',
+      'Real Madrid · black, white & silver',
+      blancosSeed,
+      swatches: [Colors.white, Color(0xFF171717), Color(0xFFC8C8CD)],
+    ),
+    ThemePalette(
+      'Pellara',
+      'Adidas Pellara · yellow & charcoal',
+      pellaraSeed,
+      swatches: [Color(0xFFFFD600), Color(0xFF242424), Color(0xFFFFF2A0)],
+    ),
+    ThemePalette(
+      'RCB',
+      'RCB · red, black & gold',
+      rcbSeed,
+      swatches: [Color(0xFFDA1736), Color(0xFF171717), Color(0xFFD4AF5A)],
+    ),
+  ];
+
+  static bool isFan(Color seed) =>
+      fanCollection.any((palette) => palette.seed == seed);
+
   static String nameFor(Color seed) {
-    for (final palette in all) {
+    for (final palette in [...all, ...fanCollection]) {
       if (palette.seed == seed) {
         return palette.name;
       }

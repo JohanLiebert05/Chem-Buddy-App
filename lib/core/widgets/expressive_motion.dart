@@ -66,7 +66,13 @@ class _SpringPressState extends State<SpringPress>
         (child is InkWell &&
             child.onTap == null &&
             child.onLongPress == null) ||
-        (child is FloatingActionButton && child.onPressed == null);
+        (child is FloatingActionButton && child.onPressed == null) ||
+        (child is GestureDetector &&
+            child.onTap == null &&
+            child.onLongPress == null) ||
+        (child is ListTile &&
+            (!child.enabled ||
+                (child.onTap == null && child.onLongPress == null)));
     if (disabled) {
       return child;
     }
@@ -101,7 +107,7 @@ class _SpringPressState extends State<SpringPress>
         animation: _spring,
         child: widget.child,
         builder: (context, child) {
-          final pressure = reduced
+          final pressure = (reduced || MediaQuery.highContrastOf(context))
               ? 0.0
               : ((1 - _spring.value) / (1 - widget.pressedScale)).clamp(
                   0.0,

@@ -142,6 +142,28 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                 ],
               ),
               const SizedBox(height: 20),
+              Text('Fan collection', style: text.titleLarge),
+              const SizedBox(height: 6),
+              Text(
+                'Your teams. Your colours.',
+                style: text.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 14),
+              for (final palette in ThemePalette.fanCollection)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _FanPaletteTile(
+                    key: ValueKey('fan-theme-${palette.name}'),
+                    palette: palette,
+                    selected: palette.seed == appearance.seed,
+                    onTap: _saving
+                        ? null
+                        : () => _apply(appearance.copyWith(seed: palette.seed)),
+                  ),
+                ),
+              const SizedBox(height: 16),
               Text('Color collection', style: text.titleLarge),
               const SizedBox(height: 6),
               Text(
@@ -443,6 +465,98 @@ class _FinishTile extends StatelessWidget {
             trailing: Icon(
               selected ? Icons.radio_button_checked : Icons.radio_button_off,
               color: selected ? colors.primary : colors.outline,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FanPaletteTile extends StatelessWidget {
+  const _FanPaletteTile({
+    super.key,
+    required this.palette,
+    required this.selected,
+    this.onTap,
+  });
+  final ThemePalette palette;
+  final bool selected;
+  final VoidCallback? onTap;
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: SpringPress(
+        child: LiquidGlassContainer(
+          borderRadius: 24,
+          blurSigma: 12,
+          borderColor: selected ? colors.primary : colors.outlineVariant,
+          borderWidth: selected ? 1.5 : .8,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: palette.name == 'Pellara'
+                              ? [palette.swatches.first, palette.swatches.last]
+                              : palette.swatches,
+                        ),
+                        border: Border.all(color: colors.outlineVariant),
+                      ),
+                      child: Icon(
+                        palette.name == 'Blancos'
+                            ? Icons.sports_soccer_rounded
+                            : Icons.sports_cricket_rounded,
+                        color: palette.name == 'Pellara'
+                            ? const Color(0xFF242424)
+                            : Colors.white,
+                        size: 23,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            palette.name,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            palette.caption,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: colors.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      selected
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_off_rounded,
+                      color: selected ? colors.primary : colors.outline,
+                      size: 22,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

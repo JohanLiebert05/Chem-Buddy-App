@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,12 +10,17 @@ import 'package:chem_buddy/data/local/local_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  // These are layout tests on a desktop host; phone notification plugins are
+  // exercised separately from widget rendering and tab-state preservation.
+  setUp(() => debugDefaultTargetPlatformOverride = TargetPlatform.linux);
+  tearDown(() => debugDefaultTargetPlatformOverride = null);
 
   setUpAll(() async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/path_provider'),
-      (MethodCall methodCall) async => '.',
-    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall methodCall) async => '.',
+        );
     try {
       await HiveBoxes.openAll();
       await Hive.box(HiveBoxes.appTutorialState).put('completed', true);
@@ -44,57 +50,89 @@ void main() {
   }
 
   group('Bottom Navigation Bar Stability & Rapid Switch Tests', () {
-    testWidgets('1. Rapidly switches tabs 30+ times in a row without crashing or throwing duplicate key errors', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets(
+      '1. Rapidly switches tabs 30+ times in a row without crashing or throwing duplicate key errors',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp(
-            theme: ThemeData(fontFamily: 'sans-serif'),
-            home: const MainShell(),
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              theme: ThemeData(fontFamily: 'sans-serif'),
+              home: const MainShell(),
+            ),
           ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 100));
+        );
+        await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.byType(MainShell), findsOneWidget);
-      expect(find.byType(IndexedStack), findsOneWidget);
+        expect(find.byType(MainShell), findsOneWidget);
+        expect(find.byType(IndexedStack), findsOneWidget);
 
-      // Perform 30 rapid switches across all tabs in random and sequential orders
-      const switchSequence = [
-        1, 2, 3, 4, 0,
-        2, 0, 1, 3, 2,
-        4, 1, 0, 3, 4,
-        2, 1, 0, 4, 3,
-        1, 0, 2, 4, 1,
-        3, 0, 2, 1, 4,
-      ];
+        // Perform 30 rapid switches across all tabs in random and sequential orders
+        const switchSequence = [
+          1,
+          2,
+          3,
+          4,
+          0,
+          2,
+          0,
+          1,
+          3,
+          2,
+          4,
+          1,
+          0,
+          3,
+          4,
+          2,
+          1,
+          0,
+          4,
+          3,
+          1,
+          0,
+          2,
+          4,
+          1,
+          3,
+          0,
+          2,
+          1,
+          4,
+        ];
 
-      for (final tabIndex in switchSequence) {
-        container.read(shellTabProvider.notifier).state = tabIndex;
-        // Pump minimal frame to simulate high-frequency user interactions
-        await tester.pump(const Duration(milliseconds: 16));
-        assertNoAppCrash(tester, context: 'rapidly switching to tab $tabIndex');
-      }
+        for (final tabIndex in switchSequence) {
+          container.read(shellTabProvider.notifier).state = tabIndex;
+          // Pump minimal frame to simulate high-frequency user interactions
+          await tester.pump(const Duration(milliseconds: 16));
+          assertNoAppCrash(
+            tester,
+            context: 'rapidly switching to tab $tabIndex',
+          );
+        }
 
-      await tester.pump(const Duration(milliseconds: 100));
+        await tester.pump(const Duration(milliseconds: 100));
 
-      // Verify MainShell and IndexedStack are healthy and rendered
-      final indexedStackFinder = find.byType(IndexedStack);
-      expect(indexedStackFinder, findsOneWidget);
-      final indexedStack = tester.widget<IndexedStack>(indexedStackFinder);
-      expect(indexedStack.index, equals(4)); // Last tab in sequence
-      expect(indexedStack.children.length, equals(5));
-    });
+        // Verify MainShell and IndexedStack are healthy and rendered
+        final indexedStackFinder = find.byType(IndexedStack);
+        expect(indexedStackFinder, findsOneWidget);
+        final indexedStack = tester.widget<IndexedStack>(indexedStackFinder);
+        expect(indexedStack.index, equals(4)); // Last tab in sequence
+        expect(indexedStack.children.length, equals(5));
+      },
+    );
 
-    testWidgets('2. Handles out-of-bounds tab index gracefully via clamping', (tester) async {
+    testWidgets('2. Handles out-of-bounds tab index gracefully via clamping', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);

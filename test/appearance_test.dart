@@ -41,12 +41,64 @@ double contrast(Color a, Color b) {
 }
 
 void main() {
+  testWidgets(
+    'A fan theme applies to the app and Undo restores the previous palette',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final storage = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [appearanceStorageProvider.overrideWithValue(storage)],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _ThemeApp(),
+        ),
+      );
+      final before = container.read(appearanceProvider);
+      final fan = find.byKey(const ValueKey('fan-theme-RCB'));
+      await tester.scrollUntilVisible(fan, 250);
+      await tester.tap(fan);
+      await tester.pumpAndSettle();
+      expect(container.read(appearanceProvider).seed, ThemePalette.rcbSeed);
+      expect(container.read(appearanceProvider).mode, before.mode);
+      expect(container.read(appearanceProvider).glass, before.glass);
+      await tester.scrollUntilVisible(find.text('Undo'), -250);
+      await tester.tap(find.text('Undo'));
+      await tester.pumpAndSettle();
+      expect(container.read(appearanceProvider).seed, before.seed);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  test('Fan collection stays separate and survives saved preferences', () {
+    expect(ThemePalette.all, hasLength(12));
+    expect(ThemePalette.fanCollection.map((p) => p.name), [
+      'Blancos',
+      'Pellara',
+      'RCB',
+    ]);
+    for (final palette in ThemePalette.fanCollection) {
+      expect(ThemePalette.all.any((p) => p.seed == palette.seed), isFalse);
+      final restored = Appearance.decode(
+        palette.seed.toARGB32(),
+        GlassStyle.crystal.name,
+        ThemeMode.light.name,
+      );
+      expect(ThemePalette.nameFor(restored.seed), palette.name);
+      expect(restored.mode, ThemeMode.light);
+      expect(restored.glass, GlassStyle.crystal);
+    }
+  });
+
   test('curated and generated palettes retain readable Material roles', () {
     var appearance = const Appearance();
     final random = Random(42);
-    final samples = ThemePalette.all
-        .map((p) => Appearance(seed: p.seed))
-        .toList();
+    final samples = [
+      ...ThemePalette.all,
+      ...ThemePalette.fanCollection,
+    ].map((p) => Appearance(seed: p.seed)).toList();
     for (var i = 0; i < 100; i++) {
       final next = appearance.surprise(random);
       expect(next.seed, isNot(appearance.seed));
@@ -179,10 +231,17 @@ void main() {
     await tester.tap(find.byKey(const Key('surprise-theme')));
     await tester.pumpAndSettle();
     expect(container.read(appearanceProvider).seed, isNot(before));
-    expect(ThemePalette.nameFor(container.read(appearanceProvider).seed), 'Your discovery');
-    await tester.scrollUntilVisible(find.text('Your discovery'), -200);
-    await tester.pumpAndSettle();
-    expect(find.text('Your discovery'), findsOneWidget);
+    expect(
+      ThemePalette.nameFor(container.read(appearanceProvider).seed),
+      'Your discovery',
+    );
+    expect(find.widgetWithText(TextButton, 'Undo'), findsOneWidget);
+    expect(
+      tester
+          .widget<TextButton>(find.widgetWithText(TextButton, 'Undo'))
+          .onPressed,
+      isNotNull,
+    );
     await tester.ensureVisible(find.text('Undo'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Undo'));

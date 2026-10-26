@@ -23,8 +23,13 @@ class AppTheme {
     final generated = ColorScheme.fromSeed(
       seedColor: seed,
       brightness: brightness,
-      dynamicSchemeVariant: DynamicSchemeVariant.vibrant,
+      dynamicSchemeVariant: seed == ThemePalette.blancosSeed
+          ? DynamicSchemeVariant.monochrome
+          : DynamicSchemeVariant.vibrant,
     );
+    if (ThemePalette.isFan(seed)) {
+      return _fanScheme(generated, seed);
+    }
     if (brightness == Brightness.dark) {
       return generated;
     }
@@ -39,6 +44,90 @@ class AppTheme {
       surfaceContainerHighest: const Color(0xFFE0E5EF),
       outline: const Color(0xFF667085),
       outlineVariant: const Color(0xFFD7DDE8),
+    );
+  }
+
+  static ColorScheme _fanScheme(ColorScheme generated, Color seed) {
+    final light = generated.brightness == Brightness.light;
+    final neutral = generated.copyWith(
+      surface: light ? const Color(0xFFF8F8FA) : const Color(0xFF111113),
+      onSurface: light ? const Color(0xFF19191C) : const Color(0xFFF5F5F7),
+      onSurfaceVariant: light
+          ? const Color(0xFF505055)
+          : const Color(0xFFCACACE),
+      surfaceContainerLowest: light ? Colors.white : const Color(0xFF0C0C0E),
+      surfaceContainerLow: light
+          ? const Color(0xFFFDFDFE)
+          : const Color(0xFF1A1A1D),
+      surfaceContainer: light
+          ? const Color(0xFFF0F0F3)
+          : const Color(0xFF202023),
+      surfaceContainerHigh: light
+          ? const Color(0xFFE8E8EC)
+          : const Color(0xFF29292D),
+      surfaceContainerHighest: light
+          ? const Color(0xFFDFDFE4)
+          : const Color(0xFF343438),
+      outline: light ? const Color(0xFF737378) : const Color(0xFF949499),
+      outlineVariant: light ? const Color(0xFFD3D3D9) : const Color(0xFF46464C),
+    );
+    if (seed == ThemePalette.blancosSeed) {
+      return neutral.copyWith(
+        primary: light ? const Color(0xFF191919) : const Color(0xFFF5F5F5),
+        onPrimary: light ? Colors.white : const Color(0xFF191919),
+        primaryContainer: light
+            ? const Color(0xFFE2E2E5)
+            : const Color(0xFF363639),
+        onPrimaryContainer: light
+            ? const Color(0xFF191919)
+            : const Color(0xFFF5F5F5),
+      );
+    }
+    if (seed == ThemePalette.pellaraSeed) {
+      return neutral.copyWith(
+        primary: light ? const Color(0xFF705D00) : const Color(0xFFFFE04B),
+        onPrimary: light ? Colors.white : const Color(0xFF211C00),
+        primaryContainer: light
+            ? const Color(0xFFFFE15A)
+            : const Color(0xFF4D4100),
+        onPrimaryContainer: light
+            ? const Color(0xFF292200)
+            : const Color(0xFFFFED94),
+        secondary: light ? const Color(0xFF494943) : const Color(0xFFD0D0C7),
+        onSecondary: light ? Colors.white : const Color(0xFF25251E),
+        secondaryContainer: light
+            ? const Color(0xFFE5E5DC)
+            : const Color(0xFF363630),
+        onSecondaryContainer: light
+            ? const Color(0xFF20201A)
+            : const Color(0xFFE5E5DC),
+      );
+    }
+    final gold = ColorScheme.fromSeed(
+      seedColor: const Color(0xFFD4AF5A),
+      brightness: generated.brightness,
+    );
+    return neutral.copyWith(
+      primary: light ? const Color(0xFFC8102E) : const Color(0xFFFF8A99),
+      onPrimary: light ? Colors.white : const Color(0xFF520013),
+      primaryContainer: light
+          ? const Color(0xFFFFDADD)
+          : const Color(0xFF590019),
+      onPrimaryContainer: light
+          ? const Color(0xFF44000D)
+          : const Color(0xFFFFDADD),
+      secondary: gold.primary,
+      onSecondary: gold.onPrimary,
+      secondaryContainer: gold.primaryContainer,
+      onSecondaryContainer: gold.onPrimaryContainer,
+      tertiary: light ? const Color(0xFF49494F) : const Color(0xFFD4D4DB),
+      onTertiary: light ? Colors.white : const Color(0xFF26262C),
+      tertiaryContainer: light
+          ? const Color(0xFFE4E4EB)
+          : const Color(0xFF36363D),
+      onTertiaryContainer: light
+          ? const Color(0xFF1E1E24)
+          : const Color(0xFFE4E4EB),
     );
   }
 

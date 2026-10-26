@@ -3,6 +3,7 @@
 - Added a floating liquid-glass navigation dock, elastic selection indicators and subtle spring feedback across buttons, chips, cards and page transitions, with reduced-motion support.
 - Refined Material 3 Expressive typography, spacing, buttons and glass surfaces.
 - Strong dark text on light themes, with readable semantic and subject colors.
+- Added a separate Fan collection: Blancos (black and white), Pellara (yellow and charcoal), and RCB (red, black and gold), each with light and dark modes.
 - Light, Dark and System modes across twelve palettes, with Surprise me and saved glass finishes.
 - Redesigned welcome, university, semester and subject setup with a calmer layout.
 - Added Continue as guest: local study data stays separate from signed-in accounts and is retained between guest visits.

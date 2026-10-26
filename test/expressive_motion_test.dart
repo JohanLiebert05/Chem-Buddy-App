@@ -4,12 +4,34 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('A fast tap still shows a glass spring response', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: SpringPress(child: FilledButton(onPressed: () {}, child: const Text('Tap'))))));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SpringPress(
+            child: FilledButton(onPressed: () {}, child: const Text('Tap')),
+          ),
+        ),
+      ),
+    );
     await tester.tap(find.text('Tap'));
     await tester.pump(const Duration(milliseconds: 16));
-    final transform = tester.widget<Transform>(find.descendant(of: find.byType(SpringPress), matching: find.byType(Transform)).first);
+    final transform = tester.widget<Transform>(
+      find
+          .descendant(
+            of: find.byType(SpringPress),
+            matching: find.byType(Transform),
+          )
+          .first,
+    );
     expect(transform.transform.storage[0], lessThan(.995));
-    final glass = tester.widget<DecoratedBox>(find.descendant(of: find.byType(SpringPress), matching: find.byType(DecoratedBox)).first);
+    final glass = tester.widget<DecoratedBox>(
+      find
+          .descendant(
+            of: find.byType(SpringPress),
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
     expect((glass.decoration as BoxDecoration).gradient, isNotNull);
     await tester.pumpAndSettle();
   });
@@ -33,7 +55,7 @@ void main() {
     final gesture = await tester.startGesture(
       tester.getCenter(find.text('Open')),
     );
-    await tester.pump();
+    await tester.pump(); // Start the ticker before advancing its elapsed time.
     await tester.pump(const Duration(milliseconds: 90));
     final pressed = tester
         .widget<Transform>(
@@ -80,7 +102,7 @@ void main() {
     final gesture = await tester.startGesture(
       tester.getCenter(find.text('Open')),
     );
-    await tester.pump();
+    await tester.pump(); // Start the ticker before advancing its elapsed time.
     await tester.pump(const Duration(milliseconds: 90));
     expect(
       tester

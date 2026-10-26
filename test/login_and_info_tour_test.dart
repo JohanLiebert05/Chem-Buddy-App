@@ -28,7 +28,9 @@ void main() {
       expect(find.byKey(const Key('continue-guest')), findsOneWidget);
 
       await tester.tap(find.text('Create Account').first);
-      await tester.pumpAndSettle();
+      // The decorative logo keeps animating; wait for the form transition only.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
 
       expect(find.text('Full Name'), findsOneWidget);
       expect(find.text('A study space that grows with you.'), findsOneWidget);

@@ -75,7 +75,9 @@ class NotificationService {
           defaultTargetPlatform == TargetPlatform.macOS);
 
   Future<void> init() async {
-    if (!_supported) {return;}
+    if (!_supported) {
+      return;
+    }
     try {
       tzdata.initializeTimeZones();
       tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
@@ -113,60 +115,62 @@ class NotificationService {
         onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
       );
 
-    final androidPlugin = _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
-    if (androidPlugin != null) {
-      // Explicitly register Android 8.0+ notification channels
-      await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'chem_buddy_classes',
-          'Class reminders',
-          description: 'Upcoming lecture and lab reminders',
-          importance: Importance.high,
-        ),
-      );
-      await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'chem_buddy_daily',
-          'Daily timetable',
-          description: 'Morning overview of today’s classes',
-          importance: Importance.defaultImportance,
-        ),
-      );
-      await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'chem_buddy_deadlines',
-          'Tests & assignments',
-          description: 'Reminders for upcoming chemistry deadlines',
-          importance: Importance.high,
-        ),
-      );
-      await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'chem_buddy_flashcards',
-          'Study & Flashcards',
-          description: 'Spaced repetition flashcard review reminders',
-          importance: Importance.high,
-        ),
-      );
-      await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'chem_buddy_psychology_facts',
-          'Daily Psychology Facts',
-          description: 'Fascinating daily insights into human behavior, memory, and cognitive psychology',
-          importance: Importance.high,
-        ),
-      );
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (androidPlugin != null) {
+        // Explicitly register Android 8.0+ notification channels
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'chem_buddy_classes',
+            'Class reminders',
+            description: 'Upcoming lecture and lab reminders',
+            importance: Importance.high,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'chem_buddy_daily',
+            'Daily timetable',
+            description: 'Morning overview of today’s classes',
+            importance: Importance.defaultImportance,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'chem_buddy_deadlines',
+            'Tests & assignments',
+            description: 'Reminders for upcoming chemistry deadlines',
+            importance: Importance.high,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'chem_buddy_flashcards',
+            'Study & Flashcards',
+            description: 'Spaced repetition flashcard review reminders',
+            importance: Importance.high,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'chem_buddy_psychology_facts',
+            'Daily Psychology Facts',
+            description: 'Fascinating daily insights into human behavior, memory, and cognitive psychology',
+            importance: Importance.high,
+          ),
+        );
 
-      await androidPlugin.requestNotificationsPermission();
-      try {
-        await androidPlugin.requestExactAlarmsPermission();
-      } catch (e) {
-        debugPrint('[NotificationService] Exact alarm permission request: $e');
+        await androidPlugin.requestNotificationsPermission();
+        try {
+          await androidPlugin.requestExactAlarmsPermission();
+        } catch (e) {
+          debugPrint(
+            '[NotificationService] Exact alarm permission request: $e',
+          );
+        }
       }
-    }
       ready = true;
       debugPrint(
         '[NotificationService] Initialized with 5 channels and permissions',
@@ -178,7 +182,9 @@ class NotificationService {
   }
 
   Future<bool> requestPermission() async {
-    if (!_supported) {return false;}
+    if (!_supported) {
+      return false;
+    }
     final android = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -194,9 +200,13 @@ class NotificationService {
     NotificationResponse details,
   ) async {
     final action = details.actionId;
-    if (action != 'mark_present' && action != 'mark_absent') {return;}
+    if (action != 'mark_present' && action != 'mark_absent') {
+      return;
+    }
     final payload = details.payload;
-    if (payload == null || payload.isEmpty) {return;}
+    if (payload == null || payload.isEmpty) {
+      return;
+    }
 
     Map<String, dynamic> data;
     try {
@@ -208,7 +218,9 @@ class NotificationService {
     final subjectId = data['subjectId'] as String?;
     final subjectName = data['subjectName'] as String? ?? 'Class';
     final slotId = data['slotId'] as String?;
-    if (subjectId == null || subjectId.isEmpty) {return;}
+    if (subjectId == null || subjectId.isEmpty) {
+      return;
+    }
 
     final status = action == 'mark_present'
         ? AttendanceStatus.present
@@ -299,8 +311,12 @@ class NotificationService {
     String? testSubjectId,
     String? testSubjectName,
   }) async {
-    if (!_supported) {return;}
-    if (!ready) {await init();}
+    if (!_supported) {
+      return;
+    }
+    if (!ready) {
+      await init();
+    }
     debugPrint('[NotificationService] Triggering test notification');
     const androidDetails = AndroidNotificationDetails(
       'chem_buddy_classes',
@@ -357,7 +373,9 @@ class NotificationService {
   Future<void> sendTestPsychologyFactNotification({
     PsychologyFact? fact,
   }) async {
-    if (!ready) {await init();}
+    if (!ready) {
+      await init();
+    }
     final pFact = fact ?? PsychologyFactsService.instance.getTodayFact();
     final title = '${pFact.emoji} Psychology Fact: ${pFact.title}';
     final body = '${pFact.fact}\n\n💡 Insight: ${pFact.takeaway}';
@@ -400,9 +418,15 @@ class NotificationService {
     Map<String, SubjectAttendanceStats>? subjectStats,
     SubjectAttendanceStats? overallStats,
   }) async {
-    if (!_supported) {return;}
-    if (!ready) {await init();}
-    if (!ready) {return;}
+    if (!_supported) {
+      return;
+    }
+    if (!ready) {
+      await init();
+    }
+    if (!ready) {
+      return;
+    }
     await _plugin.cancelAll();
     if (!prefs.enabled) {
       debugPrint(
@@ -453,8 +477,12 @@ class NotificationService {
     if (prefs.assignmentReminders || prefs.examReminders) {
       for (final event in events.where((e) => !e.completed)) {
         final isExam = event.type == EventType.test;
-        if (isExam && !prefs.examReminders) {continue;}
-        if (!isExam && !prefs.assignmentReminders) {continue;}
+        if (isExam && !prefs.examReminders) {
+          continue;
+        }
+        if (!isExam && !prefs.assignmentReminders) {
+          continue;
+        }
         await scheduleEvent(event);
         scheduledCount++;
       }
@@ -490,7 +518,9 @@ class NotificationService {
     final upcomingCards = cards
         .where((c) => c.nextReviewAt != null && c.nextReviewAt!.isAfter(now))
         .toList();
-    if (upcomingCards.isEmpty) {return 0;}
+    if (upcomingCards.isEmpty) {
+      return 0;
+    }
 
     final Map<String, List<SmartFlashcard>> grouped = {};
     for (final card in upcomingCards) {
@@ -508,7 +538,9 @@ class NotificationService {
           'Chemistry Deck';
 
       final fire = tz.TZDateTime.from(earliest, tz.local);
-      if (fire.isBefore(tz.TZDateTime.now(tz.local))) {continue;}
+      if (fire.isBefore(tz.TZDateTime.now(tz.local))) {
+        continue;
+      }
 
       final titles = [
         '🧠 Your brain cells are getting rusty!',
@@ -642,7 +674,9 @@ class NotificationService {
       while (reminderHour < 0) {
         reminderHour += 24;
         reminderWeekday -= 1;
-        if (reminderWeekday < 1) {reminderWeekday = 7;}
+        if (reminderWeekday < 1) {
+          reminderWeekday = 7;
+        }
       }
       final next = _nextWeekday(reminderWeekday, reminderHour, reminderMinute);
       final banter = _buildClassBanter(
@@ -998,7 +1032,9 @@ class NotificationService {
   }
 
   Future<void> scheduleEvent(AcademicEvent event) async {
-    if (!ready || event.completed) {return;}
+    if (!ready || event.completed) {
+      return;
+    }
     final when = tz.TZDateTime.from(
       event.dueDate,
       tz.local,
@@ -1010,7 +1046,9 @@ class NotificationService {
             tz.local,
           ).subtract(const Duration(hours: 2))
         : when.add(const Duration(hours: 9));
-    if (fire.isBefore(now)) {return;}
+    if (fire.isBefore(now)) {
+      return;
+    }
 
     final dueStr =
         '${event.dueDate.day}/${event.dueDate.month}/${event.dueDate.year}';
@@ -1051,9 +1089,13 @@ class NotificationService {
   }
 
   Future<void> scheduleReminder(AppReminder reminder) async {
-    if (!ready) {return;}
+    if (!ready) {
+      return;
+    }
     final fire = tz.TZDateTime.from(reminder.when, tz.local);
-    if (fire.isBefore(tz.TZDateTime.now(tz.local))) {return;}
+    if (fire.isBefore(tz.TZDateTime.now(tz.local))) {
+      return;
+    }
     await _plugin.zonedSchedule(
       reminder.id.hashCode,
       reminder.title,
@@ -1121,6 +1163,8 @@ class NotificationService {
   }
 
   Future<void> cancel(String id) async {
-    if (_supported) {await _plugin.cancel(id.hashCode);}
+    if (_supported) {
+      await _plugin.cancel(id.hashCode);
+    }
   }
 }

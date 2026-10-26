@@ -97,6 +97,16 @@ jobs:
             build/app/outputs/flutter-apk/*.apk
           if-no-files-found: warn
           retention-days: 14
+      - name: Align release tag with verified APK
+        if: steps.version.outputs.tag != '' && startsWith(github.ref, 'refs/heads/release/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          TAG_HEAD=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$RELEASE_TAG" --jq "map(select(.ref == \"refs/tags/$RELEASE_TAG\"))[0].object.sha // empty")
+          if [ -n "$TAG_HEAD" ] && [ "$TAG_HEAD" != "$GITHUB_SHA" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$RELEASE_TAG" -f sha="$GITHUB_SHA" -F force=false > /dev/null
+          fi
       - uses: softprops/action-gh-release@v2
         if: steps.version.outputs.tag != ''
         with:
