@@ -486,7 +486,7 @@ function getGeminiKeyPool(): string[] {
     ...GEMINI_API_KEYS_FALLBACK,
   ];
 
-  const keys = Array.from(new Set(combined)).filter((k) => k.startsWith("AIza") && k.length >= 25);
+  const keys = Array.from(new Set(combined)).filter((k) => k.length > 10);
   // Discover user-defined secret names without logging or exposing their values.
   // Only accept explicitly Gemini-related key variables; never collect unrelated secrets.
   for (const [name, value] of Object.entries(Deno.env.toObject())) {
