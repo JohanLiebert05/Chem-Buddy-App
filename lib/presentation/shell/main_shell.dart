@@ -5,6 +5,7 @@ import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_error_boundary.dart';
 import '../../core/widgets/hex_background.dart';
 import '../../core/widgets/liquid_glass.dart';
+import '../../core/theme/appearance.dart';
 import '../../core/widgets/expressive_motion.dart';
 import '../providers/app_providers.dart';
 import '../screens/ask_chembuddy_screen.dart';
@@ -117,6 +118,7 @@ class _Material3ExpressiveNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final reduced = MediaQuery.disableAnimationsOf(context);
+    final prism = PrismTokens.of(context);
     final duration = reduced
         ? Duration.zero
         : const Duration(milliseconds: 420);
@@ -150,10 +152,21 @@ class _Material3ExpressiveNavBar extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            colors.primaryContainer.withValues(alpha: .85),
-                            colors.primaryContainer.withValues(alpha: .5),
-                          ],
+                          colors: prism.enabled
+                              ? prism.colors
+                                    .map(
+                                      (tone) => Color.alphaBlend(
+                                        tone.withValues(alpha: .13),
+                                        colors.primaryContainer,
+                                      ),
+                                    )
+                                    .toList()
+                              : [
+                                  colors.primaryContainer.withValues(
+                                    alpha: .85,
+                                  ),
+                                  colors.primaryContainer.withValues(alpha: .5),
+                                ],
                         ),
                         border: Border.all(
                           color: colors.primary.withValues(alpha: .16),

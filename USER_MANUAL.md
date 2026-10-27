@@ -1,6 +1,6 @@
-# ChemBuddy 3.5.4 — operating guide
+# ChemBuddy 3.5.5 — operating guide
 
-Version 3.5.4 adds the reviewed fixes, new glass themes, local guest mode and a redesigned setup flow.
+Version 3.5.5 adds the reviewed fixes, new glass themes, local guest mode and a redesigned setup flow.
 
 ## Getting started
 

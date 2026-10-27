@@ -1,26 +1,19 @@
-import '../../core/widgets/expressive_motion.dart';
-import '../../core/theme/app_colors.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/widgets/atom_logo.dart';
-import '../../core/widgets/glow_card.dart';
+import '../../core/widgets/expressive_motion.dart';
+import '../../core/widgets/liquid_glass.dart';
 import '../providers/app_providers.dart';
 
 class BeginnerTutorialDialog extends ConsumerStatefulWidget {
   const BeginnerTutorialDialog({super.key, this.onFinished});
   final VoidCallback? onFinished;
-
-  static Future<void> show(BuildContext context, {VoidCallback? onFinished}) {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => BeginnerTutorialDialog(onFinished: onFinished),
-    );
-  }
-
+  static Future<void> show(BuildContext context, {VoidCallback? onFinished}) =>
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => BeginnerTutorialDialog(onFinished: onFinished),
+      );
   @override
   ConsumerState<BeginnerTutorialDialog> createState() =>
       _BeginnerTutorialDialogState();
@@ -28,836 +21,365 @@ class BeginnerTutorialDialog extends ConsumerStatefulWidget {
 
 class _BeginnerTutorialDialogState
     extends ConsumerState<BeginnerTutorialDialog> {
-  final PageController _controller = PageController();
+  final _controller = PageController();
   int _step = 0;
-  static const int _totalSteps = 7;
-
-  void _next() {
-    if (_step < _totalSteps - 1) {
-      _controller.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    } else {
-      _finish();
+  bool _finishing = false;
+  static const _slides = [
+    _TourSlide(
+      'Welcome to ChemBuddy',
+      'A quick map of your study space. Take the tour now, or replay it later from Profile.',
+      Icons.science_outlined,
+      [
+        (
+          'Keep your week together',
+          'Classes, attendance, deadlines and course notes have a home here.',
+        ),
+        (
+          'Start at your own pace',
+          'Guest mode keeps local study data on this device. Sign in when you need cloud AI.',
+        ),
+      ],
+    ),
+    _TourSlide(
+      'Draw your ideas.',
+      'Open ChemDraw Canvas when a structure is easier to show than describe.',
+      Icons.draw_outlined,
+      [
+        (
+          'Build a structure',
+          'Use ring templates, bonds and functional groups, then adjust your sketch.',
+        ),
+        (
+          'Connect the next step',
+          'Explore the available reaction and structure tools. Check chemical assumptions as you work.',
+        ),
+      ],
+    ),
+    _TourSlide(
+      'Ask with context.',
+      'Ask ChemBuddy can help explain a topic or work with the notes you attach.',
+      Icons.auto_awesome_outlined,
+      [
+        (
+          'Choose the kind of answer',
+          'Switch between short explanations, exam answers and deeper study modes.',
+        ),
+        (
+          'Know what needs a connection',
+          'Cloud AI requires a signed-in account and internet. Review generated answers against your course material.',
+        ),
+      ],
+    ),
+    _TourSlide(
+      'Turn notes into practice.',
+      'Keep PDFs organised, then move from reading to recall.',
+      Icons.auto_stories_outlined,
+      [
+        (
+          'Keep the source close',
+          'Add course PDFs to your library and return to them while revising.',
+        ),
+        (
+          'Practise deliberately',
+          'Use available flashcard and quiz tools. Review the source when a generated question is unclear.',
+        ),
+      ],
+    ),
+    _TourSlide(
+      'Keep attendance in view.',
+      'Record what happened, then use the percentage and safe-skip estimate as a guide.',
+      Icons.fact_check_outlined,
+      [
+        (
+          'Mark classes carefully',
+          'Keep present, absent, postponed and excused entries distinct.',
+        ),
+        (
+          'Check your university rules',
+          'Attendance estimates depend on your records and cutoff settings; your institution makes the final decision.',
+        ),
+      ],
+    ),
+    _TourSlide(
+      'Explore one workspace at a time.',
+      'The chemistry hubs now start with a clear overview instead of a wall of controls.',
+      Icons.dashboard_customize_outlined,
+      [
+        (
+          'Find the right tool',
+          'Search the toolkit by calculator or concept, then choose a workspace.',
+        ),
+        (
+          'See the chemistry',
+          'Use the spectroscopy hub and pericyclic studio to connect signals, structures and orbital ideas.',
+        ),
+      ],
+    ),
+    _TourSlide(
+      'Make it your space.',
+      'Your look is now part of Profile. Change it whenever you want.',
+      Icons.palette_outlined,
+      [
+        (
+          'Choose your colours',
+          'Pick Classic, Fan or three-colour Prism gradients, then tune light/dark mode and the glass finish.',
+        ),
+        (
+          'Leave room for curiosity',
+          'A few small chemistry discoveries are tucked away in the app. Your Curiosity cabinet keeps them together.',
+        ),
+      ],
+    ),
+  ];
+  void _move(int index) {
+    if (_finishing) {
+      return;
     }
-  }
-
-  void _prev() {
-    if (_step > 0) {
-      _controller.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.jumpToPage(index);
+    } else {
+      _controller.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
       );
     }
   }
 
   Future<void> _finish() async {
-    await ref.read(appControllerProvider.notifier).setTutorialCompleted(true);
-    if (mounted) {
+    if (_finishing) {
+      return;
+    }
+    setState(() => _finishing = true);
+    try {
+      await ref.read(appControllerProvider.notifier).setTutorialCompleted(true);
+      if (!mounted) {
+        return;
+      }
       Navigator.of(context).pop();
       widget.onFinished?.call();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _finishing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save tour progress. Please try again.'),
+        ),
+      );
     }
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 440, maxHeight: 620),
-        decoration: BoxDecoration(
-          color: const Color(0xF5161822),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.6),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary
-                  .withValues(alpha: 0.15),
-              blurRadius: 30,
-              spreadRadius: -4,
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Top Bar with step indicator & Skip button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
-              child: Row(
-                children: [
-                  Text(
-                    'STEP ${_step + 1} OF $_totalSteps',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                      fontSize: 11,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480, maxHeight: 640),
+        child: LiquidGlassContainer(
+          borderRadius: 32,
+          blurSigma: 16,
+          backgroundColor: colors.surfaceContainerLow,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 12, 12, 2),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'QUICK TOUR',
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: colors.onSurfaceVariant,
+                              letterSpacing: 1.5,
+                            ),
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  if (_step < _totalSteps - 1)
+
                     SpringPress(
                       child: TextButton(
-                        onPressed: _finish,
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Skip',
-                          style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                            fontSize: 12,
-                          ),
-                        ),
+                        onPressed: _finishing ? null : _finish,
+                        child: const Text('Skip'),
                       ),
                     ),
-                ],
-              ),
-            ),
-
-            // Progress bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: (_step + 1) / _totalSteps,
-                  backgroundColor: Colors.white10,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).colorScheme.primary,
-                  ),
-                  minHeight: 4,
+                  ],
                 ),
               ),
-            ),
-
-            // Main Page Content
-            Expanded(
-              child: PageView(
-                controller: _controller,
-                onPageChanged: (i) => setState(() => _step = i),
-                children: [
-                  _buildStep1Welcome(),
-                  _buildStep2ChemDraw(),
-                  _buildStep3GeminiAi(),
-                  _buildStep4HandwrittenNotes(),
-                  _buildStep5Attendance(),
-                  _buildStep6Timetable(),
-                  _buildStep7StudyWorkflow(),
-                ],
-              ),
-            ),
-
-            // Bottom Navigation Buttons
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              child: Row(
-                children: [
-                  if (_step > 0) ...[
-                    SpringPress(
-                      child: OutlinedButton(
-                        onPressed: _prev,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
-                          side: BorderSide(
-                            color: Theme.of(context).colorScheme.outlineVariant,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                        ),
-                        child: const Text('Back'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(end: (_step + 1) / _slides.length),
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 300),
+                        builder: (context, value, child) =>
+                            LinearProgressIndicator(
+                              value: value,
+                              minHeight: 4,
+                              borderRadius: BorderRadius.circular(4),
+                              color: colors.primary,
+                              backgroundColor: colors.surfaceContainerHighest,
+                              semanticsLabel: 'Walkthrough progress',
+                            ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${_step + 1} / ${_slides.length}',
+                      key: const Key('tour-step'),
+                      style: Theme.of(context).textTheme.labelMedium
+                          ?.copyWith(color: colors.onSurfaceVariant),
+                    ),
                   ],
-                  Expanded(
-                    child: SpringPress(
-                      child: ElevatedButton(
-                        onPressed: _next,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer,
-                          foregroundColor: Theme.of(context)
-                              .colorScheme
-                              .onPrimaryContainer,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          elevation: 4,
-                          shadowColor: Theme.of(context).colorScheme.primary
-                              .withValues(alpha: 0.5),
+                ),
+              ),
+              Expanded(
+                child: PageView(
+                  controller: _controller,
+                  onPageChanged: (index) => setState(() => _step = index),
+                  children: [
+                    for (final slide in _slides) _TourSlideView(slide: slide),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                child: Row(
+                  children: [
+                    if (_step > 0) ...[
+                      SpringPress(
+                        child: OutlinedButton(
+                          onPressed: _finishing ? null : () => _move(_step - 1),
+                          child: const Text('Back'),
                         ),
-                        child: Text(
-                          _step == _totalSteps - 1
-                              ? 'Start Using ChemBuddy'
-                              : 'Next →',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                    Expanded(
+                      child: SpringPress(
+                        child: FilledButton.icon(
+                          onPressed: _finishing
+                              ? null
+                              : () => _step == _slides.length - 1
+                                    ? _finish()
+                                    : _move(_step + 1),
+                          icon: Icon(
+                            _step == _slides.length - 1
+                                ? Icons.check_rounded
+                                : Icons.arrow_forward_rounded,
+                            size: 19,
+                          ),
+                          label: Text(
+                            _finishing
+                                ? 'Saving…'
+                                : _step == _slides.length - 1
+                                ? "Let's go"
+                                : 'Next',
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  // 1. WELCOME
-  Widget _buildStep1Welcome() {
+class _TourSlide {
+  const _TourSlide(this.title, this.summary, this.icon, this.details);
+  final String title;
+  final String summary;
+  final IconData icon;
+  final List<(String, String)> details;
+}
+
+class _TourSlideView extends StatelessWidget {
+  const _TourSlideView({required this.slide});
+  final _TourSlide slide;
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(22, 26, 22, 12),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
-          const AtomLogo(size: 72, animated: true),
-          const SizedBox(height: 14),
-          Text(
-            'Welcome to ChemBuddy',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 21,
-              fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.onSurface,
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colors.primaryContainer,
+              borderRadius: BorderRadius.circular(23),
             ),
+            child: Icon(slide.icon, color: colors.onPrimaryContainer, size: 34),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 22),
           Text(
-            'Chem Buddy by Prajwal A Kambar\nattendance, tests, and notes for MSc Chemistry students.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontSize: 12.5,
+            slide.title,
+            style: text.headlineSmall?.copyWith(
+              color: colors.onSurface,
               fontWeight: FontWeight.w700,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 14),
-          GlowCard(
-            padding: EdgeInsets.all(14),
-            child: Text(
-              'Your all-in-one companion for postgraduate chemistry. Calculate attendance & safe bunk limits, switch Organic & Inorganic timetables, study reference PDFs, sketch molecules in ChemDraw, and master mechanisms with ChemBuddy AI.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 12.5,
-                height: 1.45,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: const [
-              _FeatureChip(
-                icon: Icons.analytics_rounded,
-                label: 'Attendance & Safe Bunks',
-              ),
-              _FeatureChip(
-                icon: Icons.calendar_month_rounded,
-                label: 'Timetable Presets',
-              ),
-              _FeatureChip(
-                icon: Icons.menu_book_rounded,
-                label: 'PDF Library & Notes',
-              ),
-              _FeatureChip(
-                icon: Icons.gesture_rounded,
-                label: 'ChemDraw Canvas',
-              ),
-              _FeatureChip(
-                icon: Icons.auto_awesome_rounded,
-                label: 'ChemBuddy AI Tutor',
-              ),
-              _FeatureChip(
-                icon: Icons.camera_alt_rounded,
-                label: 'Notes to Flashcards',
-              ),
-              _FeatureChip(icon: Icons.quiz_rounded, label: 'Tests & Quizzes'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 2. CHEMDRAW CANVAS (NEW FEATURE)
-  Widget _buildStep2ChemDraw() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _badge(
-            'NEW · CHEMDRAW CANVAS',
-            Icons.draw_rounded,
-            color: const Color(0xFF06B6D4),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Interactive Chemical Sketcher',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Draw molecules and reaction mechanisms with a touch-first canvas.',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12.5,
-              height: 1.35,
+              height: 1.16,
             ),
           ),
           const SizedBox(height: 12),
-          const _TourCard(
-            icon: Icons.hexagon_outlined,
-            iconColor: Color(0xFF06B6D4),
-            title: 'Ring Templates & Fused Systems',
-            description: 'One-tap insertion for Benzene, Cyclohexane, Naphthalene, Indole, Ferrocene, and crown ethers.',
-          ),
-          const SizedBox(height: 8),
-          const _TourCard(
-            icon: Icons.hub_rounded,
-            iconColor: Color(0xFF06B6D4),
-            title: 'Functional Groups & Smart Snapping',
-            description: 'Quick-insert palette (—OH, —COOH, —NO₂, —CHO) with automatic magnetic bond snapping.',
-          ),
-          const SizedBox(height: 8),
-          const _TourCard(
-            icon: Icons.arrow_forward_rounded,
-            iconColor: Color(0xFF06B6D4),
-            title: 'Reaction Arrows & Predictor',
-            description: 'Draw multi-reactant reactions with "+" symbols, mechanism arrows, and instant AI reaction prediction.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 3. GEMINI AI TUTOR
-  Widget _buildStep3GeminiAi() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _badge(
-            'CHEMBUDDY AI TUTOR',
-            Icons.auto_awesome_rounded,
-            color: const Color(0xFFA855F7),
-          ),
-          const SizedBox(height: 10),
           Text(
-            'Intelligent Academic Tutor',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.onSurface,
+            slide.summary,
+            style: text.bodyMedium?.copyWith(
+              color: colors.onSurfaceVariant,
+              height: 1.55,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            'Powered by intelligent academic reasoning with dedicated modes for MSc studies.',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12.5,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const _TourCard(
-            icon: Icons.psychology_rounded,
-            iconColor: Color(0xFFA855F7),
-            title: 'General AI & Internet Access',
-            description: 'Ask any chemistry, scientific, or research question with live internet intelligence and multi-key failover.',
-          ),
-          const SizedBox(height: 8),
-          const _TourCard(
-            icon: Icons.compare_arrows_rounded,
-            iconColor: Color(0xFFA855F7),
-            title: 'Step-by-Step Reaction Mechanisms',
-            description: 'Arrow-pushing, reaction intermediates, stereochemistry, and transition states explained clearly.',
-          ),
-          const SizedBox(height: 8),
-          const _TourCard(
-            icon: Icons.graphic_eq_rounded,
-            iconColor: Color(0xFFA855F7),
-            title: 'Spectroscopy Deciphering',
-            description: 'Decode NMR proton splits, IR absorption bands, and mass spectrometry fragmentation effortlessly.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 4. NOTES TO FLASHCARDS (OCR)
-  Widget _buildStep4HandwrittenNotes() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _badge(
-            'AI OCR & FLASHCARDS',
-            Icons.document_scanner_rounded,
-            color: const Color(0xFF3B82F6),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Handwritten Notes → Flashcards',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Convert classroom notes and blackboard photos into study sets in seconds.',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12.5,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const _TourCard(
-            icon: Icons.camera_alt_rounded,
-            iconColor: Color(0xFF3B82F6),
-            title: 'Multi-Page Photo Scanning',
-            description: 'Snap photos with your camera or select multiple notebook pages directly from your gallery.',
-          ),
-          const SizedBox(height: 8),
-          const _TourCard(
-            icon: Icons.spellcheck_rounded,
-            iconColor: Color(0xFF3B82F6),
-            title: 'Chemistry Formula OCR',
-            description: 'Advanced vision AI extracts molecular formulas, synthesis steps, and reaction conditions accurately.',
-          ),
-          const SizedBox(height: 8),
-          const _TourCard(
-            icon: Icons.style_rounded,
-            iconColor: Color(0xFF3B82F6),
-            title: 'Active Spaced Repetition',
-            description: 'Review cards with self-grading (Easy, Difficult, Skip) to lock difficult mechanisms into long-term memory.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 5. ATTENDANCE & SAFE BUNKS
-  Widget _buildStep5Attendance() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _badge(
-            'ATTENDANCE INTELLIGENCE',
-            Icons.how_to_reg_rounded,
-            color: const Color(0xFF10B981),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Stay Confidently Above 75%',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Real-time calculations so you never risk university attendance shortages.',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12.5,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const _TourCard(
-            icon: Icons.check_circle_outline_rounded,
-            iconColor: Color(0xFF10B981),
-            title: 'Live "Can Skip" Buffer',
-            description: 'Knows exactly how many lectures you can miss while staying safely above the 75% requirement.',
-          ),
-          const SizedBox(height: 8),
-          const _TourCard(
-            icon: Icons.trending_up_rounded,
-            iconColor: Color(0xFF10B981),
-            title: 'Recovery Roadmap',
-            description: 'In the warning zone? ChemBuddy calculates the exact number of consecutive classes needed to recover.',
-          ),
-          const SizedBox(height: 8),
-          const _TourCard(
-            icon: Icons.filter_list_rounded,
-            iconColor: Color(0xFF10B981),
-            title: 'Multi-Target Buffers',
-            description: 'Target 75%, 80%, 85%, or 90% with full Excused and On-Duty attendance preservation.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 6. TIMETABLE & SCHEDULE
-  Widget _buildStep6Timetable() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _badge(
-            'SMART TIMETABLE',
-            Icons.calendar_month_rounded,
-            color: const Color(0xFFF59E0B),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Your Daily Command Center',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Your day at a glance. Class timings, room locations, and lecture alerts.',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12.5,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const _TourCard(
-            icon: Icons.school_rounded,
-            iconColor: Color(0xFFF59E0B),
-            title: 'MSc Timetable Presets',
-            description: 'Pre-loaded schedules for Organic and Inorganic MSc chemistry streams with faculty mapping.',
-          ),
-          const SizedBox(height: 8),
-          const _TourCard(
-            icon: Icons.photo_size_select_actual_rounded,
-            iconColor: Color(0xFFF59E0B),
-            title: 'Pinch-to-Zoom Reference Photo',
-            description: 'Keep your official printed department schedule handy with instant pinch-to-zoom access.',
-          ),
-          const SizedBox(height: 8),
-          const _TourCard(
-            icon: Icons.notifications_active_rounded,
-            iconColor: Color(0xFFF59E0B),
-            title: 'Lecture Reminders',
-            description: 'Automated notifications before each class so you always reach the right lecture hall on time.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 7. STUDY ROUTINE
-  Widget _buildStep7StudyWorkflow() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _badge(
-            'STUDY ROUTINE',
-            Icons.rocket_launch_rounded,
-            color: const Color(0xFFA855F7),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'The 5-Step Academic Routine',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Proven daily routine for top marks in university exams.',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12.5,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const GlowCard(
-            padding: EdgeInsets.all(12),
-            child: Column(
-              children: [
-                _RoutineRow(
-                  num: '1',
-                  title: 'Morning Schedule',
-                  text: 'Check today\'s classes, timings, and lecture halls.',
-                ),
-                _RoutineRow(
-                  num: '2',
-                  title: 'Mark Attendance',
-                  text: 'Tap Present right after each lecture to update your safe bunk buffer.',
-                ),
-                _RoutineRow(
-                  num: '3',
-                  title: 'Sketch & Scan',
-                  text: 'Draw structures in ChemDraw or snap photos of lecture notes.',
-                ),
-                _RoutineRow(
-                  num: '4',
-                  title: 'Active Recall',
-                  text: 'Review 10 flashcards daily to cement reaction mechanisms.',
-                ),
-                _RoutineRow(
-                  num: '5',
-                  title: 'Exam Readiness',
-                  text: 'Test yourself with AI quizzes and review weak topic diagnostics.',
-                  isLast: true,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _badge(String title, IconData icon, {Color? color}) {
-    final c = color ?? Theme.of(context).colorScheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: c.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: c.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: c, size: 14),
-          const SizedBox(width: 6),
-          Text(
-            title,
-            style: TextStyle(
-              color: AppColors.readableText(context, c),
-              fontWeight: FontWeight.w800,
-              fontSize: 10.5,
-              letterSpacing: 0.8,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TourCard extends StatelessWidget {
-  const _TourCard({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.description,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh
-            .withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: iconColor.withValues(alpha: 0.3)),
-            ),
-            child: Icon(icon, color: iconColor, size: 16),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurface,
+          const SizedBox(height: 22),
+          for (final detail in slide.details)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Container(
+                padding: const EdgeInsets.all(17),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHigh.withValues(alpha: .7),
+                  borderRadius: BorderRadius.circular(21),
+                  border: Border.all(
+                    color: colors.outlineVariant.withValues(alpha: .6),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 11.5,
-                    height: 1.35,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      detail.$1,
+                      style: text.titleSmall?.copyWith(color: colors.onSurface),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      detail.$2,
+                      style: text.bodyMedium?.copyWith(
+                        color: colors.onSurfaceVariant,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeatureChip extends StatelessWidget {
-  const _FeatureChip({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RoutineRow extends StatelessWidget {
-  const _RoutineRow({
-    required this.num,
-    required this.title,
-    required this.text,
-    this.isLast = false,
-  });
-
-  final String num;
-  final String title;
-  final String text;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 22,
-            height: 22,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary
-                  .withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Theme.of(context).colorScheme.primary
-                    .withValues(alpha: 0.4),
               ),
             ),
-            child: Text(
-              num,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w800,
-                fontSize: 11,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12.5,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  text,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 11.5,
-                    height: 1.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

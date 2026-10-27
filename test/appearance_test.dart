@@ -74,7 +74,8 @@ void main() {
 
   test('Fan collection stays separate and survives saved preferences', () {
     expect(ThemePalette.all, hasLength(12));
-    expect(ThemePalette.fanCollection.map((p) => p.name), [
+    expect(ThemePalette.fanCollection, hasLength(9));
+    expect(ThemePalette.fanCollection.take(3).map((p) => p.name), [
       'Blancos',
       'Pellara',
       'RCB',
@@ -98,6 +99,7 @@ void main() {
     final samples = [
       ...ThemePalette.all,
       ...ThemePalette.fanCollection,
+      ...ThemePalette.gradientCollection,
     ].map((p) => Appearance(seed: p.seed)).toList();
     for (var i = 0; i < 100; i++) {
       final next = appearance.surprise(random);

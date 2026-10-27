@@ -7,7 +7,8 @@ import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
-import '../../core/widgets/hex_background.dart';
+import '../../core/widgets/study_hub_shell.dart';
+import '../../core/widgets/curiosity_cabinet.dart';
 import '../../data/services/pericyclic_service.dart';
 import '../widgets/pericyclic_3d_orbital_view.dart';
 import 'reaction_mechanism_screen.dart';
@@ -46,71 +47,46 @@ class _PericyclicHubScreenState extends State<PericyclicHubScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return HexBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: SpringPress(
-            child: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Theme.of(context).colorScheme.onSurface,
-                size: 20,
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.all_inclusive_rounded,
-                color: Theme.of(context).colorScheme.primary,
-                size: 22,
-              ),
-              SizedBox(width: 8),
-              Text(
-                'Pericyclic Chemistry & FMO',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
-              ),
-            ],
-          ),
-          bottom: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            indicatorColor: Theme.of(context).colorScheme.primary,
-            indicatorWeight: 3,
-            labelColor: Theme.of(context).colorScheme.onSurface,
-            unselectedLabelColor: Theme.of(context)
-                .colorScheme
-                .onSurfaceVariant,
-            labelStyle: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-            tabs: const [
-              Tab(text: '3D Orbital Studio 🌐'),
-              Tab(text: 'FMO Predictor'),
-              Tab(text: 'Woodward-Hoffmann Rules'),
-              Tab(text: 'MSc Reaction Classes'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _build3DStudioTab(),
-            _buildPredictorTab(),
-            _buildRulesTab(),
-            _buildClassesTab(),
-          ],
-        ),
+  Widget build(BuildContext context) => StudyHubShell(
+    title: 'Pericyclic Chemistry & FMO',
+    headline: 'Follow the orbitals.',
+    description: 'See the overlap, predict the outcome and connect symmetry to the reactions you study.',
+    icon: Icons.all_inclusive_rounded,
+    controller: _tabController,
+    onEmblemLongPress: () => revealCuriosity(context, 'aromatic'),
+    destinations: const [
+      HubDestination(
+        '3D Orbital Studio',
+        'Explore orbital phases and transition-state overlap.',
+        Icons.view_in_ar_outlined,
+        shortLabel: 'Orbital studio',
       ),
-    );
-  }
+      HubDestination(
+        'FMO Predictor',
+        'Compare electron count, conditions and allowed pathways.',
+        Icons.route_outlined,
+        shortLabel: 'Predictor',
+      ),
+      HubDestination(
+        'Woodward-Hoffmann Rules',
+        'A focused guide to orbital-symmetry selection rules.',
+        Icons.rule_rounded,
+        shortLabel: 'Selection rules',
+      ),
+      HubDestination(
+        'MSc Reaction Classes',
+        'Browse electrocyclic, cycloaddition and sigmatropic examples.',
+        Icons.auto_stories_outlined,
+        shortLabel: 'Reaction atlas',
+      ),
+    ],
+    panes: [
+      _build3DStudioTab(),
+      _buildPredictorTab(),
+      _buildRulesTab(),
+      _buildClassesTab(),
+    ],
+  );
 
   // ----------------------------------------------------
   // 1. 3D Orbital & Transition State Studio Tab

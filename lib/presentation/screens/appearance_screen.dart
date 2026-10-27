@@ -164,6 +164,27 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                   ),
                 ),
               const SizedBox(height: 16),
+              Text('Prism gradients', style: text.titleLarge),
+              const SizedBox(height: 6),
+              Text(
+                'Three colours, one flowing glass finish.',
+                style: text.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 14),
+              for (final palette in ThemePalette.gradientCollection)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _FanPaletteTile(
+                    palette: palette,
+                    selected: palette.seed == appearance.seed,
+                    onTap: _saving
+                        ? null
+                        : () => _apply(appearance.copyWith(seed: palette.seed)),
+                  ),
+                ),
+              const SizedBox(height: 16),
               Text('Color collection', style: text.titleLarge),
               const SizedBox(height: 6),
               Text(
@@ -519,9 +540,12 @@ class _FanPaletteTile extends StatelessWidget {
                         border: Border.all(color: colors.outlineVariant),
                       ),
                       child: Icon(
-                        palette.name == 'Blancos'
-                            ? Icons.sports_soccer_rounded
-                            : Icons.sports_cricket_rounded,
+                        palette.emblem ??
+                            (ThemePalette.isGradient(palette.seed)
+                                ? Icons.gradient_rounded
+                                : palette.name == 'Blancos'
+                                ? Icons.sports_soccer_rounded
+                                : Icons.sports_cricket_rounded),
                         color: palette.name == 'Pellara'
                             ? const Color(0xFF242424)
                             : Colors.white,

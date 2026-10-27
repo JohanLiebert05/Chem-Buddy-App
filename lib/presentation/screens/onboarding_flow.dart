@@ -141,16 +141,15 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                               icon: const Icon(Icons.arrow_back_rounded),
                               tooltip: 'Previous step',
                             ),
-                          )
-                        else
-                          const Text(
-                            'ChemBuddy',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
                           ),
-                        const Spacer(),
+                        Expanded(
+                          child: Text(
+                            _step == 0 ? 'ChemBuddy' : 'Your course',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium,
+                          ),
+                        ),
                         SpringPress(
                           child: TextButton.icon(
                             onPressed: _saving
@@ -175,20 +174,31 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                       children: [
                         if (_step == 0) ...[
                           const SizedBox(height: 16),
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
-                            child: ChemBuddyLogo(size: 88),
+                            child: Container(
+                              padding: const EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(26),
+                              ),
+                              child: Icon(
+                                Icons.science_outlined,
+                                size: 40,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 32),
                           Text(
-                            'A little clarity.\nA lot of chemistry.',
+                            'Your chemistry.\nA clearer way through.',
                             style: theme.textTheme.headlineLarge?.copyWith(
                               height: 1.12,
                             ),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Your classes, notes and next discovery.\nTogether in a space that feels like yours.',
+                            'A study companion for MSc Chemistry: organise your week, understand your notes and explore the ideas behind the equations.',
                             style: theme.textTheme.bodyLarge?.copyWith(
                               height: 1.6,
                             ),
@@ -201,34 +211,64 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Make room for what matters.',
+                                  'What you can do here',
                                   style: theme.textTheme.titleLarge,
                                 ),
                                 const SizedBox(height: 24),
                                 const _SetupFeature(
                                   icon: Icons.calendar_month_outlined,
-                                  title: 'A calmer day',
-                                  detail: 'Classes and attendance, thoughtfully organised.',
+                                  title: 'Keep your course together',
+                                  detail: 'Plan classes, record attendance and keep deadlines in view.',
                                 ),
                                 const SizedBox(height: 22),
                                 const _SetupFeature(
                                   icon: Icons.auto_stories_outlined,
-                                  title: 'Your own library',
-                                  detail:
-                                      'Keep course notes and revision close.',
+                                  title: 'Study from your own material',
+                                  detail: 'Organise PDFs, revisit your notes and use the available revision tools.',
                                 ),
                                 const SizedBox(height: 22),
                                 const _SetupFeature(
                                   icon: Icons.science_outlined,
-                                  title: 'Space to explore',
-                                  detail: 'Chemistry tools, reactions and study practice.',
+                                  title: 'Explore the chemistry',
+                                  detail: 'Open focused calculators, spectroscopy workspaces, orbital visualisations and the drawing canvas.',
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          LiquidGlassContainer(
+                            enableBlur: false,
+                            padding: const EdgeInsets.all(20),
+                            borderRadius: 24,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Start your way',
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Choose your university and subjects, then sign in or continue as guest. Your course details and colours can be changed in Profile.',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    height: 1.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Guest mode keeps local notes, attendance and tools on this device. Cloud AI needs an account and internet. Keep your original study files backed up.',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    height: 1.5,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(height: 24),
                           Text(
-                            '3.5.4  ·  By ${AppIdentity.author}',
+                            '${AppIdentity.version}  ·  By ${AppIdentity.author}',
                             style: theme.textTheme.labelMedium,
                           ),
                         ] else ...[

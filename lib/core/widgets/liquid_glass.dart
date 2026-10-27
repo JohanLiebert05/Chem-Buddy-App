@@ -43,6 +43,7 @@ class LiquidGlassContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final tokens = GlassTokens.of(context);
+    final prism = PrismTokens.of(context);
     final light = colors.brightness == Brightness.light;
     final highContrast = MediaQuery.highContrastOf(context);
     final opaque = highContrast || tokens.blur == 0;
@@ -87,9 +88,15 @@ class LiquidGlassContainer extends StatelessWidget {
                     ),
                     effectiveBg,
                   ),
-                  effectiveBg,
+                  prism.enabled
+                      ? Color.alphaBlend(
+                          prism.colors[1].withValues(alpha: light ? .045 : .04),
+                          effectiveBg,
+                        )
+                      : effectiveBg,
                   Color.alphaBlend(
-                    colors.tertiary.withValues(alpha: light ? .035 : .02),
+                    (prism.enabled ? prism.colors[2] : colors.tertiary)
+                        .withValues(alpha: light ? .05 : .025),
                     effectiveBg,
                   ),
                 ],

@@ -17,26 +17,44 @@ class HexBackground extends StatelessWidget {
     }
     final colors = Theme.of(context).colorScheme;
     final glass = GlassTokens.of(context);
+    final prism = PrismTokens.of(context);
     return Stack(
       fit: StackFit.expand,
       children: [
         DecoratedBox(
           decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(0, -0.7),
-              radius: 1.4,
-              colors: [
-                Color.alphaBlend(
-                  colors.primary.withValues(
-                    alpha:
-                        glass.glow *
-                        (colors.brightness == Brightness.light ? .46 : 1),
+            gradient: prism.enabled
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: prism.colors
+                        .map(
+                          (tone) => Color.alphaBlend(
+                            tone.withValues(
+                              alpha: colors.brightness == Brightness.light
+                                  ? .12
+                                  : .19,
+                            ),
+                            colors.surface,
+                          ),
+                        )
+                        .toList(),
+                  )
+                : RadialGradient(
+                    center: Alignment(0, -0.7),
+                    radius: 1.4,
+                    colors: [
+                      Color.alphaBlend(
+                        colors.primary.withValues(
+                          alpha:
+                              glass.glow *
+                              (colors.brightness == Brightness.light ? .46 : 1),
+                        ),
+                        colors.surface,
+                      ),
+                      colors.surface,
+                    ],
                   ),
-                  colors.surface,
-                ),
-                colors.surface,
-              ],
-            ),
           ),
         ),
         Positioned.fill(

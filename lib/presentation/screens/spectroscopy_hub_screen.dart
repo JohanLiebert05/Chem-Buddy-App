@@ -10,7 +10,7 @@ import '../../core/utils/haptics.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
-import '../../core/widgets/hex_background.dart';
+import '../../core/widgets/study_hub_shell.dart';
 import '../../data/services/inorganic_spectroscopy_service.dart';
 import '../../data/services/spectroscopy_service.dart';
 import 'chem_sketcher_screen.dart';
@@ -228,97 +228,72 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return HexBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: SpringPress(
-            child: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Theme.of(context).colorScheme.onSurface,
-                size: 20,
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
+  Widget build(BuildContext context) => StudyHubShell(
+    title: 'Spectroscopy Hub',
+    headline: 'Read the signal.',
+    description: 'Connect the peaks, compare the evidence and build a clearer picture of your molecule.',
+    icon: Icons.graphic_eq_rounded,
+    controller: _tabController,
+    actions: [
+      SpringPress(
+        child: IconButton(
+          tooltip: 'Mobile ChemDraw Canvas',
+          icon: const Icon(Icons.draw_outlined),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const ChemSketcherScreen()),
           ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.graphic_eq_rounded,
-                color: Theme.of(context).colorScheme.primary,
-                size: 22,
-              ),
-              SizedBox(width: 8),
-              Text(
-                'Spectroscopy Hub',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-              ),
-            ],
-          ),
-          actions: [
-            SpringPress(
-              child: IconButton(
-                icon: Icon(
-                  Icons.draw_outlined,
-                  color: AppColors.adaptive(context, AppColors.accentCyan),
-                  size: 22,
-                ),
-                tooltip: 'Mobile ChemDraw Canvas',
-                onPressed: () {
-                  AppHaptics.selection();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ChemSketcherScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          bottom: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            indicatorColor: Theme.of(context).colorScheme.primary,
-            indicatorWeight: 3,
-            labelColor: Theme.of(context).colorScheme.onSurface,
-            unselectedLabelColor: Theme.of(context)
-                .colorScheme
-                .onSurfaceVariant,
-            labelStyle: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-            tabs: const [
-              Tab(text: 'Structure Solver'),
-              Tab(text: 'Chromatograms & Spectrograms'),
-              Tab(text: '¹H / ¹³C NMR'),
-              Tab(text: 'FT-IR Frequencies'),
-              Tab(text: 'Mass Spec'),
-              Tab(text: 'Inorganic 10M'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildSolverTab(),
-            _buildChromatogramsTab(),
-            _buildNmrTab(),
-            _buildIrTab(),
-            _buildMsTab(),
-            _buildInorganicTab(),
-          ],
         ),
       ),
-    );
-  }
+    ],
+    destinations: const [
+      HubDestination(
+        'Structure Solver',
+        'Bring formula, IR, NMR and mass evidence together.',
+        Icons.hub_outlined,
+        shortLabel: 'Solver',
+      ),
+      HubDestination(
+        'Chromatograms & Spectrograms',
+        'Explore signals and inspect individual peaks.',
+        Icons.multiline_chart_rounded,
+        shortLabel: 'Signals',
+        keywords: 'chromatography HPLC GC atlas',
+      ),
+      HubDestination(
+        '¹H / ¹³C NMR',
+        'Chemical shifts, environments and interpretation.',
+        Icons.waves_rounded,
+        shortLabel: 'NMR',
+      ),
+      HubDestination(
+        'FT-IR Frequencies',
+        'Recognise functional groups from their vibrations.',
+        Icons.show_chart_rounded,
+        shortLabel: 'IR',
+      ),
+      HubDestination(
+        'Mass Spec',
+        'Read molecular ions and fragmentation patterns.',
+        Icons.scatter_plot_outlined,
+        shortLabel: 'Mass spec',
+      ),
+      HubDestination(
+        'Inorganic 10M',
+        'Racah parameters, magnetism, EPR and metal carbonyls.',
+        Icons.grain_rounded,
+        shortLabel: 'Inorganic',
+      ),
+    ],
+    panes: [
+      _buildSolverTab(),
+      _buildChromatogramsTab(),
+      _buildNmrTab(),
+      _buildIrTab(),
+      _buildMsTab(),
+      _buildInorganicTab(),
+    ],
+  );
 
   // ----------------------------------------------------
   // 1. Structure Solver Tab (Upgraded with dedicated 1H & 13C)

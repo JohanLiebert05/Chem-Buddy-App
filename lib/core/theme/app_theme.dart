@@ -103,6 +103,9 @@ class AppTheme {
             : const Color(0xFFE5E5DC),
       );
     }
+    if (seed != ThemePalette.rcbSeed) {
+      return neutral;
+    }
     final gold = ColorScheme.fromSeed(
       seedColor: const Color(0xFFD4AF5A),
       brightness: generated.brightness,
@@ -138,6 +141,13 @@ class AppTheme {
   }) {
     final colors = schemeFor(appearance.seed, brightness);
     final base = ThemeData(useMaterial3: true, colorScheme: colors);
+    final glass = GlassTokens.forStyle(
+      appearance.glass,
+      brightness: brightness,
+    );
+    final fanGlass =
+        ThemePalette.isFan(appearance.seed) &&
+        appearance.glass != GlassStyle.solid;
     final body = useGoogleFonts
         ? GoogleFonts.dmSansTextTheme(base.textTheme)
         : base.textTheme;
@@ -172,7 +182,16 @@ class AppTheme {
       scaffoldBackgroundColor: colors.surface,
       textTheme: text,
       extensions: [
-        GlassTokens.forStyle(appearance.glass, brightness: brightness),
+        fanGlass
+            ? glass.copyWith(
+                opacity:
+                    glass.opacity -
+                    (brightness == Brightness.light ? .05 : .04),
+                blur: (glass.blur + 2).clamp(0, 20).toDouble(),
+                glow: glass.glow + .025,
+              )
+            : glass,
+        PrismTokens(ThemePalette.gradientFor(appearance.seed)),
       ],
       pageTransitionsTheme: pageTransitionsTheme,
       splashFactory: kIsWeb

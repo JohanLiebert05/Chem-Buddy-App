@@ -47,9 +47,10 @@ class ChemBuddyApp extends ConsumerWidget {
         brightness: Brightness.dark,
       ),
       themeMode: ref.watch(appearanceProvider).mode,
+      themeAnimationCurve: Curves.easeInOutCubic,
       themeAnimationDuration: MediaQuery.disableAnimationsOf(context)
           ? Duration.zero
-          : const Duration(milliseconds: 300),
+          : const Duration(milliseconds: 360),
       scrollBehavior: AppTheme.scrollBehavior,
       home: ExitConfirmation(
         child: AppErrorBoundary(screenName: 'ChemBuddy Home', child: home),

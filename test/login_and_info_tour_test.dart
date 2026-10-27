@@ -38,69 +38,35 @@ void main() {
     });
   });
 
-  group('Intelligent Info Tour (BeginnerTutorialDialog) Tests', () {
-    testWidgets(
-      'Steps through all 7 intelligent stages including ChemDraw and ChemBuddy AI',
-      (tester) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(body: BeginnerTutorialDialog(onFinished: () {})),
-            ),
+  group('Theme-aware onboarding tour', () {
+    testWidgets('Moves through all seven focused tour pages', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(body: BeginnerTutorialDialog(onFinished: () {})),
           ),
-        );
-        await tester.pump();
-
-        expect(find.text('STEP 1 OF 7'), findsOneWidget);
-        expect(find.text('Welcome to ChemBuddy'), findsOneWidget);
-        expect(find.text('ChemDraw Canvas'), findsOneWidget);
-        expect(find.text('ChemBuddy AI Tutor'), findsOneWidget);
-
-        await tester.tap(find.text('Next →'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('STEP 2 OF 7'), findsOneWidget);
-        expect(find.text('Interactive Chemical Sketcher'), findsOneWidget);
-        expect(find.text('Ring Templates & Fused Systems'), findsOneWidget);
-        expect(find.text('Functional Groups & Smart Snapping'), findsOneWidget);
-        expect(find.text('Reaction Arrows & Predictor'), findsOneWidget);
-
-        await tester.tap(find.text('Next →'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('STEP 3 OF 7'), findsOneWidget);
-        expect(find.text('Intelligent Academic Tutor'), findsOneWidget);
-        expect(find.text('General AI & Internet Access'), findsOneWidget);
-        expect(find.text('Step-by-Step Reaction Mechanisms'), findsOneWidget);
-
-        await tester.tap(find.text('Next →'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('STEP 4 OF 7'), findsOneWidget);
-        expect(find.text('Handwritten Notes → Flashcards'), findsOneWidget);
-        expect(find.text('Multi-Page Photo Scanning'), findsOneWidget);
-
-        await tester.tap(find.text('Next →'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('STEP 5 OF 7'), findsOneWidget);
-        expect(find.text('Stay Confidently Above 75%'), findsOneWidget);
-        expect(find.text('Live "Can Skip" Buffer'), findsOneWidget);
-
-        await tester.tap(find.text('Next →'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('STEP 6 OF 7'), findsOneWidget);
-        expect(find.text('Your Daily Command Center'), findsOneWidget);
-        expect(find.text('MSc Timetable Presets'), findsOneWidget);
-
-        await tester.tap(find.text('Next →'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('STEP 7 OF 7'), findsOneWidget);
-        expect(find.text('The 5-Step Academic Routine'), findsOneWidget);
-        expect(find.text('Start Using ChemBuddy'), findsOneWidget);
-      },
-    );
+        ),
+      );
+      await tester.pumpAndSettle();
+      const titles = [
+        'Welcome to ChemBuddy',
+        'Draw your ideas.',
+        'Ask with context.',
+        'Turn notes into practice.',
+        'Keep attendance in view.',
+        'Explore one workspace at a time.',
+        'Make it your space.',
+      ];
+      for (var i = 0; i < titles.length; i++) {
+        expect(find.text(titles[i]), findsOneWidget);
+        expect(find.byKey(const Key('tour-step')), findsOneWidget);
+        if (i < titles.length - 1) {
+          await tester.tap(find.text('Next'));
+          await tester.pumpAndSettle();
+        }
+      }
+      expect(find.text("Let's go"), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 }

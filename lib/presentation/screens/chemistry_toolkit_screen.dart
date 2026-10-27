@@ -9,7 +9,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../core/widgets/glow_card.dart';
-import '../../core/widgets/hex_background.dart';
+import '../../core/widgets/study_hub_shell.dart';
+import '../../core/widgets/curiosity_cabinet.dart';
 import '../../data/services/chemical_name_database.dart';
 import '../../core/widgets/liquid_glass.dart';
 
@@ -30,14 +31,17 @@ class _ToolkitToolInfo {
 }
 
 class ChemistryToolkitScreen extends StatefulWidget {
-  const ChemistryToolkitScreen({super.key, this.initialCategory = 0});
-  final int initialCategory;
+  const ChemistryToolkitScreen({super.key, this.initialCategory});
+  final int? initialCategory;
 
   @override
   State<ChemistryToolkitScreen> createState() => _ChemistryToolkitScreenState();
 }
 
-class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
+class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen>
+    with SingleTickerProviderStateMixin {
+  final _hubKey = GlobalKey<StudyHubShellState>();
+  late final TabController _hubController;
   late int _selectedCategory;
 
   final _categories = [
@@ -487,10 +491,7 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
                                     child: InkWell(
                                       onTap: () {
                                         Navigator.pop(sheetContext);
-                                        setState(
-                                          () => _selectedCategory =
-                                              tool.categoryIndex,
-                                        );
+                                        _openCategory(tool.categoryIndex);
                                         AppHaptics.confirm();
                                       },
                                       borderRadius: BorderRadius.circular(14),
@@ -630,242 +631,113 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.initialCategory.clamp(0, _categories.length - 1);
+    _selectedCategory = (widget.initialCategory ?? 0).clamp(
+      0,
+      _categories.length - 1,
+    );
+    _hubController = TabController(
+      length: _categories.length,
+      vsync: this,
+      initialIndex: _selectedCategory,
+    );
+  }
+
+  void _openCategory(int index) {
+    _hubController.index = index;
+    _hubKey.currentState?.openSection(index);
   }
 
   @override
-  Widget build(BuildContext context) {
-    return HexBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: const Text(
-            'Chemistry Toolkit',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          actions: [
-            SpringPress(
-              child: IconButton(
-                icon: const Icon(Icons.search_rounded),
-                tooltip: 'Search Calculators',
-                onPressed: () => _openToolSearchSheet(context),
-              ),
-            ),
-          ],
-        ),
-        body: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-          children: [
-            // Pedagogical Header
-            Text(
-              'Chemistry Toolkit',
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 22,
-                letterSpacing: -0.4,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Choose a problem type or search for a calculator.',
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 14),
+  void dispose() {
+    _hubController.dispose();
+    super.dispose();
+  }
 
-            // Liquid Glass Search Trigger Pill
-            LiquidGlassContainer(
-              borderRadius: 16,
-              backgroundColor: Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHigh
-                  .withValues(alpha: 0.72),
-              borderColor: Theme.of(context).colorScheme.outlineVariant,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: SpringPress(
-                child: InkWell(
-                  onTap: () => _openToolSearchSheet(context),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.search_rounded,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Search calculators, formulas, or concepts...',
-                          style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '19 Tools',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Category Chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _categories.asMap().entries.map((entry) {
-                  final idx = entry.key;
-                  final title = entry.value;
-                  final isSel = _selectedCategory == idx;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: SpringPress(
-                      child: ChoiceChip(
-                        label: Text(
-                          title,
-                          style: TextStyle(
-                            color: isSel
-                                ? Theme.of(context).colorScheme.onSurface
-                                : Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                            fontWeight: isSel
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                        selected: isSel,
-                        selectedColor: Theme.of(context).colorScheme.primary,
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHigh,
-                        onSelected: (val) {
-                          if (val) {
-                            setState(() => _selectedCategory = idx);
-                            AppHaptics.selection();
-                          }
-                        },
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Category Description Banner
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                  width: 0.6,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline_rounded,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _categoryDescriptions[_selectedCategory],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            if (_selectedCategory == 0) ...[
-              _MolarMassCalculator(
-                onSelectTool: (tool) {
-                  if (tool == 'Molarity' ||
-                      tool == 'Normality' ||
-                      tool == 'Dilution') {
-                    setState(() => _selectedCategory = 0);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              const _MolarityCalculator(),
-              const SizedBox(height: 16),
-              const _DilutionCalculator(),
-            ] else if (_selectedCategory == 1) ...[
-              const _StoichiometryCalculator(),
-              const SizedBox(height: 16),
-              const _UnitConversionCalculator(),
-            ] else if (_selectedCategory == 2) ...[
-              const _CrystalFieldCalculator(),
-            ] else if (_selectedCategory == 3) ...[
-              const _PhCalculator(),
-              const SizedBox(height: 16),
-              const _HendersonHasselbalchCalculator(),
-            ] else if (_selectedCategory == 4) ...[
-              const _GibbsFreeEnergyCalculator(),
-              const SizedBox(height: 16),
-              const _ArrheniusCalculator(),
-              const SizedBox(height: 16),
-              const _IntegratedRateLawCalculator(),
-            ] else if (_selectedCategory == 5) ...[
-              const _QuantumChemistryCalculator(),
-            ] else if (_selectedCategory == 6) ...[
-              const _BeerLambertCalculator(),
-              const SizedBox(height: 16),
-              const _PhotonEnergyCalculator(),
-            ] else if (_selectedCategory == 7) ...[
-              const _NernstCalculator(),
-              const SizedBox(height: 16),
-              const _CellPotentialCalculator(),
-            ] else if (_selectedCategory == 8) ...[
-              const _AnalyticalErrorCalculator(),
-              const SizedBox(height: 16),
-              const _VanDeemterCalculator(),
-              const SizedBox(height: 16),
-              const _HplcCalibrationCurveCalculator(),
-            ],
-          ],
+  @override
+  Widget build(BuildContext context) => StudyHubShell(
+    key: _hubKey,
+    title: 'Chemistry Toolkit',
+    headline: 'A clearer bench.',
+    description: 'Choose the problem. Keep the calculation in focus. Your everyday chemistry tools, organised by purpose.',
+    icon: Icons.science_outlined,
+    controller: _hubController,
+    initialSection: widget.initialCategory,
+    onSecretSearch: () => revealCuriosity(context, 'molybdenum'),
+    actions: [
+      SpringPress(
+        child: IconButton(
+          tooltip: 'Search Calculators',
+          icon: const Icon(Icons.search_rounded),
+          onPressed: () => _openToolSearchSheet(context),
         ),
       ),
+    ],
+    destinations: [
+      for (var i = 0; i < _categories.length; i++)
+        HubDestination(
+          _categories[i],
+          _categoryDescriptions[i].split(': ').last,
+          [
+            Icons.water_drop_outlined,
+            Icons.balance_rounded,
+            Icons.grain_rounded,
+            Icons.biotech_outlined,
+            Icons.thermostat_rounded,
+            Icons.waves_rounded,
+            Icons.graphic_eq_rounded,
+            Icons.bolt_rounded,
+            Icons.analytics_outlined,
+          ][i],
+          keywords: _toolsCatalog
+              .where((tool) => tool.categoryIndex == i)
+              .map((tool) => '${tool.title} ${tool.keywords.join(' ')}')
+              .join(' '),
+        ),
+    ],
+    panes: [for (var i = 0; i < _categories.length; i++) _categoryPane(i)],
+  );
+  Widget _categoryPane(int index) {
+    final tools = switch (index) {
+      0 => <Widget>[
+        _MolarMassCalculator(onSelectTool: (_) => _openCategory(0)),
+        const _MolarityCalculator(),
+        const _DilutionCalculator(),
+      ],
+      1 => <Widget>[
+        const _StoichiometryCalculator(),
+        const _UnitConversionCalculator(),
+      ],
+      2 => <Widget>[const _CrystalFieldCalculator()],
+      3 => <Widget>[
+        const _PhCalculator(),
+        const _HendersonHasselbalchCalculator(),
+      ],
+      4 => <Widget>[
+        const _GibbsFreeEnergyCalculator(),
+        const _ArrheniusCalculator(),
+        const _IntegratedRateLawCalculator(),
+      ],
+      5 => <Widget>[const _QuantumChemistryCalculator()],
+      6 => <Widget>[
+        const _BeerLambertCalculator(),
+        const _PhotonEnergyCalculator(),
+      ],
+      7 => <Widget>[
+        const _NernstCalculator(),
+        const _CellPotentialCalculator(),
+      ],
+      _ => <Widget>[
+        const _AnalyticalErrorCalculator(),
+        const _VanDeemterCalculator(),
+        const _HplcCalibrationCurveCalculator(),
+      ],
+    };
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
+      children: [
+        for (final tool in tools)
+          Padding(padding: const EdgeInsets.only(bottom: 18), child: tool),
+      ],
     );
   }
 }

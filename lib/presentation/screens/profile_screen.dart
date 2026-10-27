@@ -17,7 +17,8 @@ import '../../data/services/reaction_mechanism_service.dart';
 import '../../data/services/study_analytics_service.dart';
 import '../providers/app_providers.dart';
 import 'app_guides_screen.dart';
-import 'appearance_screen.dart';
+import '../widgets/profile_appearance_card.dart';
+import '../../core/widgets/curiosity_cabinet.dart';
 import 'beginner_tutorial_dialog.dart';
 import 'notification_settings_screen.dart';
 
@@ -251,15 +252,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       children: [
         Row(
           children: [
-            Text(
-              'Profile & Settings',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
+            Expanded(
+              child: Text(
+                'Profile & Settings',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
-            const Spacer(),
+
             SpringPress(
               child: IconButton(
                 icon: Icon(
@@ -300,7 +303,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                       ],
                     ),
-                    child: const AtomLogo(size: 52),
+                    child: const CuriosityTrigger(child: AtomLogo(size: 52)),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -392,6 +395,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 14),
+
+        const ProfileAppearanceCard(),
+        const SizedBox(height: 24),
 
         // 2. QUICK ACADEMIC STATS STRIP
         Row(
@@ -645,41 +651,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         const SizedBox(height: 14),
 
+        const CuriosityCabinet(),
+        const SizedBox(height: 18),
+
         // 5. ACADEMIC HELP & SETTINGS
         const SectionTitle(
           'Help, Guides & Settings',
           icon: Icons.settings_rounded,
-        ),
-        GlowCard(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(builder: (_) => const AppearanceScreen()),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.palette_outlined,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Appearance',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    Text(
-                      'Palettes, glass finishes & a little surprise',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right),
-            ],
-          ),
         ),
         const SizedBox(height: 8),
         GlowCard(

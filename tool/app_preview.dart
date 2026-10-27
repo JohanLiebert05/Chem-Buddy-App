@@ -1,3 +1,8 @@
+import 'package:chem_buddy/presentation/screens/beginner_tutorial_dialog.dart';
+import 'package:chem_buddy/presentation/screens/chemistry_toolkit_screen.dart';
+import 'package:chem_buddy/presentation/screens/spectroscopy_hub_screen.dart';
+import 'package:chem_buddy/presentation/screens/pericyclic_hub_screen.dart';
+import 'package:chem_buddy/presentation/screens/profile_screen.dart';
 // Browser-only preview using the real app screens and isolated sample data.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +23,9 @@ import 'package:chem_buddy/presentation/shell/main_shell.dart';
 final previewNavigator = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
-  if (!kIsWeb) throw StateError('Run this sample preview in a browser.');
+  if (!kIsWeb) {
+    throw StateError('Run this sample preview in a browser.');
+  }
   WidgetsFlutterBinding.ensureInitialized();
   FlutterError.onError = (details) {
     debugPrint('Preview error: ${details.exceptionAsString()}');
@@ -163,6 +170,8 @@ class AppPreview extends ConsumerWidget {
         brightness: Brightness.dark,
       ),
       themeMode: appearance.mode,
+      themeAnimationDuration: const Duration(milliseconds: 360),
+      themeAnimationCurve: Curves.easeInOutCubic,
       builder: (context, child) {
         final media = MediaQuery.of(context);
         final width = media.size.width.clamp(0.0, 480.0).toDouble();
@@ -255,6 +264,22 @@ class _PreviewHome extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(appControllerProvider).profile;
+    final screen = Uri.base.queryParameters['screen'];
+    if (screen == 'tour') {
+      return const Scaffold(body: BeginnerTutorialDialog());
+    }
+    if (screen == 'toolkit') {
+      return const ChemistryToolkitScreen();
+    }
+    if (screen == 'spectroscopy') {
+      return const SpectroscopyHubScreen();
+    }
+    if (screen == 'pericyclic') {
+      return const PericyclicHubScreen();
+    }
+    if (screen == 'profile') {
+      return const Scaffold(body: SafeArea(child: ProfileScreen()));
+    }
     return ExitConfirmation(
       child: profile.loggedIn
           ? const MainShell()

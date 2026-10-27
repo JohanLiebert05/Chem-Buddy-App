@@ -1,3 +1,17 @@
+# ChemBuddy 3.5.5 by Prajwal A Kambar
+
+- Theme editing now lives directly in Profile: display mode, Classic/Fan/Prism collections, glass finish, collection-aware Surprise me and Undo.
+- Expands the Fan collection with Papaya Grid, Rosso, Centre Court, Neon Arcade, Deep Orbit and Reef, inspired by racing, tennis, gaming, space and the ocean.
+- Adds six coordinated three-colour Prism gradients with readable Material 3 roles and tinted glass surfaces.
+- Rebuilds the chemistry toolkit, spectroscopy hub and pericyclic hub around searchable overviews and focused, state-preserving workspaces.
+- Adds three optional chemistry Easter eggs and a device-local Curiosity cabinet.
+- Expands the first-launch welcome with clear setup, guest, offline and cloud-AI guidance; rebuilds the post-login tour with consistent theme colours and readable cards.
+- Retains quick-tap spring feedback, reduced-motion support and the earlier security and reliability fixes.
+
+Production signing is used when configured. Otherwise the APK is a separately installed ChemBuddy Preview test app. Database deployment and rotation of previously embedded provider keys remain separate live steps.
+
+---
+
 # ChemBuddy 3.5.4 by Prajwal A Kambar
 
 - Added a floating liquid-glass navigation dock, elastic selection indicators and subtle spring feedback across buttons, chips, cards and page transitions, with reduced-motion support.

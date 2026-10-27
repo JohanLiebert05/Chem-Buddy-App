@@ -15,77 +15,93 @@ void main() {
   });
 
   group('Closed Study Loop & MSc Features Tests', () {
-    test('SmartFlashcard preserves sourceBacklink through toJson and fromJson', () {
-      final card = SmartFlashcard(
-        id: 'c1',
-        setId: 's1',
-        question: 'What is the Woodward-Hoffmann rule for [4+2]?',
-        answer: 'Thermally allowed suprafacial-suprafacial',
-        position: 0,
-        sourceBacklink: 'Comprehensive AI chat derivation on Diels-Alder [4+2] cycloaddition.',
-      );
+    test(
+      'SmartFlashcard preserves sourceBacklink through toJson and fromJson',
+      () {
+        final card = SmartFlashcard(
+          id: 'c1',
+          setId: 's1',
+          question: 'What is the Woodward-Hoffmann rule for [4+2]?',
+          answer: 'Thermally allowed suprafacial-suprafacial',
+          position: 0,
+          sourceBacklink: 'Comprehensive AI chat derivation on Diels-Alder [4+2] cycloaddition.',
+        );
 
-      final json = card.toJson();
-      expect(json['source_backlink'], equals('Comprehensive AI chat derivation on Diels-Alder [4+2] cycloaddition.'));
-
-      final restored = SmartFlashcard.fromJson(json);
-      expect(restored.sourceBacklink, equals(card.sourceBacklink));
-    });
-
-    testWidgets('ExamPatternQuizScreen renders university exam format and marks', (tester) async {
-      tester.view.physicalSize = const Size(1200, 2400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: ExamPatternQuizScreen(examTitle: 'Test Exam Paper'),
+        final json = card.toJson();
+        expect(
+          json['source_backlink'],
+          equals(
+            'Comprehensive AI chat derivation on Diels-Alder [4+2] cycloaddition.',
           ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pumpAndSettle();
+        );
 
-      expect(find.text('Test Exam Paper'), findsOneWidget);
-      expect(find.textContaining('University Exam Pattern'), findsOneWidget);
-      expect(find.textContaining('Part A'), findsWidgets);
-      expect(find.textContaining('Part B'), findsWidgets);
-    });
+        final restored = SmartFlashcard.fromJson(json);
+        expect(restored.sourceBacklink, equals(card.sourceBacklink));
+      },
+    );
 
+    testWidgets(
+      'ExamPatternQuizScreen renders university exam format and marks',
+      (tester) async {
+        tester.view.physicalSize = const Size(1200, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-    testWidgets('SpectroscopyHubScreen renders NMR, IR, and Mass Spec tabs', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: SpectroscopyHubScreen(),
+        await tester.pumpWidget(
+          const ProviderScope(
+            child: MaterialApp(
+              home: ExamPatternQuizScreen(examTitle: 'Test Exam Paper'),
+            ),
           ),
-        ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Test Exam Paper'), findsOneWidget);
+        expect(find.textContaining('University Exam Pattern'), findsOneWidget);
+        expect(find.textContaining('Part A'), findsWidgets);
+        expect(find.textContaining('Part B'), findsWidgets);
+      },
+    );
+
+    testWidgets('SpectroscopyHubScreen renders NMR, IR, and Mass Spec tabs', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const ProviderScope(child: MaterialApp(home: SpectroscopyHubScreen())),
       );
       await tester.pumpAndSettle();
 
       expect(find.text('Spectroscopy Hub'), findsOneWidget);
-      expect(find.text('¹H / ¹³C NMR'), findsOneWidget);
-      expect(find.text('FT-IR Frequencies'), findsOneWidget);
-      expect(find.text('Mass Spec'), findsOneWidget);
-      expect(find.text('Structure Solver'), findsOneWidget);
+      expect(find.text('Read the signal.'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).first, 'NMR');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const ValueKey('¹H / ¹³C NMR')));
+      await tester.tap(find.byKey(const ValueKey('¹H / ¹³C NMR')));
+      await tester.pumpAndSettle();
+      expect(find.byType(TabBarView), findsOneWidget);
+      expect(find.text('NMR'), findsOneWidget);
     });
 
-    testWidgets('PericyclicHubScreen renders FMO Predictor and tabs', (tester) async {
+    testWidgets('PericyclicHubScreen renders FMO Predictor and tabs', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: PericyclicHubScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: PericyclicHubScreen())),
       );
       await tester.pumpAndSettle();
 
       expect(find.text('Pericyclic Chemistry & FMO'), findsOneWidget);
-      expect(find.text('FMO Predictor'), findsOneWidget);
-      expect(find.text('Woodward-Hoffmann Rules'), findsOneWidget);
+      expect(find.text('Follow the orbitals.'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).first, 'Predictor');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const ValueKey('FMO Predictor')));
+      await tester.tap(find.byKey(const ValueKey('FMO Predictor')));
+      await tester.pumpAndSettle();
+      expect(find.byType(TabBarView), findsOneWidget);
+      expect(find.text('Predictor'), findsOneWidget);
     });
   });
 }

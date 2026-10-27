@@ -1,12 +1,12 @@
 # Chem Buddy by Prajwal A Kambar
 
-Flutter study companion for MSc Chemistry students (3.5.4): attendance, AI/PDF study, quizzes, flashcards, reactions, drawing, spectroscopy, calculators and exports.
+Flutter study companion for MSc Chemistry students (3.5.5): attendance, AI/PDF study, quizzes, flashcards, reactions, drawing, spectroscopy, calculators and exports.
 
 See [USER_MANUAL.md](USER_MANUAL.md) and [deployment requirements](docs/REVIEW_FIXES.md). Old PDF/DOC manuals are historical.
 
 Made by Prajwal A Kambar.
 
-## Version 3.5.4
+## Version 3.5.5
 
 Material 3 Expressive light/dark themes, refined glass surfaces, a new setup flow, local guest mode, and Android Back exit confirmation. See [appearance and preview notes](docs/APPEARANCE.md). GitHub Releases provides the current APK; a separately labeled Preview APK is used when production signing is not configured.
 
