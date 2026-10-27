@@ -159,6 +159,7 @@ async function executeGeminiWithRotation(
       instruction.push("STUDY DOCUMENT:\n" + payload.document_context);
     }
     body.systemInstruction = {parts: [{text: instruction.join("\n\n")}]};
+    if (needsFreshWebSearch(payload.prompt) && !payload.document_context?.trim()) body.tools = [{ google_search: {} }];
 
     try {
       const resp = await fetch(url, {
