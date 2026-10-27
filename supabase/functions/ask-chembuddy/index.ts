@@ -477,6 +477,7 @@ function getGeminiKeyPool(): string[] {
   const combined: string[] = [
     ...envKeys,
     ...namedKeys,
+    ...["GEMINI_KEY_A", "GEMINI_KEY_B", "GEMINI_KEY_C", "GEMINI_KEY_D", "GEMINI_KEY_E"].map((name) => Deno.env.get(name)?.trim()).filter((key): key is string => Boolean(key)),
     ...(singleKey ? [singleKey] : []),
     ...GEMINI_API_KEYS_FALLBACK,
   ];
