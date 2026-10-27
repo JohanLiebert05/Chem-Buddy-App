@@ -23,6 +23,7 @@ class RagService {
   }) async {
     debugPrint('[RAG] Incoming question: "$question" | mode: ${mode ?? "quick"} | subject: ${subject ?? "none"} | doc: ${documentName ?? "none"} | history: ${history?.length ?? 0} msgs');
 
+    Object? cloudFailure;
     // 1. Try remote cloud first if configured
     if (remote.configured) {
       try {
@@ -43,7 +44,8 @@ class RagService {
           return RagResponse.fromJson(response);
         }
       } catch (e) {
-        debugPrint('[RAG] Cloud ask-chembuddy failed, trying direct Gemini Orchestrator: $e');
+        cloudFailure = e;
+        debugPrint('[RAG] Cloud ask-chembuddy failed, trying Gemini Orchestrator: $e');
       }
     }
 
@@ -97,10 +99,19 @@ class RagService {
         );
       }
     } catch (geminiErr) {
-      debugPrint('[RAG] Direct Gemini Orchestrator failed: $geminiErr');
+      debugPrint('[RAG] Gemini Orchestrator failed: $geminiErr');
+      cloudFailure = geminiErr;
     }
 
-    // 3. Zero-connectivity / Airplane Mode: ChemistryKnowledgeEngine
+    // Do not claim the device is offline merely because a cloud request failed.
+    // Surface the actual failure; local answers are only for an explicitly offline mode.
+    if (cloudFailure != null) {
+      throw StateError('Cloud AI request failed: $cloudFailure');
+    }
+    if (remote.configured) {
+      throw StateError('Cloud AI returned no usable answer. Please retry.');
+    }
+    // Cloud backend is not configured on this installation.
     return ChemistryKnowledgeEngine.generateAcademicResponse(
       question: question,
       subject: subject,
