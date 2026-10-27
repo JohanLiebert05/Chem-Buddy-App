@@ -43,16 +43,15 @@ serve(async (req: Request) => {
 
     await requireAiBudget(user);
 
-    // 2. Fetch with 4-Key Gemini Failover & Rotation
+    // Fetch with configured Gemini credentials (up to five named keys).
     const keys = getAvailableGeminiKeys();
     if (keys.length === 0) {
       return jsonResponse({ error: "No Gemini API keys configured on server." }, 500);
     }
 
     const candidateModels = [
-      Deno.env.get("GEMINI_MODEL") || "gemini-3-flash-preview",
-      "gemini-flash-latest",
-      "gemini-3.6-flash",
+      Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash",
+      "gemini-2.5-flash",
     ].filter((m, i, arr) => arr.indexOf(m) === i);
 
     let result: { ok: boolean; data?: any; status?: number; error?: string; keyIndexUsed?: number; modelUsed?: string } = {
@@ -70,7 +69,7 @@ serve(async (req: Request) => {
 
     if (!result.ok) {
       return jsonResponse(
-        { error: "Gemini API exhausted or unavailable across all 4 keys.", details: result.error },
+        { error: "Gemini API unavailable for the configured credentials.", details: result.error },
         result.status || 500
       );
     }
@@ -94,9 +93,11 @@ serve(async (req: Request) => {
 // Helper: Extract all 4 keys + fallbacks
 function getAvailableGeminiKeys(): string[] {
   const keys: string[] = [];
-  for (let i = 1; i <= 4; i++) {
-    const k = Deno.env.get(`GEMINI_KEY_${i}`);
-    if (k && k.trim().length > 10) keys.push(k.trim());
+  for (let i = 1; i <= 5; i++) {
+    for (const name of [`GEMINI_KEY_${i}`, `GEMINI_API_KEY_${i}`]) {
+      const k = Deno.env.get(name)?.trim();
+      if (k && k.length > 10 && !keys.includes(k)) keys.push(k);
+    }
   }
   // Fallbacks if named differently
   const fallbacks = ["GEMINI_KEY_A", "GEMINI_KEY_B", "GEMINI_KEY_C", "GEMINI_KEY_D", "GEMINI_API_KEY"];
@@ -125,7 +126,7 @@ async function executeGeminiWithRotation(
     const keyIndex = (startIndex + attempt) % keys.length;
     const apiKey = keys[keyIndex];
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
 
     const contents: any[] = [];
     if (payload.history && payload.history.length > 0) {
@@ -159,7 +160,7 @@ async function executeGeminiWithRotation(
     try {
       const resp = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify(body),
       });
 
@@ -170,7 +171,7 @@ async function executeGeminiWithRotation(
 
       lastStatus = resp.status;
       lastError = await resp.text();
-      console.warn(`[Gemini Failover] Key #${keyIndex + 1} returned status ${resp.status}:`, lastError.slice(0, 150));
+      console.warn(`[Gemini Failover] Credential #${keyIndex + 1} returned HTTP ${resp.status}`);
 
       // If Rate-limited (429) or Server overloaded (503), immediately try next key
       if (resp.status === 429 || resp.status === 503 || resp.status === 403) {
@@ -178,7 +179,7 @@ async function executeGeminiWithRotation(
       }
     } catch (netErr: any) {
       lastError = String(netErr);
-      console.warn(`[Gemini Failover] Network error on Key #${keyIndex + 1}:`, netErr);
+      console.warn(`[Gemini Failover] Request failed for credential #${keyIndex + 1}`);
       continue;
     }
   }
