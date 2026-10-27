@@ -110,6 +110,19 @@ function getAvailableGeminiKeys(): string[] {
       keys.push(val.trim());
     }
   }
+
+  // Discover user-defined secret names without logging or exposing their values.
+  // Only accept explicitly Gemini-related key variables; never collect unrelated secrets.
+  for (const [name, value] of Object.entries(Deno.env.toObject())) {
+    if (/^(?:GEMINI|GOOGLE_GEMINI|GOOGLE_AI|GOOGLE_API)[A-Z0-9_]*(?:KEY|KEYS|TOKEN|API)[A-Z0-9_]*$/i.test(name) &&
+        !/MODEL|PROJECT|URL|BASE|ENDPOINT/i.test(name)) {
+      for (const candidate of value.split(/[\\n,;]/)) {
+        const key = candidate.trim();
+        if (key.startsWith("AIza") && key.length >= 25 && !keys.includes(key)) keys.push(key);
+      }
+    }
+  }
+  console.info(`[Gemini config] Available distinct credentials: ${keys.length}`);
   return keys;
 }
 
