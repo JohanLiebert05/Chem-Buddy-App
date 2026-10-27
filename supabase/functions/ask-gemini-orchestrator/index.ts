@@ -50,8 +50,10 @@ serve(async (req: Request) => {
     }
 
     const candidateModels = [
-      Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash",
-      "gemini-2.5-flash",
+      Deno.env.get("GEMINI_MODEL") || "gemini-3.5-flash-lite",
+      "gemini-3.5-flash-lite",
+      "gemini-3.8-flash",
+      "gemini-3.6-flash",
     ].filter((m, i, arr) => arr.indexOf(m) === i);
 
     let result: { ok: boolean; data?: any; status?: number; error?: string; keyIndexUsed?: number; modelUsed?: string } = {
