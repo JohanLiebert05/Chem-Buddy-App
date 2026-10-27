@@ -317,7 +317,7 @@ The student is asking a standard chemistry question.
 - Explain cleanly, correctly, and accurately without introductory fluff or repetitive filler.`;
     }
 
-    const systemPrompt = `You are ChemBuddy AI, an intelligent, accurate, and pedagogical Chemistry AI tutor.
+    const systemPrompt = `Current date (UTC): ${new Date().toISOString().slice(0, 10)}. For dated, recent, or changing facts, verify with Google Search grounding. Never claim a past year is still in the future. If live verification is unavailable, disclose uncertainty.\n\nYou are ChemBuddy AI, an intelligent, accurate, and pedagogical Chemistry AI tutor.
 
 ${modeInstructions}
 
@@ -382,6 +382,7 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
         `models/${modelCandidate}:generateContent`,
         {
           systemInstruction: { parts: [{ text: systemPrompt }] },
+          ...(needsFreshWebSearch(question) && !documentText ? { tools: [{ google_search: {} }] } : {}),
           contents,
           generationConfig: {
             temperature: 0.2,
@@ -411,6 +412,7 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
       mode: typeof mode !== "undefined" ? mode : "default",
       model,
       sources: sources.length > 0 ? sources : [],
+      groundingSources: (chatRes.data?.candidates?.[0]?.groundingMetadata?.groundingChunks ?? []).flatMap((chunk: any) => chunk.web?.uri ? [{ title: chunk.web.title ?? 'Web source', url: chunk.web.uri }] : []),
       docScoped: typeof documentName !== "undefined" && documentName !== null,
       hasContext: chunks.length > 0,
       chunksUsed: chunks.length,
@@ -418,7 +420,7 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
     };
 
     // 10. Write to Cache & Increment Usage Asynchronously
-    const ttlDays = 7;
+    const ttlDays = needsFreshWebSearch(question) ? 0 : 7;
     const expiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000).toISOString();
 
     fetch(`${supabaseUrl}/rest/v1/ai_cache`, {
@@ -640,3 +642,8 @@ function json(body: unknown, status = 200) {
     headers: { ...cors(), "Content-Type": "application/json" },
   });
 }
+
+function needsFreshWebSearch(question: string): boolean {
+  return /\b(today|tonight|yesterday|tomorrow|current|currently|latest|recent|recently|now|this (year|month|week)|last (year|month|week)|202[4-9]|203\d|winner|won|election|price|news|released|announced|ballon d.?or)\b/i.test(question);
+}
+
