@@ -100,7 +100,7 @@ function getAvailableGeminiKeys(): string[] {
     }
   }
   // Fallbacks if named differently
-  const fallbacks = ["GEMINI_KEY_A", "GEMINI_KEY_B", "GEMINI_KEY_C", "GEMINI_KEY_D", "GEMINI_API_KEY"];
+  const fallbacks = ["GEMINI_KEY_A", "GEMINI_KEY_B", "GEMINI_KEY_C", "GEMINI_KEY_D", "GEMINI_KEY_E", "GEMINI_API_KEY"];
   for (const fb of fallbacks) {
     const val = Deno.env.get(fb);
     if (val && val.trim().length > 10 && !keys.includes(val.trim())) {
