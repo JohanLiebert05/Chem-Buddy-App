@@ -505,117 +505,49 @@ function getGeminiKeyPool(): string[] {
 // Global round-robin index across incoming invocations
 let globalKeyCounter = 0;
 
+const geminiCooldownUntil = new Map<string, number>();
+
 async function fetchGeminiWithRotation(
   endpointPath: string,
   payload: unknown,
 ): Promise<{ ok: boolean; status: number; data?: any; errorText?: string }> {
   const keys = getGeminiKeyPool();
-  if (keys.length === 0) {
-    return { ok: false, status: 500, errorText: "No Gemini API keys configured." };
-  }
-
-  // Round-robin starting point so load is evenly distributed across all 3 keys
-  const startIdx = (globalKeyCounter++) % keys.length;
-  const orderedKeys = keys.map((_, i) => keys[(startIdx + i) % keys.length]);
-
-  return new Promise((resolve) => {
-    let settled = false;
-    let completedAttempts = 0;
-    let lastErrorText = "";
-    let lastStatus = 500;
-    const activeControllers: AbortController[] = [];
-    const scheduledTimeouts: ReturnType<typeof setTimeout>[] = [];
-    const launched = new Set<number>();
-
-    function settleSuccess(data: any) {
-      if (settled) return;
-      settled = true;
-      // Clear pending delayed dispatches
-      scheduledTimeouts.forEach((t) => clearTimeout(t));
-      // Abort other in-flight requests immediately
-      activeControllers.forEach((ac) => {
-        try { ac.abort(); } catch (_) {}
+  if (!keys.length) return { ok: false, status: 503, errorText: "No Gemini credentials found in Supabase secrets." };
+  const start = (globalKeyCounter++) % keys.length;
+  let lastStatus = 503;
+  let lastError = "All configured Gemini credentials are unavailable.";
+  let attempted = 0;
+  for (let offset = 0; offset < keys.length; offset++) {
+    const key = keys[(start + offset) % keys.length];
+    if ((geminiCooldownUntil.get(key) ?? 0) > Date.now()) continue;
+    attempted++;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${endpointPath}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       });
-      resolve({ ok: true, status: 200, data });
-    }
-
-    function checkAllFailed() {
-      completedAttempts++;
-      if (completedAttempts >= orderedKeys.length && !settled) {
-        settled = true;
-        scheduledTimeouts.forEach((t) => clearTimeout(t));
-        resolve({ ok: false, status: lastStatus, errorText: lastErrorText });
+      if (response.ok) return { ok: true, status: 200, data: await response.json() };
+      lastStatus = response.status;
+      const errorBody = await response.text();
+      lastError = errorBody.slice(0, 450);
+      console.warn(`[Gemini rotation] Credential ${(start + offset) % keys.length + 1}/${keys.length} returned HTTP ${response.status}`);
+      if ([429, 403, 401, 404].includes(response.status)) {
+        // Avoid hammering the same exhausted/invalid credential on subsequent requests.
+        geminiCooldownUntil.set(key, Date.now() + (response.status === 429 ? 60000 : 300000));
       }
+      // Move to the next distinct key immediately, without waiting for a retry timer.
+    } catch (error) {
+      lastError = String(error);
+      console.warn("[Gemini rotation] Credential request timed out or failed; switching.");
+    } finally {
+      clearTimeout(timer);
     }
-
-    async function dispatchKey(index: number) {
-      if (settled || launched.has(index) || index >= orderedKeys.length) return;
-      launched.add(index);
-
-      const key = orderedKeys[index];
-      const ac = new AbortController();
-      activeControllers.push(ac);
-      const url = `https://generativelanguage.googleapis.com/v1beta/${endpointPath}?key=${key}`;
-
-      // Max timeout of 12s per key attempt
-      const attemptTimer = setTimeout(() => {
-        try { ac.abort(); } catch (_) {}
-      }, 12000);
-
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: ac.signal,
-        });
-        clearTimeout(attemptTimer);
-
-        if (settled) return;
-
-        if (res.ok) {
-          const data = await res.json();
-          settleSuccess(data);
-          return;
-        }
-
-        lastStatus = res.status;
-        lastErrorText = await res.text();
-        console.warn(`[Gemini Fast Hedging] Key ${index + 1}/${orderedKeys.length} failed (${res.status}):`, lastErrorText.slice(0, 120));
-
-        // If rate-limited or transient server error, immediately trigger the next key without waiting for the timer!
-        if (index + 1 < orderedKeys.length && !settled) {
-          dispatchKey(index + 1);
-        }
-      } catch (err: any) {
-        clearTimeout(attemptTimer);
-        if (settled) return;
-        if (err.name !== "AbortError") {
-          lastErrorText = String(err);
-          console.warn(`[Gemini Fast Hedging] Key ${index + 1} network error:`, err);
-        }
-        // Immediately try next key on network error
-        if (index + 1 < orderedKeys.length && !settled) {
-          dispatchKey(index + 1);
-        }
-      }
-      checkAllFailed();
-    }
-
-    // Launch initial key immediately
-    dispatchKey(0);
-
-    // Speculative Hedging: If key 0 hasn't responded in 650ms, start key 1 in parallel.
-    // If neither has answered in 1300ms, start key 2 in parallel.
-    for (let i = 1; i < orderedKeys.length; i++) {
-      const timer = setTimeout(() => {
-        if (!settled) {
-          dispatchKey(i);
-        }
-      }, i * 650);
-      scheduledTimeouts.push(timer);
-    }
-  });
+  }
+  return { ok: false, status: lastStatus, errorText: attempted ? lastError : "All Gemini credentials are cooling down after provider errors." };
 }
 
 function getUserIdFromToken(authHeader: string): string | null {
