@@ -81,6 +81,7 @@ class StudyHubShellState extends State<StudyHubShell>
   }
 
   void openSection(int index) {
+    FocusManager.instance.primaryFocus?.unfocus();
     AppHaptics.selection();
     widget.controller.index = index.clamp(0, widget.destinations.length - 1);
     setState(() {
@@ -94,6 +95,7 @@ class StudyHubShellState extends State<StudyHubShell>
   }
 
   void _back() {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (!_overview) {
       setState(() => _overview = true);
     } else {
