@@ -24,6 +24,17 @@ class RagService {
     debugPrint('[RAG] Incoming question: "$question" | mode: ${mode ?? "quick"} | subject: ${subject ?? "none"} | doc: ${documentName ?? "none"} | history: ${history?.length ?? 0} msgs');
 
     Object? cloudFailure;
+    // Guests without cloud authentication can still use local study answers.
+    if (remote.userId == null) {
+      return ChemistryKnowledgeEngine.generateAcademicResponse(
+        question: question,
+        subject: subject,
+        documentText: documentText,
+        documentName: documentName,
+        history: history,
+        mode: mode,
+      );
+    }
     // 1. Try remote cloud first if configured
     if (remote.configured) {
       try {
