@@ -62,14 +62,7 @@ class GeminiOrchestrator {
     };
     final userId = _remote.userId;
     if (userId == null) {
-      return OrchestratorResponse(
-        text: 'Error: Sign in to use cloud AI. Guest study data stays on this device.',
-        model: 'unavailable',
-        isCached: false,
-        keyIndexUsed: 0,
-        totalKeys: 0,
-        latency: DateTime.now().difference(started),
-      );
+      throw StateError('Sign in to use cloud AI. Guest study data stays on this device.');
     }
     final key = sha256
         .convert(utf8.encode(jsonEncode([userId, request])))
@@ -112,15 +105,9 @@ class GeminiOrchestrator {
         _cache[key] = response;
       }
       return response;
-    } catch (_) {
-      return OrchestratorResponse(
-        text: 'Error: Cloud AI is unavailable. Please sign in and try again.',
-        model: 'unavailable',
-        isCached: false,
-        keyIndexUsed: 0,
-        totalKeys: 0,
-        latency: DateTime.now().difference(started),
-      );
+    } catch (error) {
+      // Preserve the original failure for accurate UI classification and diagnostics.
+      rethrow;
     }
   }
 
