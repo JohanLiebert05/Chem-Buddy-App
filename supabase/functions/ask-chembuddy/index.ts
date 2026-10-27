@@ -363,9 +363,8 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
 
     // 9. Generate answer with Gemini multi-key rotation and multi-model fallback
     const candidateChatModels = [
-      Deno.env.get("GEMINI_MODEL") || "gemini-3-flash-preview",
-      "gemini-flash-latest",
-      "gemini-3.6-flash",
+      Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash",
+      "gemini-2.5-flash",
     ].filter((m, i, arr) => arr.indexOf(m) === i);
 
     let chatRes: { ok: boolean; status: number; data?: any; errorText?: string } = {
@@ -385,9 +384,6 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
           generationConfig: {
             temperature: 0.2,
             maxOutputTokens: 8192,
-            thinkingConfig: {
-              thinkingLevel: "low",
-            },
           },
         }
       );
@@ -470,16 +466,17 @@ function getGeminiKeyPool(): string[] {
     .map((k) => k.trim())
     .filter((k) => k.length > 10);
 
-  const key1 = Deno.env.get("GEMINI_API_KEY_1")?.trim();
-  const key2 = Deno.env.get("GEMINI_API_KEY_2")?.trim();
-  const key3 = Deno.env.get("GEMINI_API_KEY_3")?.trim();
+  const namedKeys: string[] = [];
+  for (let i = 1; i <= 5; i++) {
+    for (const name of [`GEMINI_API_KEY_${i}`, `GEMINI_KEY_${i}`]) {
+      const key = Deno.env.get(name)?.trim();
+      if (key) namedKeys.push(key);
+    }
+  }
   const singleKey = Deno.env.get("GEMINI_API_KEY")?.trim();
-
   const combined: string[] = [
     ...envKeys,
-    ...(key1 ? [key1] : []),
-    ...(key2 ? [key2] : []),
-    ...(key3 ? [key3] : []),
+    ...namedKeys,
     ...(singleKey ? [singleKey] : []),
     ...GEMINI_API_KEYS_FALLBACK,
   ];
