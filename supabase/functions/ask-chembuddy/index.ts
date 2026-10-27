@@ -363,8 +363,10 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
 
     // 9. Generate answer with Gemini multi-key rotation and multi-model fallback
     const candidateChatModels = [
-      Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash",
-      "gemini-2.5-flash",
+      Deno.env.get("GEMINI_MODEL") || "gemini-3.5-flash-lite",
+      "gemini-3.5-flash-lite",
+      "gemini-3.8-flash",
+      "gemini-3.6-flash",
     ].filter((m, i, arr) => arr.indexOf(m) === i);
 
     let chatRes: { ok: boolean; status: number; data?: any; errorText?: string } = {
