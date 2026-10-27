@@ -127,6 +127,8 @@ function getAvailableGeminiKeys(): string[] {
 }
 
 // 4-Key Failover Executor with immediate retry on 429 / 503
+const orchestratorCooldownUntil = new Map<string, number>();
+
 async function executeGeminiWithRotation(
   keys: string[],
   model: string,
@@ -141,6 +143,7 @@ async function executeGeminiWithRotation(
   for (let attempt = 0; attempt < keys.length; attempt++) {
     const keyIndex = (startIndex + attempt) % keys.length;
     const apiKey = keys[keyIndex];
+    if ((orchestratorCooldownUntil.get(apiKey) ?? 0) > Date.now()) continue;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
 
@@ -187,11 +190,14 @@ async function executeGeminiWithRotation(
       }
 
       lastStatus = resp.status;
-      lastError = await resp.text();
+      lastError = (await resp.text()).slice(0, 450);
+      if ([429, 403, 401, 404].includes(resp.status)) {
+        orchestratorCooldownUntil.set(apiKey, Date.now() + (resp.status === 429 ? 60000 : 300000));
+      }
       console.warn(`[Gemini Failover] Credential #${keyIndex + 1} returned HTTP ${resp.status}`);
 
       // If Rate-limited (429) or Server overloaded (503), immediately try next key
-      if (resp.status === 429 || resp.status === 503 || resp.status === 403) {
+      if ([429, 503, 403, 401, 404].includes(resp.status)) {
         continue;
       }
     } catch (netErr: any) {
