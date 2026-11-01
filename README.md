@@ -8,6 +8,10 @@ Made by Prajwal A Kambar.
 
 ## Version 3.5.6
 
+Revised build 36 adds **Predict with Gemini** for compound name/SMILES → predicted
+¹H/¹³C NMR, SVG spectra and checked structures through the existing cloud AI
+connection. [Prediction and validation notes](docs/GEMINI_NMR_PREDICTION.md).
+
 Adds SVG spectral previews, evidence-checked structure deduction with a student/MSc walkthrough, percentage-composition analysis, a light molecular sketcher with drawing checks, and fixes populated attendance rendering. See [spectroscopy](docs/SPECTROSCOPY_SOLVER.md) and [elemental analysis](docs/ELEMENTAL_ANALYSIS.md).
 
 

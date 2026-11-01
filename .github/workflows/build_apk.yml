@@ -28,7 +28,7 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test --concurrency=1
+      - run: flutter test --concurrency=1 --dart-define=WRITE_SPECTROSCOPY_REPORT=true
       - name: Check sketcher chemistry and browser bridge
         run: node --test tool/sketcher*.test.cjs
       - uses: denoland/setup-deno@v2
@@ -97,6 +97,7 @@ jobs:
           path: |
             ChemBuddy-v*.apk
             build/app/outputs/flutter-apk/*.apk
+            build/spectroscopy-review/random-25-report.*
           if-no-files-found: warn
           retention-days: 14
       - name: Align release tag with verified APK
@@ -117,6 +118,8 @@ jobs:
           files: |
             ${{ steps.version.outputs.apk }}
             ChemBuddy-v*-by-Prajwal-A-Kambar.apk
+            build/spectroscopy-review/random-25-report.html
+            build/spectroscopy-review/random-25-report.json
           name: ChemBuddy ${{ steps.version.outputs.version }} by Prajwal A Kambar
           prerelease: ${{ steps.signing.outputs.preview == 'true' }}
           body_path: release-body.md

@@ -11,6 +11,7 @@ import '../../data/services/spectroscopy_reference_service.dart';
 import '../../data/services/spectroscopy_service.dart';
 import '../../data/services/spectroscopy_teaching_service.dart';
 import '../screens/chem_sketcher_screen.dart';
+import '../screens/spectroscopy_prediction_screen.dart';
 
 class SpectroscopySolverWorkspace extends StatefulWidget {
   const SpectroscopySolverWorkspace({super.key, this.initialFormula});
@@ -282,6 +283,16 @@ class _SpectroscopySolverWorkspaceState
                             avatar: const Icon(
                               Icons.science_outlined,
                               size: 17,
+                            ),
+                          ),
+                          ActionChip(
+                            label: const Text('Predict with Gemini'),
+                            avatar: const Icon(Icons.auto_awesome, size: 17),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) =>
+                                    const SpectroscopyPredictionScreen(),
+                              ),
                             ),
                           ),
                         ],

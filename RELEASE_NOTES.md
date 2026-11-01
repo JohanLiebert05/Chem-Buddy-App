@@ -1,5 +1,17 @@
 # ChemBuddy 3.5.6 by Prajwal A Kambar
 
+Revised Android build 36 adds **Predict with Gemini** beside the existing solver.
+Enter a specific compound name or supported SMILES, solvent, temperature and
+frequency to request predicted proton/carbon shifts, heuristic ranges, estimated
+splitting, SVG spectra and a formula-checked structure. Uses the existing
+authenticated server-side Gemini connection. Contradictory assignments receive
+one correction attempt and are withheld if still inconsistent. Formula-only
+questions request an unambiguous identity instead of inventing an isomer.
+
+The attached 25-molecule report covers reproducible offline reference, formula,
+DBE, assignment and SVG rendering checks. Live Gemini accuracy was not measured
+in that report. Predictions remain estimates requiring experimental verification.
+
 - Rebuilds the structure solver with separate entered and expected spectra, SVG proton/carbon NMR, IR and mass previews, reference assignments and formula-checked candidate structures.
 - Tightens formula, DBE and peak matching; conflicting or insufficient evidence stays unresolved instead of forcing an exact compound.
 - Adds eight guided deduction steps, from molecular formula and DBE to fragment assembly, alternative isomers and final verification, with MSc checkpoints.
