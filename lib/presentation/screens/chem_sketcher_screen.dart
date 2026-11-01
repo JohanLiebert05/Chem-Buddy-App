@@ -126,13 +126,13 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
   void _initWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0xFF0B0F19))
+      ..setBackgroundColor(Colors.white)
       ..addJavaScriptChannel(
         'ChemBridge',
         onMessageReceived: (JavaScriptMessage msg) {
           try {
             final data = jsonDecode(msg.message);
-            if (data is Map && data['type'] == 'structureChanged') {
+            if (mounted && data is Map && data['type'] == 'structureChanged') {
               final payload = data['data'];
               setState(() {
                 _atomCount = (payload['atomCount'] as num?)?.toInt() ?? 0;
@@ -149,6 +149,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageFinished: (String url) async {
+            if (!mounted) return;
             setState(() => _isLoading = false);
             if (widget.initialSmiles != null &&
                 widget.initialSmiles!.isNotEmpty) {
@@ -160,10 +161,20 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
       ..loadFlutterAsset('assets/web/sketcher.html');
   }
 
+  String _decodeBridgeString(Object value) {
+    if (value is String && value.startsWith('"')) {
+      try {
+        final decoded = jsonDecode(value);
+        if (decoded is String) return decoded;
+      } catch (_) {}
+    }
+    return value.toString();
+  }
+
   Future<String> _getSmiles() async {
     try {
       final res = await _controller.runJavaScriptReturningResult('getSmiles()');
-      final s = res.toString().replaceAll('"', '').trim();
+      final s = _decodeBridgeString(res).trim();
       return s.isNotEmpty ? s : _currentSmiles;
     } catch (_) {
       return _currentSmiles;
@@ -175,15 +186,25 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
       final res = await _controller.runJavaScriptReturningResult(
         'getMolfile()',
       );
-      return res.toString().replaceAll('\\n', '\n').replaceAll('"', '');
+      return _decodeBridgeString(res);
     } catch (_) {
       return '';
     }
   }
 
   Future<void> _loadSmiles(String smiles) async {
-    final escaped = smiles.replaceAll("'", "\\'");
-    await _controller.runJavaScript("loadSmiles('$escaped')");
+    try {
+      await _controller.runJavaScript('loadSmiles(${jsonEncode(smiles)})');
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not import this structure. Check the SMILES; isotope and stereochemical annotations need a full molecular editor.',
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _analyzeWithRdkit() async {
@@ -473,7 +494,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0B0F19),
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.primary,
@@ -698,7 +719,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F172A),
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFF1E293B)),
                   ),
@@ -1766,7 +1787,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Color(0xFF0F172A),
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
                 border: Border(
                   top: BorderSide(
                     color: Theme.of(context).colorScheme.outlineVariant,

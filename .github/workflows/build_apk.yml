@@ -29,6 +29,8 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test --concurrency=1
+      - name: Check sketcher chemistry and browser bridge
+        run: node --test tool/sketcher*.test.cjs
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -87,7 +89,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           cp RELEASE_NOTES.md release-body.md
           if [ "$PREVIEW" = "true" ]; then
-            printf '\n## Mobile test build\n\nThis APK is the separate **ChemBuddy Preview** app, signed for testing. It installs alongside the existing app. Production signing secrets were unavailable. Use it to test 3.5.4 on your phone; it is not an in-place production update.\n' >> release-body.md
+            printf '\n## Mobile test build\n\nThis APK is the separate **ChemBuddy Preview** app, signed for testing. It installs alongside the existing app. Production signing secrets were unavailable. Use it to test the version above on your phone; it is not an in-place production update.\n' >> release-body.md
           fi
       - uses: actions/upload-artifact@v4
         with:

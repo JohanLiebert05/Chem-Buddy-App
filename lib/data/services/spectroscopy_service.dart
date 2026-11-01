@@ -18,7 +18,20 @@ class SpectroscopyService {
 
   // 1b. Parse and Validate Molecular Formula with academic valence checks
   static ParsedFormula parseFormula(String rawFormula) {
-    final clean = rawFormula.trim();
+    const subscripts = {
+      '₀': '0',
+      '₁': '1',
+      '₂': '2',
+      '₃': '3',
+      '₄': '4',
+      '₅': '5',
+      '₆': '6',
+      '₇': '7',
+      '₈': '8',
+      '₉': '9',
+    };
+    var clean = rawFormula.trim().replaceAll(RegExp(r'\s+'), '');
+    subscripts.forEach((key, value) => clean = clean.replaceAll(key, value));
     if (clean.isEmpty) {
       return const ParsedFormula(
         carbons: 0,
@@ -31,7 +44,25 @@ class SpectroscopyService {
     }
 
     final elementRegex = RegExp(r'([A-Z][a-z]?)(\d*)');
-    final matches = elementRegex.allMatches(clean);
+    final matches = elementRegex.allMatches(clean).toList();
+    const supported = {'C', 'H', 'N', 'O', 'F', 'Cl', 'Br', 'I', 'S', 'P'};
+    if (matches.map((m) => m.group(0)).join() != clean ||
+        matches.any(
+          (m) =>
+              !supported.contains(m.group(1)) ||
+              (m.group(2)!.isNotEmpty &&
+                  (int.tryParse(m.group(2)!) == null ||
+                      int.tryParse(m.group(2)!) == 0)),
+        )) {
+      return const ParsedFormula(
+        carbons: 0,
+        hydrogens: 0,
+        isValid: false,
+        errorMessage: 'Enter a neutral organic molecular formula using C, H, N, O, F, Cl, Br, I, S or P. Parentheses, charges, unknown elements and zero counts are not supported.',
+        dbe: 0,
+        molarMass: 0,
+      );
+    }
 
     int c = 0, h = 0, n = 0, o = 0, f = 0, cl = 0, br = 0, i = 0, s = 0, p = 0;
 
@@ -485,10 +516,31 @@ class SpectroscopyService {
       effectiveC.addAll(nmrPeaks.where((p) => p > 20.0));
     }
 
+    for (final input in [
+      ('FT-IR', irPeaks ?? <double>[], 400.0, 4000.0),
+      ('¹H NMR', effectiveH, -5.0, 20.0),
+      ('¹³C NMR', effectiveC, -20.0, 250.0),
+      ('MS m/z', msPeaks ?? <double>[], 0.001, 100000.0),
+    ]) {
+      if (input.$2.length > 500 ||
+          input.$2.any((v) => !v.isFinite || v < input.$3 || v > input.$4)) {
+        return SpectroscopyAnalysisResult(
+          isValid: false,
+          errorMessage:
+              '${input.$1}: enter finite peak positions between ${input.$3} and ${input.$4} (at most 500 values).',
+          formula: formula ?? '',
+          dbe: parsed.dbe,
+          molarMass: parsed.molarMass,
+          steps: const [],
+          markdownFull: 'Invalid spectral input.',
+        );
+      }
+    }
+
     final dbe = parsed.dbe;
     final steps = <DeductionStep>[];
     final fullReport = StringBuffer();
-    final fUpper = formula?.trim().toUpperCase() ?? '';
+    final fUpper = formula?.trim() ?? '';
 
     fullReport.writeln('# Academic Spectroscopy Structure Deduction Report\n');
     fullReport.writeln('**Molecular Formula**: `$fUpper` | **Molar Mass**: `${parsed.molarMass} g/mol` | **Calculated DBE**: `$dbe`\n');
@@ -502,11 +554,16 @@ class SpectroscopyService {
     step1Buffer.writeln('- **Calculated DBE**: **$dbe**');
     String dbeSummary = '';
     if (dbe >= 4.0) {
-      dbeSummary = 'DBE ≥ 4: Strongly indicates an aromatic benzene ring';
-      step1Buffer.writeln('- **Aromatic Framework**: A DBE of **$dbe** strongly indicates the presence of a **benzene ring** (consumption of 4 units: 1 ring + 3 alternating double bonds).');
+      dbeSummary =
+          'DBE ≥ 4: Aromatic, polyunsaturated or polycyclic possibilities';
+      step1Buffer.writeln(
+        '- **Possible Frameworks**: DBE **$dbe** permits a benzene ring (4 units), but also non-aromatic rings and multiple bonds. DBE alone does not establish aromaticity.',
+      );
       if (dbe > 4.0) {
         final remaining = (dbe - 4.0).toStringAsFixed(1).replaceAll('.0', '');
-        step1Buffer.writeln('- **Substituent Unsaturation**: The remaining **$remaining DBE unit(s)** must reside in side-chain unsaturation (e.g. carbonyl C=O, alkene C=C, alkyne C#C, or nitrile C#N).');
+        step1Buffer.writeln(
+          '- **Substituent Unsaturation**: If a benzene ring is independently supported, the remaining **$remaining DBE unit(s)** may be additional rings or unsaturation (e.g. carbonyl C=O, alkene C=C, alkyne C#C, or nitrile C#N).',
+        );
       }
     } else if (dbe == 1.0) {
       dbeSummary = 'DBE = 1: Single double bond (C=O or C=C) OR monocyclic ring';
@@ -517,9 +574,15 @@ class SpectroscopyService {
     } else if (dbe == 3.0) {
       dbeSummary = 'DBE = 3: Multiple unsaturations (polyene or bicyclic system)';
       step1Buffer.writeln('- **Three Unsaturations**: Highly conjugated or polycyclic framework.');
-    } else {
+    } else if (dbe == 0) {
       dbeSummary = 'DBE = 0: Completely saturated acyclic hydrocarbon framework';
-      step1Buffer.writeln('- **Fully Saturated**: All carbons are sp³ hybridized. No rings, no double bonds, and no carbonyls.');
+      step1Buffer.writeln('- **Fully Saturated**: All carbons are sp³ hybridized. No rings, no double bonds, and no carbonyls.',
+      );
+    } else {
+      dbeSummary = 'Fractional DBE: check formula, charge or radical state';
+      step1Buffer.writeln(
+        'The neutral closed-shell model does not explain fractional DBE; verify the molecular formula before assigning a structure.',
+      );
     }
 
     steps.add(DeductionStep(
@@ -627,11 +690,16 @@ class SpectroscopyService {
         }).toList();
 
         if (filtered.isNotEmpty) {
-          final best = filtered.first;
-          step3Buffer.writeln('- **δ ${p.toStringAsFixed(2)} ppm**: **${best.type}**\n  - ${best.description}');
-          if (!nmrFragments.contains(best.type)) {nmrFragments.add(best.type);}
+          step3Buffer.writeln(
+            '- **δ ${p.toStringAsFixed(2)} ppm**: Possible environments: ${filtered.map((r) => r.type).join('; ')}. Correlate with integration, splitting and other spectra.',
+          );
+          for (final region in filtered) {
+            if (!nmrFragments.contains(region.type)) {
+              nmrFragments.add(region.type);
+            }
+          }
         } else {
-          step3Buffer.writeln('- **δ ${p.toStringAsFixed(2)} ppm**: Shielded aliphatic / secondary alkyl chemical shift environment.');
+          step3Buffer.writeln('- **δ ${p.toStringAsFixed(2)} ppm**: No reliable assignment from the available shift ranges. Check solvent, referencing, exchangeable protons and correlated spectra.');
         }
       }
     } else {
@@ -661,12 +729,18 @@ class SpectroscopyService {
       step4Buffer.writeln('#### Observed ¹³C NMR Chemical Shifts (${effectiveC.length} signals):\n');
       for (final c in effectiveC) {
         String interpretation = '';
-        if (c >= 198) {
+        if (c >= 160 && parsed.oxygens == 0) {
+          interpretation = '**Deshielded Carbon**: The formula contains no oxygen, so a C=O assignment is not supported. Consider C=N / heteroaromatic environments or recheck the formula and referencing.';
+        } else if (c > 230) {
+          interpretation = '**Unusually Downfield Carbon**: Outside the usual neutral organic carbonyl ranges; verify referencing and chemical context before assigning a functional group.';
+        } else if (c >= 185 && effectiveH.isEmpty) {
+          interpretation = '**Aldehyde / Ketone Carbonyl Possibilities**: Their carbon ranges overlap; proton NMR or DEPT/HSQC is needed to distinguish CHO from a quaternary carbonyl.';
+        } else if (c >= 198) {
           if (hasAldehydeProton) {
             interpretation = '**Aldehyde Carbonyl (C=O, ~190-205 ppm)**: Confirmed by presence of formyl proton at δ 9-10 ppm in ¹H NMR.';
             hasAldehydeCarbon = true;
           } else {
-            interpretation = '**Ketone Carbonyl (C=O, ~200-220 ppm)**: Quaternary sp² carbon with no heteroatom conjugation (absence of formyl proton rules out aldehyde).';
+            interpretation = '**Ketone Carbonyl (C=O, ~200-220 ppm)**: Quaternary sp² carbon with no heteroatom conjugation (aldehyde remains possible if the proton list is incomplete).';
             hasKetoneCarbon = true;
           }
         } else if (c >= 185 && c < 198) {
@@ -677,12 +751,15 @@ class SpectroscopyService {
             interpretation = '**Conjugated Ketone Carbonyl (Ar-CO-R)**: Alpha,beta-unsaturated or aryl ketone (e.g. Acetophenone δ 198 ppm).';
             hasKetoneCarbon = true;
           }
+        } else if (c >= 160 && c < 170 &&
+            !(irPeaks ?? []).any((p) => p >= 1650 && p <= 1800)) {
+          interpretation = '**Deshielded sp² Carbon**: May be an aryl C–O/C–N, heteroaromatic carbon, or acid-derivative carbonyl. Correlate with IR and connectivity; shift alone does not prove C=O.';
         } else if (c >= 160 && c < 185) {
-          if (hasAcidProton || (parsed.oxygens >= 2 && irPeaks != null && irPeaks.any((p) => p >= 2500 && p <= 3300))) {
+          if (hasAcidProton && parsed.oxygens >= 2) {
             interpretation = '**Carboxylic Acid Carbonyl (-COOH, δ 170-185 ppm)**: Strongly hydrogen-bonded.';
             hasEsterOrAcidCarbon = true;
           } else if (parsed.oxygens >= 2 && hasDeshieldedAliphatic) {
-            interpretation = '**Ester Carbonyl (-COO-R, δ 165-175 ppm)**: Confirmed by presence of -OCH2- / -OCH3 signals in ¹H & ¹³C.';
+            interpretation = '**Possible Ester Carbonyl (-COO-R, δ 165-175 ppm)**: Correlate with C–O signals; acid and other acid derivatives can overlap.';
             hasEsterOrAcidCarbon = true;
           } else if (parsed.nitrogens > 0) {
             interpretation = '**Amide Carbonyl (-CONH-, δ 160-175 ppm)**: Strong resonance from nitrogen lone pair.';
@@ -690,21 +767,23 @@ class SpectroscopyService {
             interpretation = '**Ester / Acid Derivative Carbonyl (δ 160-185 ppm)**.';
             hasEsterOrAcidCarbon = true;
           }
-        } else if (c >= 115 && c < 160) {
+        } else if (c >= 100 && c < 160) {
           hasAromaticCarbons = true;
           if (c >= 135) {
-            interpretation = '**Aromatic Ipso Quaternary Carbon (Ar-C)** or substituted alkene; lower intensity in broadband decoupled spectrum due to lack of NOE.';
+            interpretation = '**Substituted Alkene / Aromatic sp² Carbon**: May be CH or quaternary; verify with DEPT/HSQC.';
           } else {
-            interpretation = '**Aromatic CH Carbon (Ar-CH)**; appears upright in DEPT-135 & DEPT-90.';
+            interpretation = '**Alkene / Aromatic sp² Carbon**: Protonation and multiplicity require DEPT or HSQC; chemical shift alone cannot distinguish CH from quaternary carbon.';
           }
-        } else if (c >= 50 && c < 85) {
+        } else if (c >= 65 && c < 100) {
+          interpretation = '**Overlapping Carbon Environments**: Alkyne sp carbon, oxygen-bearing sp³ carbon or (near 90–100 ppm) acetal carbon; use DBE, IR and DEPT/HSQC to distinguish.';
+        } else if (c >= 50 && c < 65) {
           interpretation = '**Heteroatom-Bearing sp³ Carbon (C-O, C-N, C-X)**: E.g., -OCH2- (58-65 ppm), -OCH3 (55 ppm), or -CH2X.';
         } else if (c >= 65 && c < 90) {
           interpretation = '**Alkyne sp Carbon (-C#C-)** or strongly deshielded alcohol carbon.';
         } else if (c >= 25 && c < 50) {
           interpretation = '**Aliphatic Methine/Methylene Carbon (-CH2-, -CH<)**.';
         } else {
-          interpretation = '**Aliphatic Methyl Carbon (-CH3, δ 10-25 ppm)**: Upright in DEPT-135; absent in DEPT-90.';
+          interpretation = '**Shielded Aliphatic Carbon**: Often methyl, but CH₂/CH are possible. DEPT is required to assign protonation.';
         }
 
         step4Buffer.writeln('- **δ ${c.toStringAsFixed(1)} ppm**: $interpretation');
@@ -762,38 +841,47 @@ class SpectroscopyService {
     // ----------------------------------------------------
     final step5Buffer = StringBuffer();
     final msFragments = <String>[];
-    if (parsed.chlorines > 0) {
+    if (parsed.chlorines == 1 && parsed.bromines == 0) {
       step5Buffer.writeln('- **Chlorine Signature**: Formula contains ${parsed.chlorines}x Cl. Look for classic **M and M+2 doublet in 3:1 ratio** (due to natural abundance ³⁵Cl 75.8% vs ³⁷Cl 24.2%).');
       msFragments.add('³⁵Cl/³⁷Cl (3:1)');
     }
-    if (parsed.bromines > 0) {
+    if (parsed.bromines == 1 && parsed.chlorines == 0) {
       step5Buffer.writeln('- **Bromine Signature**: Formula contains ${parsed.bromines}x Br. Look for characteristic **twin peaks of equal intensity (1:1 ratio) separated by 2 m/z units** (⁷⁹Br 50.7% vs ⁸¹Br 49.3%).');
       msFragments.add('⁷⁹Br/⁸¹Br (1:1)');
+    }
+    if (parsed.chlorines + parsed.bromines > 1) {
+      step5Buffer.writeln('- **Halogen isotope cluster**: Multiple Cl/Br atoms produce a multi-peak isotope envelope. A single-halogen 3:1 or 1:1 doublet rule does not apply.');
     }
 
     if (msPeaks != null && msPeaks.isNotEmpty) {
       for (final m in msPeaks) {
-        if ((m - parsed.molarMass).abs() <= 1.0) {
-          step5Buffer.writeln('- **m/z $m**: **Molecular Ion Peak [M]⁺•** (confirms molecular weight of ${parsed.molarMass} g/mol).');
+        if ((m - parsed.nominalMass).abs() <= 0.5) {
+          step5Buffer.writeln('- **m/z $m**: Compatible with **Molecular Ion Peak [M]⁺•** at nominal mass ${parsed.nominalMass}. Verify ionization and isotope pattern; average molar mass is ${parsed.molarMass} g/mol.');
           msFragments.add('[M]⁺•');
-        } else if (m == 91) {
-          step5Buffer.writeln('- **m/z 91**: Diagnostic **Tropylium Cation [C₇H₇]⁺** (classic fingerprint confirming a benzyl group Ar-CH₂- via McLafferty/benzylic cleavage).');
+        } else if (parsed.chlorines + parsed.bromines > 0 && m > parsed.nominalMass &&
+            List.generate(parsed.chlorines + parsed.bromines, (i) => parsed.nominalMass + 2 * (i + 1)).any((ion) => (ion - m).abs() <= .5)) {
+          step5Buffer.writeln('- **m/z $m**: Possible heavier halogen isotopologue in the molecular-ion cluster, not the average molar mass.');
+        } else if (m == 91 && parsed.carbons >= 7 && parsed.hydrogens >= 7) {
+          step5Buffer.writeln('- **m/z 91**: Possible **Tropylium Cation [C₇H₇]⁺** from benzylic fragmentation. Nominal mass alone does not establish connectivity.');
           msFragments.add('Tropylium m/z 91');
-        } else if (m == 77) {
-          step5Buffer.writeln('- **m/z 77**: **Phenyl Cation [C₆H₅]⁺** (confirms an unsubstituted monosubstituted benzene ring).');
+        } else if (m == 77 && parsed.carbons >= 6 && parsed.hydrogens >= 5) {
+          step5Buffer.writeln('- **m/z 77**: Possible **Phenyl Cation [C₆H₅]⁺**. This does not uniquely establish the parent ring substitution.');
           msFragments.add('Phenyl m/z 77');
-        } else if (m == 105) {
-          step5Buffer.writeln('- **m/z 105**: **Benzoyl Cation [C₆H₅CO]⁺** (confirms a benzoyl group Ar-C(=O)- formed by α-cleavage).');
+        } else if (m == 105 && parsed.carbons >= 7 && parsed.hydrogens >= 5 && parsed.oxygens > 0) {
+          step5Buffer.writeln('- **m/z 105**: Possible **Benzoyl Cation [C₆H₅CO]⁺**, compatible with a benzoyl group. Confirm by the other spectra.');
           msFragments.add('Benzoyl m/z 105');
-        } else if (m == 43) {
-          step5Buffer.writeln('- **m/z 43**: **Acetylium Cation [CH₃CO]⁺** or Propyl cation [C₃H₇]⁺ (confirms methyl ketone CH₃-C=O or saturated propyl).');
-          msFragments.add('Acetylium m/z 43');
-        } else if (m == 57) {
-          step5Buffer.writeln('- **m/z 57**: **tert-Butyl Cation [(CH₃)₃C]⁺** or butyl fragment.');
-          msFragments.add('[C₄H₉]⁺ m/z 57');
-        } else if (m == 29) {
-          step5Buffer.writeln('- **m/z 29**: **Ethyl Cation [CH₃CH₂]⁺** or Formyl cation [CHO]⁺.');
-          msFragments.add('[C₂H₅]⁺ m/z 29');
+        } else if (m == 43 && ((parsed.carbons >= 2 && parsed.hydrogens >= 3 && parsed.oxygens > 0) || (parsed.carbons >= 3 && parsed.hydrogens >= 7))) {
+          final assignments = [if (parsed.carbons >= 2 && parsed.hydrogens >= 3 && parsed.oxygens > 0) 'acetylium [CH₃CO]⁺', if (parsed.carbons >= 3 && parsed.hydrogens >= 7) 'propyl [C₃H₇]⁺'];
+          step5Buffer.writeln('- **m/z 43**: Possible ${assignments.join(' or ')}; nominal mass alone is not unique.');
+          msFragments.add('Possible ion m/z 43');
+        } else if (m == 57 && ((parsed.carbons >= 4 && parsed.hydrogens >= 9) || (parsed.carbons >= 3 && parsed.hydrogens >= 5 && parsed.oxygens > 0))) {
+          final assignments = [if (parsed.carbons >= 4 && parsed.hydrogens >= 9) 'butyl [C₄H₉]⁺', if (parsed.carbons >= 3 && parsed.hydrogens >= 5 && parsed.oxygens > 0) 'propionyl [C₃H₅O]⁺'];
+          step5Buffer.writeln('- **m/z 57**: Possible ${assignments.join(' or ')}; distinguish using other evidence.');
+          msFragments.add('Possible ion m/z 57');
+        } else if (m == 29 && ((parsed.carbons >= 2 && parsed.hydrogens >= 5) || (parsed.carbons >= 1 && parsed.hydrogens >= 1 && parsed.oxygens > 0))) {
+          final assignments = [if (parsed.carbons >= 2 && parsed.hydrogens >= 5) 'ethyl [C₂H₅]⁺', if (parsed.carbons >= 1 && parsed.hydrogens >= 1 && parsed.oxygens > 0) 'formyl [CHO]⁺'];
+          step5Buffer.writeln('- **m/z 29**: Possible ${assignments.join(' or ')}.');
+          msFragments.add('Possible ion m/z 29');
         } else {
           step5Buffer.writeln('- **m/z $m**: Characteristic daughter ion / molecular fragmentation peak.');
         }
@@ -825,16 +913,22 @@ class SpectroscopyService {
 
     // Carbonyl framework - strictly checked against oxygen valence!
     if (parsed.oxygens > 0 && dbe >= 1) {
-      if (hasAldehydeProton || hasAldehydeCarbon || (irPeaks != null && irPeaks.any((p) => p >= 1690 && p <= 1730) && (irPeaks.any((p) => p >= 2700 && p <= 2850)))) {
+      if (hasAldehydeProton || hasAldehydeCarbon) {
         subunits.add('Aldehyde Group (–CH=O, consumes 1 C, 1 H, 1 O, 1 DBE)');
-      } else if (hasKetoneCarbon || (effectiveC.any((c) => c >= 195) || (irPeaks != null && irPeaks.any((p) => p >= 1660 && p <= 1725)))) {
+      } else if (hasKetoneCarbon) {
         subunits.add('Ketone Carbonyl Group (–C(=O)–, consumes 1 C, 1 O, 1 DBE)');
-      } else if (parsed.oxygens >= 2 && (hasAcidProton || (irPeaks != null && irPeaks.any((p) => p >= 2500 && p <= 3300)))) {
+      } else if (parsed.oxygens >= 2 && hasAcidProton && hasEsterOrAcidCarbon) {
         subunits.add('Carboxylic Acid Group (–COOH, consumes 1 C, 1 H, 2 O, 1 DBE)');
-      } else if (parsed.oxygens >= 2 && (hasEsterOrAcidCarbon || (irPeaks != null && irPeaks.any((p) => p >= 1730 && p <= 1755)))) {
-        subunits.add('Ester Group (–CO–O–, consumes 1 C, 2 O, 1 DBE)');
+      } else if (parsed.oxygens >= 2 && hasEsterOrAcidCarbon) {
+        subunits.add(
+          'Possible Ester / Acid Group (connectivity and acid O–H not established)',
+        );
       } else if (parsed.nitrogens > 0 && (irPeaks != null && irPeaks.any((p) => p >= 1630 && p <= 1685))) {
-        subunits.add('Amide Group (–CO–N<, consumes 1 C, 1 O, 1 N, 1 DBE)');
+        subunits.add('Possible Amide Group (confirm C=O and C–N connectivity)');
+      } else if ((irPeaks ?? []).any((p) => p >= 1650 && p <= 1800)) {
+        subunits.add(
+          'Possible Carbonyl Group (IR alone does not distinguish ketone, aldehyde, acid, ester or amide)',
+        );
       }
     }
 
@@ -856,9 +950,13 @@ class SpectroscopyService {
 
     // Methyl groups
     if (hasAlphaCarbonylProtons || (effectiveC.any((c) => c >= 20 && c <= 30))) {
-      subunits.add('Methyl Group bonded to Carbonyl or Aryl ring (–CH₃, consumes 1 C, 3 H)');
+      subunits.add(
+        'Possible alkyl environment adjacent to carbonyl / aryl; integration and DEPT needed to distinguish CH₃ from CH₂/CH',
+      );
     } else if (effectiveH.any((p) => p >= 0.8 && p <= 1.5) || effectiveC.any((c) => c >= 10 && c <= 25)) {
-      subunits.add('Terminal Methyl Group (–CH₃, consumes 1 C, 3 H)');
+      subunits.add(
+        'Possible alkyl environment; confirm methyl assignment with integration / DEPT',
+      );
     }
 
     if (parsed.chlorines > 0) {subunits.add('${parsed.chlorines}x Chlorine substituent (-Cl)');}
@@ -868,7 +966,9 @@ class SpectroscopyService {
     for (final s in subunits) {
       step6Buffer.writeln('- **$s**');
     }
-    step6Buffer.writeln('\n**Total sub-atomic balance**: When pieced together, the fragments account for all ${parsed.carbons} Carbon, ${parsed.hydrogens} Hydrogen, ${parsed.oxygens} Oxygen, and heteroatoms without false-positive functional groups.');
+    step6Buffer.writeln(
+      '\n**Atom-budget constraints**: Formula contains ${parsed.carbons} C, ${parsed.hydrogens} H and ${parsed.oxygens} O. These are possible, overlapping subunits; their atom balance and connectivity have not been established.',
+    );
 
     steps.add(DeductionStep(
       stepNumber: 6,
@@ -885,18 +985,52 @@ class SpectroscopyService {
     final step7Buffer = StringBuffer();
     String primaryCandidate = 'Proposed Molecular Structure';
 
-    // Query 52+ Curated MSc Chemistry Compounds Database or Algorithmic Engine
-    final knownCompound = findKnownSpectroscopyCompound(
-      formula: fUpper,
+    final sanityReport = runSanityChecks(
+      formula: parsed,
+      irPeaks: irPeaks,
+      nmrPeaks: effectiveH,
+      nmr13CPeaks: effectiveC,
+      carbonSignals: carbonSignals,
+      msPeaks: msPeaks,
+    );
+    final ranked = rankSpectroscopyCandidates(
+      formula: formula ?? '',
       irPeaks: irPeaks,
       nmrPeaks: effectiveH,
       nmr13CPeaks: effectiveC,
       msPeaks: msPeaks,
     );
+    final knownCompound =
+        !sanityReport.hasViolations &&
+            ranked.isNotEmpty &&
+            (ranked.length == 1 || ranked.first.score - ranked[1].score >= 0.10)
+        ? ranked.first.compound
+        : null;
+    if (ranked.isNotEmpty) {
+      step7Buffer.writeln(
+        '**Reference candidates ranked by supplied peak agreement** (heuristic score, not a probability; library is not exhaustive):',
+      );
+      for (final match in ranked.take(3)) {
+        step7Buffer.writeln(
+          '- ${match.compound.commonName}: ${(match.score * 100).round()}/100 — ${match.evidence.join('; ')}',
+        );
+      }
+    } else if (effectiveH.isNotEmpty || effectiveC.isNotEmpty) {
+      step7Buffer.writeln(
+        '**No supported reference match**: the NMR evidence is insufficient or disagrees with the formula-matched library entries. Matching IR alone cannot identify an isomer.',
+      );
+    }
+    if (sanityReport.hasViolations) {
+      step7Buffer.writeln(
+        '**Conflicting evidence**: resolve the flagged inconsistencies before assigning a structure.',
+      );
+    }
 
     if (knownCompound != null) {
       primaryCandidate = '${knownCompound.commonName} (${knownCompound.iupacName})';
-      step7Buffer.writeln('#### Primary Structural Candidate: **$primaryCandidate**\n');
+      step7Buffer.writeln(
+        '#### Tentative Reference Candidate: **$primaryCandidate**\n',
+      );
       step7Buffer.writeln('**Chemical Structure**: `${knownCompound.structure}`');
       if (knownCompound.smiles.isNotEmpty) {
         step7Buffer.writeln('**SMILES**: `${knownCompound.smiles}`\n');
@@ -904,9 +1038,12 @@ class SpectroscopyService {
         step7Buffer.writeln();
       }
 
-      step7Buffer.writeln('**Definitive Spectral Evidence & Deduction Rationale**:');
-      step7Buffer.writeln(knownCompound.definitiveReasoning);
-      step7Buffer.writeln('\n**Diagnostic Spectroscopic Assignments**:');
+      step7Buffer.writeln(
+        '**Interpretation**: The supplied shifts support this library candidate. A unique structure is not established; confirm integration, multiplicities and connectivity.',
+      );
+      step7Buffer.writeln(
+        '\n**Expected Reference Data (not additional observed peaks)**:',
+      );
       if (knownCompound.diagnosticIr.isNotEmpty) {
         step7Buffer.writeln('- **FT-IR Signatures**: ${knownCompound.diagnosticIr.join("; ")}');
       }
@@ -930,11 +1067,17 @@ class SpectroscopyService {
       }
 
       if (knownCompound.alternativeIsomersRuledOut.isNotEmpty) {
-        step7Buffer.writeln('\n**Ruling Out Alternative Constitutional Isomers**:');
+        step7Buffer.writeln(
+          '\n**Reference comparisons — verify the required observations before excluding an isomer**:',
+        );
         for (final iso in knownCompound.alternativeIsomersRuledOut) {
-          step7Buffer.writeln('- $iso');
+          step7Buffer.writeln(
+            '- ${iso.replaceAll(RegExp(r'Ruled out because', caseSensitive: false), 'Distinguishing reference feature:')}',
+          );
         }
       }
+    } else if (sanityReport.hasViolations) {
+      primaryCandidate = 'Structure assignment withheld: conflicting evidence';
     } else {
       // Algorithmic Structure Deduction Engine for Arbitrary Formulas
       final algorithmicResult = deduceStructureAlgorithmically(
@@ -964,42 +1107,28 @@ class SpectroscopyService {
     // STEP 8: Final Verification & Consistency Summary
     // ----------------------------------------------------
     final step8Buffer = StringBuffer();
-    step8Buffer.writeln('#### Academic Spectral Consistency Checklist\n');
-    step8Buffer.writeln('| Technique | Key Observed Signal | Chemical Assignment | Verification Status |');
-    step8Buffer.writeln('|---|---|---|---|');
-    step8Buffer.writeln('| **Molecular DBE** | DBE = $dbe | Core framework saturation | ✅ Consistent |');
-    if (irPeaks != null && irPeaks.isNotEmpty) {
-      step8Buffer.writeln('| **FT-IR** | ${irPeaks.first} cm⁻¹ | Functional group stretching | ✅ Consistent |');
-    }
-    if (effectiveH.isNotEmpty) {
-      step8Buffer.writeln('| **¹H NMR** | δ ${effectiveH.first.toStringAsFixed(2)} ppm | Proton magnetic environment | ✅ Consistent |');
-    }
-    if (effectiveC.isNotEmpty) {
-      step8Buffer.writeln('| **¹³C NMR** | δ ${effectiveC.first.toStringAsFixed(1)} ppm | Carbon skeleton & hybridization | ✅ Consistent |');
-    }
-    if (msPeaks != null && msPeaks.isNotEmpty) {
-      step8Buffer.writeln('| **Mass Spec** | m/z ${msPeaks.first} | Characteristic ion / fragment | ✅ Consistent |');
-    }
-    step8Buffer.writeln('\n**Final Academic Conclusion**: The spectroscopic evidence is fully self-consistent and uniquely validates the proposed structural connectivity without false-positive functional groups.');
+    final conclusion = sanityReport.hasViolations
+        ? 'Conflicting evidence: structure assignment withheld. Review the sanity checks.'
+        : knownCompound != null
+        ? 'Tentative library match; confirm with integration, splitting, DEPT/HSQC and HMBC as needed.'
+        : 'Insufficient or ambiguous evidence for a unique structure. The framework suggestions are hypotheses.';
+    step8Buffer.writeln('#### Evidence assessment\n');
+    step8Buffer.writeln(conclusion);
+    step8Buffer.writeln(
+      '\nNo peak list alone establishes every bond. Missing peaks are not proof of absence; solvent, exchangeable protons and incomplete spectra can affect assignments.',
+    );
+    step8Buffer.writeln(
+      '\n**Checks**: ${sanityReport.passedCount} passed, ${sanityReport.warningCount} warnings, ${sanityReport.violationCount} violations.',
+    );
 
     steps.add(DeductionStep(
       stepNumber: 8,
       title: 'Final Structure Verification & Checklist',
-      summary: 'All spectroscopic methods cross-verified',
+      summary: conclusion,
       content: step8Buffer.toString(),
-      icon: Icons.check_circle_outline,
+      icon: Icons.fact_check_outlined,
     ));
-    fullReport.writeln('### Step 8: Final Verification\n${step8Buffer.toString()}\n');
-
-    // Run Rule-Based Spectral Sanity Checks
-    final sanityReport = runSanityChecks(
-      formula: parsed,
-      irPeaks: irPeaks,
-      nmrPeaks: effectiveH,
-      nmr13CPeaks: effectiveC,
-      carbonSignals: carbonSignals,
-      msPeaks: msPeaks,
-    );
+    fullReport.writeln('### Step 8: Final Verification\n$step8Buffer\n');
 
     if (sanityReport.items.isNotEmpty) {
       fullReport.writeln('### Rule-Based Spectral Sanity Checks 🛡️\n');
@@ -1022,6 +1151,8 @@ class SpectroscopyService {
       steps: steps,
       markdownFull: fullReport.toString(),
       sanityReport: sanityReport,
+      supportedCompound: knownCompound,
+      candidateMatches: ranked,
     );
   }
 
@@ -1070,8 +1201,9 @@ class SpectroscopyService {
           title: 'Aromatic Ring DBE Deficit',
           category: '¹H NMR / DBE Correlation',
           passed: false,
-          severity: SanitySeverity.violation,
-          message: 'Claimed aromatic protons at δ ${aromaticProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm, but DBE = ${dbe.toStringAsFixed(1)}. An intact benzene ring requires at least 4 units of unsaturation.',
+          severity: SanitySeverity.warning,
+          message:
+                'Signals at δ ${aromaticProtons.map((e) => e.toStringAsFixed(2)).join(', ')} ppm overlap aromatic, alkene and exchangeable proton regions. An intact benzene ring requires at least 4 units of unsaturation; DBE = ${dbe.toStringAsFixed(1)} does not permit that assignment.',
           recommendation: 'Re-examine proton assignments: signals between 6.0–6.8 ppm may belong to conjugated alkenes, furans, or hetero-olefins.',
         ));
       } else {
@@ -1094,9 +1226,9 @@ class SpectroscopyService {
           title: 'Carbonyl Stretch Without Oxygen',
           category: 'FT-IR Heteroatom Check',
           passed: false,
-          severity: SanitySeverity.violation,
+          severity: carbonylPeaks.any((p) => p >= 1700) ? SanitySeverity.violation : SanitySeverity.warning,
           message: 'Strong FT-IR carbonyl absorption claimed at ${carbonylPeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹, but molecular formula contains 0 Oxygen atoms.',
-          recommendation: 'Impossible: Carbonyl groups (C=O) require at least 1 oxygen atom. Re-verify formula or reassign peak (e.g. C=C alkene ~1640 cm⁻¹ or C=N imine).',
+          recommendation: 'A C=O interpretation requires oxygen, but C=C and C=N bands can overlap at the lower end. Check NMR before assigning the group.',
         ));
       } else {
         items.add(SanityCheckItem(
@@ -1114,7 +1246,7 @@ class SpectroscopyService {
           title: 'Carbonyl Unsaturation Deficit',
           category: 'DBE & Valence',
           passed: false,
-          severity: SanitySeverity.violation,
+          severity: carbonylPeaks.any((p) => p >= 1700) ? SanitySeverity.violation : SanitySeverity.warning,
           message: 'Carbonyl band detected, but DBE is ${dbe.toStringAsFixed(1)} (< 1.0). A C=O double bond requires at least 1 unit of unsaturation.',
           recommendation: 'Check formula saturation: neutral aldehydes and ketones have DBE ≥ 1.0.',
         ));
@@ -1137,15 +1269,14 @@ class SpectroscopyService {
     }
 
     // 5. Carboxylic Acid O-H vs Carbonyl & Oxygen Count
-    final broadAcidOh = ir.where((p) => p >= 2500 && p <= 3300 && !nmr.any((n) => n >= 11)).toList();
     final highAcidNmr = nmr.where((p) => p >= 10.5 && p <= 13.5).toList();
-    if (highAcidNmr.isNotEmpty || (broadAcidOh.isNotEmpty && carbonylPeaks.isNotEmpty)) {
+    if (highAcidNmr.isNotEmpty) {
       if (formula.oxygens < 2) {
         items.add(SanityCheckItem(
           title: 'Carboxylic Acid Oxygen Deficit',
           category: 'FT-IR / NMR Correlation',
           passed: false,
-          severity: SanitySeverity.violation,
+          severity: SanitySeverity.warning,
           message: 'Carboxylic acid signature detected (extreme downfield proton δ ${highAcidNmr.isNotEmpty ? highAcidNmr.join(', ') : ''} ppm or broad 2500–3300 cm⁻¹ O-H), but formula has only ${formula.oxygens} Oxygen atom(s).',
           recommendation: 'Carboxylic acids (-COOH) require at least 2 oxygen atoms. If only 1 oxygen is present, reassign as enol (-C=C-OH) or phenolic O-H with intra-molecular H-bonding.',
         ));
@@ -1160,7 +1291,7 @@ class SpectroscopyService {
           title: 'Nitrile Stretch Without Nitrogen',
           category: 'FT-IR Heteroatom Check',
           passed: false,
-          severity: SanitySeverity.violation,
+          severity: SanitySeverity.warning,
           message: 'Sharp band in nitrile region (${nitrilePeaks.map((e) => e.toStringAsFixed(0)).join(', ')} cm⁻¹), but molecular formula contains 0 Nitrogen atoms.',
           recommendation: 'Nitrile groups (C#N) require nitrogen. Peak may be an alkyne (C#C, 2100–2260 cm⁻¹) or carbon dioxide artifact (2349 cm⁻¹).',
         ));
@@ -1168,14 +1299,14 @@ class SpectroscopyService {
     }
 
     // 7. 13C Carbonyl without Oxygen
-    final cCarbonyl = nmr13C.where((c) => c >= 160).toList();
+    final cCarbonyl = nmr13C.where((c) => c >= 185).toList();
     if (cCarbonyl.isNotEmpty && formula.oxygens == 0) {
       items.add(SanityCheckItem(
         title: '¹³C Carbonyl Resonance Without Oxygen',
         category: '¹³C NMR Heteroatom Check',
         passed: false,
-        severity: SanitySeverity.violation,
-        message: 'Downfield ¹³C chemical shift(s) at ${cCarbonyl.map((c) => 'δ ${c.toStringAsFixed(1)}').join(', ')} ppm indicate a carbonyl carbon (C=O), but formula has 0 Oxygen atoms.',
+        severity: formula.sulfurs > 0 ? SanitySeverity.warning : SanitySeverity.violation,
+        message: 'Downfield ¹³C chemical shift(s) at ${cCarbonyl.map((c) => 'δ ${c.toStringAsFixed(1)}').join(', ')} ppm need reassignment because the formula has no oxygen. Consider thiocarbonyls when sulfur is present.',
         recommendation: 'Carbonyls require oxygen. If no oxygen is present, check if peaks belong to highly deshielded heteroaromatics or carbocations.',
       ));
     }
@@ -1194,15 +1325,15 @@ class SpectroscopyService {
 
     // 9. Mass Spec Molecular Ion Consistency
     if (ms.isNotEmpty) {
-      final hasMolIon = ms.any((m) => (m - formula.molarMass).abs() <= 1.0);
+      final hasMolIon = ms.any((m) => (m - formula.nominalMass).abs() <= 0.5);
       if (hasMolIon) {
         items.add(SanityCheckItem(
           title: 'Molecular Ion [M]⁺• Consistency',
           category: 'Mass Spectrometry',
           passed: true,
           severity: SanitySeverity.info,
-          message: 'Molecular ion peak observed at m/z ~${formula.molarMass.toInt()}, exactly matching formula molar mass.',
-          recommendation: 'Molecular weight validated.',
+          message: 'A peak is compatible with the nominal molecular ion at m/z ${formula.nominalMass}. Average molar mass (${formula.molarMass} g/mol) is not an exact isotope-ion mass.',
+          recommendation: 'Check the isotope cluster, ionization method and charge. One nominal mass does not prove the formula.',
         ));
       }
     }
@@ -3068,26 +3199,167 @@ class SpectroscopyService {
     List<double>? nmr13CPeaks,
     List<double>? msPeaks,
   }) {
-    final clean = formula.trim().toUpperCase().replaceAll(' ', '');
-    final matches = curatedCompoundDatabase.where((c) => c.formula.toUpperCase() == clean).toList();
-    if (matches.isEmpty) {return null;}
-    if (matches.length == 1) {return matches.first;}
-
-    // Disambiguate between constitutional isomers (e.g. 1-bromopropane vs 2-bromopropane)
-    if (clean == 'C3H7BR') {
-      if (nmrPeaks != null && nmrPeaks.any((p) => p >= 4.0 && p <= 4.5)) {
-        return matches.firstWhere((c) => c.commonName.contains('2-Bromopropane'), orElse: () => matches.first);
-      }
-      return matches.firstWhere((c) => c.commonName.contains('1-Bromopropane'), orElse: () => matches.first);
+    final ranked = rankSpectroscopyCandidates(
+      formula: formula,
+      irPeaks: irPeaks,
+      nmrPeaks: nmrPeaks,
+      nmr13CPeaks: nmr13CPeaks,
+      msPeaks: msPeaks,
+    );
+    if (ranked.isEmpty ||
+        (ranked.length > 1 && ranked.first.score - ranked[1].score < 0.10)) {
+      return null;
     }
-    if (clean == 'C8H8O3') {
-      if (irPeaks != null && irPeaks.any((p) => p >= 1675 && p <= 1690)) {
-        return matches.firstWhere((c) => c.commonName.contains('Methyl Salicylate'), orElse: () => matches.first);
-      }
-      return matches.firstWhere((c) => c.commonName.contains('Vanillin'), orElse: () => matches.first);
-    }
+    return ranked.first.compound;
+  }
 
-    return matches.first;
+  /// Match observed resonances against reference values, never against formula alone.
+  /// Scores measure library agreement, not identification confidence.
+  static List<SpectroscopyCandidateMatch> rankSpectroscopyCandidates({
+    required String formula,
+    List<double>? irPeaks,
+    List<double>? nmrPeaks,
+    List<double>? nmr13CPeaks,
+    List<double>? msPeaks,
+  }) {
+    final parsed = parseFormula(formula);
+    if (!parsed.isValid || parsed.dbe % 1 != 0) return [];
+    final h = nmrPeaks ?? <double>[];
+    final c = nmr13CPeaks ?? <double>[];
+    // Formula, isolated fragments and a single resonance cannot identify an isomer.
+    if (h.toSet().length < 2 && c.toSet().length < 2) return [];
+    final result = <SpectroscopyCandidateMatch>[];
+    for (final entry in curatedCompoundDatabase.where((e) =>
+          _formulaKey(
+            parseFormula(
+              e.formula.replaceAll('BR', 'Br').replaceAll('CL', 'Cl'),
+            ),
+          ) ==
+          _formulaKey(parsed),
+    )) {
+      final expectedH = _referenceShifts(entry.nmr1H);
+      final expectedC = _referenceShifts(entry.nmr13C);
+      var total = 0.0;
+      var weight = 0.0;
+      var compatible = true;
+      final evidence = <String>[];
+      for (final data in [
+        ('¹H NMR', h, expectedH, 0.30, 2.0),
+        ('¹³C NMR', c, expectedC, 3.0, 3.0),
+      ]) {
+        if (data.$2.isEmpty || data.$3.isEmpty) { continue; }
+        final agreement = _peakAgreement(data.$2, data.$3, data.$4);
+        if (agreement < 0.60) { compatible = false; }
+        if (_matchedPeakCount(data.$2, data.$3, data.$4) < data.$2.toSet().length) {
+          compatible = false;
+        }
+        // One unexplained diagnostic resonance (for example OCH3 instead of
+        // COCH3) matters more than many matching aromatic signals.
+        if (data.$2.any(
+          (value) =>
+              !data.$3.any((reference) => (reference - value).abs() <= data.$4),
+        )) {
+          compatible = false;
+        }
+        total += agreement * data.$5;
+        weight += data.$5;
+        evidence.add('${data.$1} ${(agreement * 100).round()}/100');
+      }
+      // A formyl proton requires a reference aldehyde; incompatible carbonyl
+      // classes must not be outweighed by a cluster of aromatic resonances.
+      if (h.any((v) => v >= 9.2 && v <= 10.5) &&
+          !expectedH.any((v) => v >= 9.0 && v <= 10.6)) {
+        compatible = false;
+      }
+      for (final carbon in c.where((v) => v >= 170)) {
+        if (!expectedC.any((v) => (v - carbon).abs() <= 8)) compatible = false;
+      }
+      // IR and MS provide supporting evidence, but cannot rescue a failed NMR match.
+      for (final data in [
+        (
+          'FT-IR',
+          irPeaks ?? <double>[],
+          _referencePositions(entry.diagnosticIr, r'^[\d.,\s&–-]+'),
+          35.0,
+        ),
+        (
+          'MS',
+          msPeaks ?? <double>[],
+          _referencePositions(
+            entry.msFragmentation,
+            r'm/z\s*\d+(?:\s*&\s*\d+)?',
+          ),
+          0.5,
+        ),
+      ]) {
+        if (data.$2.isEmpty || data.$3.isEmpty) continue;
+        final agreement = _peakAgreement(data.$2, data.$3, data.$4);
+        total += agreement * 0.5;
+        weight += 0.5;
+        evidence.add('${data.$1} ${(agreement * 100).round()}/100');
+      }
+      if (!compatible || weight == 0) continue;
+      result.add(
+        SpectroscopyCandidateMatch(
+          compound: entry,
+          score: total / weight,
+          evidence: evidence,
+        ),
+      );
+    }
+    result.sort((a, b) => b.score.compareTo(a.score));
+    return result;
+  }
+
+  static String _formulaKey(ParsedFormula f) =>
+      '${f.carbons},${f.hydrogens},${f.nitrogens},${f.oxygens},${f.fluorines},${f.chlorines},${f.bromines},${f.iodines},${f.sulfurs},${f.phosphoruses}';
+
+  static List<double> _referencePositions(List<String> lines, String pattern) =>
+      [
+        for (final line in lines)
+          for (final prefix in RegExp(pattern).allMatches(line))
+            for (final number in RegExp(
+              r'\d+(?:\.\d+)?',
+            ).allMatches(prefix.group(0)!))
+              double.parse(number.group(0)!),
+      ];
+
+  static List<double> _referenceShifts(List<String> lines) => [
+    for (final line in lines)
+      if (RegExp(r'δ\s*(\d+(?:\.\d+)?)').firstMatch(line) case final match?)
+        double.parse(match.group(1)!),
+  ];
+
+  // One-to-one matching prevents several observed peaks reusing one reference.
+  // Include both observed and reference coverage so sparse matches stay tentative.
+  static int _matchedPeakCount(
+    List<double> observed,
+    List<double> expected,
+    double tolerance,
+  ) {
+    final reference = expected.toSet().toList()..sort();
+    final values = observed.toSet().toList()..sort();
+    var matched = 0;
+    var i = 0;
+    var j = 0;
+    while (i < values.length && j < reference.length) {
+      if ((values[i] - reference[j]).abs() <= tolerance) {
+        matched++;
+        i++;
+        j++;
+      } else if (values[i] < reference[j]) {
+        i++;
+      } else {
+        j++;
+      }
+    }
+    return matched;
+  }
+
+  static double _peakAgreement(List<double> observed, List<double> expected, double tolerance) {
+    if (observed.isEmpty || expected.isEmpty) return 0;
+    final matched = _matchedPeakCount(observed, expected, tolerance);
+    return 0.7 * matched / observed.toSet().length + 0.3 * matched / expected.toSet().length;
   }
 
   /// Algorithmic Structure Deduction Engine for Arbitrary Formulas
@@ -3113,17 +3385,22 @@ class SpectroscopyService {
     final nmr13C = nmr13CPeaks ?? [];
 
     // Detect functional groups from spectroscopic signals
-    final hasCarbonyl = ir.any((p) => p >= 1650 && p <= 1780) || nmr13C.any((p) => p >= 165 && p <= 220);
+    final hasCarbonyl =
+        o > 0 &&
+        dbe >= 1 &&
+        (ir.any((p) => p >= 1700 && p <= 1800) || nmr13C.any((p) => p >= 170 && p <= 230));
     final hasHydroxyl = ir.any((p) => p >= 3200 && p <= 3600);
-    final hasCarboxyl = (o >= 2 && ir.any((p) => p >= 2500 && p <= 3300)) || (nmr.any((p) => p >= 10.5 && p <= 13.5));
+    // Peak positions do not encode band breadth: ordinary C-H stretches in
+    // 2850–3100 cm⁻¹ must never be treated as a broad acid O-H envelope.
+    final hasCarboxyl =
+        o >= 2 && hasCarbonyl && nmr.any((p) => p > 10.5 && p <= 13.5);
     final hasAmine = (n > 0 && ir.any((p) => p >= 3300 && p <= 3500));
-    final hasAromatic = (dbe >= 4.0 && (nmr.any((p) => p >= 6.5 && p <= 8.5) || nmr13C.any((p) => p >= 115 && p <= 145)));
+    final hasAromatic = (c >= 6 && dbe >= 4.0 && nmr.any((p) => p >= 6.5 && p <= 8.5));
     final hasAldehyde = nmr.any((p) => p >= 9.2 && p <= 10.5) || ir.any((p) => p >= 2700 && p <= 2840);
 
     String candidateName = 'Synthesized Molecular Candidate';
     // String candidateFormula = formula;
     String candidateConnectivity = '';
-    String candidateSmiles = '';
     final List<String> altIsomers = [];
     final List<String> deductionSteps = [];
 
@@ -3134,15 +3411,12 @@ class SpectroscopyService {
       deductionSteps.add('**Core Benzene Framework (C₆H₅– or –C₆H₄–)**: Supported by DBE = $dbe (≥ 4.0) and aromatic ¹H/¹³C resonances.');
 
       if (hasCarboxyl) {
-        candidateName = remainingC == 0 ? 'Benzoic Acid' : 'Substituted Phenylalkanoic Acid';
-        candidateConnectivity = remainingC == 0 ? 'C₆H₅–COOH' : 'C₆H₅–(CH₂)ₙ–COOH';
-        candidateSmiles = remainingC == 0 ? 'O=C(O)c1ccccc1' : 'O=C(O)CCc1ccccc1';
-        altIsomers.add('**Hydroxybenzaldehyde / Phenyl Formate**: Ruled out by characteristic broad carboxylic O–H band.');
+        candidateName = 'Possible Aromatic Carboxylic Acid';
+        candidateConnectivity =
+            'Ar–COOH or aryl-substituted acid; attachment unresolved';
       } else if (hasAldehyde) {
-        candidateName = remainingC == 0 ? 'Benzaldehyde' : 'Substituted Aryl Aldehyde';
-        candidateConnectivity = remainingC == 0 ? 'C₆H₅–CHO' : 'C₆H₅–(CH₂)ₙ–CHO';
-        candidateSmiles = remainingC == 0 ? 'O=Cc1ccccc1' : 'O=CCc1ccccc1';
-        altIsomers.add('**Aryl Ketone**: Ruled out by presence of sharp formyl proton at δ 9–10 ppm.');
+        candidateName = 'Possible Aryl Aldehyde';
+        candidateConnectivity = 'Aryl framework with a possible –CHO group';
       } else if (hasCarbonyl && o >= 1) {
         candidateName = 'Aryl Ketone / Ester Derivative';
         candidateConnectivity = 'Ar–CO–R';
@@ -3150,11 +3424,9 @@ class SpectroscopyService {
       } else if (hasHydroxyl) {
         candidateName = remainingC == 0 ? 'Phenol' : 'Aryl Alcohol / Alkylphenol';
         candidateConnectivity = remainingC == 0 ? 'C₆H₅–OH' : 'HO–C₆H₄–R or C₆H₅–CH₂OH';
-        candidateSmiles = remainingC == 0 ? 'Oc1ccccc1' : 'OCc1ccccc1';
       } else if (hasAmine) {
         candidateName = remainingC == 0 ? 'Aniline' : 'Aryl Amine Derivative';
         candidateConnectivity = remainingC == 0 ? 'C₆H₅–NH₂' : 'H₂N–C₆H₄–R';
-        candidateSmiles = remainingC == 0 ? 'Nc1ccccc1' : 'NCc1ccccc1';
       } else {
         candidateName = 'Alkylbenzene Derivative';
         candidateConnectivity = 'C₆H₅–R';
@@ -3168,8 +3440,9 @@ class SpectroscopyService {
           candidateConnectivity = 'R–OH';
           altIsomers.add('**Dialkyl Ether (R–O–R\')**: Ruled out if O–H stretch is present at 3300 cm⁻¹.');
         } else if (o > 0) {
-          candidateName = 'Saturated Dialkyl Ether';
-          candidateConnectivity = 'R–O–R\'';
+          candidateName = 'Alcohol / Ether Possibilities';
+          candidateConnectivity =
+              'C–O framework; missing O–H information does not exclude alcohol';
         } else if (hal > 0) {
           candidateName = 'Saturated Haloalkane';
           candidateConnectivity = 'R–X';
@@ -3203,13 +3476,11 @@ class SpectroscopyService {
       }
     }
 
-    buffer.writeln('#### Primary Structural Candidate: **$candidateName**\n');
-    buffer.writeln('**Probable Molecular Framework**: `$candidateConnectivity`');
-    if (candidateSmiles.isNotEmpty) {
-      buffer.writeln('**Representative SMILES**: `$candidateSmiles`\n');
-    } else {
-      buffer.writeln();
-    }
+    buffer.writeln('#### Possible Structural Class: **$candidateName**\n');
+    buffer.writeln('**Framework hypothesis**: `$candidateConnectivity`');
+    buffer.writeln(
+      'Insufficient evidence for a specific connectivity. No exact structure or SMILES is assigned by this fallback.',
+    );
 
     buffer.writeln('**Algorithmic Deduction Rationale**:');
     for (final step in deductionSteps) {
@@ -3490,6 +3761,8 @@ class SpectralDataPoint {
 }
 
 class ParsedFormula {
+  int get nominalMass => carbons * 12 + hydrogens + nitrogens * 14 + oxygens * 16 +
+      fluorines * 19 + chlorines * 35 + bromines * 79 + iodines * 127 + sulfurs * 32 + phosphoruses * 31;
   final int carbons;
   final int hydrogens;
   final int nitrogens;
@@ -3570,6 +3843,8 @@ class SpectroscopyAnalysisResult {
   final List<DeductionStep> steps;
   final String markdownFull;
   final SpectroscopySanityReport? sanityReport;
+  final SpectroscopyCompoundEntry? supportedCompound;
+  final List<SpectroscopyCandidateMatch> candidateMatches;
 
   const SpectroscopyAnalysisResult({
     required this.isValid,
@@ -3580,6 +3855,8 @@ class SpectroscopyAnalysisResult {
     required this.steps,
     required this.markdownFull,
     this.sanityReport,
+    this.supportedCompound,
+    this.candidateMatches = const [],
   });
 }
 
@@ -3704,3 +3981,13 @@ class AlgorithmicDeductionResult {
   });
 }
 
+class SpectroscopyCandidateMatch {
+  final SpectroscopyCompoundEntry compound;
+  final double score;
+  final List<String> evidence;
+  const SpectroscopyCandidateMatch({
+    required this.compound,
+    required this.score,
+    required this.evidence,
+  });
+}

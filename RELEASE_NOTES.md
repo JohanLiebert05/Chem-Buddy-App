@@ -1,3 +1,16 @@
+# ChemBuddy 3.5.6 by Prajwal A Kambar
+
+- Rebuilds the structure solver with separate entered and expected spectra, SVG proton/carbon NMR, IR and mass previews, reference assignments and formula-checked candidate structures.
+- Tightens formula, DBE and peak matching; conflicting or insufficient evidence stays unresolved instead of forcing an exact compound.
+- Adds eight guided deduction steps, from molecular formula and DBE to fragment assembly, alternative isomers and final verification, with MSc checkpoints.
+- Adds percentage-composition problems, empirical/molecular formula calculations, oxygen-by-difference as an explicit option, and direct transfer into the solver.
+- Makes the bundled molecular sketcher light, adds connectivity/valence/formula checks, restores bounded SMILES import, removes atom-count identity guesses and fixes molfile indices after atom deletion.
+- Fixes the populated attendance crash caused by a dynamic extension lookup; adapts schedule cards, controls and simulator to narrow screens and larger text.
+
+Predicted spectra are educational references, not experimental measurements. Sparse spectra may admit multiple structures. The sketcher rejects import syntax it cannot preserve, including isotope and stereochemical annotations.
+
+Production signing is used when configured. Otherwise the APK is the separate ChemBuddy Preview app for testing.
+
 # ChemBuddy 3.5.5 by Prajwal A Kambar
 
 - Theme editing now lives directly in Profile: display mode, Classic/Fan/Prism collections, glass finish, collection-aware Surprise me and Undo.

@@ -12,6 +12,7 @@ import '../../core/widgets/atom_logo.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../data/models/models.dart';
 import '../../data/models/timetable_entry.dart';
+import '../../data/repositories/chem_repository.dart';
 import '../../data/services/timetable_parser_service.dart';
 import '../providers/app_providers.dart';
 import 'smart_flashcards_generate_screen.dart';
@@ -348,7 +349,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               ),
 
               // Target Selector Row
-              Row(
+              Column(
                 children: [
                   Text(
                     'Target Goal:',
@@ -359,7 +360,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(
+                  SizedBox(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
@@ -476,10 +477,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
         // 7. Horizontal Date Ribbon / Carousel
         const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            SizedBox(
               child: Text(
                 isTodaySelected
                     ? 'Schedule & Attendance (Today)'
@@ -599,7 +600,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Top Title & Subject Code Row
-                  Row(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (code.isNotEmpty) ...[
@@ -628,7 +629,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                         ),
                         const SizedBox(width: 8),
                       ],
-                      Expanded(
+                      SizedBox(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -640,7 +641,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Icon(
                                   Icons.schedule,
@@ -1038,7 +1040,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
                     children: [
                       SpringPress(
                         child: OutlinedButton.icon(
@@ -1319,9 +1323,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          Column(
                             children: [
-                              Expanded(
+                              SizedBox(
                                 child: Text(
                                   _selectedPhotoPreset.title,
                                   maxLines: 1,
@@ -1346,8 +1350,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                       .withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                                child: Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
                                   children: [
                                     Icon(
                                       Icons.zoom_in_rounded,
@@ -1578,8 +1582,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   Widget _buildNextClassSpotlight(
     BuildContext context,
     TimetableSlot nextSlot,
-    dynamic state,
-    dynamic repo,
+    AppState state,
+    ChemRepository repo,
     DateTime today,
   ) {
     final entry = state.entries.where((e) => e.id == nextSlot.id).firstOrNull;
@@ -1632,13 +1636,15 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      'UPCOMING LECTURE',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
+                    Flexible(
+                      child: Text(
+                        'UPCOMING LECTURE',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -1740,7 +1746,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Icon(
                 Icons.auto_graph_rounded,
@@ -1755,8 +1762,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
             children: [
               Text(
                 'Upcoming classes to attend: $_simAttend',
@@ -1785,8 +1793,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             ],
           ),
           const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
             children: [
               Text(
                 'Upcoming classes to skip: $_simMiss',
@@ -1819,8 +1828,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 6,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1908,7 +1918,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   Widget _buildDangerBanner(
     BuildContext context,
     List<Subject> dangerList,
-    dynamic repo,
+    ChemRepository repo,
   ) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -1967,7 +1977,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     );
   }
 
-  Widget _buildDateRibbon(DateTime today, dynamic repo) {
+  Widget _buildDateRibbon(DateTime today, ChemRepository repo) {
     // 15 days window: 7 days before, today, 7 days after
     final days = List.generate(
       15,

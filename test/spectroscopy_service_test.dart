@@ -71,29 +71,29 @@ void main() {
       expect(cViolation.passed, isFalse);
     });
 
-    test('runSanityChecks flags aromatic protons with DBE < 4 as violation', () {
+    test('runSanityChecks treats aromatic-region protons with DBE < 4 as ambiguous', () {
       final parsed = SpectroscopyService.parseFormula('C3H6O'); // DBE = 1
       final report = SpectroscopyService.runSanityChecks(
         formula: parsed,
         nmrPeaks: [7.25, 7.35],
       );
 
-      expect(report.hasViolations, isTrue);
+      expect(report.hasViolations, isFalse);
       final aroDeficit = report.items.firstWhere((i) => i.title.contains('Aromatic Ring DBE Deficit'));
-      expect(aroDeficit.severity, equals(SanitySeverity.violation));
+      expect(aroDeficit.severity, equals(SanitySeverity.warning));
       expect(aroDeficit.message, contains('intact benzene ring requires at least 4 units'));
     });
 
-    test('runSanityChecks flags nitrile stretch with 0 nitrogens as violation', () {
+    test('runSanityChecks allows an alkyne alternative without nitrogen', () {
       final parsed = SpectroscopyService.parseFormula('C6H10O');
       final report = SpectroscopyService.runSanityChecks(
         formula: parsed,
         irPeaks: [2240],
       );
 
-      expect(report.hasViolations, isTrue);
+      expect(report.hasViolations, isFalse);
       final nitViolation = report.items.firstWhere((i) => i.title.contains('Nitrile Stretch Without Nitrogen'));
-      expect(nitViolation.severity, equals(SanitySeverity.violation));
+      expect(nitViolation.severity, equals(SanitySeverity.warning));
     });
 
     test('runSanityChecks flags ester peak with only 1 oxygen as warning', () {
