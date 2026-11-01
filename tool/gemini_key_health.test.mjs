@@ -22,7 +22,7 @@ test('key checks use headers and return status without credential values', async
   });
   const result = await response.json();
   assert.equal(calls, 2);
-  assert.deepEqual(result.results.map(r => r.status), ['generation_ok', 'generation_ok']);
+  assert.deepEqual(result.results.filter(r => r.status !== 'not_configured').map(r => r.status), ['generation_ok', 'generation_ok']);
   assert.ok(!JSON.stringify(result).includes('private-key'));
 });
 test('provider rate limits and permission errors remain distinct and sanitized', async () => {
@@ -31,14 +31,14 @@ test('provider rate limits and permission errors remain distinct and sanitized',
     new Response(JSON.stringify({error:{status: calls === 0 ? 'RESOURCE_EXHAUSTED' : 'PERMISSION_DENIED',
       message:'sensitive provider details new-private-key'}}), {status: calls++ === 0 ? 429 : 403}));
   const result = await response.json();
-  assert.deepEqual(result.results.map(r => r.status), ['quota_or_rate_limited', 'authentication_or_permission_failed']);
+  assert.deepEqual(result.results.filter(r => r.status !== 'not_configured').map(r => r.status), ['quota_or_rate_limited', 'authentication_or_permission_failed']);
   assert.ok(!JSON.stringify(result).includes('private-key'));
 });
 test('network exceptions cannot disclose credentials', async () => {
   const response = await keyHealth(request('project-service-credential'), env,
     async () => {throw Error('URL contains new-private-key');});
   const result = await response.json();
-  assert.ok(result.results.every(r => r.status === 'network_or_timeout'));
+  assert.ok(result.results.filter(r => r.status !== 'not_configured').every(r => r.status === 'network_or_timeout'));
   assert.ok(!JSON.stringify(result).includes('private-key'));
 });
 test('modern project secret keys authorize; publishable keys do not', async () => {
@@ -51,4 +51,17 @@ test('modern project secret keys authorize; publishable keys do not', async () =
     }), modernEnv, provider);
     assert.equal(response.status, expected);
   }
+});
+test('all five configured credentials receive an independent generation check', async () => {
+  const names = ['GEMINI_KEY_1','GEMINI_KEY_2','GEMINI_KEY_3','GEMINI_KEY_4','GEMINI_API_KEY'];
+  const fiveEnv = name => names.includes(name) ? `private-${name}` : env(name);
+  const checked = [];
+  const response = await keyHealth(request('project-service-credential'), fiveEnv, async (_url, init) => {
+    checked.push(init.headers['x-goog-api-key']);
+    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:'OK'}]}}]}));
+  });
+  const result = await response.json();
+  assert.deepEqual(checked, names.map(n => `private-${n}`));
+  assert.ok(result.results.every(r => r.status === 'generation_ok'));
+  assert.ok(!JSON.stringify(result).includes('private-'));
 });

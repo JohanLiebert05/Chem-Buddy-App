@@ -11,8 +11,8 @@ export async function keyHealth(req: Request, env: (name: string) => string | un
   }
   if (req.method !== "POST") return new Response(JSON.stringify({error: "Use POST."}), {status: 405, headers});
   const results = [];
-  // Check only the two known Gemini credentials, never unrelated project secrets.
-  for (const name of ["GEMINI_KEY_1", "GEMINI_API_KEY"]) {
+  // Check the supported Gemini slots, never unrelated project secrets.
+  for (const name of ["GEMINI_KEY_1", "GEMINI_KEY_2", "GEMINI_KEY_3", "GEMINI_KEY_4", "GEMINI_API_KEY"]) {
     const key = env(name)?.trim();
     if (!key) { results.push({name, status: "not_configured"}); continue; }
     try {

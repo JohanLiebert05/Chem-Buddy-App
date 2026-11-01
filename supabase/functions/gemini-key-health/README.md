@@ -1,7 +1,7 @@
 # Gemini credential health check
 
 Maintenance endpoint for the project owner. It sends one tiny generation request
-per configured `GEMINI_KEY_1` / `GEMINI_API_KEY` and returns only names, HTTP status
+per configured `GEMINI_KEY_1` through `GEMINI_KEY_4` / `GEMINI_API_KEY` and returns only names, HTTP status
 and sanitized outcome categories. It never returns credential values or raw
 provider error messages. Credentials go to Google in headers, never query URLs.
 
@@ -21,6 +21,15 @@ On 1 November 2026 both credentials returned `generation_ok` / HTTP 200 using
 `gemini-3.6-flash`. The new supplied credential was saved as `GEMINI_KEY_1`;
 the previous `GEMINI_API_KEY` remains available. The deployed spectroscopy
 orchestrator already reads both names. This tests connectivity, not NMR accuracy.
+
+A later five-credential check on the same date returned HTTP 200 for
+`GEMINI_KEY_1`, `GEMINI_KEY_4` and `GEMINI_API_KEY`. Google rejected
+`GEMINI_KEY_2` and `GEMINI_KEY_3` with HTTP 401 / `UNAUTHENTICATED`; they are
+stored but unusable until replaced. One live Ask ChemBuddy question through its
+existing guest API returned HTTP 200 and a chemistry answer from
+`gemini-3.6-flash`. The deployed Ask ChemBuddy reader recognizes all these secret
+names and skips failed credentials during failover. This check does not change
+the earlier partial 40-case spectroscopy report or the student's allowance.
 
 Local authorization/redaction tests:
 `node --experimental-strip-types --test tool/gemini_key_health.test.mjs`.

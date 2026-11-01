@@ -1,0 +1,16 @@
+{
+  "http_status": 200,
+  "path": "existing public guest API",
+  "question": "In two sentences, explain how an aldehyde differs from a ketone.",
+  "response": {
+    "answer": "An aldehyde contains a carbonyl group (C=O) bonded to at least one hydrogen atom, placing the functional group at the end of a carbon chain (R-CHO). In contrast, a ketone has its carbonyl group bonded to two other carbon atoms, positioning the functional group within the carbon chain (R-CO-R').",
+    "mode": "quick",
+    "model": "gemini-3.6-flash",
+    "sources": [],
+    "groundingSources": [],
+    "docScoped": true,
+    "hasContext": false,
+    "chunksUsed": 0,
+    "cached": false
+  }
+}
