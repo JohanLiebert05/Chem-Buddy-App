@@ -29,7 +29,7 @@
       valence.set(bond.atom2, valence.get(bond.atom2) + order);
       adjacency.get(bond.atom1).push(bond.atom2); adjacency.get(bond.atom2).push(bond.atom1);
     }
-    const counts = {}, unknown = new Set();
+    const counts = {}, implicitHydrogens = {}, unknown = new Set();
     let charge = 0;
     for (const atom of atoms) {
       const el = atom.element, q = atom.charge || 0;
@@ -51,6 +51,7 @@
       const h = atom.explicitHs != null ? atom.explicitHs : el === 'H' || ['F','Cl','Br','I'].includes(el) || (atom.aromatic && el !== 'C') ? 0 : Math.max(0, Math.floor(target - used + .01));
       if (used + h > Math.max(...allowed) + .01 && !atom.aromatic) fail(`${el} atom ${atom.id}: explicit hydrogens exceed ordinary valence.`, [atom.id]);
       counts.H = (counts.H || 0) + h;
+      implicitHydrogens[atom.id] = h;
     }
     let fragments = 0;
     const visited = new Set();
@@ -76,7 +77,7 @@
     const dbe = fullyChecked && fragments === 1 && charge === 0 && !counts.S && !counts.P
       ? (2 * (counts.C || 0) + 2 + (counts.N || 0) - (counts.H || 0) - (counts.F || 0) - (counts.Cl || 0) - (counts.Br || 0) - (counts.I || 0)) / 2 : null;
     return {isValid: errors.length === 0, fullyChecked, errors, warnings, invalidAtomIds:[...invalidAtomIds], fragments,
-      formula: fullyChecked ? formula : null, molarMass, dbe, netCharge: charge};
+      formula: fullyChecked ? formula : null, molarMass, dbe, netCharge: charge, implicitHydrogens};
   }
   // Deliberately bounded importer. Unsupported stereochemistry/isotopes are
   // rejected rather than silently discarded by the educational 2D editor.

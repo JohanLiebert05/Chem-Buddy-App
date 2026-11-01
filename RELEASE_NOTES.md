@@ -1,6 +1,11 @@
 # ChemBuddy 3.5.6 by Prajwal A Kambar
 
 Revised Android build 36 adds **Predict with Gemini** beside the existing solver.
+
+It also fixes the reported light-theme Signals cards, provides clean vertical
+Profile appearance choices, fits complete sketcher drawings on mobile, moves
+drawing checks below the canvas, and replaces raw descriptor exceptions with
+short guidance that preserves the drawing.
 Enter a specific compound name or supported SMILES, solvent, temperature and
 frequency to request predicted proton/carbon shifts, heuristic ranges, estimated
 splitting, SVG spectra and a formula-checked structure. Uses the existing
@@ -11,6 +16,13 @@ questions request an unambiguous identity instead of inventing an isomer.
 The attached 25-molecule report covers reproducible offline reference, formula,
 DBE, assignment and SVG rendering checks. Live Gemini accuracy was not measured
 in that report. Predictions remain estimates requiring experimental verification.
+
+The separate partial **40-case live review** used `gemini-3.6-flash`: seven
+predictions passed consistency checks, three model responses were rejected, and
+thirty cases were blocked by the daily account quota. One configured key slot
+was reported. This confirms the live API connection; it is not a completed
+40-prediction accuracy benchmark or multi-key failover test. The report includes
+the accepted structures and proton/carbon SVG plots, plus every blocked case.
 
 - Rebuilds the structure solver with separate entered and expected spectra, SVG proton/carbon NMR, IR and mass previews, reference assignments and formula-checked candidate structures.
 - Tightens formula, DBE and peak matching; conflicting or insufficient evidence stays unresolved instead of forcing an exact compound.

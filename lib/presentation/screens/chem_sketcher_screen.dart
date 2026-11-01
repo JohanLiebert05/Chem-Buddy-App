@@ -207,66 +207,71 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
     }
   }
 
+  Future<void> _drawingNotice(String title, String message) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Back to drawing'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _analyzeWithRdkit() async {
     AppHaptics.confirm();
     setState(() => _isAnalyzing = true);
-
-    final smiles = await _getSmiles();
-    if (smiles.isEmpty) {
-      setState(() => _isAnalyzing = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Please draw a chemical structure first.'),
-            backgroundColor: AppColors.adaptive(
-              context,
-              AppColors.statusDanger,
-            ),
-          ),
-        );
-      }
-      return;
-    }
-
     try {
-      // Validate valency first
-      final valency = await RdkitService.instance.validateValency(smiles);
-      if (!valency.isValid && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(valency.errorMessage ?? 'Valence error detected.'),
-            backgroundColor: AppColors.adaptive(
-              context,
-              AppColors.statusDanger,
-            ),
-            duration: const Duration(seconds: 4),
-          ),
+      final smiles = await _getSmiles();
+      if (!mounted) return;
+      if (smiles.isEmpty) {
+        await _drawingNotice(
+          'Draw a molecule first',
+          'Add a structure or choose a template, then run the drawing check.',
         );
-        setState(() => _isAnalyzing = false);
         return;
       }
-
-      final desc = await RdkitService.instance.calculateDescriptors(smiles);
-      setState(() {
-        _isAnalyzing = false;
-      });
-
-      if (mounted) {
-        _showDescriptorsSheet(desc);
-      }
-    } catch (e) {
-      setState(() => _isAnalyzing = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Analysis failed: $e'),
-            backgroundColor: AppColors.adaptive(
-              context,
-              AppColors.statusDanger,
-            ),
-          ),
+      final rawCheck = await _controller.runJavaScriptReturningResult(
+        'JSON.stringify(checkStructure())',
+      );
+      final check = jsonDecode(_decodeBridgeString(rawCheck));
+      if (!mounted) return;
+      if (check is Map && (check['fragments'] as num? ?? 0) > 1) {
+        await _drawingNotice(
+          'More than one molecule',
+          'The canvas contains separate structures. Descriptor estimates work on one molecule at a time. Use Undo to remove the last addition, or start a new drawing. Fit shows the entire canvas.',
         );
+        return;
       }
+      final valency = await RdkitService.instance.validateValency(smiles);
+      if (!mounted) return;
+      if (!valency.isValid) {
+        await _drawingNotice(
+          'Review the drawing',
+          valency.errorMessage ?? 'Check the atom charges and bond orders.',
+        );
+        return;
+      }
+      final desc = await RdkitService.instance.calculateDescriptors(smiles);
+      if (mounted) _showDescriptorsSheet(desc);
+    } on FormatException {
+      await _drawingNotice(
+        'Advanced structure',
+        'Your drawing is still available. Local descriptor estimates do not cover this structure. You can continue editing or export its SMILES and molfile.',
+      );
+    } catch (_) {
+      await _drawingNotice(
+        'Could not analyze the drawing',
+        'Check the structure and try again. Your drawing has been kept.',
+      );
+    } finally {
+      if (mounted) setState(() => _isAnalyzing = false);
     }
   }
 

@@ -80,6 +80,8 @@ class SpectroscopyPrediction {
     required this.explanation,
     required this.uncertainties,
     required this.model,
+    this.keyIndexUsed = 0,
+    this.totalKeys = 0,
   });
   final SpectroscopyPredictionRequest request;
   final SpectroscopyCompoundEntry compound;
@@ -87,6 +89,7 @@ class SpectroscopyPrediction {
   final List<PredictedNmrSignal> proton, carbon;
   final List<String> explanation, uncertainties;
   final String model;
+  final int keyIndexUsed, totalKeys;
 }
 
 /// Uses the existing authenticated server-side Gemini key rotation. No provider
@@ -137,6 +140,8 @@ class SpectroscopyPredictionService {
           response['text'] as String,
           request,
           model: response['model']?.toString() ?? 'Gemini',
+          keyIndexUsed: (response['key_index'] as num?)?.toInt() ?? 0,
+          totalKeys: (response['total_keys'] as num?)?.toInt() ?? 0,
         );
       } on FormatException catch (error) {
         // Clarification/unsupported responses are intentional, not malformed
@@ -152,6 +157,8 @@ class SpectroscopyPredictionService {
     String text,
     SpectroscopyPredictionRequest request, {
     String model = 'Gemini',
+    int keyIndexUsed = 0,
+    int totalKeys = 0,
   }) {
     request.validate();
     if (text.length > 100000) {
@@ -469,6 +476,8 @@ class SpectroscopyPredictionService {
       explanation: strings('explanation'),
       uncertainties: strings('uncertainties'),
       model: model,
+      keyIndexUsed: keyIndexUsed,
+      totalKeys: totalKeys,
     );
   }
 

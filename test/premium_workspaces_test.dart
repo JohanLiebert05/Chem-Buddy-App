@@ -159,8 +159,12 @@ void main() {
       ),
     );
     final before = container.read(appearanceProvider);
+    await tester.tap(find.text('Colour collection'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Gradients'));
     await tester.tap(find.text('Gradients'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('Aurora')));
     await tester.tap(find.byKey(const ValueKey('Aurora')));
     await tester.pumpAndSettle();
     expect(

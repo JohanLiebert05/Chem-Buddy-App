@@ -382,6 +382,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
 
         // Prominent Technique Type Banner Card
         Container(
+          key: const ValueKey('spectroscopy-instrument-banner'),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -392,7 +393,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                         ? AppColors.adaptive(context, AppColors.accentCyan)
                         : Theme.of(context).colorScheme.primary)
                     .withValues(alpha: 0.18),
-                const Color(0xFF0F172A),
+                Theme.of(context).colorScheme.surfaceContainerHigh,
               ],
             ),
             borderRadius: BorderRadius.circular(14),
@@ -448,7 +449,8 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -497,8 +499,8 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
+                            const SizedBox(height: 6),
+                            SizedBox(
                               child: Text(
                                 currentTech.domainDescription,
                                 style: TextStyle(
@@ -637,8 +639,9 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
         // Interactive Spectrogram / Chromatogram Graph
         if (currentEx != null) ...[
           Container(
+            key: const ValueKey('spectroscopy-signals-card'),
             decoration: BoxDecoration(
-              color: const Color(0xFF070D18),
+              color: Theme.of(context).colorScheme.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: Theme.of(context).colorScheme.outlineVariant,
@@ -684,7 +687,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0F172A),
+                          color: Theme.of(context).colorScheme.surfaceContainerHigh,
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(color: Colors.white12),
                         ),
@@ -769,7 +772,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                                       context,
                                       AppColors.accentCyan,
                                     ).withValues(alpha: 0.25)
-                                  : const Color(0xFF0F172A),
+                                  : Theme.of(context).colorScheme.surfaceContainerHigh,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: isSelected
@@ -829,7 +832,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                     margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F172A),
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: AppColors.adaptive(
@@ -911,7 +914,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                           size: 18,
                         ),
                         SizedBox(width: 6),
-                        Text(
+                        Flexible(child: Text(
                           'X-Axis Meaning',
                           style: TextStyle(
                             fontWeight: FontWeight.w800,
@@ -921,7 +924,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                             ),
                             fontSize: 13,
                           ),
-                        ),
+                        )),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -986,14 +989,14 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                           size: 18,
                         ),
                         SizedBox(width: 6),
-                        Text(
+                        Flexible(child: Text(
                           'Y-Axis Meaning',
                           style: TextStyle(
                             fontWeight: FontWeight.w800,
                             color: Theme.of(context).colorScheme.primary,
                             fontSize: 13,
                           ),
-                        ),
+                        )),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -1177,7 +1180,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F172A),
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: AppColors.adaptive(
@@ -1225,7 +1228,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
           decoration: BoxDecoration(
             color: isSelected
                 ? Theme.of(context).colorScheme.primary
-                : const Color(0xFF0F172A),
+                : Theme.of(context).colorScheme.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected
@@ -1831,7 +1834,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                       const SizedBox(height: 4),
                       DropdownButtonFormField<int>(
                         initialValue: _magDElectrons,
-                        dropdownColor: const Color(0xFF1E293B),
+                        dropdownColor: Theme.of(context).colorScheme.surfaceContainerHigh,
                         items: List.generate(9, (i) => i + 1)
                             .map(
                               (d) => DropdownMenuItem(
@@ -1854,7 +1857,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                         },
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: const Color(0xFF0F172A),
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHigh,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
@@ -1882,7 +1885,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                       const SizedBox(height: 4),
                       DropdownButtonFormField<bool>(
                         initialValue: _magIsHighSpin,
-                        dropdownColor: const Color(0xFF1E293B),
+                        dropdownColor: Theme.of(context).colorScheme.surfaceContainerHigh,
                         items: [
                           DropdownMenuItem(
                             value: true,
@@ -1910,7 +1913,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                         },
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: const Color(0xFF0F172A),
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHigh,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
@@ -1966,7 +1969,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                       const SizedBox(height: 4),
                       DropdownButtonFormField<int>(
                         initialValue: _eprNuclearSpinDouble,
-                        dropdownColor: const Color(0xFF1E293B),
+                        dropdownColor: Theme.of(context).colorScheme.surfaceContainerHigh,
                         items: [
                           DropdownMenuItem(
                             value: 1,
@@ -2021,7 +2024,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                         },
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: const Color(0xFF0F172A),
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHigh,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
@@ -2049,7 +2052,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                       const SizedBox(height: 4),
                       DropdownButtonFormField<int>(
                         initialValue: _eprLigandCount,
-                        dropdownColor: const Color(0xFF1E293B),
+                        dropdownColor: Theme.of(context).colorScheme.surfaceContainerHigh,
                         items: [
                           DropdownMenuItem(
                             value: 0,
@@ -2086,7 +2089,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                         },
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: const Color(0xFF0F172A),
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHigh,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
@@ -2188,7 +2191,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
             const SizedBox(height: 4),
             DropdownButtonFormField<String>(
               initialValue: _carbonylSelectedType,
-              dropdownColor: const Color(0xFF1E293B),
+              dropdownColor: Theme.of(context).colorScheme.surfaceContainerHigh,
               items: [
                 DropdownMenuItem(
                   value: 'M(CO)6',
@@ -2253,7 +2256,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
               },
               decoration: InputDecoration(
                 filled: true,
-                fillColor: const Color(0xFF0F172A),
+                fillColor: Theme.of(context).colorScheme.surfaceContainerHigh,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
@@ -2352,7 +2355,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0F172A),
+                          color: Theme.of(context).colorScheme.surfaceContainerHigh,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: Theme.of(context).colorScheme.outlineVariant,
@@ -2680,15 +2683,18 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
         // Zoom toolbar header
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: const BoxDecoration(
-            color: Color(0xFF0F172A),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
             borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
             border: Border(bottom: BorderSide(color: Colors.white10)),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
             children: [
-              Row(
+              Wrap(
                 children: [
                   Icon(
                     Icons.zoom_in_rounded,
@@ -2734,8 +2740,8 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
                   ),
                 ],
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+
                 children: [
                   if (_currentScale > 1.05)
                     SpringPress(
@@ -2755,7 +2761,7 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(color: Colors.white24),
                           ),
-                          child: Row(
+                          child: Wrap(
                             children: [
                               Icon(
                                 Icons.restart_alt_rounded,
@@ -2819,7 +2825,7 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
                         child: Icon(
                           Icons.add_rounded,
                           size: 16,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
                     ),
@@ -2861,6 +2867,7 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
                           example: widget.example,
                           technique: widget.technique,
                           selectedPeak: widget.selectedPeak,
+                          fontFamily: Theme.of(context).textTheme.bodySmall?.fontFamily,
                         ),
                       ),
                     ),
@@ -2879,6 +2886,7 @@ class _ZoomableSpectrogramChartState extends State<_ZoomableSpectrogramChart> {
 // Interactive Spectrogram & Chromatogram Chart Painter
 // ----------------------------------------------------
 class _InteractiveSpectrogramChartPainter extends CustomPainter {
+  final String? fontFamily;
   final SpectrogramExample example;
   final AnalyticalTechniqueInfo technique;
   final SpectralPeakAnnotation? selectedPeak;
@@ -2887,6 +2895,7 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
     required this.example,
     required this.technique,
     this.selectedPeak,
+    this.fontFamily,
   });
 
   @override
@@ -2964,7 +2973,8 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
     final xLabelPainter = TextPainter(
       text: TextSpan(
         text: example.xAxisLabel,
-        style: const TextStyle(
+        style: TextStyle(
+          fontFamily: fontFamily,
           color: AppColors.accentCyan,
           fontSize: 10.5,
           fontWeight: FontWeight.w700,
@@ -2983,7 +2993,8 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
     final yLabelPainter = TextPainter(
       text: TextSpan(
         text: example.yAxisLabel,
-        style: const TextStyle(
+        style: TextStyle(
+          fontFamily: fontFamily,
           color: AppColors.brandBright,
           fontSize: 9.5,
           fontWeight: FontWeight.w700,
@@ -3067,6 +3078,7 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
         text: TextSpan(
           text: peak.label.split('(').first.trim(),
           style: TextStyle(
+            fontFamily: fontFamily,
             color: isSel ? AppColors.accentGold : Colors.white,
             fontSize: 9,
             fontWeight: FontWeight.w800,
@@ -3095,6 +3107,7 @@ class _InteractiveSpectrogramChartPainter extends CustomPainter {
     covariant _InteractiveSpectrogramChartPainter oldDelegate,
   ) {
     return oldDelegate.example != example ||
+        oldDelegate.fontFamily != fontFamily ||
         oldDelegate.technique != technique ||
         oldDelegate.selectedPeak != selectedPeak;
   }

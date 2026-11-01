@@ -454,6 +454,14 @@
     #canvas-viewport { background: #FFFFFF; }
     #hud-info { flex-wrap: wrap; max-width: calc(100% - 24px); box-shadow: 0 2px 8px #0F172A18; }
     #structure-feedback { position:absolute; left:12px; top:12px; right:12px; max-height:35%; overflow:auto; background:#FFFFFFF2; color:#334155; padding:10px; border:1px solid #CBD5E1; border-radius:10px; font-size:12px; z-index:6; display:none; }
+    #structure-review { display:none; flex-shrink:0; max-height:160px; overflow:auto; padding:8px 12px; background:#F8FAFC; color:#334155; border-top:1px solid #CBD5E1; font-size:12px; }
+    #structure-review summary { cursor:pointer; font-weight:600; }
+    #structure-feedback { position:static; display:block; max-height:none; border:0; padding:8px 0; background:transparent; }
+    #hud-info { bottom:8px; right:8px; font-size:10px; padding:4px 7px; gap:6px; }
+    #top-toolbar { min-height:48px; flex-shrink:0; }
+    #top-toolbar, #dock-content { overflow-y:hidden; scrollbar-width:none; }
+    #top-toolbar::-webkit-scrollbar, #dock-content::-webkit-scrollbar { display:none; }
+    #sketcher-toast { top:auto; bottom:46px; max-width:calc(100% - 32px); font-size:11px; }
 </style>
 </head>
 <body>
@@ -469,6 +477,7 @@
       <div class="tool-divider"></div>
 
       <div class="tool-group">
+        <button class="tool-btn" id="btn-fit" title="Fit entire drawing to screen">Fit</button>
         <button class="tool-btn" id="btn-select" title="Select / Move Tool">⬚</button>
         <button class="tool-btn" id="btn-clean" title="Clean-Up / Beautify Structure">🧹</button>
         <button class="tool-btn" id="btn-check" title="Check valence, formula and disconnected fragments">Check</button>
@@ -496,7 +505,6 @@
     <!-- Canvas Viewport -->
     <div id="canvas-viewport">
       <canvas id="chem-canvas"></canvas>
-      <div id="structure-feedback" role="status" aria-live="polite"></div>
       <div id="hud-info">
         <div>Formula: <span id="hud-formula">Draw a molecule</span></div>
         <div>Atoms: <span id="hud-atoms">0</span></div>
@@ -535,6 +543,7 @@
     </div>
 
     <!-- Consolidated Bottom Dock -->
+    <details id="structure-review"><summary id="structure-review-summary">Drawing check</summary><div id="structure-feedback" role="status" aria-live="polite"></div></details>
     <div id="bottom-dock">
       <div id="dock-tabs">
         <button class="dock-tab-btn active" id="tab-atoms">⚛️ Atoms</button>
@@ -779,6 +788,7 @@
         canvas.height = rect.height * dpr;
         ctx.resetTransform();
         ctx.scale(dpr, dpr);
+        fitStructure();
         redraw();
       }
       window.addEventListener('resize', resizeCanvas);
@@ -806,6 +816,9 @@
         state.atoms = prev.atoms;
         state.bonds = prev.bonds;
         state.reactionArrows = prev.reactionArrows;
+        state.nextAtomId=Math.max(0,...state.atoms.map(a=>a.id))+1;
+        state.nextBondId=Math.max(0,...state.bonds.map(b=>b.id))+1;
+        fitStructure();
         redraw();
         notifyStructureChanged();
       }
@@ -821,6 +834,9 @@
         state.atoms = next.atoms;
         state.bonds = next.bonds;
         state.reactionArrows = next.reactionArrows;
+        state.nextAtomId=Math.max(0,...state.atoms.map(a=>a.id))+1;
+        state.nextBondId=Math.max(0,...state.bonds.map(b=>b.id))+1;
+        fitStructure();
         redraw();
         notifyStructureChanged();
       }
@@ -832,6 +848,7 @@
         state.bonds = [];
         state.reactionArrows = [];
         state.selectedAtoms = [];
+        state.transform = {scale:1,offsetX:0,offsetY:0};
         state.nextAtomId = 1;
         state.nextBondId = 1;
         state.nextReactionArrowId = 1;
@@ -854,32 +871,16 @@
         showToast('✨ Structure Regularized & Centered');
       }
 
-      function centerStructure() {
-        if (state.atoms.length === 0) return;
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        state.atoms.forEach(a => {
-          if (a.x < minX) minX = a.x;
-          if (a.x > maxX) maxX = a.x;
-          if (a.y < minY) minY = a.y;
-          if (a.y > maxY) maxY = a.y;
-        });
-
-        const rect = viewport.getBoundingClientRect();
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const structCenterX = (minX + maxX) / 2;
-        const structCenterY = (minY + maxY) / 2;
-        const dx = centerX - structCenterX;
-        const dy = centerY - structCenterY;
-
-        state.atoms.forEach(a => {
-          a.x += dx;
-          a.y += dy;
-        });
-        state.reactionArrows.forEach(arr => {
-          arr.x1 += dx; arr.y1 += dy;
-          arr.x2 += dx; arr.y2 += dy;
-        });
+      function centerStructure() { fitStructure(); }
+      function fitStructure() {
+        if (!state.atoms.length) { state.transform={scale:1,offsetX:0,offsetY:0}; return; }
+        const points=[...state.atoms,...state.reactionArrows.flatMap(a=>[{x:a.x1,y:a.y1},{x:a.x2,y:a.y2}])];
+        const xs=points.map(a=>a.x),ys=points.map(a=>a.y);
+        const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+        const rect=viewport.getBoundingClientRect(), padding=38;
+        const availableW=Math.max(30,rect.width-padding*2),availableH=Math.max(30,rect.height-padding*2-25);
+        const scale=Math.min(1,availableW/Math.max(1,maxX-minX),availableH/Math.max(1,maxY-minY));
+        state.transform={scale,offsetX:rect.width/2-(minX+maxX)/2*scale,offsetY:(rect.height-25)/2-(minY+maxY)/2*scale};
       }
 
       // 8. Dock Tab Rendering
@@ -1132,6 +1133,8 @@
       // 12. Non-Destructive Template Loading
       function loadTemplate(template) {
         saveHistory();
+        const previousCount=state.atoms.length;
+        const previousMaxX=previousCount?Math.max(...state.atoms.map(a=>a.x)):0;
         const rect = viewport.getBoundingClientRect();
         let cx = rect.width / 2;
         let cy = rect.height / 2;
@@ -1203,6 +1206,21 @@
             break;
         }
 
+        if(previousCount) {
+          const added=state.atoms.slice(previousCount);
+          const minNew=Math.min(...added.map(a=>a.x));
+          if (rect.width < 600) {
+            const old=state.atoms.slice(0,previousCount);
+            const oldCenter=(Math.min(...old.map(a=>a.x))+previousMaxX)/2;
+            const newCenter=(minNew+Math.max(...added.map(a=>a.x)))/2;
+            const moveY=Math.max(...old.map(a=>a.y))+75-Math.min(...added.map(a=>a.y));
+            added.forEach(a=>{a.x+=oldCenter-newCenter;a.y+=moveY;});
+          } else {
+            const shift=Math.max(0,previousMaxX+75-minNew);
+            added.forEach(a=>a.x+=shift);
+          }
+        }
+        fitStructure();
         document.getElementById('template-overlay').style.display = 'none';
         redraw();
         notifyStructureChanged();
@@ -1441,7 +1459,11 @@
 
       // 13. Drawing & Canvas Rendering
       function redraw() {
+        state.checkReport=window.ChemBuddySketcherIntelligence.analyze(state);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(state.transform.offsetX,state.transform.offsetY);
+        ctx.scale(state.transform.scale,state.transform.scale);
 
         // Draw selection marquee if active
         if (state.selectionBox) {
@@ -1491,6 +1513,7 @@
           drawAtom(atom);
         });
 
+        ctx.restore();
         updateHud();
       }
 
@@ -1691,7 +1714,9 @@
           ctx.font = 'bold 15px system-ui';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(atom.element, atom.x, atom.y);
+          const hs=state.checkReport?.implicitHydrogens?.[atom.id] || 0;
+          const label=atom.element + (hs && ['N','O','S','P'].includes(atom.element) ? 'H'+(hs>1?hs:'') : '');
+          ctx.fillText(label, atom.x, atom.y);
         }
 
         // Draw Formal Charge Badge if non-zero
@@ -1721,13 +1746,13 @@
         const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
         const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
         return {
-          x: clientX - rect.left,
-          y: clientY - rect.top
+          x: (clientX - rect.left - state.transform.offsetX) / state.transform.scale,
+          y: (clientY - rect.top - state.transform.offsetY) / state.transform.scale
         };
       }
 
       function findAtomNear(x, y, radius = SNAP_RADIUS) {
-        return state.atoms.find(a => Math.hypot(a.x - x, a.y - y) <= radius);
+        return state.atoms.find(a => Math.hypot(a.x - x, a.y - y) <= radius / state.transform.scale);
       }
 
       // Pointer / Touch Handling
@@ -1945,6 +1970,7 @@
 
       function generateSmiles() {
         if (!state.atoms || state.atoms.length === 0) return '';
+        const hydrogenReport=window.ChemBuddySketcherIntelligence.analyze(state);
 
         // 1. Build adjacency graph for all atoms
         const adj = {};
@@ -2049,7 +2075,8 @@
             let sym = atom.aromatic ? atom.element.toLowerCase() : atom.element;
             if (atom.charge || atom.explicitHs != null || !/^(B|C|N|O|P|S|F|Cl|Br|I|b|c|n|o|p|s)$/.test(sym)) {
               const chg = atom.charge > 0 ? (atom.charge === 1 ? '+' : `+${atom.charge}`) : (atom.charge === -1 ? '-' : `${atom.charge}`);
-              const h = atom.explicitHs ? 'H' + (atom.explicitHs === 1 ? '' : atom.explicitHs) : '';
+              const hCount=atom.explicitHs ?? hydrogenReport.implicitHydrogens[atom.id] ?? 0;
+              const h = hCount ? 'H' + (hCount === 1 ? '' : hCount) : '';
               return `[${sym}${h}${atom.charge ? chg : ''}]`;
             }
             return sym;
@@ -2137,8 +2164,11 @@
         const facts = report.formula ? `${report.formula} · ${(report.molarMass == null ? 'unknown mass' : report.molarMass.toFixed(2))} g/mol${report.dbe == null ? '' : ' · DBE ' + report.dbe}` : 'Formula withheld until the drawing is resolved.';
         const messages = [...report.errors, ...report.warnings];
         panel.textContent = !state.atoms.length ? 'Draw a molecule to check its connectivity.' : facts + '\n' + (messages.length ? messages.join(' ') : 'Ordinary valence checks passed. Confirm stereochemistry and identity separately.');
-        panel.style.display = 'block';
+        document.getElementById('structure-review').style.display = 'block';
+        document.getElementById('structure-review').open = report.errors.length > 0;
+        document.getElementById('structure-review-summary').textContent = (report.formula || 'Drawing check') + (report.fragments > 1 ? ' · ' + report.fragments + ' fragments' : '') + (report.errors.length ? ' · Needs correction' : report.warnings.length ? ' · Review notes' : ' · Checks passed');
         panel.style.whiteSpace = 'pre-line';
+        requestAnimationFrame(() => {fitStructure();redraw();});
         return report;
       }
 
@@ -2172,7 +2202,9 @@
       document.getElementById('btn-clear').onclick = clearCanvas;
       document.getElementById('btn-select').onclick = () => setActiveTool(state.activeTool === 'select' ? 'single' : 'select');
       document.getElementById('btn-clean').onclick = cleanUpStructure;
-      document.getElementById('btn-check').onclick = checkStructure;
+      document.getElementById('btn-check').onclick = () => {const review=document.getElementById('structure-review');if(review.style.display==='block'){review.style.display='none';}else{checkStructure();} fitStructure();redraw();};
+      document.getElementById('btn-fit').onclick = () => {fitStructure();redraw();};
+      window.fitDrawing = () => {fitStructure();redraw();};
 
       ['single', 'double', 'triple', 'wedge', 'dash', 'rxn-arrow', 'eraser'].forEach(t => {
         const btn = document.getElementById(`btn-${t}`);

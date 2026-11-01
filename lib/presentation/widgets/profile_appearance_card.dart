@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/appearance.dart';
-import '../../core/widgets/expressive_motion.dart';
 import '../../core/widgets/liquid_glass.dart';
 import '../providers/appearance_provider.dart';
 
@@ -47,11 +46,80 @@ class _ProfileAppearanceCardState extends ConsumerState<ProfileAppearanceCard> {
     }
   }
 
+  Widget _choice({
+    required String title,
+    String? subtitle,
+    required bool selected,
+    required VoidCallback onTap,
+    Widget? leading,
+    Key? choiceKey,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: selected ? colors.primaryContainer : colors.surfaceContainerLow,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(
+            color: selected ? colors.primary : colors.outlineVariant,
+          ),
+        ),
+        child: InkWell(
+          key: choiceKey,
+          borderRadius: BorderRadius.circular(14),
+          onTap: _saving ? null : onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                if (leading != null) ...[leading, const SizedBox(width: 12)],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: selected
+                              ? colors.onPrimaryContainer
+                              : colors.onSurface,
+                        ),
+                      ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            color: selected
+                                ? colors.onPrimaryContainer
+                                : colors.onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked,
+                  color: selected ? colors.primary : colors.outline,
+                  size: 21,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final appearance = ref.watch(appearanceProvider);
     final colors = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
     final active =
         _collection ??
         (ThemePalette.isGradient(appearance.seed)
@@ -64,18 +132,34 @@ class _ProfileAppearanceCardState extends ConsumerState<ProfileAppearanceCard> {
       ThemePalette.fanCollection,
       ThemePalette.gradientCollection,
     ][active];
+    const collections = ['Classic', 'Fan collection', 'Gradients'];
+    String modeName(ThemeMode mode) => switch (mode) {
+      ThemeMode.system => 'Auto',
+      ThemeMode.light => 'Light',
+      ThemeMode.dark => 'Dark',
+    };
+    String finishName(GlassStyle finish) => switch (finish) {
+      GlassStyle.soft => 'Soft glass',
+      GlassStyle.crystal => 'Crystal',
+      GlassStyle.solid => 'Solid',
+    };
     return LiquidGlassContainer(
       borderRadius: 28,
       blurSigma: 12,
       padding: const EdgeInsets.all(18),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
               Icon(Icons.palette_outlined, color: colors.primary),
               const SizedBox(width: 10),
-              Expanded(child: Text('Your look', style: text.titleLarge)),
+              Expanded(
+                child: Text(
+                  'Your look',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
               if (_saving)
                 const SizedBox(
                   width: 16,
@@ -84,215 +168,113 @@ class _ProfileAppearanceCardState extends ConsumerState<ProfileAppearanceCard> {
                 ),
             ],
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 6),
           Text(
             ThemePalette.nameFor(appearance.seed),
             key: const Key('profile-theme-name'),
-            style: text.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 7,
-            runSpacing: 7,
-            children: [
-              for (final mode in ThemeMode.values)
-                SpringPress(
-                  child: ChoiceChip(
-                    selected: appearance.mode == mode,
-                    label: Text(switch (mode) {
-                      ThemeMode.system => 'Auto',
-                      ThemeMode.light => 'Light',
-                      ThemeMode.dark => 'Dark',
-                    }),
-                    avatar: Icon(switch (mode) {
-                      ThemeMode.system => Icons.brightness_auto_outlined,
-                      ThemeMode.light => Icons.light_mode_outlined,
-                      ThemeMode.dark => Icons.dark_mode_outlined,
-                    }, size: 17),
-                    onSelected: _saving
-                        ? null
-                        : (_) => _apply(appearance.copyWith(mode: mode)),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (var i = 0; i < 3; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 7),
-                    child: SpringPress(
-                      child: ChoiceChip(
-                        selected: active == i,
-                        label: Text(
-                          ['Classic', 'Fan collection', 'Gradients'][i],
-                        ),
-                        onSelected: _saving
-                            ? null
-                            : (_) => setState(() => _collection = i),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            style: TextStyle(color: colors.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            height:
-                116.0 +
-                (MediaQuery.textScalerOf(context).scale(14) - 14).clamp(0, 32),
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: palettes.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final palette = palettes[index];
-                final selected = appearance.seed == palette.seed;
-                final swatches = palette.swatches.isNotEmpty
-                    ? palette.swatches
-                    : [
-                        palette.seed,
-                        Color.lerp(palette.seed, colors.surface, .35)!,
-                        Color.lerp(palette.seed, colors.tertiary, .4)!,
-                      ];
-                return SizedBox(
-                  width: 146,
-                  child: Semantics(
-                    selected: selected,
-                    button: true,
-                    child: SpringPress(
-                      child: Material(
-                        color: selected
-                            ? colors.primaryContainer.withValues(alpha: .6)
-                            : colors.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(20),
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
-                          key: ValueKey(palette.name),
-                          onTap: _saving
-                              ? null
-                              : () => _apply(
-                                  appearance.copyWith(seed: palette.seed),
-                                ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  height: 39,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: swatches,
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: colors.outlineVariant.withValues(
-                                        alpha: .5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        palette.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: text.labelLarge,
-                                      ),
-                                    ),
-                                    if (selected)
-                                      Icon(
-                                        Icons.check_circle_rounded,
-                                        color: colors.primary,
-                                        size: 16,
-                                      ),
-                                  ],
-                                ),
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: const Text('Display mode'),
+            subtitle: Text(modeName(appearance.mode)),
+            children: [
+              for (final mode in ThemeMode.values)
+                _choice(
+                  title: modeName(mode),
+                  selected: appearance.mode == mode,
+                  subtitle: mode == ThemeMode.system
+                      ? 'Follow your device'
+                      : null,
+                  leading: Icon(switch (mode) {
+                    ThemeMode.system => Icons.brightness_auto_outlined,
+                    ThemeMode.light => Icons.light_mode_outlined,
+                    ThemeMode.dark => Icons.dark_mode_outlined,
+                  }),
+                  onTap: () => _apply(appearance.copyWith(mode: mode)),
+                ),
+            ],
+          ),
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            initiallyExpanded: false,
+            title: const Text('Colour collection'),
+            subtitle: Text(collections[active]),
+            children: [
+              for (var i = 0; i < collections.length; i++)
+                _choice(
+                  title: collections[i],
+                  selected: active == i,
+                  onTap: () => setState(() => _collection = i),
+                ),
+              const SizedBox(height: 8),
+              for (final palette in palettes)
+                _choice(
+                  choiceKey: ValueKey(palette.name),
+                  title: palette.name,
+                  subtitle: palette.caption,
+                  selected: appearance.seed == palette.seed,
+                  onTap: () => _apply(appearance.copyWith(seed: palette.seed)),
+                  leading: Container(
+                    width: 48,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        colors: palette.swatches.isNotEmpty
+                            ? palette.swatches
+                            : [
+                                palette.seed,
+                                Color.lerp(palette.seed, colors.surface, .4)!,
                               ],
-                            ),
-                          ),
-                        ),
                       ),
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+            ],
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 7,
-            runSpacing: 7,
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: const Text('Surface finish'),
+            subtitle: Text(finishName(appearance.glass)),
             children: [
               for (final finish in GlassStyle.values)
-                SpringPress(
-                  child: ChoiceChip(
-                    selected: appearance.glass == finish,
-                    label: Text(switch (finish) {
-                      GlassStyle.soft => 'Soft glass',
-                      GlassStyle.crystal => 'Crystal',
-                      GlassStyle.solid => 'Solid',
-                    }),
-                    onSelected: _saving
-                        ? null
-                        : (_) => _apply(appearance.copyWith(glass: finish)),
-                  ),
+                _choice(
+                  title: finishName(finish),
+                  selected: appearance.glass == finish,
+                  onTap: () => _apply(appearance.copyWith(glass: finish)),
                 ),
             ],
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: SpringPress(
-                  child: FilledButton.icon(
-                    onPressed: _saving
-                        ? null
-                        : () {
-                            final options = palettes
-                                .where(
-                                  (palette) => palette.seed != appearance.seed,
-                                )
-                                .toList();
-                            _apply(
-                              active == 0
-                                  ? appearance.surprise(_random)
-                                  : appearance.copyWith(
-                                      seed:
-                                          options[_random.nextInt(
-                                                options.length,
-                                              )]
-                                              .seed,
-                                    ),
-                            );
-                          },
-                    icon: const Icon(Icons.auto_awesome_rounded, size: 17),
-                    label: const Text('Surprise me'),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SpringPress(
-                child: TextButton(
-                  onPressed: _saving || _previous == null
-                      ? null
-                      : () {
-                          setState(() => _collection = null);
-                          _apply(_previous!, undo: true);
-                        },
-                  child: const Text('Undo'),
-                ),
-              ),
-            ],
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: _saving
+                ? null
+                : () {
+                    final options = palettes
+                        .where((p) => p.seed != appearance.seed)
+                        .toList();
+                    _apply(
+                      active == 0
+                          ? appearance.surprise(_random)
+                          : appearance.copyWith(
+                              seed:
+                                  options[_random.nextInt(options.length)].seed,
+                            ),
+                    );
+                  },
+            icon: const Icon(Icons.auto_awesome_rounded, size: 17),
+            label: const Text('Surprise me'),
+          ),
+          TextButton(
+            onPressed: _saving || _previous == null
+                ? null
+                : () {
+                    setState(() => _collection = null);
+                    _apply(_previous!, undo: true);
+                  },
+            child: const Text('Undo'),
           ),
         ],
       ),

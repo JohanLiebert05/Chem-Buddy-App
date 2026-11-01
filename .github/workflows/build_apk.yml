@@ -98,6 +98,7 @@ jobs:
             ChemBuddy-v*.apk
             build/app/outputs/flutter-apk/*.apk
             build/spectroscopy-review/random-25-report.*
+            docs/reports/live-40-report.*
           if-no-files-found: warn
           retention-days: 14
       - name: Align release tag with verified APK
@@ -120,6 +121,8 @@ jobs:
             ChemBuddy-v*-by-Prajwal-A-Kambar.apk
             build/spectroscopy-review/random-25-report.html
             build/spectroscopy-review/random-25-report.json
+            docs/reports/live-40-report.html
+            docs/reports/live-40-report.json
           name: ChemBuddy ${{ steps.version.outputs.version }} by Prajwal A Kambar
           prerelease: ${{ steps.signing.outputs.preview == 'true' }}
           body_path: release-body.md

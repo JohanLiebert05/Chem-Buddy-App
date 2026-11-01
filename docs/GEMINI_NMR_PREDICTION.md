@@ -62,3 +62,27 @@ attaches these reports to the APK release. These are **offline reference/renderi
 simulations**, not 25 live Gemini requests or an independent experimental benchmark.
 The reference library's measurement provenance/conditions are not established.
 No experimental accuracy percentage is inferred from these checks.
+
+## Partial live review — 1 November 2026
+
+Forty distinct PubChem-verified molecular formulas with specified connectivity
+were submitted through the authenticated app and existing server-side keys.
+Ten molecules received Gemini responses: seven passed the client's consistency
+checks, two still returned malformed JSON after correction, and one incorrectly
+refused the valid PubChem vanillin structure. The remaining thirty were blocked
+by the account's daily AI request limit. The user chose to finish this partial
+report rather than increase the allowance. No quota or authentication bypass was
+used.
+
+The responding model was `gemini-3.6-flash`. Server metadata reported **one
+configured key slot**; this run confirms connectivity, not multi-key failover.
+Conditions requested were CDCl3, 298 K and 400 MHz proton frequency. Seven
+accepted responses have formula/structure consistency, balanced H/C assignments,
+and 21 locally generated SVGs. Captured-response regression tests replay and
+render these outputs offline without credentials or new API calls.
+
+Read the [40-case report](reports/live-40-report.html) or
+[machine-readable outcomes](reports/live-40-report.json). PubChem supplies formula
+and connectivity references, not measured NMR shifts. This is **not a completed
+40-prediction run or an experimental accuracy benchmark**. Model rejection of a
+valid input is a recorded failure, not evidence that the molecule is invalid.
