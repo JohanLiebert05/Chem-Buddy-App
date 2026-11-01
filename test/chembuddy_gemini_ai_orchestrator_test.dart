@@ -64,12 +64,13 @@ Organometallic catalysts: Wilkinson catalyst is RhCl(PPh3)3 used for homogeneous
 
     test('6. Google Gemini API orchestrator returns non-empty response or handled fallback', () async {
       HttpOverrides.global = null;
-      final response = await GeminiOrchestrator.instance.ask(
-        prompt: 'State the first law of thermodynamics in one short sentence',
+      // Unauthenticated users must get a meaningful error, not a fake cloud response.
+      expect(
+        () => GeminiOrchestrator.instance.ask(
+          prompt: 'State the first law of thermodynamics in one short sentence',
+        ),
+        throwsA(isA<StateError>()),
       );
-
-      expect(response.text.isNotEmpty, isTrue);
-      expect(response.model.isNotEmpty, isTrue);
     });
   });
 }
