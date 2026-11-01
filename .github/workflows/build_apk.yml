@@ -31,6 +31,11 @@ jobs:
       - run: flutter test --concurrency=1 --dart-define=WRITE_SPECTROSCOPY_REPORT=true
       - name: Check sketcher chemistry and browser bridge
         run: node --test tool/sketcher*.test.cjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check credential diagnostic authorization and redaction
+        run: node --experimental-strip-types --test tool/gemini_key_health.test.mjs
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x

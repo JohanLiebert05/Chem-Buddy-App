@@ -86,3 +86,14 @@ Read the [40-case report](reports/live-40-report.html) or
 and connectivity references, not measured NMR shifts. This is **not a completed
 40-prediction run or an experimental accuracy benchmark**. Model rejection of a
 valid input is a recorded failure, not evidence that the molecule is invalid.
+
+## Subsequent credential check
+
+After the partial run, the owner added a new backend secret as `GEMINI_KEY_1`.
+A project-server-authorized diagnostic on 1 November 2026 returned
+`generation_ok` (HTTP 200) for both it and the existing `GEMINI_API_KEY`, using
+`gemini-3.6-flash`. The deployed orchestrator already recognizes both secret
+names. Neither credential is embedded in the application or these reports.
+This later connectivity check does not change the earlier partial-run numbers
+or the student's daily allowance. See the maintenance
+[diagnostic documentation](../supabase/functions/gemini-key-health/README.md).
