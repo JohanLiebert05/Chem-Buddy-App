@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { keyHealth } from '../supabase/functions/gemini-key-health/handler.ts';
 
 const env = name => ({SUPABASE_SERVICE_ROLE_KEY: 'project-service-credential',
-  GEMINI_KEY_1: 'new-private-key', GEMINI_API_KEY: 'existing-private-key'}[name]);
+  GEMINI_KEY_1: 'new-private-key', GEMINI_KEY_6: 'existing-private-key'}[name]);
 const request = token => new Request('https://example.test', {
   method: 'POST', headers: {Authorization: `Bearer ${token}`},
 });
@@ -52,8 +52,8 @@ test('modern project secret keys authorize; publishable keys do not', async () =
     assert.equal(response.status, expected);
   }
 });
-test('all five configured credentials receive an independent generation check', async () => {
-  const names = ['GEMINI_KEY_1','GEMINI_KEY_2','GEMINI_KEY_3','GEMINI_KEY_4','GEMINI_API_KEY'];
+test('all six configured credentials receive an independent generation check', async () => {
+  const names = Array.from({length:6},(_,i)=>`GEMINI_KEY_${i+1}`);
   const fiveEnv = name => names.includes(name) ? `private-${name}` : env(name);
   const checked = [];
   const response = await keyHealth(request('project-service-credential'), fiveEnv, async (_url, init) => {

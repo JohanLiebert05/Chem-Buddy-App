@@ -1,0 +1,41 @@
+{
+  "model": "gemini-3.6-flash",
+  "results": [
+    {
+      "name": "GEMINI_KEY_1",
+      "status": "quota_or_rate_limited",
+      "http_status": 429,
+      "error_code": "RESOURCE_EXHAUSTED"
+    },
+    {
+      "name": "GEMINI_KEY_2",
+      "status": "generation_ok",
+      "http_status": 200,
+      "error_code": null
+    },
+    {
+      "name": "GEMINI_KEY_3",
+      "status": "authentication_or_permission_failed",
+      "http_status": 401,
+      "error_code": "UNAUTHENTICATED"
+    },
+    {
+      "name": "GEMINI_KEY_4",
+      "status": "authentication_or_permission_failed",
+      "http_status": 401,
+      "error_code": "UNAUTHENTICATED"
+    },
+    {
+      "name": "GEMINI_KEY_5",
+      "status": "quota_or_rate_limited",
+      "http_status": 429,
+      "error_code": "RESOURCE_EXHAUSTED"
+    },
+    {
+      "name": "GEMINI_KEY_6",
+      "status": "generation_ok",
+      "http_status": 200,
+      "error_code": null
+    }
+  ]
+}

@@ -94,7 +94,7 @@ serve(async (req: Request) => {
 // Helper: Extract all 4 keys + fallbacks
 function getAvailableGeminiKeys(): string[] {
   const keys: string[] = [];
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 6; i++) {
     const k = Deno.env.get(`GEMINI_KEY_${i}`);
     if (k && k.trim().length > 10) keys.push(k.trim());
   }

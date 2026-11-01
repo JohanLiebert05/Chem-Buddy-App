@@ -471,7 +471,7 @@ function getGeminiKeyPool(): string[] {
     .filter((k) => k.length > 10);
 
   const namedKeys: string[] = [];
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 6; i++) {
     for (const name of [`GEMINI_API_KEY_${i}`, `GEMINI_KEY_${i}`]) {
       const key = Deno.env.get(name)?.trim();
       if (key) namedKeys.push(key);

@@ -1,0 +1,16 @@
+{
+  "http_status": 200,
+  "path": "existing public guest API",
+  "question": "Explain why ethyl acetate shows a triplet and quartet in proton NMR. Limit to two sentences.",
+  "response": {
+    "answer": "In ethyl acetate, the triplet and quartet signals arise from spin-spin coupling within the ethyl group (-O-CH₂-CH₃) according to the n+1 rule. The methyl protons (-CH₃) are split into a triplet by the two neighboring methylene protons (2+1=3), while the methylene protons (-CH₂-) are split into a quartet by the three neighboring methyl protons (3+1=4).",
+    "mode": "quick",
+    "model": "gemini-3.6-flash",
+    "sources": [],
+    "groundingSources": [],
+    "docScoped": true,
+    "hasContext": false,
+    "chunksUsed": 0,
+    "cached": false
+  }
+}

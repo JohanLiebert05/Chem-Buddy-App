@@ -6,13 +6,14 @@ or project-server credential is read or stored. Does not change user allowances.
 import json
 import pathlib
 import re
+import sys
 import urllib.error
 import urllib.request
 
 source = pathlib.Path('lib/data/remote/supabase_service.dart').read_text(encoding='utf-8')
 url = re.search(r"defaultUrl\s*=\s*'([^']+)'", source).group(1)
 anon = re.search(r"defaultAnonKey\s*=\s*'([^']+)'", source).group(1)
-payload = {'question': 'In two sentences, explain how an aldehyde differs from a ketone.', 'mode': 'quick'}
+payload = {'question': sys.argv[1] if len(sys.argv) > 1 else 'In two sentences, explain how an aldehyde differs from a ketone.', 'mode': 'quick'}
 request = urllib.request.Request(url + '/functions/v1/ask-chembuddy',
     data=json.dumps(payload).encode(), method='POST',
     headers={'Content-Type': 'application/json', 'Authorization': 'Bearer ' + anon, 'apikey': anon})
