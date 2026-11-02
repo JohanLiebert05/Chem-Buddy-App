@@ -231,7 +231,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen>
       modelPrompt = null;
     } else if (_currentMode == ChemBuddyAiMode.general) {
       modeString = 'general';
-      // General AI Mode: general purpose like normal Google Gemini AI
+      // Chemistry tutor; keep the existing mode ID for saved conversations.
       modelPrompt = null;
     } else if (_currentMode == ChemBuddyAiMode.simple) {
       modeString = 'simple';
@@ -306,7 +306,7 @@ class _AskChemBuddyScreenState extends ConsumerState<AskChemBuddyScreen>
             const SizedBox(width: 8),
             _AiModeChip(
               icon: Icons.auto_awesome_rounded,
-              label: 'General AI',
+              label: 'Chemistry AI',
               selected: _currentMode == ChemBuddyAiMode.general,
               onTap: () =>
                   setState(() => _currentMode = ChemBuddyAiMode.general),

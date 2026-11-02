@@ -1,4 +1,5 @@
-import { isGeminiCoolingDown, recordGeminiFailure } from "../_shared/gemini_cooldown.ts";
+import { rotateGemini } from "../_shared/gemini_rotation.ts";
+import { isChemistryQuestion, chemistryRefusal, aiUnavailableNotice, CHEMISTRY_ONLY_INSTRUCTION } from "../_shared/chemistry_scope.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -23,6 +24,7 @@ Deno.serve(async (req) => {
     if (question.length < 3) {
       return json({ error: "Please ask a more specific question." }, 400);
     }
+    if (!isChemistryQuestion(question, Array.isArray(body.history) ? body.history : [], typeof body.document_text === "string" ? body.document_text : "")) return json(chemistryRefusal());
 
     // 3. Supabase credentials
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -69,16 +71,7 @@ Deno.serve(async (req) => {
           const usages: Array<{ request_count: number }> = await usageRes.json();
           const used = usages?.[0]?.request_count ?? 0;
           if (used >= dailyLimit) {
-            return json(
-              {
-                error: "limit_reached",
-                message:
-                  "AI limit reached for today. You can continue studying your saved notes and flashcards.",
-                used,
-                limit: dailyLimit,
-              },
-              429,
-            );
+            return json({...aiUnavailableNotice(true), used, limit: dailyLimit});
           }
         }
       } catch (e) {
@@ -137,6 +130,7 @@ Deno.serve(async (req) => {
     }> = [];
 
     try {
+      if (documentId || subject) {
       const embeddingModel = Deno.env.get("GEMINI_EMBEDDING_MODEL") || "text-embedding-004";
       const embedRes = await fetchGeminiWithRotation(
         `models/${embeddingModel}:embedContent`,
@@ -167,6 +161,7 @@ Deno.serve(async (req) => {
             chunks = await matchRes.json();
           }
         }
+      }
       }
     } catch (e) {
       console.warn("RAG retrieval skipped or failed:", e);
@@ -305,11 +300,7 @@ RULES — FOLLOW EXACTLY:
 5. NEVER invent page numbers, reactions, or definitions not present in the provided text.
 6. Accuracy over fluency — a short correct answer is better than a long hallucinated one.`;
     } else if (mode === "general") {
-      modeInstructions = `ANSWER MODE: GENERAL INTELLIGENT AI (✨)
-You are functioning as an expert, all-knowing general AI tutor (like Google Gemini).
-- Answer any question clearly, comprehensively, intelligently, and accurately, whether it is chemistry, general science, university academics, or broad knowledge.
-- Provide step-by-step explanations, real-world examples, and precise answers without artificial constraints.
-- Format chemical formulas, equations, or scientific laws with clean notation.`;
+      modeInstructions = `ANSWER MODE: CHEMISTRY TUTOR. Explain chemistry clearly and accurately. Decline unrelated requests.`;
     } else {
       // DEFAULT QUICK ANSWER MODE
       modeInstructions = `DEFAULT MODE: QUICK & DIRECT ANSWER (⚡)
@@ -319,7 +310,7 @@ The student is asking a standard chemistry question.
 - Explain cleanly, correctly, and accurately without introductory fluff or repetitive filler.`;
     }
 
-    const systemPrompt = `You are ChemBuddy AI, an intelligent, accurate, and pedagogical Chemistry AI tutor.
+    const systemPrompt = `${CHEMISTRY_ONLY_INSTRUCTION}\n\nYou are ChemBuddy AI, an intelligent, accurate, and pedagogical Chemistry AI tutor.
 
 ${modeInstructions}
 
@@ -377,6 +368,7 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
     };
     let modelUsed = candidateChatModels[0];
 
+    const chatDeadline = Date.now() + 35000;
     for (const modelCandidate of candidateChatModels) {
       modelUsed = modelCandidate;
       chatRes = await fetchGeminiWithRotation(
@@ -391,19 +383,18 @@ ${context ? `AVAILABLE STUDY CONTEXT (use as primary factual reference):\n${cont
               thinkingLevel: "low",
             },
           },
-        }
+        },
+        chatDeadline,
       );
       if (chatRes.ok && chatRes.data) break;
     }
 
     if (!chatRes.ok || !chatRes.data) {
-      return json({ error: "ChemBuddy could not generate an answer right now.", detail: chatRes.errorText }, 502);
+      return json(aiUnavailableNotice());
     }
 
     let answer = chatRes.data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    if (!answer) {
-      return json({ error: "ChemBuddy produced an empty response." }, 502);
-    }
+    if (!answer) return json(aiUnavailableNotice());
 
     // Clean any accidental placeholder tokens or broken remnants
     answer = answer.replace(/___?DISPLAY_MATH[0-9₀-₉_]*___?/g, "");
@@ -492,122 +483,10 @@ function getGeminiKeyPool(): string[] {
 }
 
 // Global round-robin index across incoming invocations
-let globalKeyCounter = 0;
-const geminiCooldownUntil = new Map<string, number>();
+const geminiRotationState = {activeIndex: 0, cooldowns: new Map<string, number>()};
 
-async function fetchGeminiWithRotation(
-  endpointPath: string,
-  payload: unknown,
-): Promise<{ ok: boolean; status: number; data?: any; errorText?: string }> {
-  const configuredKeys = getGeminiKeyPool();
-  const keys = configuredKeys.filter(key => !isGeminiCoolingDown(geminiCooldownUntil, endpointPath, key));
-  if (keys.length === 0) {
-    return { ok: false, status: 503, errorText: configuredKeys.length ? "Gemini credentials are temporarily cooling down for this model." : "No Gemini API keys configured." };
-  }
-
-  // Round-robin starting point across the configured credential pool.
-  const startIdx = (globalKeyCounter++) % keys.length;
-  const orderedKeys = keys.map((_, i) => keys[(startIdx + i) % keys.length]);
-
-  return new Promise((resolve) => {
-    let settled = false;
-    let completedAttempts = 0;
-    let lastErrorText = "";
-    let lastStatus = 500;
-    const activeControllers: AbortController[] = [];
-    const scheduledTimeouts: ReturnType<typeof setTimeout>[] = [];
-    const launched = new Set<number>();
-
-    function settleSuccess(data: any) {
-      if (settled) return;
-      settled = true;
-      // Clear pending delayed dispatches
-      scheduledTimeouts.forEach((t) => clearTimeout(t));
-      // Abort other in-flight requests immediately
-      activeControllers.forEach((ac) => {
-        try { ac.abort(); } catch (_) {}
-      });
-      resolve({ ok: true, status: 200, data });
-    }
-
-    function checkAllFailed() {
-      completedAttempts++;
-      if (completedAttempts >= orderedKeys.length && !settled) {
-        settled = true;
-        scheduledTimeouts.forEach((t) => clearTimeout(t));
-        resolve({ ok: false, status: lastStatus, errorText: lastErrorText });
-      }
-    }
-
-    async function dispatchKey(index: number) {
-      if (settled || launched.has(index) || index >= orderedKeys.length) return;
-      launched.add(index);
-
-      const key = orderedKeys[index];
-      const ac = new AbortController();
-      activeControllers.push(ac);
-      const url = `https://generativelanguage.googleapis.com/v1beta/${endpointPath}`;
-
-      // Max timeout of 12s per key attempt
-      const attemptTimer = setTimeout(() => {
-        try { ac.abort(); } catch (_) {}
-      }, 12000);
-
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-          body: JSON.stringify(payload),
-          signal: ac.signal,
-        });
-        clearTimeout(attemptTimer);
-
-        if (settled) return;
-
-        if (res.ok) {
-          const data = await res.json();
-          settleSuccess(data);
-          return;
-        }
-
-        lastStatus = res.status;
-        recordGeminiFailure(geminiCooldownUntil, endpointPath, key, res.status);
-        lastErrorText = await res.text();
-        console.warn(`[Gemini Fast Hedging] Key ${index + 1}/${orderedKeys.length} failed (${res.status}):`, lastErrorText.slice(0, 120));
-
-        // If rate-limited or transient server error, immediately trigger the next key without waiting for the timer!
-        if (index + 1 < orderedKeys.length && !settled) {
-          dispatchKey(index + 1);
-        }
-      } catch (err: any) {
-        clearTimeout(attemptTimer);
-        if (settled) return;
-        if (err.name !== "AbortError") {
-          lastErrorText = String(err);
-          console.warn(`[Gemini Fast Hedging] Key ${index + 1} network error:`, err);
-        }
-        // Immediately try next key on network error
-        if (index + 1 < orderedKeys.length && !settled) {
-          dispatchKey(index + 1);
-        }
-      }
-      checkAllFailed();
-    }
-
-    // Launch initial key immediately
-    dispatchKey(0);
-
-    // Speculative Hedging: If key 0 hasn't responded in 650ms, start key 1 in parallel.
-    // If neither has answered in 1300ms, start key 2 in parallel.
-    for (let i = 1; i < orderedKeys.length; i++) {
-      const timer = setTimeout(() => {
-        if (!settled) {
-          dispatchKey(i);
-        }
-      }, i * 650);
-      scheduledTimeouts.push(timer);
-    }
-  });
+async function fetchGeminiWithRotation(endpointPath: string, payload: unknown, deadline?: number) {
+  return rotateGemini(getGeminiKeyPool(), endpointPath, payload, geminiRotationState, {deadline: deadline ?? Date.now() + 4000, attemptTimeoutMs: endpointPath.endsWith(":embedContent") ? 4000 : 20000});
 }
 
 function getUserIdFromToken(authHeader: string): string | null {

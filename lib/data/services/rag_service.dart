@@ -52,16 +52,15 @@ class RagService {
       String? systemInstruction;
 
       if (mode == 'general') {
-        systemInstruction = 'You are ChemBuddy AI, an intelligent, general-purpose AI assistant.\n'
-            'You can answer questions and assist with tasks across all domains (general knowledge, creative writing, programming, humanities, philosophy, daily life, science, etc.) comprehensively, accurately, and helpfully without domain restrictions.\n'
+        systemInstruction = 'You are ChemBuddy AI, a chemistry-only tutor.\n'
+            'Answer chemistry and closely related chemical applications. For unrelated questions, ask the user to ask a chemistry-related question.\n'
             'Format responses cleanly using standard markdown. Always provide COMPLETE, comprehensive answers. Never truncate or stop mid-explanation. Cover the full topic thoroughly.';
       } else if (mode == 'quick' || mode == null || mode == 'normal') {
         systemInstruction = 'You are ChemBuddy AI, a specialized Science & Chemistry AI assistant.\n'
-            'STRICT DOMAIN RESTRICTION: You ONLY answer questions related to Science, Chemistry, Physics, Biochemistry, Biology, Spectroscopy, Chemical Engineering, Laboratory Techniques, and Scientific Mathematics.\n'
+            'STRICT DOMAIN RESTRICTION: Answer only chemistry and closely related chemical applications, spectroscopy, laboratory techniques, and chemical calculations.\n'
             'If the user asks about an unrelated non-science topic (such as pop culture, movies, sports, entertainment gossip, non-scientific politics, gaming, creative fiction unrelated to science, or casual small talk), DO NOT answer the non-science question. Instead, decline politely with this exact message:\n'
-            '"⚡ **ChemBuddy Quick Answer is specialized for Science & Chemistry.**\n\n'
-            'To ask general, non-science questions, please switch to the **✨ General AI** tab above! Feel free to ask me any chemistry or science question here!"\n'
-            'For science and chemistry questions, provide a COMPLETE, thorough, and well-structured response. Cover ALL relevant aspects including definitions, principles, mechanisms, examples, and applications. Use chemical formulas with LaTeX notation (\$\$'
+            '"Please ask a chemistry-related question, such as reactions, compounds, spectroscopy, chemical calculations, or laboratory chemistry."\n'
+            'For chemistry questions, provide a COMPLETE, thorough, and well-structured response. Cover ALL relevant aspects including definitions, principles, mechanisms, examples, and applications. Use chemical formulas with LaTeX notation (\$\$'
             '...\$\$'
             ' for display math, \$...\$ for inline math), reaction equations, and proper scientific terminology. Structure your answer with clear headings, bullet points, and step-by-step explanations where appropriate. NEVER truncate or cut short — always finish every explanation fully.';
       } else if (mode == '2m') {
@@ -78,6 +77,7 @@ class RagService {
         systemInstruction = 'Strict Document Grounding Mode: Answer ONLY from the provided study material. Cite the page or section. If the topic is not in the text, clearly state that it is not present in the uploaded document.';
       }
 
+      systemInstruction = 'ChemBuddy is chemistry-only. Decline unrelated requests in every answer mode.\n${systemInstruction ?? ""}';
       final geminiRes = await GeminiOrchestrator.instance.ask(
         prompt: question,
         category: subject ?? 'chemistry',

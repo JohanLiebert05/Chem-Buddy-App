@@ -1,0 +1,35 @@
+{
+  "chemistry": {
+    "http_status": 200,
+    "path": "existing public guest API",
+    "question": "Compare normality and molarity for sulfuric acid in acid-base titration. Use two sentences.",
+    "response": {
+      "answer": "Molarity measures the concentration of H₂SO₄ in moles per liter, whereas normality measures the concentration of reactive equivalents of H⁺ ions per liter of solution. Because sulfuric acid is a diprotic acid that donates two H⁺ ions per molecule during complete neutralization, its normality is always twice its molarity (N = 2M).",
+      "mode": "general",
+      "model": "gemini-3.6-flash",
+      "sources": [],
+      "groundingSources": [],
+      "docScoped": true,
+      "hasContext": false,
+      "chunksUsed": 0,
+      "cached": false
+    }
+  },
+  "out_of_scope": {
+    "http_status": 200,
+    "elapsed_ms": 595,
+    "mode": "general",
+    "path": "existing public guest API",
+    "question": "who won the Ballon Dor in 2026",
+    "response": {
+      "answer": "Please ask a chemistry-related question, such as reactions, compounds, spectroscopy, chemical calculations, or laboratory chemistry.",
+      "status": "out_of_scope",
+      "model": "local-policy",
+      "cached": false,
+      "sources": [],
+      "groundingSources": [],
+      "hasContext": false,
+      "chunksUsed": 0
+    }
+  }
+}
