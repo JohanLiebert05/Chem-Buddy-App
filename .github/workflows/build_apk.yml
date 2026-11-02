@@ -75,7 +75,7 @@ jobs:
           CHEMBUDDY_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           CHEMBUDDY_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           CHEMBUDDY_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: flutter build apk --release
+        run: flutter build apk --release --split-per-abi
       - name: Prepare versioned download
         id: version
         if: steps.signing.outputs.preview != ''
@@ -87,12 +87,15 @@ jobs:
           SUFFIX=""
           if [ "$PREVIEW" = "true" ]; then SUFFIX="-preview"; fi
           APK="ChemBuddy-v$VERSION$SUFFIX.apk"
-          cp build/app/outputs/flutter-apk/app-release.apk "$APK"
-          cp build/app/outputs/flutter-apk/app-release.apk "ChemBuddy-v$VERSION-by-Prajwal-A-Kambar.apk"
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "$APK"
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "ChemBuddy-v$VERSION-by-Prajwal-A-Kambar.apk"
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "ChemBuddy-v$VERSION-armv7$SUFFIX.apk"
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk "ChemBuddy-v$VERSION-x86_64$SUFFIX.apk"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
           echo "apk=$APK" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           cp RELEASE_NOTES.md release-body.md
+          printf '\nThe main download is **ARM64**, suitable for modern Android phones. Separate ARMv7 and x86_64 downloads preserve support for older devices and emulators. Each build includes all features.\n' >> release-body.md
           if [ "$PREVIEW" = "true" ]; then
             printf '\n## Mobile test build\n\nThis APK is the separate **ChemBuddy Preview** app, signed for testing. It installs alongside the existing app. Production signing secrets were unavailable. Use it to test the version above on your phone; it is not an in-place production update.\n' >> release-body.md
           fi
@@ -122,8 +125,7 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           target_commitish: ${{ github.sha }}
           files: |
-            ${{ steps.version.outputs.apk }}
-            ChemBuddy-v*-by-Prajwal-A-Kambar.apk
+            ChemBuddy-v*.apk
             build/spectroscopy-review/random-25-report.html
             build/spectroscopy-review/random-25-report.json
             docs/reports/live-40-report.html

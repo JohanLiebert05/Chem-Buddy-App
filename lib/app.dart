@@ -16,13 +16,23 @@ class ChemBuddyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(appControllerProvider).profile;
+    final profile = ref.watch(
+      appControllerProvider.select(
+        (state) => (
+          loggedIn: state.profile.loggedIn,
+          role: state.profile.role,
+          onboarded: state.profile.onboarded,
+          identity: state.profile.id ?? state.profile.registerNumber,
+        ),
+      ),
+    );
+    final appearance = ref.watch(appearanceProvider);
     Widget home;
     if (profile.loggedIn) {
       if (profile.role == 'admin') {
-        home = AdminShell(key: ValueKey(profile.id ?? profile.registerNumber));
+        home = AdminShell(key: ValueKey(profile.identity));
       } else {
-        home = MainShell(key: ValueKey(profile.id ?? profile.registerNumber));
+        home = MainShell(key: ValueKey(profile.identity));
       }
     } else if (profile.onboarded) {
       home = const HexBackground(
@@ -38,15 +48,12 @@ class ChemBuddyApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Chem Buddy by Prajwal A Kambar',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.fromAppearance(
-        ref.watch(appearanceProvider),
-        brightness: Brightness.light,
-      ),
+      theme: AppTheme.fromAppearance(appearance, brightness: Brightness.light),
       darkTheme: AppTheme.fromAppearance(
-        ref.watch(appearanceProvider),
+        appearance,
         brightness: Brightness.dark,
       ),
-      themeMode: ref.watch(appearanceProvider).mode,
+      themeMode: appearance.mode,
       themeAnimationCurve: Curves.easeInOutCubic,
       themeAnimationDuration: MediaQuery.disableAnimationsOf(context)
           ? Duration.zero

@@ -1,0 +1,29 @@
+{
+  "baseline_bytes": 138285403,
+  "splits": [
+    {
+      "abi": "arm64-v8a",
+      "bytes": 55510358,
+      "reduction_percent": 59.86,
+      "feature_assets_matching_checkout": 46,
+      "unchanged_native_libraries": 5,
+      "ocr_and_pdf_present": true
+    },
+    {
+      "abi": "armeabi-v7a",
+      "bytes": 48162940,
+      "reduction_percent": 65.17,
+      "feature_assets_matching_checkout": 46,
+      "unchanged_native_libraries": 5,
+      "ocr_and_pdf_present": true
+    },
+    {
+      "abi": "x86_64",
+      "bytes": 57467153,
+      "reduction_percent": 58.44,
+      "feature_assets_matching_checkout": 46,
+      "unchanged_native_libraries": 5,
+      "ocr_and_pdf_present": true
+    }
+  ]
+}

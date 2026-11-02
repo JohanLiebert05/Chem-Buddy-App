@@ -1,0 +1,30 @@
+{
+  "checked_at_utc": "2026-11-02T02:45:29Z",
+  "source": "Authenticated Supabase dashboard POST to the protected gemini-key-health function",
+  "model": "gemini-3.6-flash",
+  "configured_key_slots": 6,
+  "working_key_slots": [2, 5, 6],
+  "results": [
+    {"name": "GEMINI_KEY_1", "status": "quota_or_rate_limited", "http_status": 429, "error_code": "RESOURCE_EXHAUSTED"},
+    {"name": "GEMINI_KEY_2", "status": "generation_ok", "http_status": 200, "error_code": null},
+    {"name": "GEMINI_KEY_3", "status": "authentication_or_permission_failed", "http_status": 401, "error_code": "UNAUTHENTICATED"},
+    {"name": "GEMINI_KEY_4", "status": "authentication_or_permission_failed", "http_status": 401, "error_code": "UNAUTHENTICATED"},
+    {"name": "GEMINI_KEY_5", "status": "generation_ok", "http_status": 200, "error_code": null},
+    {"name": "GEMINI_KEY_6", "status": "generation_ok", "http_status": 200, "error_code": null}
+  ],
+  "app_endpoint_check": {
+    "feature": "Ask ChemBuddy, general mode",
+    "question": "Explain why a terminal alkyne proton is more acidic than a vinylic proton using orbital hybridization, in two sentences.",
+    "http_status": 200,
+    "model": "gemini-3.6-flash",
+    "cached": false,
+    "elapsed_ms": 5435,
+    "outcome": "Live answer correctly distinguishes 50% versus 33% s-character and stabilization of the conjugate base."
+  },
+  "limitations": [
+    "A successful minimal generation check is a point-in-time connectivity check, not a guarantee of available future quota or scientific accuracy.",
+    "Code cannot restore provider quota or repair credentials rejected by Google. Keys 3 and 4 need valid replacements or provider-side authorization repair.",
+    "The app tries the configured keys sequentially on retryable provider failures and retains the successful key for subsequent requests."
+  ],
+  "credentials_in_report": false
+}

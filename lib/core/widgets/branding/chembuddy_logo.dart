@@ -24,16 +24,11 @@ class ChemBuddyLogo extends StatefulWidget {
 
 class _ChemBuddyLogoState extends State<ChemBuddyLogo>
     with TickerProviderStateMixin {
-  late final AnimationController _spinController;
   late final AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
-    _spinController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 12),
-    );
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
@@ -41,18 +36,16 @@ class _ChemBuddyLogoState extends State<ChemBuddyLogo>
   }
 
   void _syncMotion() {
-    final animate = widget.animated && !MediaQuery.disableAnimationsOf(context);
+    final animate =
+        widget.animated &&
+        !MediaQuery.disableAnimationsOf(context) &&
+        TickerMode.valuesOf(context).enabled;
     if (animate) {
-      if (!_spinController.isAnimating) {
-        _spinController.repeat();
-      }
       if (!_pulseController.isAnimating) {
         _pulseController.repeat(reverse: true);
       }
     } else {
-      _spinController.stop();
       _pulseController.stop();
-      _spinController.value = 0;
       _pulseController.value = 0;
     }
   }
@@ -71,7 +64,6 @@ class _ChemBuddyLogoState extends State<ChemBuddyLogo>
 
   @override
   void dispose() {
-    _spinController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
@@ -79,62 +71,62 @@ class _ChemBuddyLogoState extends State<ChemBuddyLogo>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_spinController, _pulseController]),
+      animation: _pulseController,
       builder: (context, child) {
         final pulse =
             widget.animated && !MediaQuery.disableAnimationsOf(context)
             ? 0.96 + (_pulseController.value * 0.08)
             : 1.0;
-        return Transform.scale(
-          scale: pulse,
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            decoration: widget.showBadge
-                ? BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const RadialGradient(
-                      colors: [
-                        Color(0xFF26214B),
-                        Color(0xFF131127),
-                        Color(0xFF0A0914),
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.primary.withValues(
-                          alpha: 0.25 + (_pulseController.value * 0.15),
-                        ),
-                        blurRadius: widget.size * 0.35,
-                        spreadRadius: widget.size * 0.05,
-                      ),
+        return Transform.scale(scale: pulse, child: child);
+      },
+      child: RepaintBoundary(
+        child: Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: widget.showBadge
+              ? BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const RadialGradient(
+                    colors: [
+                      Color(0xFF26214B),
+                      Color(0xFF131127),
+                      Color(0xFF0A0914),
                     ],
-                    border: Border.all(
+                  ),
+                  boxShadow: [
+                    BoxShadow(
                       color: Theme.of(context).colorScheme.primary
-                          .withValues(alpha: 0.5),
-                      width: widget.size * 0.03,
+                          .withValues(alpha: 0.32),
+                      blurRadius: widget.size * 0.35,
+                      spreadRadius: widget.size * 0.05,
                     ),
-                  )
-                : null,
-            child: ClipOval(
-              child: Image.asset(
-                'assets/images/app_logo.png',
-                width: widget.size,
-                height: widget.size,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return CustomPaint(
-                    painter: _ChemBuddyLogoPainter(
-                      spin: _spinController.value * 2 * math.pi,
-                      pulse: _pulseController.value,
-                    ),
-                  );
-                },
-              ),
+                  ],
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.5),
+                    width: widget.size * 0.03,
+                  ),
+                )
+              : null,
+          child: ClipOval(
+            child: Image.asset(
+              'assets/images/app_logo.png',
+              width: widget.size,
+              height: widget.size,
+              fit: BoxFit.contain,
+              cacheWidth: (widget.size * MediaQuery.devicePixelRatioOf(context))
+                  .ceil(),
+              cacheHeight:
+                  (widget.size * MediaQuery.devicePixelRatioOf(context)).ceil(),
+              errorBuilder: (context, error, stackTrace) {
+                return CustomPaint(
+                  painter: _ChemBuddyLogoPainter(spin: 0, pulse: 0),
+                );
+              },
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

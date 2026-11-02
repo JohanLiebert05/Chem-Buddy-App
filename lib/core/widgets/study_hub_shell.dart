@@ -61,7 +61,7 @@ class StudyHubShellState extends State<StudyHubShell>
   late int _active;
   late final AnimationController _entrance = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 300),
+    duration: const Duration(milliseconds: 200),
     value: 1,
   );
   @override
@@ -81,6 +81,7 @@ class StudyHubShellState extends State<StudyHubShell>
   }
 
   void openSection(int index) {
+    final enteringWorkspace = _overview;
     FocusManager.instance.primaryFocus?.unfocus();
     AppHaptics.selection();
     widget.controller.index = index.clamp(0, widget.destinations.length - 1);
@@ -89,7 +90,7 @@ class StudyHubShellState extends State<StudyHubShell>
       _overview = false;
       _active = widget.controller.index;
     });
-    if (!MediaQuery.disableAnimationsOf(context)) {
+    if (enteringWorkspace && !MediaQuery.disableAnimationsOf(context)) {
       _entrance.forward(from: 0);
     }
   }
@@ -171,6 +172,7 @@ class StudyHubShellState extends State<StudyHubShell>
                           borderRadius: 26,
                           padding: const EdgeInsets.all(6),
                           blurSigma: 12,
+                          enableBlur: false,
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: Row(
@@ -240,12 +242,9 @@ class StudyHubShellState extends State<StudyHubShell>
                                   : Curves.easeOutCubic.transform(
                                       _entrance.value,
                                     );
-                              return Opacity(
-                                opacity: .7 + .3 * progress,
-                                child: Transform.translate(
-                                  offset: Offset(0, 8 * (1 - progress)),
-                                  child: child,
-                                ),
+                              return Transform.translate(
+                                offset: Offset(0, 4 * (1 - progress)),
+                                child: child,
                               );
                             },
                           ),

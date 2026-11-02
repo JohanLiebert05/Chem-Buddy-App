@@ -1,4 +1,26 @@
-# ChemBuddy 3.5.6 by Prajwal A Kambar
+# ChemBuddy 3.5.7 by Prajwal A Kambar
+
+Android build 37 improves startup and navigation while preserving existing features.
+
+- Shows a branded native splash and immediate Flutter startup screen while services initialize in parallel.
+- Loads main tabs on first visit, retains their state, and stops hidden animations.
+- Uses shorter tab and dashboard motion, a paint-only navigation indicator, isolated background painting, and a cached logo layer.
+- Prevents ordinary attendance, note and AI updates from rebuilding the entire app theme and router.
+- Requests high refresh rates while preserving display resolution.
+- Publishes smaller APKs per CPU architecture. The main download is ARM64 for modern phones; ARMv7 and x86_64 are available separately. OCR, PDFs, spectroscopy and sketching remain included.
+- Includes immediate Gemini key failover, chemistry-only AI guidance, and truthful service/quota notices from the latest backend changes.
+
+120 Hz smoothness still requires profiling on the user's physical phone; host regression tests do not establish device FPS. Download size differs from installed storage and saved user data.
+
+This release uses the separate **ChemBuddy Preview** app when production signing is unavailable. Keep the existing app and its saved data; Preview is not an in-place production update.
+
+Live backend check on 2 November 2026: keys **2, 5 and 6** generated responses;
+key **1** was quota-limited (429); keys **3 and 4** were rejected (401). A fresh
+Ask ChemBuddy chemistry question returned an uncached Gemini response in 5.4 s.
+Provider quota and invalid credentials require provider-side action; automatic
+failover cannot make all exhausted or rejected keys available.
+
+## Previous spectroscopy improvements (3.5.6)
 
 Revised Android build 36 adds **Predict with Gemini** beside the existing solver.
 

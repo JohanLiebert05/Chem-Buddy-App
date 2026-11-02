@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:chem_buddy/presentation/providers/app_providers.dart';
 import 'package:chem_buddy/presentation/shell/main_shell.dart';
+import 'package:chem_buddy/presentation/screens/ask_chembuddy_screen.dart';
+import 'package:chem_buddy/presentation/screens/profile_screen.dart';
+import 'package:chem_buddy/presentation/screens/resources_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:chem_buddy/data/local/local_store.dart';
 
@@ -69,6 +72,17 @@ void main() {
 
         expect(find.byType(MainShell), findsOneWidget);
         expect(find.byType(IndexedStack), findsOneWidget);
+        // Heavy workspaces must not mount before their first visit.
+        expect(
+          find.byType(AskChemBuddyScreen, skipOffstage: false),
+          findsNothing,
+        );
+        expect(find.byType(ProfileScreen, skipOffstage: false), findsNothing);
+        expect(find.byType(ResourcesScreen, skipOffstage: false), findsNothing);
+
+        container.read(shellTabProvider.notifier).state = 2;
+        await tester.pump(const Duration(microseconds: 8333));
+        final retainedAskState = tester.state(find.byType(AskChemBuddyScreen));
 
         // Perform 30 rapid switches across all tabs in random and sequential orders
         const switchSequence = [
@@ -107,7 +121,7 @@ void main() {
         for (final tabIndex in switchSequence) {
           container.read(shellTabProvider.notifier).state = tabIndex;
           // Pump minimal frame to simulate high-frequency user interactions
-          await tester.pump(const Duration(milliseconds: 16));
+          await tester.pump(const Duration(microseconds: 8333));
           assertNoAppCrash(
             tester,
             context: 'rapidly switching to tab $tabIndex',
@@ -122,6 +136,11 @@ void main() {
         final indexedStack = tester.widget<IndexedStack>(indexedStackFinder);
         expect(indexedStack.index, equals(4)); // Last tab in sequence
         expect(indexedStack.children.length, equals(5));
+        // First-visit laziness must not discard conversations on later switches.
+        expect(
+          tester.state(find.byType(AskChemBuddyScreen, skipOffstage: false)),
+          same(retainedAskState),
+        );
       },
     );
 

@@ -29,9 +29,10 @@ class _SpringPressState extends State<SpringPress>
     if (!widget.enabled || reduced) {
       return;
     }
+    if (!_spring.isAnimating && (_spring.value - target).abs() < .001) return;
     _spring.animateWith(
       SpringSimulation(
-        const SpringDescription(mass: 1, stiffness: 480, damping: 19),
+        const SpringDescription(mass: 1, stiffness: 600, damping: 38),
         _spring.value,
         target,
         _spring.velocity,
@@ -117,23 +118,27 @@ class _SpringPressState extends State<SpringPress>
           return Transform.scale(
             transformHitTests: false,
             scale: reduced ? 1 : _spring.value.clamp(.92, 1.04),
+            // Keep the element tree stable while a pointer is down, otherwise
+            // replacing the wrapper cancels the child's gesture recognizer.
             child: DecoratedBox(
               position: DecorationPosition.foreground,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: pressure * .25),
-                    colors.primary.withValues(alpha: pressure * .08),
-                    Colors.white.withValues(alpha: pressure * .10),
-                  ],
-                ),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: pressure * .45),
-                ),
-              ),
+              decoration: pressure < .001
+                  ? const BoxDecoration()
+                  : BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha: pressure * .25),
+                          colors.primary.withValues(alpha: pressure * .08),
+                          Colors.white.withValues(alpha: pressure * .10),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: pressure * .45),
+                      ),
+                    ),
               child: child,
             ),
           );

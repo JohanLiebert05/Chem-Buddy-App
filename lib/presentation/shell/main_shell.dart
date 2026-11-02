@@ -22,6 +22,7 @@ class MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<MainShell> {
+  final Set<int> _visited = {};
   static const _tabNames = [
     'Home',
     'Classes & Attendance',
@@ -57,6 +58,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   Widget build(BuildContext context) {
     final rawIndex = ref.watch(shellTabProvider);
     final safeIndex = rawIndex.clamp(0, _tabs.length - 1);
+    _visited.add(safeIndex);
 
     return HexBackground(
       child: Scaffold(
@@ -67,13 +69,21 @@ class _MainShellState extends ConsumerState<MainShell> {
             index: safeIndex,
             children: [
               for (var i = 0; i < _tabs.length; i++)
-                TickerMode(
-                  enabled: i == safeIndex,
-                  child: AppErrorBoundary(
-                    screenName: _tabNames[i],
-                    child: _tabs[i],
+                if (!_visited.contains(i))
+                  const SizedBox.shrink()
+                else
+                  TickerMode(
+                    enabled: i == safeIndex,
+                    child: ExcludeFocus(
+                      excluding: i != safeIndex,
+                      child: RepaintBoundary(
+                        child: AppErrorBoundary(
+                          screenName: _tabNames[i],
+                          child: _tabs[i],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
             ],
           ),
         ),
@@ -121,7 +131,7 @@ class _Material3ExpressiveNavBar extends StatelessWidget {
     final prism = PrismTokens.of(context);
     final duration = reduced
         ? Duration.zero
-        : const Duration(milliseconds: 420);
+        : const Duration(milliseconds: 200);
     final height =
         66.0 + (MediaQuery.textScalerOf(context).scale(11) - 11).clamp(0, 30);
     return SafeArea(
@@ -131,6 +141,8 @@ class _Material3ExpressiveNavBar extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 12),
         borderRadius: 32,
         blurSigma: 20,
+        // This bar sits outside the scrolling body over a static background.
+        enableBlur: false,
         padding: const EdgeInsets.all(5),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -139,37 +151,46 @@ class _Material3ExpressiveNavBar extends StatelessWidget {
               height: height,
               child: Stack(
                 children: [
-                  AnimatedPositioned(
-                    duration: duration,
-                    curve: Curves.easeOutBack,
-                    left: selectedIndex * itemWidth + 2,
+                  Positioned(
+                    left: 2,
                     top: 2,
                     bottom: 2,
                     width: itemWidth - 4,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(26),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: prism.enabled
-                              ? prism.colors
-                                    .map(
-                                      (tone) => Color.alphaBlend(
-                                        tone.withValues(alpha: .13),
-                                        colors.primaryContainer,
-                                      ),
-                                    )
-                                    .toList()
-                              : [
-                                  colors.primaryContainer.withValues(
-                                    alpha: .85,
-                                  ),
-                                  colors.primaryContainer.withValues(alpha: .5),
-                                ],
-                        ),
-                        border: Border.all(
-                          color: colors.primary.withValues(alpha: .16),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(end: selectedIndex * itemWidth),
+                      duration: duration,
+                      curve: Curves.easeOutCubic,
+                      builder: (context, offset, child) => Transform.translate(
+                        offset: Offset(offset, 0),
+                        child: child,
+                      ),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(26),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: prism.enabled
+                                ? prism.colors
+                                      .map(
+                                        (tone) => Color.alphaBlend(
+                                          tone.withValues(alpha: .13),
+                                          colors.primaryContainer,
+                                        ),
+                                      )
+                                      .toList()
+                                : [
+                                    colors.primaryContainer.withValues(
+                                      alpha: .85,
+                                    ),
+                                    colors.primaryContainer.withValues(
+                                      alpha: .5,
+                                    ),
+                                  ],
+                          ),
+                          border: Border.all(
+                            color: colors.primary.withValues(alpha: .16),
+                          ),
                         ),
                       ),
                     ),
@@ -200,7 +221,7 @@ class _Material3ExpressiveNavBar extends StatelessWidget {
                                         AnimatedScale(
                                           scale: selected ? 1.08 : 1,
                                           duration: duration,
-                                          curve: Curves.easeOutBack,
+                                          curve: Curves.easeOutCubic,
                                           child: Icon(
                                             selected
                                                 ? activeIcons[i]
@@ -247,8 +268,8 @@ class _Material3ExpressiveNavBar extends StatelessWidget {
   }
 }
 
-/// Fluid, state-preserving animated switcher that transitions between tabs
-/// using Google Pixel Material 3 expressive easing and subtle forward scale.
+/// Retains tab state with a short paint-only translation, without a full-page
+/// opacity surface or scaling all of the page's text during navigation.
 class _AnimatedFadeIndexedStack extends StatefulWidget {
   final int index;
   final List<Widget> children;
@@ -266,8 +287,7 @@ class _AnimatedFadeIndexedStack extends StatefulWidget {
 class _AnimatedFadeIndexedStackState extends State<_AnimatedFadeIndexedStack>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
+  late Animation<Offset> _slideAnimation;
   int _activeChildIndex = 0;
 
   @override
@@ -276,15 +296,11 @@ class _AnimatedFadeIndexedStackState extends State<_AnimatedFadeIndexedStack>
     _activeChildIndex = widget.index;
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 360),
+      duration: const Duration(milliseconds: 200),
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-    _scaleAnimation = Tween<double>(
-      begin: 0.985,
-      end: 1.0,
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(.012, 0),
+      end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.value = 1.0;
   }
@@ -293,9 +309,7 @@ class _AnimatedFadeIndexedStackState extends State<_AnimatedFadeIndexedStack>
   void didUpdateWidget(covariant _AnimatedFadeIndexedStack oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.index != _activeChildIndex) {
-      setState(() {
-        _activeChildIndex = widget.index;
-      });
+      _activeChildIndex = widget.index;
       if (MediaQuery.disableAnimationsOf(context)) {
         _controller.value = 1;
       } else {
@@ -312,15 +326,9 @@ class _AnimatedFadeIndexedStackState extends State<_AnimatedFadeIndexedStack>
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: IndexedStack(
-          index: _activeChildIndex,
-          children: widget.children,
-        ),
-      ),
+    return SlideTransition(
+      position: _slideAnimation,
+      child: IndexedStack(index: _activeChildIndex, children: widget.children),
     );
   }
 }
