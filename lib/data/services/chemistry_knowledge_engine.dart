@@ -1181,12 +1181,12 @@ Total electrons on metal + electrons from ligands = EAN (noble gas configuration
     final topicHint = subject != null ? ' in $subject' : '';
     return '''### **$query**
 
-📡 **Offline Mode (Zero Internet Detected)**
-ChemBuddy AI is currently running offline and couldn't find a pre-built answer for this specific topic$topicHint in the local offline dictionary.
+📡 **Online AI answer unavailable**
+The local study library couldn't answer this specific topic$topicHint. Online AI requests can fail because of provider quota limits, rejected API credentials, an expired sign-in session, a timeout, or a connection problem. This fallback does not establish whether your device is offline.
 
-### How to Get Full AI Answers:
-1. **Connect to the Internet**: ChemBuddy AI will automatically activate online AI intelligence to explain any topic with deep pedagogical insight, step-by-step mechanisms, or mathematical formulas.
-2. **Upload Notes / PDF**: You can attach a study PDF or photo of notes, and ChemBuddy will analyze and answer questions directly from it.
+### What You Can Do:
+1. **Check your sign-in and retry later**: Provider quotas and temporary service errors must clear before cloud answers can resume. Check your connection if other online apps also fail.
+2. **Use study material**: You can attach notes or a PDF. Cloud analysis still requires an available AI service.
 3. **Common Exam Topics Available Offline**: Topics like *SN1 vs SN2*, *Beer-Lambert Law*, *Gibbs Free Energy*, *Hückel 4n+2 Rule*, *Diels-Alder Reaction*, *¹H NMR*, *E1 vs E2*, and *Normality/Molarity* are pre-cached and accessible without internet.''';
   }
 

@@ -1,0 +1,9 @@
+{
+  "http_status": 502,
+  "path": "existing public guest API",
+  "question": "who won the Ballon Dor in 2026",
+  "response": {
+    "error": "ChemBuddy could not generate an answer right now.",
+    "detail": "{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \",\n    \"status\": \"RESOURCE_EXHAUSTED\",\n    \"details\": [\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.Help\",\n        \"links\": [\n          {\n           "
+  }
+}

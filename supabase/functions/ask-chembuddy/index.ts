@@ -1,3 +1,5 @@
+import { isGeminiCoolingDown, recordGeminiFailure } from "../_shared/gemini_cooldown.ts";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: cors() });
@@ -491,14 +493,16 @@ function getGeminiKeyPool(): string[] {
 
 // Global round-robin index across incoming invocations
 let globalKeyCounter = 0;
+const geminiCooldownUntil = new Map<string, number>();
 
 async function fetchGeminiWithRotation(
   endpointPath: string,
   payload: unknown,
 ): Promise<{ ok: boolean; status: number; data?: any; errorText?: string }> {
-  const keys = getGeminiKeyPool();
+  const configuredKeys = getGeminiKeyPool();
+  const keys = configuredKeys.filter(key => !isGeminiCoolingDown(geminiCooldownUntil, endpointPath, key));
   if (keys.length === 0) {
-    return { ok: false, status: 500, errorText: "No Gemini API keys configured." };
+    return { ok: false, status: 503, errorText: configuredKeys.length ? "Gemini credentials are temporarily cooling down for this model." : "No Gemini API keys configured." };
   }
 
   // Round-robin starting point across the configured credential pool.
@@ -542,7 +546,7 @@ async function fetchGeminiWithRotation(
       const key = orderedKeys[index];
       const ac = new AbortController();
       activeControllers.push(ac);
-      const url = `https://generativelanguage.googleapis.com/v1beta/${endpointPath}?key=${key}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/${endpointPath}`;
 
       // Max timeout of 12s per key attempt
       const attemptTimer = setTimeout(() => {
@@ -552,7 +556,7 @@ async function fetchGeminiWithRotation(
       try {
         const res = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "x-goog-api-key": key },
           body: JSON.stringify(payload),
           signal: ac.signal,
         });
@@ -567,6 +571,7 @@ async function fetchGeminiWithRotation(
         }
 
         lastStatus = res.status;
+        recordGeminiFailure(geminiCooldownUntil, endpointPath, key, res.status);
         lastErrorText = await res.text();
         console.warn(`[Gemini Fast Hedging] Key ${index + 1}/${orderedKeys.length} failed (${res.status}):`, lastErrorText.slice(0, 120));
 

@@ -9,6 +9,18 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('ChemBuddy Intelligent Gemini AI & Mode Tests', () {
+    test('provider failure is not reported as zero internet', () async {
+      final remote = UnavailableAiRemote();
+      final response = await RagService(remote: remote).ask(
+        question: 'who won the Ballon Dor in 2026',
+        mode: 'general',
+      );
+      expect(remote.requests, 1);
+      expect(response.answer, contains('Online AI answer unavailable'));
+      expect(response.answer, contains('provider quota'));
+      expect(response.answer, isNot(contains('Zero Internet Detected')));
+      expect(response.answer, isNot(contains('currently running offline')));
+    });
     test('1. ChemBuddyAiMode includes general AI mode', () {
       expect(ChemBuddyAiMode.values.contains(ChemBuddyAiMode.general), isTrue);
       expect(ChemBuddyAiMode.general.name, equals('general'));
@@ -72,4 +84,19 @@ Organometallic catalysts: Wilkinson catalyst is RhCl(PPh3)3 used for homogeneous
       expect(response.model.isNotEmpty, isTrue);
     });
   });
+}
+
+class UnavailableAiRemote implements SupabaseService {
+  int requests = 0;
+  @override
+  bool get configured => true;
+  @override
+  Future<dynamic> invokeFunction(String name, Map<String, dynamic> body,
+      {Duration timeout = const Duration(seconds: 45), int maxRetries = 3}) async {
+    requests++;
+    throw StateError('ChemBuddy could not generate an answer right now. '
+        'All Gemini credentials are cooling down after provider errors.');
+  }
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

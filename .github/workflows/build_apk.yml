@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: '22'
       - name: Check credential diagnostic authorization and redaction
-        run: node --experimental-strip-types --test tool/gemini_key_health.test.mjs tool/ask_chembuddy_key_pool.test.cjs
+        run: node --experimental-strip-types --test tool/gemini_key_health.test.mjs tool/ask_chembuddy_key_pool.test.cjs tool/gemini_cooldown.test.mjs
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x

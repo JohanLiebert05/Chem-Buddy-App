@@ -1,4 +1,5 @@
 import { AccessError, requireUser, requireAiBudget } from "../_shared/access.ts";
+import { isGeminiCoolingDown, recordGeminiFailure } from "../_shared/gemini_cooldown.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 interface RequestPayload {
@@ -13,6 +14,7 @@ interface RequestPayload {
 }
 
 let keyCursor = 0;
+const orchestratorCooldownUntil = new Map<string, number>();
 
 serve(async (req: Request) => {
   // CORS Preflight
@@ -124,8 +126,9 @@ async function executeGeminiWithRotation(
   for (let attempt = 0; attempt < keys.length; attempt++) {
     const keyIndex = (startIndex + attempt) % keys.length;
     const apiKey = keys[keyIndex];
+    if (isGeminiCoolingDown(orchestratorCooldownUntil, model, apiKey)) continue;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     const contents: any[] = [];
     if (payload.history && payload.history.length > 0) {
@@ -159,7 +162,7 @@ async function executeGeminiWithRotation(
     try {
       const resp = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify(body),
       });
 
@@ -169,6 +172,7 @@ async function executeGeminiWithRotation(
       }
 
       lastStatus = resp.status;
+      recordGeminiFailure(orchestratorCooldownUntil, model, apiKey, resp.status);
       lastError = await resp.text();
       console.warn(`[Gemini Failover] Key #${keyIndex + 1} returned status ${resp.status}:`, lastError.slice(0, 150));
 

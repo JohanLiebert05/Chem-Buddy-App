@@ -13,7 +13,7 @@ import urllib.request
 source = pathlib.Path('lib/data/remote/supabase_service.dart').read_text(encoding='utf-8')
 url = re.search(r"defaultUrl\s*=\s*'([^']+)'", source).group(1)
 anon = re.search(r"defaultAnonKey\s*=\s*'([^']+)'", source).group(1)
-payload = {'question': sys.argv[1] if len(sys.argv) > 1 else 'In two sentences, explain how an aldehyde differs from a ketone.', 'mode': 'quick'}
+payload = {'question': sys.argv[1] if len(sys.argv) > 1 else 'In two sentences, explain how an aldehyde differs from a ketone.', 'mode': sys.argv[2] if len(sys.argv) > 2 else 'quick'}
 request = urllib.request.Request(url + '/functions/v1/ask-chembuddy',
     data=json.dumps(payload).encode(), method='POST',
     headers={'Content-Type': 'application/json', 'Authorization': 'Bearer ' + anon, 'apikey': anon})

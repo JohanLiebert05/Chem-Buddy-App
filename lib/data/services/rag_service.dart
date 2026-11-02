@@ -100,7 +100,8 @@ class RagService {
       debugPrint('[RAG] Direct Gemini Orchestrator failed: $geminiErr');
     }
 
-    // 3. Zero-connectivity / Airplane Mode: ChemistryKnowledgeEngine
+    // 3. Local reference fallback after any cloud failure, including provider
+    // quota/authentication errors. Reaching this path does not prove no internet.
     return ChemistryKnowledgeEngine.generateAcademicResponse(
       question: question,
       subject: subject,
