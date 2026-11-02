@@ -65,3 +65,32 @@ test('all six configured credentials receive an independent generation check', a
   assert.ok(result.results.every(r => r.status === 'generation_ok'));
   assert.ok(!JSON.stringify(result).includes('private-'));
 });
+
+test('targeted diagnostics classify provider errors without leaking their messages or metadata', async () => {
+  const req = new Request('https://example.test', {method:'POST',
+    headers:{Authorization:'Bearer project-service-credential'},
+    body:JSON.stringify({key_names:['GEMINI_KEY_1','GEMINI_KEY_1']})});
+  let calls = 0;
+  const response = await keyHealth(req, env, async () => {
+    calls++;
+    return new Response(JSON.stringify({error:{message:'Key expired private-key SECRET_PROJECT', details:[
+      {reason:'API_KEY_EXPIRED', metadata:{key:'private-key'}},
+      {violations:[{quotaId:'GenerateRequestsPerDayPerProjectPerModel', quotaValue:'0',
+        quotaDimensions:{project:'SECRET_PROJECT'}}]}, {retryDelay:'42.5s'}
+    ]}}), {status:401});
+  });
+  const result = await response.json();
+  assert.equal(calls, 1);
+  assert.deepEqual(result.results[0].diagnostics, {credential_issue:'expired', reason:'API_KEY_EXPIRED',
+    quota_scope:'daily', zero_quota:true, retry_after_seconds:42.5});
+  assert.ok(!JSON.stringify(result).includes('private-key'));
+  assert.ok(!JSON.stringify(result).includes('SECRET_PROJECT'));
+});
+
+test('targeted diagnostics reject arbitrary secret names before calling Google', async () => {
+  const req = new Request('https://example.test', {method:'POST',
+    headers:{Authorization:'Bearer project-service-credential'},
+    body:JSON.stringify({key_names:['SUPABASE_SERVICE_ROLE_KEY']})});
+  const response = await keyHealth(req, env, () => {throw Error('Must not call');});
+  assert.equal(response.status, 400);
+});

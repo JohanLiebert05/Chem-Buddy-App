@@ -26,5 +26,15 @@
     "Code cannot restore provider quota or repair credentials rejected by Google. Keys 3 and 4 need valid replacements or provider-side authorization repair.",
     "The app tries the configured keys sequentially on retryable provider failures and retains the successful key for subsequent requests."
   ],
-  "credentials_in_report": false
+  "credentials_in_report": false,
+  "targeted_follow_up": {
+    "function_version": 9,
+    "key_1": {"quota_scope": "daily", "zero_quota": false, "provider_retry_after_seconds": 18131},
+    "keys_3_and_4": {"http_status": 401, "error_code": "UNAUTHENTICATED", "more_specific_provider_reason": null},
+    "provider_console": "The signed-in Google account exposes only working key 5. The user confirms that the other keys belong to five other Google accounts, which are not signed in on this laptop.",
+    "required_provider_actions": [
+      "Allow key 1's daily project/model quota to reset; its next successful use remains subject to remaining quota.",
+      "Use the owning Google accounts to inspect or replace keys 3 and 4; a laptop browser login is not required for the backend to use a valid API key."
+    ]
+  }
 }

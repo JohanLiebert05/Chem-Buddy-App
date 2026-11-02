@@ -31,3 +31,12 @@ passed. A live sports question was refused with model `local-policy` in 595 ms
 round-trip, with no Gemini call. A live, uncached chemistry question returned
 HTTP 200 and a Gemini 3.6 Flash answer. Reports are in
 `docs/reports/chemistry-policy-live-2026-11-02.json`.
+## Protected key diagnostics
+
+`gemini-key-health` remains project-service-authorized. Its default POST checks
+all six slots. An administrator can send `{"key_names":["GEMINI_KEY_1",
+"GEMINI_KEY_3","GEMINI_KEY_4"]}` to inspect only failed slots and avoid consuming
+the working keys' quota. Unsupported secret names are rejected before calling
+Google. Error diagnostics return only allowlisted reason codes, daily/minute
+quota classifications, zero-quota flags and a bounded numeric retry delay.
+Provider messages, credential values and project metadata are never returned.
