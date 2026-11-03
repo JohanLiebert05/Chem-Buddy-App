@@ -630,7 +630,7 @@ class _SyllabusBrowserScreenState extends ConsumerState<SyllabusBrowserScreen> {
                             ),
                             SizedBox(width: 4),
                             Text(
-                              'Interactive SVG Mechanism',
+                              'Interactive drawing Mechanism',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: AppColors.adaptive(

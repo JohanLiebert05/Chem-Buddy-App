@@ -486,7 +486,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             const SizedBox(height: 16),
             // 2D Vector Structure Rendering
             Text(
-              '2D Molecular Vector Structure (Clean Vector SVG)',
+              'Molecular structure',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,
                 fontSize: 13,
@@ -1310,7 +1310,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             const SizedBox(height: 16),
             _buildAiOption(
               title: 'Reaction Predictor & Mechanism Viewer',
-              subtitle: 'Deterministic forward prediction, curved electron-pushing SVG player & MSc pedagogy.',
+              subtitle: 'Predict a reaction and follow the electron movement step by step.',
               icon: Icons.bolt_rounded,
               onTap: () {
                 Navigator.pop(ctx);
@@ -1327,7 +1327,7 @@ class _ChemSketcherScreenState extends State<ChemSketcherScreen> {
             const SizedBox(height: 10),
             _buildAiOption(
               title: 'Predict Major Forward Reaction Product',
-              subtitle: 'Calculates major organic product and renders 2D SVG vector via Cactus API.',
+              subtitle: 'Explore the expected main product and its molecular structure.',
               icon: Icons.auto_mode_rounded,
               onTap: _predictMajorProduct,
             ),

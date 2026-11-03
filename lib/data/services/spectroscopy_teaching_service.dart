@@ -148,8 +148,8 @@ class SpectroscopyTeachingService {
             ? 'The inputs contain conflicts. Resolve the flagged formula/spectral inconsistencies before assigning an exact structure.'
             : compound == null
             ? 'The evidence does not yet support one exact structure. Keep the functional-group and framework hypotheses, request the missing spectra/integration, and use the comparison tools to narrow them. “Insufficient evidence” is the correct conclusion when the data do not distinguish isomers.'
-            : '${workedReference ? 'The selected worked reference is' : 'The supplied evidence supports a tentative library match to'} **${compound.commonName}**, ${compound.structure}. Use **Deduce into Structure** to reveal its formula-checked SVG. Finally account for every observed signal and every DBE, and list what still requires confirmation.',
-        'An MSc answer should connect each conclusion to evidence, state unresolved ambiguity and propose a discriminating experiment. The SVG validates a candidate’s atom inventory, not unique experimental identity.',
+            : '${workedReference ? 'The selected worked reference is' : 'The supplied evidence supports a tentative library match to'} **${compound.commonName}**, ${compound.structure}. Use **Deduce into Structure** to reveal its formula-checked drawing. Finally account for every observed signal and every DBE, and list what still requires confirmation.',
+        'An MSc answer should connect each conclusion to evidence, state unresolved ambiguity and propose a discriminating experiment. The drawing validates a candidate’s atom inventory, not unique experimental identity.',
       ),
     ];
   }

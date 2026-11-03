@@ -79,7 +79,7 @@ class _SpectroscopyPredictionScreenState
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
     ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('SVG copied')));
+        .showSnackBar(const SnackBar(content: Text('drawing copied')));
   }
 
   Widget _field(
@@ -107,7 +107,7 @@ class _SpectroscopyPredictionScreenState
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Predict NMR with Gemini')),
+      appBar: AppBar(title: const Text('Predict NMR')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -128,7 +128,7 @@ class _SpectroscopyPredictionScreenState
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Enter a specific organic compound name or SMILES. Gemini proposes ¹H / ¹³C NMR data; the app checks consistency and builds SVG spectra and a structure.',
+                          'Enter a specific organic compound name or SMILES. AI proposes ¹H / ¹³C NMR data; the app checks consistency and draws spectra and a molecular structure.',
                         ),
                         const SizedBox(height: 8),
                         const Text(
@@ -224,7 +224,7 @@ class _SpectroscopyPredictionScreenState
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Uses the app’s existing Gemini cloud connection. Sign-in and internet are required. A failed consistency check may trigger one correction attempt.',
+                          'Uses the app’s existing AI cloud connection. Sign-in and internet are required. A failed consistency check may trigger one correction attempt.',
                           style: TextStyle(
                             fontSize: 12,
                             color: colors.onSurfaceVariant,
@@ -257,12 +257,12 @@ class _SpectroscopyPredictionScreenState
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           Text(
-                            '${result.compound.formula} • DBE ${result.compound.dbe.toStringAsFixed(1)} • ${result.model}',
+                            '${result.compound.formula} • DBE ${result.compound.dbe.toStringAsFixed(1)} • AI-assisted estimate',
                           ),
                           const SizedBox(height: 8),
                           Text(
                             result.request.kind == CompoundInputKind.name
-                                ? 'Identity proposed by Gemini from the name. Verify the name-to-structure match below before using these estimates.'
+                                ? 'Identity proposed by AI from the name. Verify the name-to-structure match below before using these estimates.'
                                 : 'The returned SMILES matches your input. Formula, valence and assignment inventories passed local checks.',
                           ),
                           const SizedBox(height: 8),
@@ -297,7 +297,7 @@ class _SpectroscopyPredictionScreenState
                           TextButton.icon(
                             onPressed: () => _copy(result.depiction.svg!),
                             icon: const Icon(Icons.copy),
-                            label: const Text('Copy structure SVG'),
+                            label: const Text('Copy structure'),
                           ),
                         ],
                       ),
@@ -365,7 +365,7 @@ class _SpectroscopyPredictionScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Gemini-predicted NMR',
+              'AI-predicted NMR',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             Wrap(
@@ -393,7 +393,7 @@ class _SpectroscopyPredictionScreenState
             TextButton.icon(
               onPressed: () => _copy(svg),
               icon: const Icon(Icons.copy),
-              label: const Text('Copy predicted spectrum SVG'),
+              label: const Text('Copy predicted spectrum'),
             ),
             for (final value in signals)
               Padding(

@@ -69,7 +69,7 @@ class _MechanismStepViewerState extends State<MechanismStepViewer> {
       } else if (_current.svgAsset != null && _current.svgAsset!.isNotEmpty) {
         raw = await rootBundle.loadString(_current.svgAsset!);
       } else {
-        throw StateError('No SVG schematic available for this step');
+        throw StateError('No drawing schematic available for this step');
       }
 
       if (!_showElectronFlow) {

@@ -170,7 +170,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
   Widget build(BuildContext context) => StudyHubShell(
     title: 'Spectroscopy Hub',
     headline: 'Read the signal.',
-    description: 'Interpret peaks, explore expected SVG spectra and connect DBE with molecular structure.',
+    description: 'Interpret peaks, explore expected drawing spectra and connect DBE with molecular structure.',
     icon: Icons.graphic_eq_rounded,
     controller: _tabController,
     actions: [
@@ -188,7 +188,7 @@ class _SpectroscopyHubScreenState extends ConsumerState<SpectroscopyHubScreen>
     destinations: const [
       HubDestination(
         'Structure Solver',
-        'Compare SVG spectra, assign NMR and deduce a structure.',
+        'Compare drawing spectra, assign NMR and deduce a structure.',
         Icons.hub_outlined,
         shortLabel: 'Solver',
       ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../data/services/curious_catalog.dart';
+import 'curious_topic_screen.dart';
+
 import '../../core/widgets/glow_card.dart';
-import '../../core/widgets/hex_background.dart';
+import '../widgets/organic_study_background.dart';
 import '../../core/widgets/liquid_glass.dart';
 import '../../data/models/organic_study.dart';
 import '../../data/services/organic_curriculum.dart';
@@ -279,7 +282,7 @@ class _StudyModeScreenState extends State<StudyModeScreen> {
       );
     }
     final resume = _progress.session != null && !_progress.session!.curious;
-    return HexBackground(
+    return OrganicStudyBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -460,6 +463,7 @@ class _Stat extends StatelessWidget {
   );
 }
 
+// Course IDs remain stable; Curious now has its own 60-question catalogue.
 const curiousLevels = [31, 8, 32, 30, 33, 20, 17, 43, 48, 52, 53, 58];
 
 class CuriousScreen extends StatefulWidget {
@@ -473,6 +477,8 @@ class _CuriousScreenState extends State<CuriousScreen> {
   late final OrganicProgressRepository _repo =
       widget.repository ?? OrganicProgressRepository.hive();
   late OrganicProgress _progress = _repo.load();
+  final _surprises = CuriousSurprises();
+  String _theme = 'All';
   @override
   void initState() {
     super.initState();
@@ -480,7 +486,9 @@ class _CuriousScreenState extends State<CuriousScreen> {
   }
 
   void _accountChanged() {
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -489,9 +497,20 @@ class _CuriousScreenState extends State<CuriousScreen> {
     super.dispose();
   }
 
-  Future<void> _open(OrganicLesson lesson) async {
-    await openOrganicLesson(context, _repo, _progress, lesson, curious: true);
-    if (mounted) setState(() => _progress = _repo.load());
+  Future<void> _open(CuriousTopic topic, {bool online = false}) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CuriousTopicScreen(
+          topic: topic,
+          repository: _repo,
+          exploreOnOpen: online,
+        ),
+      ),
+    );
+    if (mounted) {
+      setState(() => _progress = _repo.load());
+    }
   }
 
   @override
@@ -501,67 +520,128 @@ class _CuriousScreenState extends State<CuriousScreen> {
         body: Center(child: Text('Account changed. Reopen Curious.')),
       );
     }
-    return HexBackground(
+    final topics = curiousTopics
+        .where((t) => _theme == 'All' || t.theme == _theme)
+        .toList();
+    final themes = ['All', ...curiousTopics.map((t) => t.theme).toSet()];
+    return OrganicStudyBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(title: const Text('Curious')),
-        body: ListView(
+        body: ListView.builder(
           padding: const EdgeInsets.all(20),
-          children: [
-            Text(
-              'Pick a question.',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Explore the chemistry behind it, with a diagram and a worked example. About ten minutes each.',
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '${_progress.discoveries.length} discoveries completed · separate from your course levels',
-            ),
-            if (_progress.session?.curious == true)
-              TextButton.icon(
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('Resume discovery'),
-                onPressed: () =>
-                    _open(organicLessons[_progress.session!.lesson - 1]),
-              ),
-            for (final number in curiousLevels)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: GlowCard(
-                  borderRadius: 28,
-                  onTap: () => _open(organicLessons[number - 1]),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          itemCount: topics.length + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Pick a question.',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '60 questions. Start with an idea, see its structure, then follow your curiosity.',
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Choose a theme',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            _progress.discoveries.contains(number)
-                                ? Icons.check_circle
-                                : Icons.lightbulb_outline,
-                            color: Theme.of(context).colorScheme.tertiary,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('10 min'),
-                          const Spacer(),
-                          const Icon(Icons.arrow_outward_rounded, size: 18),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        organicLessons[number - 1].hook,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(organicLessons[number - 1].title),
+                      for (final theme in themes)
+                        ChoiceChip(
+                          label: Text(theme),
+                          selected: _theme == theme,
+                          onSelected: (_) => setState(() => _theme = theme),
+                        ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonalIcon(
+                        key: const ValueKey('curious-surprise'),
+                        icon: const Icon(Icons.shuffle_rounded),
+                        label: const Text('Surprise me'),
+                        onPressed: () => _open(_surprises.next(topics)),
+                      ),
+                      OutlinedButton.icon(
+                        key: const ValueKey('curious-new-online'),
+                        icon: const Icon(Icons.auto_awesome_outlined),
+                        label: const Text('New discovery · online'),
+                        onPressed: () =>
+                            _open(_surprises.next(topics), online: true),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text('${topics.length} questions · offline collection'),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Surprise me works offline. New discovery adds an online explanation and uses your AI allowance.',
+                  ),
+                  if (_progress.session?.curious == true)
+                    TextButton.icon(
+                      icon: const Icon(Icons.play_arrow),
+                      label: const Text('Resume discovery'),
+                      onPressed: () async {
+                        await openOrganicLesson(
+                          context,
+                          _repo,
+                          _progress,
+                          organicLessons[_progress.session!.lesson - 1],
+                          curious: true,
+                        );
+                        if (mounted) {
+                          setState(() => _progress = _repo.load());
+                        }
+                      },
+                    ),
+                ],
+              );
+            }
+            final topic = topics[index - 1];
+            return Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: GlowCard(
+                borderRadius: 28,
+                onTap: () => _open(topic),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline,
+                          color: Theme.of(context).colorScheme.tertiary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(topic.theme)),
+                        const Icon(Icons.arrow_outward_rounded, size: 18),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      topic.question,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'With ${topic.molecule.commonName.toLowerCase()} · diagram & structure',
+                    ),
+                  ],
                 ),
               ),
-          ],
+            );
+          },
         ),
       ),
     );

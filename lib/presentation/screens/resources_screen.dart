@@ -176,7 +176,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                       countStr = '60 Levels';
                       break;
                     case LibrarySection.curious:
-                      countStr = '12 Questions';
+                      countStr = '60 Questions';
                       break;
                     case LibrarySection.pdfs:
                       countStr = '$pdfCount';
@@ -984,7 +984,7 @@ class _ReactionLibrarySectionState extends State<_ReactionLibrarySection> {
                           ),
                         ),
                         Text(
-                          'Deterministic Forward Prediction • Vector SVG Arrows',
+                          'Deterministic Forward Prediction • Vector diagram Arrows',
                           style: TextStyle(
                             color: AppColors.readableText(
                               context,
@@ -1171,7 +1171,7 @@ class _ReactionLibrarySectionState extends State<_ReactionLibrarySection> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Why Verified Reaction SVGs?',
+                'Why Verified Reaction diagrams?',
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 14.5,
@@ -1180,7 +1180,7 @@ class _ReactionLibrarySectionState extends State<_ReactionLibrarySection> {
               ),
               SizedBox(height: 8),
               Text(
-                'AI text generators often hallucinate chemical structures. ChemBuddy\'s Reaction Engine pairs curated, peer-reviewed reaction mechanisms rendered in vector SVG format with step-by-step electron arrow pushing for 100% academic precision.',
+                'AI text generators often hallucinate chemical structures. ChemBuddy\'s Reaction Engine pairs curated reaction mechanisms rendered as scalable diagrams with step-by-step electron arrow pushing for clear, reviewable explanations.',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 12.5,
@@ -1663,7 +1663,7 @@ class _SmartToolsHubState extends State<_SmartToolsHub> {
             icon: Icons.biotech_outlined,
           ),
           _ToolListTile(
-            title: 'Reaction Mechanisms & Vector SVGs',
+            title: 'Reaction Mechanisms & Diagrams',
             subtitle: 'Curated reaction database, curved electron arrows & conditions',
             icon: Icons.biotech,
             iconColor: Theme.of(context).colorScheme.primary,

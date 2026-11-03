@@ -417,7 +417,7 @@ class _ReactionMechanismsScreenState
                   Icons.share_outlined,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                tooltip: 'Export Mechanism (PDF / Excel / SVG)',
+                tooltip: 'Export Mechanism (PDF / Excel / diagram)',
                 onPressed: () => _showExportOptions(m),
               ),
             ),
@@ -1535,7 +1535,7 @@ class _ReactionMechanismsScreenState
                       ),
                     ),
                     subtitle: Text(
-                      'Tabular breakdown with steps, electron flows & SVG markup',
+                      'Tabular breakdown with steps, electron flows & diagram data',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
@@ -1586,7 +1586,7 @@ class _ReactionMechanismsScreenState
                       ),
                     ),
                     title: Text(
-                      'Vector SVG Diagram (.svg)',
+                      'Vector diagram Diagram (.svg)',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w700,
@@ -1609,16 +1609,16 @@ class _ReactionMechanismsScreenState
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Generating Vector SVG Diagram...'),
+                          content: Text('Generating Vector diagram Diagram...'),
                         ),
                       );
                       final file = await ExportService.instance
                           .generateReactionSvg(mechanism: m);
                       await ExportService.instance.shareFile(
                         file,
-                        subject: '${m.name} - Vector SVG',
+                        subject: '${m.name} - Vector diagram',
                         text:
-                            'Vector SVG diagram for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
+                            'Vector diagram diagram for ${m.name} exported from Chem Buddy by Prajwal A Kambar',
                       );
                     },
                   ),
@@ -1773,7 +1773,7 @@ class _ReactionMechanismsScreenState
                       ),
                     ),
                     subtitle: Text(
-                      'Excel-ready dataset of all reactions with detailed mechanisms & SVG code',
+                      'Excel-ready dataset of all reactions with detailed mechanisms & diagram data',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,

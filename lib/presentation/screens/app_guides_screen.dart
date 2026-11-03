@@ -49,7 +49,7 @@ class AppGuidesScreen extends StatelessWidget {
                 'Tap ring templates for Benzene, Cyclohexane, Naphthalene, Indole, and Ferrocene.',
                 'Single-tap to insert functional groups (—OH, —NH₂, —COOH, —CHO, —NO₂, —CN).',
                 'Draw reaction arrows (→) between molecules to predict reaction products with AI.',
-                'Export structures as SMILES, Molfile, or vector SVG for lab records and research.',
+                'Export structures as SMILES, Molfile, or vector drawing for lab records and research.',
               ],
             ),
 

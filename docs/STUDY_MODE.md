@@ -1,6 +1,6 @@
 # Study Mode and Curious
 
-ChemBuddy 3.5.8 by Prajwal A Kambar.
+ChemBuddy 3.5.9 by Prajwal A Kambar.
 
 ## Student experience
 
@@ -9,9 +9,24 @@ Home and Library offer two separate destinations:
 - **Study Mode — Basics of Organic Chemistry:** 60 sequential levels in 12
   chapters. A suggested two-month plan introduces foundations and connects them
   to MSc reasoning. It does not promise complete MSc mastery in five hours.
-- **Curious:** 12 question-led explorations. Students can explore advanced
-  topics without course locks; discoveries do not unlock course levels or add
-  course streaks.
+- **Curious:** 60 question-led explorations, including 48 new foundations about
+  electrons, bonds, reactions and spectroscopy. Each has an original explanation,
+  a teaching diagram, a formula-checked molecular reference and a related
+  ten-minute course lesson. Curious does not require course unlocks.
+
+Theme filters and **Surprise me** select offline questions without AI requests.
+The shuffle bag visits every question in the chosen theme before repeating.
+**New discovery · online** selects a question and adds an AI-assisted worked
+explanation through the existing authenticated backend key rotation. Students can
+also choose **Explore further** inside a question. The source question and diagram
+remain available when sign-in, connectivity, quota or response checks fail.
+
+Online results must match the exact question ID and reference SMILES, have a
+bounded complete response, and use the locally formula-checked structure. No
+remote drawing markup is rendered. These checks establish identity and structural
+consistency, not guaranteed scientific accuracy of generated prose. Concurrent
+requests are coalesced; an account-scoped, twenty-entry memory cache lasts up to
+six hours. It is not a persistent generated-content library or cloud backup.
 
 Students choose 5, 10, 15 or 20 minutes. The 60:40 explanation/practice split gives
 the requested three-minute/two-minute plan for five-minute sessions. Longer

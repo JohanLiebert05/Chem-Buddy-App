@@ -9,9 +9,11 @@ import 'package:chem_buddy/core/theme/appearance.dart';
 import 'package:chem_buddy/core/widgets/hex_background.dart';
 import 'package:chem_buddy/data/services/organic_progress_repository.dart';
 import 'package:chem_buddy/presentation/screens/study_mode_screen.dart';
+import 'package:chem_buddy/data/remote/supabase_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SupabaseService.instance.init();
   final preferences = await SharedPreferences.getInstance();
   final repository = OrganicProgressRepository(
     read: () {
@@ -43,6 +45,75 @@ class _Preview extends StatefulWidget {
 
 class _PreviewState extends State<_Preview> {
   bool dark = false;
+  Future<void> _signIn(BuildContext context) async {
+    final register = TextEditingController();
+    final password = TextEditingController();
+    String? error;
+    bool busy = false;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, update) => AlertDialog(
+          title: const Text('Sign in for online explanations'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Use your ChemBuddy account. Preview course progress stays separate from app data.',
+              ),
+              TextField(
+                controller: register,
+                decoration: const InputDecoration(labelText: 'Register number'),
+              ),
+              TextField(
+                controller: password,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
+              ),
+              if (error != null) Text(error!),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: busy ? null : () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      update(() {
+                        busy = true;
+                        error = null;
+                      });
+                      try {
+                        await SupabaseService.instance.signInWithRegisterNumber(
+                          register.text.trim(),
+                          password.text,
+                        );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (mounted) setState(() {});
+                      } catch (_) {
+                        if (ctx.mounted) {
+                          update(() {
+                            busy = false;
+                            error = 'Sign-in failed. Check your account details and connection.';
+                          });
+                        }
+                      }
+                    },
+              child: Text(busy ? 'Signing in…' : 'Sign in'),
+            ),
+          ],
+        ),
+      ),
+    );
+    // Let the dialog's reverse transition detach its fields before disposal.
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    register.dispose();
+    password.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -63,6 +134,17 @@ class _PreviewState extends State<_Preview> {
           appBar: AppBar(
             title: const Text('ChemBuddy'),
             actions: [
+              IconButton(
+                tooltip: SupabaseService.instance.userId == null
+                    ? 'Sign in for online explanations'
+                    : 'Signed in · online explanations ready',
+                icon: Icon(
+                  SupabaseService.instance.userId == null
+                      ? Icons.login
+                      : Icons.verified_user_outlined,
+                ),
+                onPressed: () => _signIn(context),
+              ),
               IconButton(
                 tooltip: 'Switch theme',
                 icon: Icon(

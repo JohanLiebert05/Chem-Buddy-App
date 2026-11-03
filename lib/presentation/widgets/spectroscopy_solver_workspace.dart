@@ -7,6 +7,7 @@ import '../../core/chemistry/spectrum_svg_renderer.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/chemistry_markdown_view.dart';
 import '../../data/services/spectral_peak_input.dart';
+import '../../data/services/spectroscopy_evidence_guide.dart';
 import '../../data/services/spectroscopy_reference_service.dart';
 import '../../data/services/spectroscopy_service.dart';
 import '../../data/services/spectroscopy_teaching_service.dart';
@@ -23,6 +24,8 @@ class SpectroscopySolverWorkspace extends StatefulWidget {
 
 class _SpectroscopySolverWorkspaceState
     extends State<SpectroscopySolverWorkspace> {
+  final _integrations = TextEditingController();
+  List<int> _integrationValues = [];
   final _formula = TextEditingController(text: 'C8H8O');
   final _ir = TextEditingController(text: '1685, 1600, 1450, 3050');
   final _proton = TextEditingController(text: '2.60, 7.50, 7.95');
@@ -64,7 +67,7 @@ class _SpectroscopySolverWorkspaceState
     super.initState();
     if (widget.initialFormula case final imported?) {
       _formula.text = imported;
-      for (final controller in [_ir, _proton, _carbon, _mass]) {
+      for (final controller in [_ir, _proton, _carbon, _mass, _integrations]) {
         controller.clear();
       }
     }
@@ -73,7 +76,7 @@ class _SpectroscopySolverWorkspaceState
 
   @override
   void dispose() {
-    for (final controller in [_formula, _ir, _proton, _carbon, _mass]) {
+    for (final controller in [_formula, _ir, _proton, _carbon, _mass, _integrations]) {
       controller.dispose();
     }
     super.dispose();
@@ -93,6 +96,10 @@ class _SpectroscopySolverWorkspaceState
       SpectralPeakInput.parse(_mass.text, 'MS'),
     ];
     final errors = fields.map((f) => f.error).whereType<String>().toList();
+    _integrationValues = [];
+    try { _integrationValues = SpectroscopyEvidenceGuide.parseIntegrations(_integrations.text, fields[0].values.length); }
+    on FormatException catch (e) { errors.add(e.message); }
+
     setState(() {
       _structureShown = false;
       if (errors.isNotEmpty) {
@@ -111,6 +118,7 @@ class _SpectroscopySolverWorkspaceState
       _result = SpectroscopyService.analyzeSpectraStructured(
         formula: _formula.text,
         nmr1HPeaks: fields[0].values,
+        protonSignals: _integrationValues.isEmpty ? null : [for (var i = 0; i < _integrationValues.length; i++) ProtonSignal(shift: fields[0].values[i], integration: _integrationValues[i], multiplicity: 'unknown')],
         nmr13CPeaks: fields[1].values,
         irPeaks: fields[2].values,
         msPeaks: fields[3].values,
@@ -126,6 +134,7 @@ class _SpectroscopySolverWorkspaceState
   }
 
   void _preset(SpectroscopyCaseStudy study) {
+    _integrations.clear();
     _formula.text = study.formula;
     _ir.text = SpectralPeakInput.fromAnnotated(
       study.irHighlights,
@@ -155,7 +164,7 @@ class _SpectroscopySolverWorkspaceState
       _formula.text = compound.formula
           .replaceAll('BR', 'Br')
           .replaceAll('CL', 'Cl');
-      for (final controller in [_ir, _proton, _carbon, _mass]) {
+      for (final controller in [_ir, _proton, _carbon, _mass, _integrations]) {
         controller.clear();
       }
       _observed = {};
@@ -286,7 +295,7 @@ class _SpectroscopySolverWorkspaceState
                             ),
                           ),
                           ActionChip(
-                            label: const Text('Predict with Gemini'),
+                            label: const Text('Predict with AI'),
                             avatar: const Icon(Icons.auto_awesome, size: 17),
                             onPressed: () => Navigator.of(context).push(
                               MaterialPageRoute<void>(
@@ -318,6 +327,18 @@ class _SpectroscopySolverWorkspaceState
                     )
                   else ...[
                     _summary(result),
+                    if (!_explore) ...[
+                      const SizedBox(height: 18),
+                      AppCard(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('What would resolve the structure?', style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(height: 10),
+                        for (final tip in SpectroscopyEvidenceGuide.suggest(result: result,
+                          proton: _observed[SpectrumTechnique.proton]?.map((s) => s.position).toList() ?? [],
+                          carbon: _observed[SpectrumTechnique.carbon]?.map((s) => s.position).toList() ?? [],
+                          ir: _observed[SpectrumTechnique.ir]?.map((s) => s.position).toList() ?? [], integrations: _integrationValues))
+                          Padding(padding: const EdgeInsets.only(bottom: 10), child: Text('• $tip')),
+                      ])),
+                    ],
                     const SizedBox(height: 18),
                     _spectrumCard(compact),
                     const SizedBox(height: 18),
@@ -431,6 +452,8 @@ class _SpectroscopySolverWorkspaceState
           },
         ),
         const SizedBox(height: 14),
+        _field('¹H absolute H counts, in shift order (optional: 3, 3, 2)', _integrations),
+        const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Text('Use absolute numbers of hydrogens, not a normalised integration ratio. Leave blank when unknown.')),
         _field('FT-IR Peaks in cm⁻¹ (e.g. 1685, 1600, 1450)', _ir),
         const SizedBox(height: 14),
         _field('Mass Spec m/z Peaks (e.g. 120, 105, 77)', _mass),
@@ -452,6 +475,7 @@ class _SpectroscopySolverWorkspaceState
                   _proton,
                   _carbon,
                   _mass,
+                  _integrations,
                 ]) {
                   controller.clear();
                 }
@@ -492,7 +516,7 @@ class _SpectroscopySolverWorkspaceState
         _heading(
           '01',
           'Choose a known compound',
-          'View library NMR values and SVG spectra by name or formula. This previews a reference; it does not identify an unknown from its formula alone.',
+          'View library NMR values and drawing spectra by name or formula. This previews a reference; it does not identify an unknown from its formula alone.',
         ),
         Autocomplete<SpectroscopyCompoundEntry>(
           displayStringForOption: (c) => c.commonName,
@@ -615,7 +639,7 @@ class _SpectroscopySolverWorkspaceState
           _heading(
             '02',
             'Compare the spectra',
-            'Entered positions and expected reference signals share an SVG plot. NMR and IR axes run from high to low.',
+            'Entered positions and expected reference signals share a spectrum plot. NMR and IR axes run from high to low.',
           ),
           Wrap(
             spacing: 7,
@@ -690,7 +714,7 @@ class _SpectroscopySolverWorkspaceState
             ),
             child: Semantics(
               label:
-                  '${_technique.label} SVG spectrum. Numerical values are in the assignments below.',
+                  '${_technique.label} drawing spectrum. Numerical values are in the assignments below.',
               child: AspectRatio(
                 aspectRatio: (compact ? 600 : 800) / 340,
                 child: InteractiveViewer(
@@ -727,9 +751,9 @@ class _SpectroscopySolverWorkspaceState
             spacing: 8,
             children: [
               TextButton.icon(
-                onPressed: () => _copy(svg, 'Spectrum SVG copied'),
+                onPressed: () => _copy(svg, 'Spectrum drawing copied'),
                 icon: const Icon(Icons.copy_outlined, size: 17),
-                label: const Text('Copy spectrum SVG'),
+                label: const Text('Copy spectrum'),
               ),
               TextButton.icon(
                 onPressed: () => showDialog<void>(
@@ -1249,9 +1273,9 @@ class _SpectroscopySolverWorkspaceState
                   runSpacing: 6,
                   children: [
                     TextButton.icon(
-                      onPressed: () => _copy(svg, 'Structure SVG copied'),
+                      onPressed: () => _copy(svg, 'Structure drawing copied'),
                       icon: const Icon(Icons.copy, size: 17),
-                      label: const Text('Copy structure SVG'),
+                      label: const Text('Copy structure'),
                     ),
                     TextButton.icon(
                       onPressed: () => _copy(reference.smiles, 'SMILES copied'),

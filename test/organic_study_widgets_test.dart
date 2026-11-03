@@ -360,7 +360,11 @@ void main() {
     (tester) async {
       final disk = _Disk();
       await tester.pumpWidget(_app(CuriousScreen(repository: disk.repository)));
-      await tester.tap(find.text(organicLessons[30].hook));
+      await tester.ensureVisible(find.text('How do electrons look in a benzene ring?'));
+        await tester.tap(find.text('How do electrons look in a benzene ring?'));
+        await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(find.text('Study the related 10-minute lesson'), 500);
+        await tester.tap(find.text('Study the related 10-minute lesson'));
       await tester.pumpAndSettle();
       expect(find.byType(OrganicLessonScreen), findsOneWidget);
       expect(disk.repository.load().session!.curious, true);

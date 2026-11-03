@@ -1,0 +1,19 @@
+{
+  "version": "3.5.9",
+  "checked_date": "2026-11-03",
+  "catalogue": {"questions": 60, "new_foundational_questions": 48, "formula_checked_reference_structures": 60},
+  "static_analysis": "No issues found",
+  "full_flutter_suite": {"passed": 620, "failed": 0},
+  "final_background_and_feature_regression": {"passed": 17, "failed": 0},
+  "live_application_check": {
+    "action": "New discovery · online",
+    "question": "Why is a double bond harder to twist?",
+    "topic_id": "curious_6",
+    "reference_compound": "Ethene",
+    "reference_formula": "C2H4",
+    "result": "Application displayed the validated further explanation, reasoning steps, common misconception and working answer reveal.",
+    "scientific_scope": "Question/structure consistency and live functionality checked; generated prose remains explicitly AI-assisted, not certified experimental data."
+  },
+  "credential_check": "Replacement slot GEMINI_KEY_4 passed live generation after one inconclusive timeout. See the separate redacted health report.",
+  "credentials_included": false
+}

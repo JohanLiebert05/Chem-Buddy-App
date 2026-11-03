@@ -537,6 +537,16 @@ class SpectroscopyService {
       }
     }
 
+    if (protonSignals != null && protonSignals.isNotEmpty &&
+        (protonSignals.length != effectiveH.length ||
+         protonSignals.any((s) => s.integration <= 0 || !s.shift.isFinite) ||
+         protonSignals.indexed.any((e) => (e.$2.shift - effectiveH[e.$1]).abs() > .0001) ||
+         protonSignals.fold(0, (total, s) => total + s.integration) > parsed.hydrogens)) {
+      return SpectroscopyAnalysisResult(isValid: false,
+        errorMessage: 'Proton integrations must be positive absolute H counts, match the entered shifts and not exceed the molecular formula hydrogen count.',
+        formula: formula ?? '', dbe: parsed.dbe, molarMass: parsed.molarMass,
+        steps: const [], markdownFull: '');
+    }
     final dbe = parsed.dbe;
     final steps = <DeductionStep>[];
     final fullReport = StringBuffer();
@@ -999,6 +1009,7 @@ class SpectroscopyService {
       nmrPeaks: effectiveH,
       nmr13CPeaks: effectiveC,
       msPeaks: msPeaks,
+      protonSignals: protonSignals,
     );
     final knownCompound =
         !sanityReport.hasViolations &&
@@ -3221,6 +3232,7 @@ class SpectroscopyService {
     List<double>? nmrPeaks,
     List<double>? nmr13CPeaks,
     List<double>? msPeaks,
+    List<ProtonSignal>? protonSignals,
   }) {
     final parsed = parseFormula(formula);
     if (!parsed.isValid || parsed.dbe % 1 != 0) return [];
@@ -3297,6 +3309,40 @@ class SpectroscopyService {
         total += agreement * 0.5;
         weight += 0.5;
         evidence.add('${data.$1} ${(agreement * 100).round()}/100');
+      }
+      if (protonSignals != null && protonSignals.isNotEmpty) {
+        final reference = <(double, int)>[];
+        for (final line in entry.nmr1H) {
+          final shift = RegExp(r'δ\s*(\d+(?:\.\d+)?)').firstMatch(line);
+          final count = RegExp(r'\b(\d+)\s*H\b').firstMatch(line);
+          if (shift != null && count != null) reference.add((double.parse(shift.group(1)!), int.parse(count.group(1)!)));
+        }
+        // Require one-to-one agreement only where the reference documents an
+        // integration. Do not invent a count for an unannotated reference.
+        if (reference.length == expectedH.length && reference.isNotEmpty) {
+          final seen = <String>{};
+          bool assign(int r, List<int> remaining) {
+            if (remaining.every((n) => n == 0)) return true;
+            if (r == reference.length || seen.length >= 20000) return false;
+            if (remaining.fold(0, (a, b) => a + b) > reference.skip(r).fold(0, (a, b) => a + b.$2)) return false;
+            if (!seen.add('$r:${remaining.join(',')}')) return false;
+            // Whole documented environments may overlap in one observed region.
+            // Never split one equivalent group into arbitrary proton fragments.
+            for (var i = 0; i < protonSignals.length; i++) {
+              if (remaining[i] >= reference[r].$2 && (protonSignals[i].shift - reference[r].$1).abs() <= .30) {
+                final next = [...remaining];
+                next[i] -= reference[r].$2;
+                if (assign(r + 1, next)) return true;
+              }
+            }
+            return assign(r + 1, remaining);
+          }
+          if (!compatible || !assign(0, protonSignals.map((s) => s.integration).toList())) {
+            compatible = false;
+          } else {
+            evidence.add('¹H absolute integrations agree');
+          }
+        }
       }
       if (!compatible || weight == 0) continue;
       result.add(

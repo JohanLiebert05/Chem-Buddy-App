@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/widgets/glow_card.dart';
-import '../../core/widgets/hex_background.dart';
+import '../widgets/organic_study_background.dart';
 import '../../data/models/organic_study.dart';
 import '../../data/services/organic_curriculum.dart';
 import '../../data/services/organic_progress_repository.dart';
@@ -477,7 +477,7 @@ class _OrganicLessonScreenState extends State<OrganicLessonScreen>
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) unawaited(_exit());
       },
-      child: HexBackground(
+      child: OrganicStudyBackground(
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(

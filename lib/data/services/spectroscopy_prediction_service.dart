@@ -106,7 +106,7 @@ class SpectroscopyPredictionService {
     final owner = _remote.userId;
     if (owner == null) {
       throw StateError(
-        'Sign in to use Gemini prediction. The local structure solver works offline.',
+        'Sign in to use AI prediction. The local structure solver works offline.',
       );
     }
     String? repair;
@@ -133,7 +133,7 @@ class SpectroscopyPredictionService {
         );
       }
       if (response is! Map || response['text'] is! String) {
-        throw StateError('Gemini did not return a prediction. Please retry.');
+        throw StateError('AI did not return a prediction. Please retry.');
       }
       try {
         return parse(
@@ -231,7 +231,7 @@ class SpectroscopyPredictionService {
       msFragmentation: const [],
       alternativeIsomersRuledOut: const [],
       definitiveReasoning:
-          'Gemini prediction; not experimental identification.',
+          'AI prediction; not experimental identification.',
     );
     final depiction = SpectroscopyStructureSvg.depict(compound);
     final graph = depiction.graph;
