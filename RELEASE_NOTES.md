@@ -1,88 +1,16 @@
-# ChemBuddy 3.5.7 by Prajwal A Kambar
+# ChemBuddy 3.5.8 by Prajwal A Kambar
 
-Android build 37 improves startup and navigation while preserving existing features.
+Study Mode adds **Basics of Organic Chemistry**, a 60-level course across 12 chapters, with 5, 10, 15 and 20-minute sessions. Five-minute sessions provide a three-minute explanation and two-minute practice plan. The course rebuilds foundations and introduces MSc reasoning; further syllabus practice is still required.
 
-- Shows a branded native splash and immediate Flutter startup screen while services initialize in parallel.
-- Loads main tabs on first visit, retains their state, and stops hidden animations.
-- Uses shorter tab and dashboard motion, a paint-only navigation indicator, isolated background painting, and a cached logo layer.
-- Prevents ordinary attendance, note and AI updates from rebuilding the entire app theme and router.
-- Requests high refresh rates while preserving display resolution.
-- Publishes smaller APKs per CPU architecture. The main download is ARM64 for modern phones; ARMv7 and x86_64 are available separately. OCR, PDFs, spectroscopy and sketching remain included.
-- Includes immediate Gemini key failover, chemistry-only AI guidance, and truthful service/quota notices from the latest backend changes.
+- Plain-language lessons, worked examples, zoomable vector diagrams and 180 original checks.
+- One question at a time, explanatory feedback, confidence checks and a review list.
+- Saved first thoughts, evidence, next-visit clues and a per-lesson reasoning journal.
+- Account-separated progress, best scores, non-farmable XP and calendar streaks.
+- Pausable active-time tracking that stops in the background and restores saved sessions.
+- A separate **Curious** section with twelve question-led explorations, independent of course locks.
+- Pixel-inspired Material 3 surfaces with restrained glass, light/dark support and enlarged-text layouts.
+- Offline teaching and grading; no additional AI-key usage, native libraries or image assets.
 
-120 Hz smoothness still requires profiling on the user's physical phone; host regression tests do not establish device FPS. Download size differs from installed storage and saved user data.
+The main APK is ARM64. Separate ARMv7 and x86_64 packages retain device support. Production account data is separate from the local browser preview. Progress is saved on the device; cloud backup is not claimed.
 
-This release uses the separate **ChemBuddy Preview** app when production signing is unavailable. Keep the existing app and its saved data; Preview is not an in-place production update.
-
-Live backend check on 2 November 2026: keys **2, 5 and 6** generated responses;
-key **1** was quota-limited (429); keys **3 and 4** were rejected (401). A fresh
-Ask ChemBuddy chemistry question returned an uncached Gemini response in 5.4 s.
-Provider quota and invalid credentials require provider-side action; automatic
-failover cannot make all exhausted or rejected keys available.
-
-## Previous spectroscopy improvements (3.5.6)
-
-Revised Android build 36 adds **Predict with Gemini** beside the existing solver.
-
-It also fixes the reported light-theme Signals cards, provides clean vertical
-Profile appearance choices, fits complete sketcher drawings on mobile, moves
-drawing checks below the canvas, and replaces raw descriptor exceptions with
-short guidance that preserves the drawing.
-Enter a specific compound name or supported SMILES, solvent, temperature and
-frequency to request predicted proton/carbon shifts, heuristic ranges, estimated
-splitting, SVG spectra and a formula-checked structure. Uses the existing
-authenticated server-side Gemini connection. Contradictory assignments receive
-one correction attempt and are withheld if still inconsistent. Formula-only
-questions request an unambiguous identity instead of inventing an isomer.
-
-The attached 25-molecule report covers reproducible offline reference, formula,
-DBE, assignment and SVG rendering checks. Live Gemini accuracy was not measured
-in that report. Predictions remain estimates requiring experimental verification.
-
-The separate partial **40-case live review** used `gemini-3.6-flash`: seven
-predictions passed consistency checks, three model responses were rejected, and
-thirty cases were blocked by the daily account quota. One configured key slot
-was reported. This confirms the live API connection; it is not a completed
-40-prediction accuracy benchmark or multi-key failover test. The report includes
-the accepted structures and proton/carbon SVG plots, plus every blocked case.
-
-- Rebuilds the structure solver with separate entered and expected spectra, SVG proton/carbon NMR, IR and mass previews, reference assignments and formula-checked candidate structures.
-- Tightens formula, DBE and peak matching; conflicting or insufficient evidence stays unresolved instead of forcing an exact compound.
-- Adds eight guided deduction steps, from molecular formula and DBE to fragment assembly, alternative isomers and final verification, with MSc checkpoints.
-- Adds percentage-composition problems, empirical/molecular formula calculations, oxygen-by-difference as an explicit option, and direct transfer into the solver.
-- Makes the bundled molecular sketcher light, adds connectivity/valence/formula checks, restores bounded SMILES import, removes atom-count identity guesses and fixes molfile indices after atom deletion.
-- Fixes the populated attendance crash caused by a dynamic extension lookup; adapts schedule cards, controls and simulator to narrow screens and larger text.
-
-Predicted spectra are educational references, not experimental measurements. Sparse spectra may admit multiple structures. The sketcher rejects import syntax it cannot preserve, including isotope and stereochemical annotations.
-
-Production signing is used when configured. Otherwise the APK is the separate ChemBuddy Preview app for testing.
-
-# ChemBuddy 3.5.5 by Prajwal A Kambar
-
-- Theme editing now lives directly in Profile: display mode, Classic/Fan/Prism collections, glass finish, collection-aware Surprise me and Undo.
-- Expands the Fan collection with Papaya Grid, Rosso, Centre Court, Neon Arcade, Deep Orbit and Reef, inspired by racing, tennis, gaming, space and the ocean.
-- Adds six coordinated three-colour Prism gradients with readable Material 3 roles and tinted glass surfaces.
-- Rebuilds the chemistry toolkit, spectroscopy hub and pericyclic hub around searchable overviews and focused, state-preserving workspaces.
-- Adds three optional chemistry Easter eggs and a device-local Curiosity cabinet.
-- Expands the first-launch welcome with clear setup, guest, offline and cloud-AI guidance; rebuilds the post-login tour with consistent theme colours and readable cards.
-- Retains quick-tap spring feedback, reduced-motion support and the earlier security and reliability fixes.
-
-Production signing is used when configured. Otherwise the APK is a separately installed ChemBuddy Preview test app. Database deployment and rotation of previously embedded provider keys remain separate live steps.
-
----
-
-# ChemBuddy 3.5.4 by Prajwal A Kambar
-
-- Added a floating liquid-glass navigation dock, elastic selection indicators and subtle spring feedback across buttons, chips, cards and page transitions, with reduced-motion support.
-- Refined Material 3 Expressive typography, spacing, buttons and glass surfaces.
-- Strong dark text on light themes, with readable semantic and subject colors.
-- Added a separate Fan collection: Blancos (black and white), Pellara (yellow and charcoal), and RCB (red, black and gold), each with light and dark modes.
-- Light, Dark and System modes across twelve palettes, with Surprise me and saved glass finishes.
-- Redesigned welcome, university, semester and subject setup with a calmer layout.
-- Added Continue as guest: local study data stays separate from signed-in accounts and is retained between guest visits.
-- Added confirmation before leaving the app with Android's root Back action; normal page navigation is preserved.
-- Included the reviewed security, sync reliability, PDF export, attendance and chemistry-tool fixes.
-
-Guest mode supports local notes, attendance and study tools. Sign in for cloud AI. Backend hardening files and deployment instructions are included; they do not deploy the database or server automatically.
-
-The workflow publishes a production-signed APK when signing secrets are configured. Otherwise it publishes an explicitly labeled mobile preview app with a separate package so it can be installed alongside an existing version.
+Where production signing is unavailable, the download is the separate **ChemBuddy Preview** app. Keep the existing app and its saved data. This is not an in-place production update.

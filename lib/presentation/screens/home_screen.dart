@@ -32,6 +32,7 @@ import 'search_screen.dart';
 import 'smart_flashcards_hub.dart';
 import 'smart_flashcards_study_screen.dart';
 import 'spectroscopy_hub_screen.dart';
+import 'study_mode_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -340,6 +341,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         const SizedBox(height: 14),
+
+        const OrganicStudyEntrypoints(),
+        const SizedBox(height:20),
 
         // Study Priorities
         StudyPrioritiesCard(

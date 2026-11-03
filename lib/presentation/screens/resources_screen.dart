@@ -27,8 +27,11 @@ import 'smart_flashcards_generate_screen.dart';
 import 'smart_flashcards_hub.dart';
 import 'spectroscopy_hub_screen.dart';
 import 'syllabus_browser_screen.dart';
+import 'study_mode_screen.dart';
 
 enum LibrarySection {
+  study('Study Mode', Icons.school_outlined, '60 organic levels · saved progress & streaks'),
+  curious('Curious', Icons.lightbulb_outline_rounded, 'Questions worth exploring · diagrams & explanations'),
   pdfs(
     'PDFs',
     Icons.picture_as_pdf_outlined,
@@ -169,6 +172,12 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                   final isSelected = _currentSection == section;
                   String countStr;
                   switch (section) {
+                    case LibrarySection.study:
+                      countStr = '60 Levels';
+                      break;
+                    case LibrarySection.curious:
+                      countStr = '12 Questions';
+                      break;
                     case LibrarySection.pdfs:
                       countStr = '$pdfCount';
                       break;
@@ -510,7 +519,11 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
           const SizedBox(height: 14),
 
           // Main Section Content
-          if (_currentSection == LibrarySection.pdfs)
+          if (_currentSection == LibrarySection.study)
+            const OrganicStudyEntrypoints(onlyCurious:false)
+          else if (_currentSection == LibrarySection.curious)
+            const OrganicStudyEntrypoints(onlyCurious:true)
+          else if (_currentSection == LibrarySection.pdfs)
             const PdfLibraryScreen(embedded: true)
           else if (_currentSection == LibrarySection.reactions)
             const _ReactionLibrarySection()

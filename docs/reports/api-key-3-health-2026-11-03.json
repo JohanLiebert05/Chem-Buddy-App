@@ -1,0 +1,17 @@
+{
+  "project_ref": "tqhrvvcxrrkppdfrbxnz",
+  "checked_date": "2026-11-03",
+  "change": "Replaced rejected GEMINI_KEY_3 with the user-provided replacement in encrypted Edge Function secrets.",
+  "model": "gemini-3.6-flash",
+  "results": [
+    {
+      "name": "GEMINI_KEY_3",
+      "status": "generation_ok",
+      "http_status": 200,
+      "error_code": null
+    }
+  ],
+  "scope": "Live generation diagnostic for the replacement slot only; other slots were not re-tested in this check.",
+  "app_update_required": false,
+  "credentials_included": false
+}
