@@ -37,8 +37,7 @@
   </g>
 
   <g id="electron-arrows">
-    <path d="M 160 188 C 210 150 250 150 288 188" fill="none" stroke="#111111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
-    <path d="M 380 188 C 430 148 470 150 508 188" fill="none" stroke="#111111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+
   </g>
 
   <g id="labels">

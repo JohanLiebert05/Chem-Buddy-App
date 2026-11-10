@@ -14,19 +14,20 @@
 
   <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">H3O+ workup</text></g>
   <g id="products">
-    <line x1="260" y1="200" x2="260" y2="130" stroke="#111" stroke-width="2.1"/>
-    <line x1="260" y1="200" x2="200" y2="240" stroke="#111" stroke-width="2.1"/>
-    <line x1="260" y1="200" x2="320" y2="240" stroke="#111" stroke-width="2.1"/>
-    <line x1="260" y1="200" x2="330" y2="200" stroke="#111" stroke-width="2.1"/>
-    <text x="336" y="208" font-family="Arial, Helvetica, sans-serif" font-size="18">OH</text>
-    <text x="246" y="118" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
-    <text x="168" y="258" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
-    <text x="314" y="258" font-family="Arial, Helvetica, sans-serif" font-size="14">CH3</text>
+    <path d="M 230 200 L 161 156 M 230 200 L 160 249 M 230 200 L 229 271 M 230 200 L 300 200 M 452 200 L 496 200 M 516 189 L 543 160 M 516 209 L 542 241" fill="none" stroke="#111" stroke-width="2.1"/>
+    <text x="302" y="205" font-family="sans-serif" font-size="18">O⁻</text>
+    <circle cx="334" cy="189" r="2"/><circle cx="334" cy="198" r="2"/>
+    <text x="432" y="206" font-family="sans-serif" font-size="18">H</text>
+    <text x="500" y="206" font-family="sans-serif" font-size="18">O⁺</text>
+    <text x="545" y="161" font-family="sans-serif" font-size="18">H</text>
+    <text x="545" y="249" font-family="sans-serif" font-size="18">H</text>
   </g>
   <g id="electron-arrows">
-    <path d="M 400 160 C 370 170 350 185 338 198" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 334 193.5 C 363 157 407 155 436 190" fill="none" stroke="#111" stroke-width="2" marker-end="url(#electron-arrow)"/>
+    <path d="M 474 200 C 461 229 490 236 504 214" fill="none" stroke="#111" stroke-width="2" marker-end="url(#electron-arrow)"/>
   </g>
-  <g id="labels"><text x="200" y="300" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">tert-butanol; arrow: O- to H of H3O+</text>
-  <text x="430" y="150" font-family="Arial, Helvetica, sans-serif" font-size="14">H3O+</text></g>
+  <g id="labels">
+    <text x="260" y="311" font-family="sans-serif" font-size="13" fill="#444">Products: tert-butanol and water</text>
+  </g>
 
 </svg>

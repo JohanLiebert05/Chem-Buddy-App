@@ -1,7 +1,7 @@
 name: chem_buddy
 description: Chem Buddy by Prajwal A Kambar — attendance, tests, and notes for MSc Chemistry students.
 publish_to: 'none'
-version: 3.5.9+39
+version: 3.6.0+40
 
 
 environment:
@@ -12,6 +12,9 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^2.6.1
+  http: ^1.6.0
+  path_parsing: ^1.1.0
+  xml: ^6.6.1
   supabase_flutter: ^2.9.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
@@ -76,3 +79,6 @@ flutter:
     - assets/mechanisms/rearrangements/beckmann/
     - assets/web/
     - assets/chemistry/reactions/
+    - assets/chemistry/periodic_elements.json
+    - assets/chemistry/compound_structures.json
+    - assets/chemistry/peptide_structures.json

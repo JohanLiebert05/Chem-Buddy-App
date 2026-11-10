@@ -250,47 +250,29 @@ class ReactionCurationRepository {
   Future<Map<String, List<ElectronArrowModel>>> _loadElectronFlows() async {
     final map = <String, List<ElectronArrowModel>>{};
     try {
-      final rawCsv = await rootBundle.loadString('assets/chemistry/reactions/reaction_electron_flows.csv');
-      final rows = _parseCsv(rawCsv);
-      if (rows.length <= 1) {return map;}
-
-      // Header: flow_id,reaction_id,step_number,source_type,source_identifier,target_type,target_identifier,flow_type,arrow_type,description,curvature
-      for (int i = 1; i < rows.length; i++) {
-        final row = rows[i];
-        if (row.length < 8) {continue;}
-
-        final flowId = row[0].trim();
-        final reactionId = row[1].trim();
-        final sourceTypeStr = row[3].trim();
-        final sourceId = row[4].trim();
-        final targetTypeStr = row[5].trim();
-        final targetId = row[6].trim();
-        final flowTypeStr = row[7].trim();
-        final arrowTypeStr = row.length > 8 ? row[8].trim() : 'curved_full';
-        final description = row.length > 9 ? row[9].trim() : '';
-        final curvature = row.length > 10 ? (double.tryParse(row[10].trim()) ?? 0.35) : 0.35;
-
-        final flow = ElectronArrowModel(
-          id: flowId,
-          sourceType: _parseSourceType(sourceTypeStr),
-          sourceIdentifier: sourceId,
-          targetType: _parseTargetType(targetTypeStr),
-          targetIdentifier: targetId,
-          flowType: _parseFlowType(flowTypeStr),
-          arrowType: arrowTypeStr.toLowerCase() == 'curved_half'
-              ? ArrowHeadType.curvedHalf
-              : ArrowHeadType.curvedFull,
-          description: description,
-          curvature: curvature,
-        );
-
-        map.putIfAbsent(reactionId, () => []).add(flow);
+      final csv = await rootBundle.loadString(
+        'assets/chemistry/reactions/reaction_electron_flows.csv',
+      );
+      for (final row in _parseCsv(csv).skip(1)) {
+        if (row.length < 12) continue;
+        final flow = ElectronArrowModel.fromJson({
+          'id': row[0].trim(),
+          'sourceType': row[3].trim(),
+          'sourceIdentifier': row[5].trim(),
+          'targetType': row[6].trim(),
+          'targetIdentifier': row[8].trim(),
+          'flowType': row[9].trim(),
+          'arrowType': row[10].trim(),
+          'description': row[11].trim(),
+        });
+        map.putIfAbsent(row[1].trim(), () => []).add(flow);
       }
     } catch (e) {
-      debugPrint('[ReactionCurationRepository] Error reading reaction_electron_flows.csv: $e');
+      debugPrint('[ReactionCurationRepository] Error reading electron flows: $e');
     }
     return map;
   }
+
 
   Future<Map<String, List<CuratedReactionStep>>> _loadReactionSteps(
     Map<String, List<ElectronArrowModel>> flowsMap,
@@ -301,50 +283,27 @@ class ReactionCurationRepository {
       final rows = _parseCsv(rawCsv);
       if (rows.length <= 1) {return map;}
 
-      // Header: step_id,reaction_id,step_number,step_title,step_description,intermediate_name,intermediate_smiles,electron_flow_ids,bond_changes,charge_changes,is_rds,is_reversible
-      for (int i = 1; i < rows.length; i++) {
-        final row = rows[i];
-        if (row.length < 5) {continue;}
+      // Each row describes the changes from the drawn pre-state to this step's product.
+      for (final row in rows.skip(1)) {
+        if (row.length < 11) continue;
 
-        final stepId = row[0].trim();
-        final reactionId = row[1].trim();
-        final stepNum = int.tryParse(row[2].trim()) ?? 1;
-        final stepTitle = row[3].trim();
-        final stepDesc = row[4].trim();
-        final interName = row.length > 5 ? row[5].trim() : '';
-        final interSmiles = row.length > 6 ? row[6].trim() : '';
-        final flowIdsRaw = row.length > 7 ? row[7].trim() : '';
-        final bondChanges = row.length > 8 ? row[8].trim() : '';
-        final chargeChanges = row.length > 9 ? row[9].trim() : '';
-        final isRds = row.length > 10 ? row[10].trim().toLowerCase() == 'true' : false;
-        final isRev = row.length > 11 ? row[11].trim().toLowerCase() == 'true' : false;
-
-        // Resolve associated electron flows
-        final allFlowsForRxn = flowsMap[reactionId] ?? [];
-        final flowIdSet = flowIdsRaw
-            .split(';')
-            .map((s) => s.trim())
-            .where((s) => s.isNotEmpty)
-            .toSet();
-
-        final stepFlows = flowIdSet.isEmpty
-            ? allFlowsForRxn
-            : allFlowsForRxn.where((f) => flowIdSet.contains(f.id)).toList();
-
+        final reactionId = row[0].trim();
+        final stepId = row[1].trim();
+        final flowIds = row[6].split('|').map((id) => id.trim()).toSet();
         final step = CuratedReactionStep(
           stepId: stepId,
           reactionId: reactionId,
-          stepNumber: stepNum,
-          stepTitle: stepTitle,
-          stepDescription: stepDesc,
-          intermediateName: interName,
-          intermediateSmiles: interSmiles,
-          intermediateGraph: _buildTemplateGraphForStep(reactionId, stepNum),
-          electronFlows: stepFlows,
-          bondChanges: bondChanges,
-          chargeChanges: chargeChanges,
-          isRds: isRds,
-          isReversible: isRev,
+          stepNumber: int.tryParse(row[2].trim()) ?? 1,
+          stepTitle: row[3].trim(),
+          stepDescription: row[4].trim(),
+          electronFlows: [
+            for (final flow in flowsMap[reactionId] ?? <ElectronArrowModel>[])
+              if (flowIds.contains(flow.id)) flow,
+          ],
+          bondChanges: row[7].trim(),
+          chargeChanges: row[8].trim(),
+          isRds: row[9].trim().toLowerCase() == 'true',
+          isReversible: row[10].trim().toLowerCase() == 'true',
         );
 
         map.putIfAbsent(reactionId, () => []).add(step);
@@ -362,25 +321,22 @@ class ReactionCurationRepository {
       final rows = _parseCsv(rawCsv);
       if (rows.length <= 1) {return list;}
 
-      // Header: example_id,reaction_id,reactant_name,reactant_smiles,reagent_name,reagent_smiles,solvent,temperature,expected_product_name,expected_product_smiles,stereochemical_outcome,mechanism_type,notes
-      for (int i = 1; i < rows.length; i++) {
-        final row = rows[i];
-        if (row.length < 10) {continue;}
+      for (final row in rows.skip(1)) {
+        if (row.length < 10) continue;
 
         list.add(CuratedReactionExample(
           exampleId: row[0].trim(),
           reactionId: row[1].trim(),
-          reactantName: row[2].trim(),
-          reactantSmiles: row[3].trim(),
-          reagentName: row[4].trim(),
-          reagentSmiles: row[5].trim(),
-          solvent: row.length > 6 ? row[6].trim() : '',
-          temperature: row.length > 7 ? row[7].trim() : '',
-          expectedProductName: row.length > 8 ? row[8].trim() : '',
-          expectedProductSmiles: row.length > 9 ? row[9].trim() : '',
-          stereochemicalOutcome: row.length > 10 ? row[10].trim() : '',
-          mechanismType: row.length > 11 ? row[11].trim() : '',
-          notes: row.length > 12 ? row[12].trim() : '',
+          reactantName: '',
+          reactantSmiles: row[2].trim(),
+          reagentName: '',
+          reagentSmiles: row[3].trim(),
+          solvent: row[4].trim(),
+          temperature: row[5].trim(),
+          expectedProductSmiles: row[6].trim(),
+          expectedProductName: row[7].trim(),
+          stereochemicalOutcome: row[8].trim(),
+          notes: row[9].trim(),
         ));
       }
     } catch (e) {
@@ -477,139 +433,6 @@ class ReactionCurationRepository {
       debugPrint('[ReactionCurationRepository] Supabase save exception: $e');
     }
     return true; // Graceful offline success
-  }
-
-  // ---------------------------------------------------------------------------
-  // TEMPLATE GRAPH GENERATOR FOR MECHANISM STEPS
-  // ---------------------------------------------------------------------------
-
-  ChemicalGraph _buildTemplateGraphForStep(String reactionId, int stepNum) {
-    if (reactionId.contains('SN2')) {
-      return ChemicalGraph(
-        id: '${reactionId}_step$stepNum',
-        name: 'SN2 Reaction Center',
-        atoms: const [
-          ChemicalAtom(id: 'Nu', element: 'I', x: 70, y: 150, formalCharge: -1, role: 'nucleophile'),
-          ChemicalAtom(id: 'C_alpha', element: 'C', x: 200, y: 150, role: 'electrophile'),
-          ChemicalAtom(id: 'LG', element: 'Br', x: 330, y: 150, role: 'leaving_group'),
-          ChemicalAtom(id: 'H1', element: 'H', x: 200, y: 80),
-          ChemicalAtom(id: 'H2', element: 'H', x: 200, y: 220),
-          ChemicalAtom(id: 'R', element: 'CH3', x: 150, y: 100),
-        ],
-        bonds: const [
-          ChemicalBond(id: 'B_CLG', atom1Id: 'C_alpha', atom2Id: 'LG', type: BondType.single, isReacting: true),
-          ChemicalBond(id: 'B_CH1', atom1Id: 'C_alpha', atom2Id: 'H1', type: BondType.wedge),
-          ChemicalBond(id: 'B_CH2', atom1Id: 'C_alpha', atom2Id: 'H2', type: BondType.dash),
-          ChemicalBond(id: 'B_CR', atom1Id: 'C_alpha', atom2Id: 'R', type: BondType.single),
-        ],
-      );
-    } else if (reactionId.contains('EAS')) {
-      return ChemicalGraph(
-        id: '${reactionId}_step$stepNum',
-        name: 'Arenium Ion / Benzene',
-        atoms: const [
-          ChemicalAtom(id: 'C1', element: 'C', x: 150, y: 90, role: 'nucleophile'),
-          ChemicalAtom(id: 'C2', element: 'C', x: 210, y: 125),
-          ChemicalAtom(id: 'C3', element: 'C', x: 210, y: 195),
-          ChemicalAtom(id: 'C4', element: 'C', x: 150, y: 230),
-          ChemicalAtom(id: 'C5', element: 'C', x: 90, y: 195),
-          ChemicalAtom(id: 'C6', element: 'C', x: 90, y: 125),
-          ChemicalAtom(id: 'E_plus', element: 'NO2', x: 150, y: 30, formalCharge: 1, role: 'electrophile'),
-        ],
-        bonds: const [
-          ChemicalBond(id: 'B12', atom1Id: 'C1', atom2Id: 'C2', type: BondType.double, isReacting: true),
-          ChemicalBond(id: 'B23', atom1Id: 'C2', atom2Id: 'C3', type: BondType.single),
-          ChemicalBond(id: 'B34', atom1Id: 'C3', atom2Id: 'C4', type: BondType.double),
-          ChemicalBond(id: 'B45', atom1Id: 'C4', atom2Id: 'C5', type: BondType.single),
-          ChemicalBond(id: 'B56', atom1Id: 'C5', atom2Id: 'C6', type: BondType.double),
-          ChemicalBond(id: 'B61', atom1Id: 'C6', atom2Id: 'C1', type: BondType.single),
-        ],
-      );
-    } else {
-      // General Carbonyl template
-      return ChemicalGraph(
-        id: '${reactionId}_step$stepNum',
-        name: 'Carbonyl Addition Center',
-        atoms: const [
-          ChemicalAtom(id: 'Nu', element: 'H', x: 90, y: 160, formalCharge: -1, role: 'nucleophile'),
-          ChemicalAtom(id: 'C_carbonyl', element: 'C', x: 210, y: 160, role: 'electrophile'),
-          ChemicalAtom(id: 'O_carbonyl', element: 'O', x: 210, y: 90),
-          ChemicalAtom(id: 'R1', element: 'CH3', x: 280, y: 200),
-          ChemicalAtom(id: 'R2', element: 'H', x: 150, y: 220),
-        ],
-        bonds: const [
-          ChemicalBond(id: 'B_CO', atom1Id: 'C_carbonyl', atom2Id: 'O_carbonyl', type: BondType.double, isReacting: true),
-          ChemicalBond(id: 'B_CR1', atom1Id: 'C_carbonyl', atom2Id: 'R1', type: BondType.single),
-          ChemicalBond(id: 'B_CR2', atom1Id: 'C_carbonyl', atom2Id: 'R2', type: BondType.single),
-        ],
-      );
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // UTILITY PARSERS
-  // ---------------------------------------------------------------------------
-
-  static ElectronSourceType _parseSourceType(String raw) {
-    switch (raw.toLowerCase()) {
-      case 'lone_pair':
-      case 'lonepair':
-        return ElectronSourceType.lonePair;
-      case 'bond':
-        return ElectronSourceType.bond;
-      case 'pi_bond':
-      case 'pibond':
-        return ElectronSourceType.piBond;
-      case 'negative_charge':
-      case 'negativecharge':
-        return ElectronSourceType.negativeCharge;
-      case 'atom':
-        return ElectronSourceType.atom;
-      default:
-        return ElectronSourceType.lonePair;
-    }
-  }
-
-  static ElectronTargetType _parseTargetType(String raw) {
-    switch (raw.toLowerCase()) {
-      case 'atom':
-        return ElectronTargetType.atom;
-      case 'bond':
-        return ElectronTargetType.bond;
-      case 'positive_charge':
-      case 'positivecharge':
-        return ElectronTargetType.positiveCharge;
-      case 'space':
-        return ElectronTargetType.space;
-      default:
-        return ElectronTargetType.atom;
-    }
-  }
-
-  static ElectronFlowType _parseFlowType(String raw) {
-    switch (raw.toLowerCase()) {
-      case 'lone_pair_attack':
-      case 'lonepairattack':
-        return ElectronFlowType.lonePairAttack;
-      case 'bond_break':
-      case 'bondbreak':
-        return ElectronFlowType.bondBreak;
-      case 'pi_attack':
-      case 'piattack':
-        return ElectronFlowType.piAttack;
-      case 'proton_transfer':
-      case 'protontransfer':
-        return ElectronFlowType.protonTransfer;
-      case 'elimination':
-        return ElectronFlowType.elimination;
-      case 'bond_formation':
-      case 'bondformation':
-        return ElectronFlowType.bondFormation;
-      case 'resonance':
-        return ElectronFlowType.resonance;
-      default:
-        return ElectronFlowType.lonePairAttack;
-    }
   }
 
   /// Robust CSV parser supporting quotes, commas, and escaped quotes.

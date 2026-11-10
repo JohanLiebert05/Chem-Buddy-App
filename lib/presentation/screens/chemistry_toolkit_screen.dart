@@ -13,6 +13,7 @@ import '../../core/widgets/study_hub_shell.dart';
 import '../../core/widgets/curiosity_cabinet.dart';
 import '../../data/services/chemical_name_database.dart';
 import '../../core/widgets/liquid_glass.dart';
+import 'virtual_labs_panel.dart';
 
 class _ToolkitToolInfo {
   final int categoryIndex;
@@ -54,6 +55,7 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen>
     'Spectroscopy & AAS',
     'Electrochem',
     'Analytical & Error',
+    'Virtual Labs',
   ];
 
   static const _categoryDescriptions = [
@@ -66,9 +68,17 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen>
     'Spectroscopy & Light: Beer-Lambert absorbance (A = εbc), photon energy, and wavelengths.',
     'Electrochemistry: Nernst equation, non-standard potentials, and galvanic cell voltages.',
     'Analytical Chemistry: HPLC calibration curves, regression metrics, and Van Deemter efficiency.',
+    'Virtual Labs: Simulate dilution, density measurements, and an acid–base titration.',
   ];
 
   static const _toolsCatalog = [
+    _ToolkitToolInfo(
+      categoryIndex: 9,
+      title: 'Virtual Labs',
+      subtitle: 'Glucose dilution, unknown metal density, and acid–base titration',
+      icon: Icons.science_outlined,
+      keywords: ['experiment', 'simulation', 'dilution', 'density', 'titration'],
+    ),
     _ToolkitToolInfo(
       categoryIndex: 0,
       title: 'Molar Mass Calculator',
@@ -687,6 +697,7 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen>
             Icons.graphic_eq_rounded,
             Icons.bolt_rounded,
             Icons.analytics_outlined,
+            Icons.science_outlined,
           ][i],
           keywords: _toolsCatalog
               .where((tool) => tool.categoryIndex == i)
@@ -697,6 +708,7 @@ class _ChemistryToolkitScreenState extends State<ChemistryToolkitScreen>
     panes: [for (var i = 0; i < _categories.length; i++) _categoryPane(i)],
   );
   Widget _categoryPane(int index) {
+    if (index == 9) return const VirtualLabsPanel();
     final tools = switch (index) {
       0 => <Widget>[
         _MolarMassCalculator(onSelectTool: (_) => _openCategory(0)),

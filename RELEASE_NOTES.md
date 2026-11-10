@@ -1,14 +1,10 @@
-# ChemBuddy 3.5.9 by Prajwal A Kambar
+# ChemBuddy 3.6.0 by Prajwal A Kambar
 
-Curious now offers **60 chemistry questions**, including 48 new foundations about electrons, benzene, arrowheads, bonding, molecular shape, reactions and spectra.
+- The Library now includes a searchable offline periodic table with all 118 elements, property views and a temperature control that illustrates approximate states.
+- The Chemistry Toolkit includes three virtual labs covering solution dilution, metal density and acid-base titration.
+- The mechanism player covers all 37 Library mechanisms and 35 built-in Reaction Predictor records. It uses colour-coded arrows, distinguishes electron-pair arrows from single-electron fishhooks and labels schematic reaction-centre views. Playback includes replay and respects reduced-motion settings.
+- Compound Names includes 156 entries and 138 offline 2D structures. Search by common names such as formic acid, systematic names such as methanoic acid, or formula where available. L-, D- and meso-tartaric acid have distinct entries.
+- PubChem lookup supports compound names, synonyms and CIDs. Open the 2D depiction or rotate a 3D conformer when PubChem provides one.
+- The peptide library includes 18 entries with searchable names and sequences, offline 2D diagrams and rotatable 3D models. The models are credited to PubChem or RCSB PDB.
 
-- Browse by theme or tap **Surprise me** for an offline question without repeats until the selected collection has been explored.
-- Choose **New discovery · online** or **Explore further** for an AI-assisted explanation, reasoning steps, a common misconception and a self-check.
-- Each question includes a teaching diagram and a checked molecular reference. Online prose remains an estimate; structure checks do not certify every claim.
-- The structure solver now accepts optional absolute proton integrations, rejects incompatible reference candidates and suggests evidence to resolve ambiguity.
-- A vibrant Study Mode backdrop adds soft coral, mint and violet colour with subtle molecular details beneath glass surfaces. The backdrop is static and repaint-isolated.
-- Student-facing labels use structure, spectrum and diagram instead of provider and drawing-format terminology.
-
-Existing Study Mode course progress, levels, streaks and reasoning remain saved. Online enrichment requires sign-in, internet and available AI allowance. The sixty-question collection and its illustrations remain available offline.
-
-Where production signing is unavailable, the APK is the separate **ChemBuddy Preview** app. Keep the existing app and its saved data; this is not an in-place production update. The main download supports ARM64 phones, with separate ARMv7 and x86_64 packages.
+If production signing is unavailable, the release builds ChemBuddy Preview under its own Android package. The main APK is for ARM64 phones. Separate ARMv7 and x86_64 APKs are also available.

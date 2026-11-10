@@ -15,9 +15,13 @@ import '../../data/services/reaction_mechanism_service.dart';
 import '../providers/app_providers.dart';
 import '../widgets/reaction_mechanisms_card.dart';
 import 'chemistry_toolkit_screen.dart';
+import 'compound_library_screen.dart';
+import 'peptide_library_screen.dart';
 import 'exam_mode_screen.dart';
 import 'organic_reaction_predictor_screen.dart';
 import 'pdf_library_screen.dart';
+import 'periodic_table_panel.dart';
+import 'pubchem_lookup_screen.dart';
 import 'pdf_quiz_screen.dart';
 import 'pdf_reader_screen.dart';
 import 'pericyclic_hub_screen.dart';
@@ -36,6 +40,16 @@ enum LibrarySection {
     'PDFs',
     Icons.picture_as_pdf_outlined,
     'Textbooks, research papers & notes',
+  ),
+  periodicTable(
+    'Periodic Table',
+    Icons.grid_view_outlined,
+    'Explore element families, trends & states',
+  ),
+  compounds(
+    'Compound Names',
+    Icons.bubble_chart_outlined,
+    'Common names, formulas & 2D structures',
   ),
   reactions(
     'Reactions',
@@ -180,6 +194,12 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                       break;
                     case LibrarySection.pdfs:
                       countStr = '$pdfCount';
+                      break;
+                    case LibrarySection.periodicTable:
+                      countStr = '118 Elements';
+                      break;
+                    case LibrarySection.compounds:
+                      countStr = 'Reference';
                       break;
                     case LibrarySection.reactions:
                       countStr = '$reactionCount';
@@ -525,6 +545,65 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
             const OrganicStudyEntrypoints(onlyCurious:true)
           else if (_currentSection == LibrarySection.pdfs)
             const PdfLibraryScreen(embedded: true)
+          else if (_currentSection == LibrarySection.periodicTable) ...[
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.science_outlined),
+                title: const Text('PubChem Compound Lookup'),
+                subtitle: const Text('Search compound structures and properties'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PubChemLookupScreen(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const PeriodicTablePanel(),
+          ] else if (_currentSection == LibrarySection.compounds)
+            LiquidGlassContainer(
+              borderRadius: 28,
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Compound reference',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Find common names, synonyms, formulas and 2D diagrams. '
+                    'Search PubChem for compounds beyond the offline catalog.',
+                  ),
+                  const SizedBox(height: 12),
+                  SpringPress(
+                    child: FilledButton.tonalIcon(
+                      icon: const Icon(Icons.bubble_chart_outlined),
+                      label: const Text('Open Compound Names'),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const CompoundLibraryScreen(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SpringPress(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.hub_outlined),
+                      label: const Text('Browse Peptide Structures'),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const PeptideLibraryScreen(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
           else if (_currentSection == LibrarySection.reactions)
             const _ReactionLibrarySection()
           else if (_currentSection == LibrarySection.flashcards)

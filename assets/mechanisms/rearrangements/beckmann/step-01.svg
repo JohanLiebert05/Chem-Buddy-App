@@ -22,8 +22,8 @@
     <text x="454" y="142" font-family="Arial, Helvetica, sans-serif" font-size="16">OH2+</text>
   </g>
   <g id="electron-arrows">
-    <path d="M 300 200 C 340 180 360 160 382 142" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
-    <path d="M 420 136 C 440 120 448 118 460 128" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 325 190 C 353 213 383 188 387 145" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 425 136 C 429 109 449 110 461 128" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
   </g>
   <g id="labels"><text x="180" y="300" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">anti C-C migrates to N; N-O to leaving water</text></g>
 

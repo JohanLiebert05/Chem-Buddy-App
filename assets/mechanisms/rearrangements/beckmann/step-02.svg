@@ -14,15 +14,16 @@
 
   <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">hydration</text></g>
   <g id="intermediate-1">
-    <polygon points="240,150 310,150 340,200 310,250 240,250 210,200" fill="none" stroke="#111" stroke-width="2.1"/>
-    <line x1="310" y1="150" x2="360" y2="120" stroke="#111" stroke-width="2.1"/>
-    <line x1="306" y1="150" x2="356" y2="120" stroke="#111" stroke-width="2.1"/>
-    <text x="364" y="116" font-family="Arial, Helvetica, sans-serif" font-size="16">N+</text>
-    <text x="80" y="208" font-family="Arial, Helvetica, sans-serif" font-size="16">H2O</text>
+    <path d="M 278 191 L 305 253 L 372 270 L 432 229 L 443 168 L 405 115 L 385 123 M 359 122 L 278 185 M 363 128 L 282 191 M 367 133 L 286 197"
+      fill="none" stroke="#111" stroke-width="2.2"/>
+    <text x="365" y="129" font-family="sans-serif" font-size="18">N⁺</text>
+    <text x="98" y="218" font-family="sans-serif" font-size="18">H₂O</text>
+    <circle cx="142" cy="200" r="2"/><circle cx="142" cy="208" r="2"/>
   </g>
   <g id="electron-arrows">
-    <path d="M 120 200 C 180 160 250 140 300 148" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 142 204 C 178 153 237 145 275 184" fill="none" stroke="#111" stroke-width="2" marker-end="url(#electron-arrow)"/>
+    <path d="M 322 160 C 306 128 337 101 365 114" fill="none" stroke="#111" stroke-width="2" marker-end="url(#electron-arrow)"/>
   </g>
-  <g id="labels"><text x="200" y="300" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">water to nitrilium carbon</text></g>
+  <g id="labels"><text x="200" y="300" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">Water attacks nitrilium carbon; a π pair moves onto N</text></g>
 
 </svg>

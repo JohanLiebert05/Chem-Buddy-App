@@ -121,27 +121,25 @@ class MechanismSvgRenderer {
     final buffer = StringBuffer();
     const totalWidth = 720.0;
     const totalHeight = 260.0;
-    final rBounds = reactantGraph.getBounds();
-    final pBounds = productGraph.getBounds();
+    ChemicalGraph fit(ChemicalGraph graph, double centerX) {
+      final bounds = graph.getBounds();
+      final width = bounds.maxX - bounds.minX;
+      final height = bounds.maxY - bounds.minY;
+      final scale = math.min(
+        220 / math.max(width, 1),
+        138 / math.max(height, 1),
+      ).clamp(0.0, 1.5).toDouble();
+      return graph
+          .translate(-(bounds.minX + bounds.maxX) / 2, -(bounds.minY + bounds.maxY) / 2)
+          .scale(scale)
+          .translate(centerX, 140);
+    }
 
-    // Scale and position Reactants on left (0 to 280), Product on right (440 to 720)
-    final rGraphScaled = reactantGraph
-        .translate(-rBounds.minX, -rBounds.minY)
-        .translate(40.0, 60.0);
-
-    final pGraphScaled = productGraph
-        .translate(-pBounds.minX, -pBounds.minY)
-        .translate(460.0, 60.0);
+    final rGraphScaled = fit(reactantGraph, 145);
+    final pGraphScaled = fit(productGraph, 575);
 
     buffer.writeln(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 $totalWidth $totalHeight" width="100%" height="100%">');
-
-    // Defs: Reaction Arrow
-    buffer.writeln('  <defs>');
-    buffer.writeln('    <marker id="rxn-arrowhead" markerWidth="10" markerHeight="10" refX="7" refY="3.5" orient="auto">');
-    buffer.writeln('      <polygon points="0 0, 10 3.5, 0 7" fill="#38BDF8"/>');
-    buffer.writeln('    </marker>');
-    buffer.writeln('  </defs>');
 
     // Background
     buffer.writeln(
@@ -168,7 +166,7 @@ class MechanismSvgRenderer {
     const arrowY = 140.0;
     buffer.writeln('  <g id="reaction-arrow" font-family="system-ui, sans-serif">');
     buffer.writeln(
-        '    <line x1="300" y1="$arrowY" x2="420" y2="$arrowY" stroke="#38BDF8" stroke-width="3" marker-end="url(#rxn-arrowhead)"/>');
+        '    <line x1="300" y1="$arrowY" x2="420" y2="$arrowY" stroke="#38BDF8" stroke-width="3" stroke-linecap="round"/><path d="M 410 134 L 420 140 L 410 146" fill="none" stroke="#38BDF8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>');
 
     // Reagent above arrow
     if (reagent.isNotEmpty) {
@@ -427,7 +425,7 @@ class MechanismSvgRenderer {
 
     // Electron Flow Arrow visualization box
     buffer.writeln('  <rect x="24" y="222" width="552" height="78" rx="10" fill="#1E293B" fill-opacity="0.6" stroke="#475569" stroke-width="1"/>');
-    buffer.writeln('  <path d="M 40 260 Q 120 235 200 260" fill="none" stroke="#EC4899" stroke-width="2.5" marker-end="url(#arrow-regular)"/>');
+
     buffer.writeln('  <text x="215" y="252" font-size="11" font-weight="bold" fill="#EC4899" font-family="sans-serif">CURVED ELECTRON-PUSHING FLOW</text>');
     buffer.writeln('  <text x="215" y="272" font-size="11" font-weight="500" fill="#94A3B8" font-family="sans-serif">$pushing</text>');
 

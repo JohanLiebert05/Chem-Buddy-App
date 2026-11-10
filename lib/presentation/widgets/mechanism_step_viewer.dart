@@ -1,355 +1,329 @@
-import '../../core/widgets/expressive_motion.dart';
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
+import '../../core/widgets/expressive_motion.dart';
+import '../../core/widgets/liquid_glass.dart';
 import '../../data/models/reaction_models.dart';
+import 'electron_flow_diagram.dart';
 
-/// Step-through ChemDraw-style SVG viewer. Zoom/pan stay vector-sharp.
+/// Step-through viewer for the bundled representative reaction mechanisms.
 class MechanismStepViewer extends StatefulWidget {
   const MechanismStepViewer({
     super.key,
     required this.mechanism,
     this.onSwitchTo3D,
+    this.initialStepIndex = 0,
+    this.lessonSteps,
+    this.scopeLabel,
   });
 
   final ReactionMechanism mechanism;
   final VoidCallback? onSwitchTo3D;
+  final int initialStepIndex;
+  final List<ReactionStep>? lessonSteps;
+  final String? scopeLabel;
 
   @override
   State<MechanismStepViewer> createState() => _MechanismStepViewerState();
 }
 
 class _MechanismStepViewerState extends State<MechanismStepViewer> {
-  final TransformationController _transform = TransformationController();
-  int _stepIndex = 0;
-  bool _showElectronFlow = true;
-  bool _playing = false;
-  Timer? _playTimer;
-  String? _svg;
-  String? _loadError;
-
-  List<ReactionStep> get _steps => widget.mechanism.steps
-      .where(
-        (s) =>
-            (s.svgAsset != null && s.svgAsset!.isNotEmpty) ||
-            (s.svgContent != null && s.svgContent!.isNotEmpty),
-      )
-      .toList();
-
-  ReactionStep get _current => _steps[_stepIndex];
+  final _transform = TransformationController();
+  late List<ReactionStep> _steps;
+  late Future<List<String?>> _diagrams;
+  int _step = 0;
+  int _replay = 0;
+  bool _showFlow = true;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _loadSvg();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(MechanismStepViewer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.mechanism.id != widget.mechanism.id) {
+      _timer?.cancel();
+      _timer = null;
+      _step = 0;
+      _transform.value = Matrix4.identity();
+      _load();
+    }
+  }
+
+  void _load() {
+    _steps = widget.lessonSteps ?? widget.mechanism.steps;
+    _step = widget.initialStepIndex.clamp(
+      0,
+      _steps.isEmpty ? 0 : _steps.length - 1,
+    );
+    _diagrams = Future.wait(
+      _steps.map((step) async {
+        if (step.svgContent case final svg? when svg.isNotEmpty) return svg;
+        if (step.svgAsset == null) return null;
+        try {
+          return await rootBundle.loadString(step.svgAsset!);
+        } on FlutterError {
+          return null;
+        }
+      }),
+    );
   }
 
   @override
   void dispose() {
-    _playTimer?.cancel();
+    _timer?.cancel();
     _transform.dispose();
     super.dispose();
   }
 
-  Future<void> _loadSvg() async {
-    setState(() {
-      _svg = null;
-      _loadError = null;
-    });
-    try {
-      String raw;
-      if (_current.svgContent != null && _current.svgContent!.isNotEmpty) {
-        raw = _current.svgContent!;
-      } else if (_current.svgAsset != null && _current.svgAsset!.isNotEmpty) {
-        raw = await rootBundle.loadString(_current.svgAsset!);
-      } else {
-        throw StateError('No drawing schematic available for this step');
-      }
-
-      if (!_showElectronFlow) {
-        raw = raw.replaceFirst(
-          'id="electron-arrows"',
-          'id="electron-arrows" display="none"',
-        );
-      }
-      if (mounted) {
-        setState(() => _svg = raw);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _loadError = e.toString());
-      }
-    }
-  }
-
-  void _goTo(int index) {
+  void _select(int index) {
     AppHaptics.selection();
-    setState(() => _stepIndex = index.clamp(0, _steps.length - 1));
-    _loadSvg();
+    _timer?.cancel();
+    _transform.value = Matrix4.identity();
+    setState(() {
+      _timer = null;
+      _step = index;
+    });
   }
 
   void _play() {
-    if (_steps.isEmpty) {
+    if (_timer != null) {
+      _select(_step);
       return;
     }
     AppHaptics.confirm();
-    _playTimer?.cancel();
-    setState(() {
-      _playing = true;
-      _stepIndex = 0;
-    });
-    _loadSvg();
-    _playTimer = Timer.periodic(const Duration(seconds: 2), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      if (_stepIndex >= _steps.length - 1) {
-        t.cancel();
-        setState(() => _playing = false);
-        return;
-      }
-      setState(() => _stepIndex++);
-      _loadSvg();
-    });
-  }
-
-  void _replay() {
-    _playTimer?.cancel();
-    setState(() {
-      _playing = false;
-      _stepIndex = 0;
-    });
     _transform.value = Matrix4.identity();
-    _loadSvg();
-    _play();
+    setState(() {
+      if (_step == _steps.length - 1) _step = 0;
+      _replay++;
+      _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+        if (_step == _steps.length - 1) {
+          _timer?.cancel();
+          setState(() => _timer = null);
+          return;
+        }
+        _transform.value = Matrix4.identity();
+        setState(() => _step++);
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_steps.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.mechanism.name,
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 16,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        if (widget.mechanism.representativeExample != null) ...[
-          const SizedBox(height: 6),
+    if (_steps.isEmpty) return const SizedBox.shrink();
+    final current = _steps[_step];
+    final hasDiagram = current.svgContent != null || current.svgAsset != null;
+    final canTrace =
+        current.svgAsset != null ||
+        (current.svgContent?.contains('id="electron-arrows"') ?? false);
+    final theme = Theme.of(context);
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    final duration = reduced
+        ? Duration.zero
+        : const Duration(milliseconds: 280);
+    return LiquidGlassContainer(
+      borderRadius: 28,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(widget.mechanism.name, style: theme.textTheme.titleLarge),
+          if (widget.scopeLabel case final scopeLabel?)
+            Text(scopeLabel, style: theme.textTheme.labelMedium),
+          if (widget.mechanism.representativeExample case final example?) ...[
+            const SizedBox(height: 6),
+            Text(example, style: theme.textTheme.bodyMedium),
+          ],
+          if (current.svgContent?.contains('Electron source') ?? false)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Reaction-center map',
+                style: theme.textTheme.labelMedium,
+              ),
+            ),
+          const SizedBox(height: 14),
+          if (hasDiagram)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: AspectRatio(
+                aspectRatio: 820 / 360,
+                child: ColoredBox(
+                  color: Colors.white,
+                  child: InteractiveViewer(
+                    transformationController: _transform,
+                    minScale: 1,
+                    maxScale: 8,
+                    child: FutureBuilder<List<String?>>(
+                      future: _diagrams,
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        final svg = snapshot.data![_step];
+                        if (svg == null) {
+                          return const Center(
+                            child: Text(
+                              'Diagram unavailable',
+                              style: TextStyle(color: Colors.black87),
+                            ),
+                          );
+                        }
+                        return AnimatedSwitcher(
+                          duration: duration,
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          child: ElectronFlowDiagram(
+                            key: ValueKey((_step, _replay)),
+                            svg: svg,
+                            label: current.title,
+                            showFlow: _showFlow,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: 12),
           Text(
-            widget.mechanism.representativeExample!,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12.5,
-              height: 1.35,
-            ),
+            'Step ${_step + 1} of ${_steps.length}',
+            style: theme.textTheme.labelLarge,
           ),
-        ],
-        const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary
-                  .withValues(alpha: 0.35),
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: AspectRatio(
-            aspectRatio: 820 / 360,
-            child: InteractiveViewer(
-              transformationController: _transform,
-              minScale: 0.6,
-              maxScale: 8,
-              panEnabled: true,
-              child: _svg == null
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: _loadError == null
-                            ? const CircularProgressIndicator(strokeWidth: 2)
-                            : Text(
-                                _loadError!,
-                                style: TextStyle(
-                                  color: AppColors.readableText(
-                                    context,
-                                    Colors.red,
-                                  ),
+          const SizedBox(height: 6),
+          Semantics(
+            liveRegion: true,
+            child: AnimatedSwitcher(
+              duration: duration,
+              layoutBuilder: (currentChild, previousChildren) => Stack(
+                alignment: Alignment.topLeft,
+                children: [...previousChildren, ?currentChild],
+              ),
+              child: Column(
+                key: ValueKey(_step),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(current.title, style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 6),
+                  Text(current.description),
+                  if (_showFlow)
+                    for (final (index, flow) in current.electronFlow.indexed)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: ElectronFlowDiagram.arrowColor(index),
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '${index + 1}',
+                                style: const TextStyle(
+                                  color: Colors.white,
                                   fontSize: 12,
                                 ),
                               ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${flow.source} → ${flow.destination}',
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    )
-                  : SvgPicture.string(
-                      _svg!,
-                      fit: BoxFit.contain,
-                      allowDrawingOutsideViewBox: true,
-                    ),
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          _current.title,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 13.5,
-            color: Theme.of(context).colorScheme.onSurface,
+          const SizedBox(height: 14),
+          LinearProgressIndicator(
+            value: (_step + 1) / _steps.length,
+            borderRadius: BorderRadius.circular(4),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          _current.description,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 12.5,
-            height: 1.35,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            _CtrlButton(
-              label: 'Previous',
-              icon: Icons.chevron_left,
-              onPressed: _stepIndex == 0 ? null : () => _goTo(_stepIndex - 1),
-            ),
-            Expanded(
-              child: Text(
-                'Step ${_stepIndex + 1} of ${_steps.length}',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ),
-            _CtrlButton(
-              label: 'Next',
-              icon: Icons.chevron_right,
-              trailing: true,
-              onPressed: _stepIndex >= _steps.length - 1
-                  ? null
-                  : () => _goTo(_stepIndex + 1),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            SpringPress(
-              child: OutlinedButton.icon(
-                onPressed: _playing ? null : _play,
-                icon: const Icon(Icons.play_arrow, size: 18),
-                label: Text(_playing ? 'Playing…' : 'Play Mechanism'),
-              ),
-            ),
-            SpringPress(
-              child: OutlinedButton.icon(
-                onPressed: _replay,
-                icon: const Icon(Icons.replay, size: 18),
-                label: const Text('Replay'),
-              ),
-            ),
-            SpringPress(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  setState(() => _showElectronFlow = !_showElectronFlow);
-                  _loadSvg();
-                },
-                icon: Icon(
-                  _showElectronFlow ? Icons.visibility : Icons.visibility_off,
-                  size: 18,
-                ),
-                label: Text(
-                  _showElectronFlow
-                      ? 'Hide Electron Flow'
-                      : 'Show Electron Flow',
-                ),
-              ),
-            ),
-            SpringPress(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  AppHaptics.selection();
-                  _transform.value = Matrix4.identity();
-                },
-                icon: const Icon(Icons.center_focus_strong, size: 18),
-                label: const Text('Reset view'),
-              ),
-            ),
-            if (widget.onSwitchTo3D != null)
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
               SpringPress(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.adaptive(
-                      context,
-                      AppColors.accentCyan,
-                    ),
-                    side: BorderSide(
-                      color: AppColors.adaptive(
-                        context,
-                        AppColors.accentCyan,
-                      ).withValues(alpha: 0.5),
-                    ),
+                child: IconButton.filledTonal(
+                  tooltip: 'Previous step',
+                  onPressed: _step > 0 ? () => _select(_step - 1) : null,
+                  icon: const Icon(Icons.chevron_left),
+                ),
+              ),
+              SpringPress(
+                child: FilledButton.icon(
+                  onPressed: _play,
+                  icon: Icon(
+                    _timer == null
+                        ? Icons.play_arrow_rounded
+                        : Icons.pause_rounded,
                   ),
-                  onPressed: () {
-                    AppHaptics.selection();
-                    widget.onSwitchTo3D!();
-                  },
-                  icon: const Icon(Icons.view_in_ar_rounded, size: 18),
+                  label: Text(_timer == null ? 'Play steps' : 'Pause'),
+                ),
+              ),
+              SpringPress(
+                child: IconButton.filledTonal(
+                  tooltip: 'Next step',
+                  onPressed: _step + 1 < _steps.length
+                      ? () => _select(_step + 1)
+                      : null,
+                  icon: const Icon(Icons.chevron_right),
+                ),
+              ),
+              if (canTrace)
+                FilterChip(
+                  label: const Text('Electron flow'),
+                  selected: _showFlow,
+                  onSelected: (value) => setState(() => _showFlow = value),
+                ),
+              if (_showFlow && canTrace)
+                IconButton(
+                  tooltip: 'Replay electron flow',
+                  onPressed: () => setState(() => _replay++),
+                  icon: const Icon(Icons.replay),
+                ),
+              IconButton(
+                tooltip: 'Reset zoom',
+                onPressed: () => _transform.value = Matrix4.identity(),
+                icon: const Icon(Icons.center_focus_strong),
+              ),
+              if (widget.onSwitchTo3D != null)
+                TextButton.icon(
+                  onPressed: widget.onSwitchTo3D,
+                  icon: const Icon(Icons.view_in_ar_rounded),
                   label: const Text('Explore in 3D'),
                 ),
+            ],
+          ),
+          if (_showFlow && canTrace)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Full head: electron pair · fishhook: one electron. Arrows in a concerted step move together.',
+                style: theme.textTheme.bodySmall,
               ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _CtrlButton extends StatelessWidget {
-  const _CtrlButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-    this.trailing = false,
-  });
-
-  final String label;
-  final IconData icon;
-  final VoidCallback? onPressed;
-  final bool trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final child = Text(
-      label,
-      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-    );
-    return SpringPress(
-      child: TextButton.icon(
-        onPressed: onPressed,
-        icon: trailing ? child : Icon(icon),
-        label: trailing ? Icon(icon) : child,
+            ),
+        ],
       ),
     );
   }

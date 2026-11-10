@@ -16,7 +16,7 @@
   <g id="intermediate-1">
     <polygon points="160,160 190,175 190,205 160,220 130,205 130,175" fill="none" stroke="#111" stroke-width="2"/>
     <line x1="190" y1="190" x2="250" y2="190" stroke="#111" stroke-width="2.1"/>
-    <text x="256" y="180" font-family="Arial, Helvetica, sans-serif" font-size="14">O-</text>
+    <line x1="250" y1="190" x2="250" y2="148" stroke="#111" stroke-width="2.1"/><text x="244" y="143" font-family="sans-serif" font-size="14">O⁻</text><circle cx="232" cy="145" r="2"/><circle cx="232" cy="154" r="2"/>
     <line x1="250" y1="190" x2="250" y2="240" stroke="#111" stroke-width="2.1"/>
     <text x="244" y="262" font-family="Arial, Helvetica, sans-serif" font-size="14">H</text>
     <line x1="250" y1="190" x2="290" y2="150" stroke="#111" stroke-width="2.1"/>
@@ -28,7 +28,8 @@
     <text x="614" y="136" font-family="Arial, Helvetica, sans-serif" font-size="16">O</text>
   </g>
   <g id="electron-arrows">
-    <path d="M 252 230 C 320 250 400 230 555 198" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 232 149.5 C 204 149 212 171 250 169" fill="none" stroke="#111" stroke-width="2" marker-end="url(#electron-arrow)"/>
+    <path d="M 250 215 C 315 251 463 243 566 192" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
     <path d="M 588 168 C 605 150 610 145 618 148" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
   </g>
   <g id="labels"><text x="280" y="310" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">C-H hydride to second carbonyl C</text></g>

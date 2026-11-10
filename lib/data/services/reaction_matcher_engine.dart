@@ -1,4 +1,4 @@
-import '../../core/chemistry/chemical_graph.dart';
+import '../../core/chemistry/smiles_svg_generator.dart';
 import '../../core/chemistry/mechanism_svg_renderer.dart';
 import 'reaction_curation_repository.dart';
 
@@ -102,6 +102,7 @@ class ReactionMatcherEngine {
 
         return _buildResult(
           reaction: directMatch,
+          schemeReactants: example?.reactantSmiles,
           example: example,
           confidence: cleanReactants.isNotEmpty ? ReactionConfidence.high : ReactionConfidence.moderate,
           majorProductSmiles: prodSmiles,
@@ -116,12 +117,10 @@ class ReactionMatcherEngine {
     if (cleanReactants.isNotEmpty) {
       for (final ex in allExamples) {
         final exSmiles = _cleanSmiles(ex.reactantSmiles);
-        final isReactantMatch = exSmiles == cleanReactants ||
-            _isSmilesEquivalent(exSmiles, cleanReactants);
-
-        if (isReactantMatch) {
-          final isReagentMatch = cleanReagents.isEmpty ||
-              _isReagentMatch(cleanReagents, ex.reagentName, ex.reagentSmiles);
+        if (exSmiles == cleanReactants) {
+          final isReagentMatch = _isReagentMatch(
+            cleanReagents, ex.reagentName, ex.reagentSmiles,
+          );
 
           if (isReagentMatch) {
             final rxn = allReactions.firstWhere(
@@ -131,6 +130,7 @@ class ReactionMatcherEngine {
             return _buildResult(
               reaction: rxn,
               example: ex,
+              schemeReactants: ex.reactantSmiles,
               confidence: ReactionConfidence.high,
               majorProductSmiles: ex.expectedProductSmiles,
               majorProductName: ex.expectedProductName,
@@ -434,21 +434,25 @@ class ReactionMatcherEngine {
     required ReactionConfidence confidence,
     required String majorProductSmiles,
     required String majorProductName,
+    String? schemeReactants,
     String solvent = '',
     String temperature = '',
   }) {
-    // Generate clean scheme SVG
-    final reactantGraph = ChemicalGraph.createAlkylHalide(id: 'rxn_reactants');
-    final productGraph = ChemicalGraph.createCarbonyl(id: 'rxn_product');
-
-    final schemeSvg = MechanismSvgRenderer.renderReactionScheme(
-      reactantGraph: reactantGraph,
-      productGraph: productGraph,
-      reagent: example?.reagentName ?? reaction.conditions,
-      solvent: solvent.isNotEmpty ? solvent : reaction.solvent,
-      temperature: temperature.isNotEmpty ? temperature : reaction.temperature,
-      reactionName: reaction.reactionName,
-    );
+    var schemeSvg = '';
+    if (schemeReactants != null && majorProductSmiles.isNotEmpty) {
+      final reactantGraph = SmilesSvgGenerator.parseSmilesToGraph(schemeReactants);
+      final productGraph = SmilesSvgGenerator.parseSmilesToGraph(majorProductSmiles);
+      if (reactantGraph.atoms.isNotEmpty && productGraph.atoms.isNotEmpty) {
+        schemeSvg = MechanismSvgRenderer.renderReactionScheme(
+          reactantGraph: reactantGraph,
+          productGraph: productGraph,
+          reagent: example?.reagentSmiles ?? '',
+          solvent: solvent,
+          temperature: temperature,
+          reactionName: reaction.reactionName,
+        );
+      }
+    }
 
     return ReactionMatchResult(
       isMatched: true,
@@ -471,21 +475,14 @@ class ReactionMatcherEngine {
     return raw.replaceAll(' ', '').trim();
   }
 
-  bool _isSmilesEquivalent(String s1, String s2) {
-    if (s1.toLowerCase() == s2.toLowerCase()) {return true;}
-    final norm1 = s1.replaceAll('(', '').replaceAll(')', '').toLowerCase();
-    final norm2 = s2.replaceAll('(', '').replaceAll(')', '').toLowerCase();
-    return norm1 == norm2;
-  }
-
-  bool _isReagentMatch(String userReagent, String exReagentName, String exReagentSmiles) {
-    final u = userReagent.toLowerCase();
-    final name = exReagentName.toLowerCase();
-    final smiles = exReagentSmiles.toLowerCase();
-
-    return name.contains(u) ||
-        u.contains(name) ||
-        (smiles.isNotEmpty && (smiles.contains(u) || u.contains(smiles)));
+  bool _isReagentMatch(String input, String name, String smiles) {
+    if (input.isEmpty) return name.isEmpty && smiles.isEmpty;
+    if (smiles == '[Na+].[I-]' &&
+        const {'nai', 'sodium iodide'}.contains(input.toLowerCase())) {
+      return true;
+    }
+    return (name.isNotEmpty && input.toLowerCase() == name.toLowerCase()) ||
+        (smiles.isNotEmpty && _cleanSmiles(input) == _cleanSmiles(smiles));
   }
 
   CuratedReaction? _findRxn(List<CuratedReaction> list, String id) {

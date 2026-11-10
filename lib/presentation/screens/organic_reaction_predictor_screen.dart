@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/hex_background.dart';
+import '../../data/services/mechanism_lessons.dart';
 import '../../data/services/reaction_curation_repository.dart';
 import '../../data/services/reaction_matcher_engine.dart';
 import '../widgets/animated_mechanism_viewer.dart';
@@ -1136,7 +1137,8 @@ class _OrganicReactionPredictorScreenState
           const SizedBox(height: 16),
 
           // Interactive Mechanism Viewer Widget
-          if (rxn.steps.isNotEmpty)
+          if (rxn.steps.isNotEmpty ||
+              MechanismLessons.hasPredictorLesson(rxn.reactionId))
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: AnimatedMechanismViewer(reaction: rxn),

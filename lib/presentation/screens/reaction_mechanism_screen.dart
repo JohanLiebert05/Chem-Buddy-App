@@ -14,6 +14,7 @@ import '../../core/widgets/molecule_3d/molecule_3d_viewer.dart';
 import '../../data/models/reaction_models.dart';
 import '../../data/services/export_service.dart';
 import '../../data/services/reaction_3d_database.dart';
+import '../../data/services/mechanism_lessons.dart';
 import '../../data/services/reaction_mechanism_service.dart';
 import '../providers/app_providers.dart';
 import '../widgets/mechanism_step_viewer.dart';
@@ -252,6 +253,7 @@ class _ReactionMechanismsScreenState
   }
 
   Widget _buildMechanismCard(ReactionMechanism m) {
+    final lessonLength = (MechanismLessons.librarySteps(m.id) ?? m.steps).length;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlowCard(
@@ -324,7 +326,7 @@ class _ReactionMechanismsScreenState
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${m.steps.length} Stepwise Transformation${m.steps.length == 1 ? "" : "s"}',
+                  '$lessonLength Stepwise Transformation${lessonLength == 1 ? "" : "s"}',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 12,
@@ -388,6 +390,7 @@ class _ReactionMechanismsScreenState
 
   // Detailed Step-by-Step Mechanism View
   Widget _buildDetailView(ReactionMechanism m) {
+    final lessonSteps = MechanismLessons.librarySteps(m.id) ?? m.steps;
     final set3D = Reaction3DDatabase.get3DSet(m.id);
     final has3D = set3D != null;
 
@@ -676,17 +679,13 @@ class _ReactionMechanismsScreenState
             // Active Visualization (3D Lab or 2D ChemDraw)
             if (_is3DMode && set3D != null)
               _build3DLaboratorySection(m, set3D)
-            else if (m.hasChemDrawSteps)
-              GlowCard(
-                padding: const EdgeInsets.all(14),
-                borderColor: Theme.of(context).colorScheme.primary
-                    .withValues(alpha: 0.4),
-                child: MechanismStepViewer(
-                  mechanism: m,
-                  onSwitchTo3D: has3D
-                      ? () => setState(() => _is3DMode = true)
-                      : null,
-                ),
+            else if (lessonSteps.isNotEmpty)
+              MechanismStepViewer(
+                mechanism: m,
+                lessonSteps: lessonSteps,
+                onSwitchTo3D: has3D
+                    ? () => setState(() => _is3DMode = true)
+                    : null,
               )
             else if (m.svgContent != null && m.svgContent!.isNotEmpty) ...[
               Row(
@@ -769,7 +768,7 @@ class _ReactionMechanismsScreenState
 
             const SizedBox(height: 10),
 
-            ...m.steps.map((step) => _buildStepCard(step)),
+            ...lessonSteps.map((step) => _buildStepCard(step)),
 
             const SizedBox(height: 16),
 

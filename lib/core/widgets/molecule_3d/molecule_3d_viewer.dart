@@ -15,6 +15,7 @@ class Molecule3DViewer extends StatefulWidget {
   final Molecule3D molecule;
   final double height;
   final bool autoRotateInitial;
+  final bool showLabelsInitial;
   final String? subtitle;
 
   const Molecule3DViewer({
@@ -22,6 +23,7 @@ class Molecule3DViewer extends StatefulWidget {
     required this.molecule,
     this.height = 340,
     this.autoRotateInitial = false,
+    this.showLabelsInitial = true,
     this.subtitle,
   });
 
@@ -41,7 +43,7 @@ class _Molecule3DViewerState extends State<Molecule3DViewer>
   late final AnimationController _autoRotateController;
 
   MoleculeRenderMode _renderMode = MoleculeRenderMode.ballAndStick;
-  bool _showLabels = true;
+  late bool _showLabels = widget.showLabelsInitial;
   int? _selectedAtomIndex;
 
   @override

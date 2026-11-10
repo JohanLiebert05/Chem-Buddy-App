@@ -200,14 +200,14 @@ class ChemDrawLibrary {
     'wittig': [
       ReactionStep(
         stepNumber: 1,
-        title: 'Ylide attack',
-        description: 'Ph3P=CH2 carbon attacks acetone; C=O pi electrons go to oxygen.',
+        title: 'Oxaphosphetane formation',
+        description: 'For the salt-free example, the ylide and carbonyl form C–C and P–O bonds in the same formal [2+2] step.',
         svgAsset: 'assets/mechanisms/carbonyl/wittig/step-01.svg',
       ),
       ReactionStep(
         stepNumber: 2,
-        title: 'Oxaphosphetane',
-        description: 'Four-membered P-C-C-O intermediate (salt-free [2+2] path).',
+        title: 'Oxaphosphetane cycloreversion',
+        description: 'The C–P and C–O bonding pairs form the new C=C and P=O bonds as the ring opens.',
         svgAsset: 'assets/mechanisms/carbonyl/wittig/step-02.svg',
       ),
       ReactionStep(
@@ -223,6 +223,11 @@ class ChemDrawLibrary {
         title: 'Concerted [4+2] electron flow',
         description: 'Three two-electron arrows; no zwitterionic intermediate for this simple case.',
         svgAsset: 'assets/mechanisms/pericyclic/diels_alder/step-01.svg',
+        electronFlow: [
+          ElectronFlow(type: 'two-electron', source: 'first diene π bond', destination: 'first new C–C bond'),
+          ElectronFlow(type: 'two-electron', source: 'ethene π bond', destination: 'second new C–C bond'),
+          ElectronFlow(type: 'two-electron', source: 'second diene π bond', destination: 'central diene C–C bond'),
+        ],
       ),
       ReactionStep(
         stepNumber: 2,

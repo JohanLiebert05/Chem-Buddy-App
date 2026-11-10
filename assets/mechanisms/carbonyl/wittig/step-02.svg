@@ -14,17 +14,18 @@
 
   <g id="conditions"><text x="410" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#333333">oxaphosphetane (not a free betaine under salt-free conditions)</text></g>
   <g id="intermediate-1">
-    <text x="200" y="160" font-family="Arial, Helvetica, sans-serif" font-size="16">Ph3P</text>
-    <line x1="250" y1="154" x2="310" y2="200" stroke="#111" stroke-width="2.1"/>
-    <line x1="250" y1="154" x2="310" y2="110" stroke="#111" stroke-width="2.1"/>
-    <text x="314" y="106" font-family="Arial, Helvetica, sans-serif" font-size="16">O</text>
-    <line x1="310" y1="110" x2="310" y2="200" stroke="#111" stroke-width="2.1"/>
-    <line x1="310" y1="200" x2="370" y2="200" stroke="#111" stroke-width="2.1"/>
-    <text x="376" y="204" font-family="Arial, Helvetica, sans-serif" font-size="14">CMe2</text>
+    <path d="M 266 138 H 369 M 389 149 V 228 H 252 M 247 218 V 151 M 389 228 L 451 194 M 389 228 L 450 268"
+      fill="none" stroke="#111" stroke-width="2.2"/>
+    <text x="205" y="144" font-family="sans-serif" font-size="18">Ph₃P</text>
+    <text x="380" y="144" font-family="sans-serif" font-size="18">O</text>
+    <text x="216" y="233" font-family="sans-serif" font-size="17">CH₂</text>
   </g>
   <g id="electron-arrows">
-    <path d="M 270 160 C 255 130 270 115 300 112" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 247 190 C 204 199 240 260 315 228" fill="none" stroke="#111" stroke-width="2" marker-end="url(#electron-arrow)"/>
+    <path d="M 389 188 C 422 157 370 105 317 138" fill="none" stroke="#111" stroke-width="2" marker-end="url(#electron-arrow)"/>
   </g>
-  <g id="labels"><text x="200" y="280" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">four-membered P-C-C-O ring</text></g>
+  <g id="labels">
+    <text x="208" y="312" font-family="sans-serif" font-size="14">Cycloreversion forms C=C and P=O together</text>
+  </g>
 
 </svg>

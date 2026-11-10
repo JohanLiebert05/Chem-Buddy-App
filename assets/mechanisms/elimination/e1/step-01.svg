@@ -21,7 +21,7 @@
     <text x="338" y="208" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600">Br</text>
   </g>
   <g id="electron-arrows">
-    <path d="M 270 192 C 300 150 320 152 342 188" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
+    <path d="M 275 200 C 288 151 328 157 344 193" fill="none" stroke="#111" stroke-width="1.7" marker-end="url(#electron-arrow)"/>
   </g>
   <g id="labels"><text x="180" y="300" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#444">C-Br to Br</text></g>
 
